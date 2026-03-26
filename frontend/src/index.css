@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow selection on specific elements */
+.selectable,
+.selectable * {
+  user-select: text;
+  -webkit-user-select: text;
+}
