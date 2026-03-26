@@ -1,0 +1,61 @@
+import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import type { Construct } from 'constructs';
+
+export class StorageStack extends cdk.Stack {
+  public readonly projectsTable: dynamodb.Table;
+  public readonly reviewsTable: dynamodb.Table;
+  public readonly pageViewsTable: dynamodb.Table;
+  public readonly assetsBucket: s3.Bucket;
+
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // Projects table
+    this.projectsTable = new dynamodb.Table(this, 'ProjectsTable', {
+      tableName: 'portfolio-projects',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Reviews table
+    this.reviewsTable = new dynamodb.Table(this, 'ReviewsTable', {
+      tableName: 'portfolio-reviews',
+      partitionKey: { name: 'projectId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Reviews by user (for "my reviews" query)
+    this.reviewsTable.addGlobalSecondaryIndex({
+      indexName: 'byUserId',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+    });
+
+    // Page views table
+    this.pageViewsTable = new dynamodb.Table(this, 'PageViewsTable', {
+      tableName: 'portfolio-page-views',
+      partitionKey: { name: 'projectId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Assets bucket (screenshots, app files)
+    this.assetsBucket = new s3.Bucket(this, 'AssetsBucket', {
+      bucketName: `portfolio-assets-${this.account}`,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.GET],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+        },
+      ],
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+  }
+}
