@@ -22,6 +22,19 @@ export class FrontendStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
+    // CloudFront Function to strip /api prefix
+    const apiRewriteFn = new cloudfront.Function(this, 'ApiRewriteFunction', {
+      code: cloudfront.FunctionCode.fromInline(`
+        function handler(event) {
+          var request = event.request;
+          request.uri = request.uri.replace(/^\\/api/, '');
+          if (request.uri === '') request.uri = '/';
+          return request;
+        }
+      `),
+      functionName: 'portfolio-api-rewrite',
+    });
+
     // CloudFront distribution
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
@@ -35,6 +48,10 @@ export class FrontendStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          functionAssociations: [{
+            function: apiRewriteFn,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          }],
         },
       },
       defaultRootObject: 'index.html',

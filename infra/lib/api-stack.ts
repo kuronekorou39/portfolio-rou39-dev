@@ -93,6 +93,24 @@ export class ApiStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
+    // --- Downloads API ---
+    const downloadsFn = new nodejs.NodejsFunction(this, 'DownloadsFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/downloads.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling: bundlingOptions,
+    });
+    props.projectsTable.grantReadData(downloadsFn);
+    props.assetsBucket.grantRead(downloadsFn);
+
+    const downloads = this.api.root.addResource('downloads');
+    const downloadByProject = downloads.addResource('{projectId}');
+    downloadByProject.addMethod('GET', new apigateway.LambdaIntegration(downloadsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
     // --- Page Views API ---
     const pageViewsFn = new nodejs.NodejsFunction(this, 'PageViewsFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
