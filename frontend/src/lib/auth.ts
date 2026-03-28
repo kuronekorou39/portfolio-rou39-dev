@@ -14,6 +14,7 @@ const userPool = new CognitoUserPool({
 export interface AuthUser {
   userId: string;
   email: string;
+  nickname: string;
 }
 
 function sessionToUser(session: CognitoUserSession): AuthUser {
@@ -21,6 +22,7 @@ function sessionToUser(session: CognitoUserSession): AuthUser {
   return {
     userId: payload.sub as string,
     email: payload.email as string,
+    nickname: (payload.nickname as string) || '匿名',
   };
 }
 
@@ -62,6 +64,7 @@ export function signUp(email: string, password: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const attributes = [
       new CognitoUserAttribute({ Name: 'email', Value: email }),
+      new CognitoUserAttribute({ Name: 'nickname', Value: '匿名' }),
     ];
     userPool.signUp(email, password, attributes, [], (err) => {
       if (err) {
@@ -109,4 +112,28 @@ export function signOut(): void {
   if (cognitoUser) {
     cognitoUser.signOut();
   }
+}
+
+export function updateNickname(nickname: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = userPool.getCurrentUser();
+    if (!cognitoUser) {
+      reject(new Error('Not signed in'));
+      return;
+    }
+    cognitoUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
+      if (err || !session?.isValid()) {
+        reject(new Error('Session invalid'));
+        return;
+      }
+      const attr = [new CognitoUserAttribute({ Name: 'nickname', Value: nickname })];
+      cognitoUser.updateAttributes(attr, (err) => {
+        if (err) {
+          reject(new Error(err.message));
+          return;
+        }
+        resolve();
+      });
+    });
+  });
 }

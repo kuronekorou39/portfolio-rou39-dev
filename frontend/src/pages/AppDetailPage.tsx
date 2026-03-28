@@ -13,14 +13,24 @@ type Tab = 'about' | 'howto' | 'reviews';
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          className={`text-sm ${star <= rating ? 'text-yellow-400' : 'text-white/10'}`}
-        >
-          ★
-        </span>
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const filled = rating >= star;
+        const half = !filled && rating >= star - 0.5;
+        if (half) {
+          return (
+            <span key={star} className="relative inline-block text-sm">
+              <span className="text-white/10">★</span>
+              <span
+                className="absolute left-0 top-0 text-yellow-400"
+                style={{ clipPath: 'inset(0 50% 0 0)' }}
+              >★</span>
+            </span>
+          );
+        }
+        return (
+          <span key={star} className={`text-sm ${filled ? 'text-yellow-400' : 'text-white/10'}`}>★</span>
+        );
+      })}
     </div>
   );
 }
@@ -33,22 +43,41 @@ function InteractiveStarRating({
   onChange: (value: number) => void;
 }) {
   const [hover, setHover] = useState(0);
+  const active = hover || rating;
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
+        <div
           key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          onMouseEnter={() => setHover(star)}
+          className="relative cursor-pointer text-xl"
           onMouseLeave={() => setHover(0)}
-          className={`text-xl transition-colors ${
-            star <= (hover || rating) ? 'text-yellow-400' : 'text-white/10'
-          } hover:scale-110`}
         >
-          ★
-        </button>
+          <span className="text-white/10">★</span>
+          {active >= star - 0.5 && (
+            <span
+              className="pointer-events-none absolute inset-0 overflow-hidden text-yellow-400"
+              style={{ width: active >= star ? '100%' : '50%' }}
+            >
+              ★
+            </span>
+          )}
+          {/* Left half → X.5 (min 1.0) */}
+          <span
+            className="absolute inset-0 w-1/2"
+            onMouseEnter={() => setHover(Math.max(1, star - 0.5))}
+            onClick={() => onChange(Math.max(1, star - 0.5))}
+          />
+          {/* Right half → X.0 */}
+          <span
+            className="absolute inset-0 left-1/2 w-1/2"
+            onMouseEnter={() => setHover(star)}
+            onClick={() => onChange(star)}
+          />
+        </div>
       ))}
+      {active > 0 && (
+        <span className="ml-1 self-center text-xs text-white/30">{active.toFixed(1)}</span>
+      )}
     </div>
   );
 }
@@ -181,6 +210,8 @@ export default function AppDetailPage() {
     ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
     : 0;
 
+  const myReview = user ? reviews.find((r) => r.userId === user.userId) : null;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'about', label: 'About' },
     { key: 'howto', label: 'How to Use' },
@@ -247,7 +278,7 @@ export default function AppDetailPage() {
           <div className="mt-6 flex flex-wrap items-center gap-6">
             {/* Rating */}
             <div className="flex items-center gap-2">
-              <StarRating rating={Math.round(avgRating)} />
+              <StarRating rating={avgRating} />
               <span className="text-sm text-white/40">{avgRating.toFixed(1)}</span>
             </div>
 
@@ -391,33 +422,39 @@ export default function AppDetailPage() {
                 <div className="mb-8 flex items-center gap-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
                   <div className="text-center">
                     <div className="text-4xl font-black">{avgRating.toFixed(1)}</div>
-                    <StarRating rating={Math.round(avgRating)} />
+                    <StarRating rating={avgRating} />
                     <div className="mt-1 text-xs text-white/20">{reviews.length} reviews</div>
                   </div>
                   <div className="h-16 w-px bg-white/[0.06]" />
                   {/* Review form or login prompt */}
                   <div className="flex-1">
                     {user && token ? (
-                      <div className="space-y-3">
-                        <div>
-                          <div className="mb-1 text-xs text-white/30">評価</div>
-                          <InteractiveStarRating rating={newRating} onChange={setNewRating} />
+                      myReview ? (
+                        <p className="text-sm text-white/30">
+                          レビュー投稿済みです（下の自分のレビューから編集できます）
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <div className="mb-1 text-xs text-white/30">評価</div>
+                            <InteractiveStarRating rating={newRating} onChange={setNewRating} />
+                          </div>
+                          <textarea
+                            value={newContent}
+                            onChange={(e) => setNewContent(e.target.value)}
+                            placeholder="レビューを書く..."
+                            rows={2}
+                            className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                          />
+                          <button
+                            onClick={handleSubmitReview}
+                            disabled={submitting || newRating === 0 || !newContent.trim()}
+                            className="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            {submitting ? '送信中...' : '投稿する'}
+                          </button>
                         </div>
-                        <textarea
-                          value={newContent}
-                          onChange={(e) => setNewContent(e.target.value)}
-                          placeholder="レビューを書く..."
-                          rows={2}
-                          className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
-                        />
-                        <button
-                          onClick={handleSubmitReview}
-                          disabled={submitting || newRating === 0 || !newContent.trim()}
-                          className="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
-                        >
-                          {submitting ? '送信中...' : '投稿する'}
-                        </button>
-                      </div>
+                      )
                     ) : (
                       <Link
                         to="/auth"
@@ -494,7 +531,7 @@ export default function AppDetailPage() {
                         </div>
                       ) : (
                         <>
-                          <StarRating rating={Math.round(review.rating)} />
+                          <StarRating rating={review.rating} />
                           <p className="mt-3 text-sm leading-relaxed text-white/40">{review.content}</p>
                         </>
                       )}

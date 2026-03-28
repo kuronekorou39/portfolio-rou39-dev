@@ -8,6 +8,7 @@ import LogoShowcase from '@/pages/LogoShowcase';
 import AppsPage from '@/pages/AppsPage';
 import AppDetailPage from '@/pages/AppDetailPage';
 import AuthPage from '@/pages/AuthPage';
+import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route path="/apps" element={<AppsPage />} />
           <Route path="/apps/:id" element={<AppDetailPage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

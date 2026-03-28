@@ -11,7 +11,7 @@ function getUserFromEvent(event: APIGatewayProxyEvent) {
   if (!claims) return null;
   return {
     userId: claims.sub as string,
-    userName: (claims.email as string) || 'Anonymous',
+    userName: (claims.nickname as string) || '匿名',
   };
 }
 
@@ -41,12 +41,25 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       const user = getUserFromEvent(event);
       if (!user) return forbidden('Authentication required');
 
+      // 既存レビューチェック（1アプリ1人1レビュー）
+      const existing = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE,
+          KeyConditionExpression: 'projectId = :pid',
+          FilterExpression: 'userId = :uid',
+          ExpressionAttributeValues: { ':pid': projectId, ':uid': user.userId },
+        })
+      );
+      if (existing.Items && existing.Items.length > 0) {
+        return badRequest('このアプリにはすでにレビューを投稿済みです');
+      }
+
       const body = JSON.parse(event.body || '{}');
       if (!body.content || body.rating == null) {
         return badRequest('content and rating are required');
       }
-      if (body.rating < 0 || body.rating > 5) {
-        return badRequest('rating must be between 0 and 5');
+      if (body.rating < 1 || body.rating > 5 || (body.rating * 2) % 1 !== 0) {
+        return badRequest('rating must be between 1.0 and 5.0 in 0.5 increments');
       }
 
       const now = new Date().toISOString();
@@ -73,6 +86,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       const body = JSON.parse(event.body || '{}');
       if (!body.content || body.rating == null) {
         return badRequest('content and rating are required');
+      }
+      if (body.rating < 1 || body.rating > 5 || (body.rating * 2) % 1 !== 0) {
+        return badRequest('rating must be between 1.0 and 5.0 in 0.5 increments');
       }
 
       await docClient.send(

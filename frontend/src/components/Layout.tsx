@@ -23,7 +23,9 @@ export default function Layout() {
             {!loading && (
               user ? (
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{user.email}</span>
+                  <Link to="/profile" className="text-xs text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                    {user.nickname}
+                  </Link>
                   <button
                     onClick={signOut}
                     className="rounded-full border border-gray-300 px-3 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200"
