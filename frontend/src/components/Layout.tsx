@@ -1,6 +1,7 @@
 import { Outlet, Link } from 'react-router-dom';
 import Logo from './Logo';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAvatarEmoji } from '@/lib/avatars';
 
 export default function Layout() {
   const { user, loading, signOut } = useAuth();
@@ -23,8 +24,9 @@ export default function Layout() {
             {!loading && (
               user ? (
                 <div className="flex items-center gap-3">
-                  <Link to="/profile" className="text-xs text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                    {user.nickname}
+                  <Link to="/profile" className="flex items-center gap-1.5 text-xs text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                    <span>{getAvatarEmoji(user.avatar)}</span>
+                    <span>{user.nickname}</span>
                   </Link>
                   <button
                     onClick={signOut}

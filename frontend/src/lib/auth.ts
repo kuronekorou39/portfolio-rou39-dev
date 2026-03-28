@@ -5,6 +5,7 @@ import {
   CognitoUserAttribute,
   CognitoUserSession,
 } from 'amazon-cognito-identity-js';
+import { generateRandomIdentity } from './avatars';
 
 const userPool = new CognitoUserPool({
   UserPoolId: 'ap-northeast-1_FJeIsc61q',
@@ -15,6 +16,7 @@ export interface AuthUser {
   userId: string;
   email: string;
   nickname: string;
+  avatar: string; // avatar key (e.g. "rabbit")
 }
 
 function sessionToUser(session: CognitoUserSession): AuthUser {
@@ -23,6 +25,7 @@ function sessionToUser(session: CognitoUserSession): AuthUser {
     userId: payload.sub as string,
     email: payload.email as string,
     nickname: (payload.nickname as string) || '匿名',
+    avatar: (payload.picture as string) || '',
   };
 }
 
@@ -62,9 +65,11 @@ export function getIdToken(): Promise<string | null> {
 
 export function signUp(email: string, password: string): Promise<void> {
   return new Promise((resolve, reject) => {
+    const { nickname, avatarKey } = generateRandomIdentity();
     const attributes = [
       new CognitoUserAttribute({ Name: 'email', Value: email }),
-      new CognitoUserAttribute({ Name: 'nickname', Value: '匿名' }),
+      new CognitoUserAttribute({ Name: 'nickname', Value: nickname }),
+      new CognitoUserAttribute({ Name: 'picture', Value: avatarKey }),
     ];
     userPool.signUp(email, password, attributes, [], (err) => {
       if (err) {
@@ -127,6 +132,30 @@ export function updateNickname(nickname: string): Promise<void> {
         return;
       }
       const attr = [new CognitoUserAttribute({ Name: 'nickname', Value: nickname })];
+      cognitoUser.updateAttributes(attr, (err) => {
+        if (err) {
+          reject(new Error(err.message));
+          return;
+        }
+        resolve();
+      });
+    });
+  });
+}
+
+export function updateAvatar(avatarKey: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = userPool.getCurrentUser();
+    if (!cognitoUser) {
+      reject(new Error('Not signed in'));
+      return;
+    }
+    cognitoUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
+      if (err || !session?.isValid()) {
+        reject(new Error('Session invalid'));
+        return;
+      }
+      const attr = [new CognitoUserAttribute({ Name: 'picture', Value: avatarKey })];
       cognitoUser.updateAttributes(attr, (err) => {
         if (err) {
           reject(new Error(err.message));

@@ -12,6 +12,7 @@ function getUserFromEvent(event: APIGatewayProxyEvent) {
   return {
     userId: claims.sub as string,
     userName: (claims.nickname as string) || '匿名',
+    userAvatar: (claims.picture as string) || '',
   };
 }
 
@@ -68,6 +69,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         projectId,
         userId: user.userId,
         userName: user.userName,
+        userAvatar: user.userAvatar,
         rating: Number(body.rating),
         content: String(body.content),
         createdAt: now,

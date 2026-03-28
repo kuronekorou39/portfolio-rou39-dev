@@ -8,6 +8,7 @@ import {
   confirmSignUp as authConfirmSignUp,
   signOut as authSignOut,
   updateNickname as authUpdateNickname,
+  updateAvatar as authUpdateAvatar,
 } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
 
@@ -20,6 +21,7 @@ interface AuthContextType {
   confirmSignUp: (email: string, code: string) => Promise<void>;
   signOut: () => void;
   updateNickname: (nickname: string) => Promise<void>;
+  updateAvatar: (avatarKey: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -61,15 +63,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateNickname = useCallback(async (nickname: string) => {
     await authUpdateNickname(nickname);
-    // ユーザー情報を再取得して更新
-    const u = await getCurrentUser();
-    const t = await getIdToken();
-    setUser(u);
-    setToken(t);
+    setUser((prev) => prev ? { ...prev, nickname } : prev);
+  }, []);
+
+  const updateAvatar = useCallback(async (avatarKey: string) => {
+    await authUpdateAvatar(avatarKey);
+    setUser((prev) => prev ? { ...prev, avatar: avatarKey } : prev);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, confirmSignUp, signOut, updateNickname }}>
+    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, confirmSignUp, signOut, updateNickname, updateAvatar }}>
       {children}
     </AuthContext.Provider>
   );

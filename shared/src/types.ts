@@ -31,6 +31,7 @@ export interface Review {
   projectId: string;
   userId: string;
   userName: string;
+  userAvatar?: string;
   rating: number;
   content: string;
   createdAt: string;

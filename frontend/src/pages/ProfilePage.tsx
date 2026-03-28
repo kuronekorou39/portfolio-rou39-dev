@@ -2,35 +2,54 @@ import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { avatars, getAvatarEmoji, generateRandomIdentity } from '@/lib/avatars';
 
 export default function ProfilePage() {
-  const { user, loading, updateNickname } = useAuth();
+  const { user, loading, updateNickname, updateAvatar } = useAuth();
   const [nickname, setNickname] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('');
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !initialized) {
       setNickname(user.nickname);
+      setSelectedAvatar(user.avatar);
+      setInitialized(true);
     }
-  }, [user]);
+  }, [user, initialized]);
 
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;
   }
 
+  const hasChanges = user && (nickname !== user.nickname || selectedAvatar !== user.avatar);
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setMessage('');
+    if (!user) return;
     setSaving(true);
     try {
-      await updateNickname(nickname);
-      setMessage('ニックネームを更新しました');
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : '更新に失敗しました');
+      if (nickname !== user.nickname) await updateNickname(nickname);
+      if (selectedAvatar !== user.avatar) await updateAvatar(selectedAvatar);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // エラー時はボタンが元に戻るだけ
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleRandomNickname() {
+    const { nickname: newName } = generateRandomIdentity();
+    setNickname(newName);
+  }
+
+  function handleRandomAvatar() {
+    const randomIndex = Math.floor(Math.random() * avatars.length);
+    setSelectedAvatar(avatars[randomIndex].key);
   }
 
   const inputClass =
@@ -58,15 +77,59 @@ export default function ProfilePage() {
           My Page
         </h1>
 
-        {message && (
-          <div className="mb-4 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/60">
-            {message}
+        {/* Current avatar preview */}
+        <div className="mb-6 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-5xl">
+            {getAvatarEmoji(selectedAvatar)}
           </div>
-        )}
+          <p className="mt-2 text-sm text-white/40">{nickname}</p>
+        </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-5">
+          {/* Avatar selection */}
           <div>
-            <label className="mb-1 block text-xs text-white/40">Nickname</label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-xs text-white/40">Avatar</label>
+              <button
+                type="button"
+                onClick={handleRandomAvatar}
+                className="text-xs text-white/30 transition-colors hover:text-white/60"
+              >
+                🎲 ランダム
+              </button>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {avatars.map((a) => (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={() => setSelectedAvatar(a.key)}
+                  className={`flex flex-col items-center gap-1 rounded-lg border p-2 text-2xl transition-all hover:scale-105 ${
+                    selectedAvatar === a.key
+                      ? 'border-white/40 bg-white/10'
+                      : 'border-white/[0.08] bg-white/[0.02] hover:border-white/20'
+                  }`}
+                  title={a.label}
+                >
+                  <span>{a.emoji}</span>
+                  <span className="text-[10px] text-white/30">{a.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Nickname */}
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-xs text-white/40">Nickname</label>
+              <button
+                type="button"
+                onClick={handleRandomNickname}
+                className="text-xs text-white/30 transition-colors hover:text-white/60"
+              >
+                🎲 ランダム
+              </button>
+            </div>
             <input
               type="text"
               placeholder="ニックネーム"
@@ -78,6 +141,7 @@ export default function ProfilePage() {
             />
           </div>
 
+          {/* Email (read-only) */}
           <div>
             <label className="mb-1 block text-xs text-white/40">Email</label>
             <input
@@ -88,8 +152,12 @@ export default function ProfilePage() {
             />
           </div>
 
-          <button type="submit" disabled={saving} className={btnClass}>
-            {saving ? 'Saving...' : 'Save'}
+          <button
+            type="submit"
+            disabled={saving || (!hasChanges && !saved)}
+            className={`${btnClass} ${saved ? '!bg-emerald-500 !text-white' : ''}`}
+          >
+            {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save'}
           </button>
         </form>
 

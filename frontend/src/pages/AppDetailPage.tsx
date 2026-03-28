@@ -5,6 +5,7 @@ import Markdown from 'react-markdown';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
 import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, getDownloadUrl } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAvatarEmoji } from '@/lib/avatars';
 import type { Project } from '../../../shared/src/types';
 import type { Review } from '../../../shared/src/types';
 
@@ -478,8 +479,8 @@ export default function AppDetailPage() {
                     >
                       <div className="mb-2 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/50">
-                            {review.userName[0].toUpperCase()}
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
+                            {review.userAvatar ? getAvatarEmoji(review.userAvatar) : review.userName[0].toUpperCase()}
                           </div>
                           <span className="text-sm font-medium text-white/60">{review.userName}</span>
                         </div>
