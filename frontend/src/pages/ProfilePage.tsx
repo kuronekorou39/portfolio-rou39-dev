@@ -139,6 +139,9 @@ export default function ProfilePage() {
               required
               maxLength={30}
             />
+            <div className="mt-1 text-right text-xs text-white/20">
+              {nickname.length}/30
+            </div>
           </div>
 
           {/* Email (read-only) */}

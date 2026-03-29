@@ -98,6 +98,9 @@ export default function AppDetailPage() {
   const [newContent, setNewContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Review expand state
+  const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
+
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRating, setEditRating] = useState(0);
@@ -445,8 +448,12 @@ export default function AppDetailPage() {
                             onChange={(e) => setNewContent(e.target.value)}
                             placeholder="レビューを書く..."
                             rows={2}
+                            maxLength={500}
                             className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
                           />
+                          <div className="text-right text-xs text-white/20">
+                            {newContent.length}/500
+                          </div>
                           <button
                             onClick={handleSubmitReview}
                             disabled={submitting || newRating === 0 || !newContent.trim()}
@@ -512,8 +519,12 @@ export default function AppDetailPage() {
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             rows={3}
+                            maxLength={500}
                             className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
                           />
+                          <div className="text-right text-xs text-white/20">
+                            {editContent.length}/500
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleSaveEdit(review.id)}
@@ -533,7 +544,26 @@ export default function AppDetailPage() {
                       ) : (
                         <>
                           <StarRating rating={review.rating} />
-                          <p className="mt-3 text-sm leading-relaxed text-white/40">{review.content}</p>
+                          <div className="mt-3">
+                            <p className={`text-sm leading-relaxed text-white/40 whitespace-pre-wrap ${
+                              !expandedReviews.has(review.id) ? 'line-clamp-3' : ''
+                            }`}>
+                              {review.content}
+                            </p>
+                            {review.content.length > 100 && (
+                              <button
+                                onClick={() => setExpandedReviews(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(review.id)) next.delete(review.id);
+                                  else next.add(review.id);
+                                  return next;
+                                })}
+                                className="mt-1 text-xs text-white/30 hover:text-white/50"
+                              >
+                                {expandedReviews.has(review.id) ? '閉じる' : 'もっと見る'}
+                              </button>
+                            )}
+                          </div>
                         </>
                       )}
                     </motion.div>

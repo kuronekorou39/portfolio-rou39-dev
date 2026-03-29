@@ -793,27 +793,44 @@ function ProjectModal({ project, onClose }: { project: (typeof projects)[0]; onC
 
 // ─── Tech marquee ──────────────────────────────────────────
 function TechMarquee() {
-  const row1 = ['React', 'TypeScript', 'AWS Lambda', 'DynamoDB', 'Tailwind CSS', 'Node.js', 'Vite'];
-  const row2 = ['CDK', 'CloudFront', 'S3', 'Cognito', 'API Gateway', 'Docker', 'Git'];
+  const row1 = ['React', 'TypeScript', 'AWS Lambda', 'DynamoDB', 'Tailwind CSS', 'Node.js', 'Vite', 'React Native', 'Expo', 'Firebase'];
+  const row2 = ['CDK', 'CloudFront', 'S3', 'Cognito', 'API Gateway', 'Docker', 'Git', 'GitHub Actions', 'Webpack', 'Chart.js'];
 
   function Row({ items, reverse = false }: { items: string[]; reverse?: boolean }) {
-    const doubled = [...items, ...items, ...items];
+    const repeated = [...items, ...items, ...items, ...items];
     return (
       <div className="overflow-hidden">
-        <motion.div className="flex gap-4 whitespace-nowrap" animate={{ x: reverse ? [0, 600] : [0, -600] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}>
-          {doubled.map((item, i) => (
+        <div
+          className="flex w-max gap-3 whitespace-nowrap"
+          style={{
+            animation: `${reverse ? 'marquee-reverse' : 'marquee'} 40s linear infinite`,
+          }}
+        >
+          {repeated.map((item, i) => (
             <span key={`${item}-${i}`} className="inline-block rounded-full border border-white/10 px-5 py-2 text-sm font-medium text-white/30">{item}</span>
           ))}
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <Row items={row1} />
-      <Row items={row2} reverse />
-    </div>
+    <>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-25%); }
+        }
+        @keyframes marquee-reverse {
+          0% { transform: translateX(-25%); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
+      <div className="space-y-3">
+        <Row items={row1} />
+        <Row items={row2} reverse />
+      </div>
+    </>
   );
 }
 

@@ -7,30 +7,30 @@ export default function Layout() {
   const { user, loading, signOut } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
+    <div className="min-h-screen bg-[#060608] text-gray-100">
+      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#060608]/80 backdrop-blur-md">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <Link to="/" className="flex items-center gap-2">
             <Logo size={32} />
-            <span className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">rou39</span>
+            <span className="text-sm font-bold tracking-tight text-white">rou39</span>
           </Link>
           <div className="flex items-center gap-6">
             <Link
               to="/apps"
-              className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              className="text-sm font-medium text-gray-400 transition-colors hover:text-gray-100"
             >
               Apps
             </Link>
             {!loading && (
               user ? (
                 <div className="flex items-center gap-3">
-                  <Link to="/profile" className="flex items-center gap-1.5 text-xs text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                  <Link to="/profile" className="flex items-center gap-1.5 text-xs text-gray-500 transition-colors hover:text-gray-300">
                     <span>{getAvatarEmoji(user.avatar)}</span>
                     <span>{user.nickname}</span>
                   </Link>
                   <button
                     onClick={signOut}
-                    className="rounded-full border border-gray-300 px-3 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200"
+                    className="rounded-full border border-gray-700 px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:border-gray-500 hover:text-gray-200"
                   >
                     Logout
                   </button>
@@ -38,7 +38,7 @@ export default function Layout() {
               ) : (
                 <Link
                   to="/auth"
-                  className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-medium text-white transition-transform hover:scale-105 dark:bg-white dark:text-black"
+                  className="rounded-full bg-white px-4 py-1.5 text-xs font-medium text-black transition-transform hover:scale-105"
                 >
                   Login
                 </Link>
@@ -52,8 +52,8 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-gray-200 dark:border-gray-800">
-        <div className="mx-auto max-w-6xl px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="border-t border-white/[0.06]">
+        <div className="mx-auto max-w-6xl px-6 py-8 text-center text-sm text-gray-400">
           &copy; {new Date().getFullYear()} rou39. All rights reserved.
         </div>
       </footer>
