@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   motion,
@@ -33,41 +33,34 @@ function CursorGlow() {
   const springY = useSpring(cursorY, { stiffness: 500, damping: 28 });
   const trailX = useSpring(cursorX, { stiffness: 120, damping: 25 });
   const trailY = useSpring(cursorY, { stiffness: 120, damping: 25 });
-  const glowTrailX = useSpring(cursorX, { stiffness: 60, damping: 20 });
-  const glowTrailY = useSpring(cursorY, { stiffness: 60, damping: 20 });
-  const [boosted, setBoosted] = useState(false);
+  const glowX = useSpring(cursorX, { stiffness: 60, damping: 20 });
+  const glowY = useSpring(cursorY, { stiffness: 60, damping: 20 });
 
   useEffect(() => {
     function move(e: MouseEvent) {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
     }
-    function down() { setBoosted(true); }
-    function up() { setBoosted(false); }
     window.addEventListener('mousemove', move);
-    window.addEventListener('mousedown', down);
-    window.addEventListener('mouseup', up);
     return () => {
       window.removeEventListener('mousemove', move);
-      window.removeEventListener('mousedown', down);
-      window.removeEventListener('mouseup', up);
     };
   }, []);
 
   return (
     <>
-      {/* Big ambient glow — illuminates background near cursor */}
+      {/* Ambient glow — large, slow-following */}
       <motion.div
         className="pointer-events-none fixed z-[5] rounded-full mix-blend-screen"
         style={{
-          x: glowTrailX,
-          y: glowTrailY,
+          x: glowX,
+          y: glowY,
           translateX: '-50%',
           translateY: '-50%',
-          width: boosted ? 500 : 350,
-          height: boosted ? 500 : 350,
-          background: 'radial-gradient(circle, rgba(120,100,255,0.12) 0%, rgba(80,60,200,0.06) 40%, transparent 70%)',
-          transition: 'width 0.3s, height 0.3s',
+          width: 350,
+          height: 350,
+          background: 'radial-gradient(circle, rgba(120,100,255,0.10) 0%, rgba(80,60,200,0.05) 40%, transparent 70%)',
+          willChange: 'transform',
         }}
       />
       {/* Trail */}
@@ -79,6 +72,7 @@ function CursorGlow() {
           translateX: '-50%',
           translateY: '-50%',
           background: 'radial-gradient(circle, rgba(120,100,255,0.15) 0%, transparent 70%)',
+          willChange: 'transform',
         }}
       />
       {/* Dot */}
@@ -89,6 +83,7 @@ function CursorGlow() {
           y: springY,
           translateX: '-50%',
           translateY: '-50%',
+          willChange: 'transform',
         }}
       />
     </>
@@ -144,10 +139,22 @@ function spawnEyeOffscreen(id: number): EyePair {
 }
 
 function GlowingEyes() {
-  const [eyes, setEyes] = useState<EyePair[]>([]);
+  const [eyeIds, setEyeIds] = useState<number[]>([]);
+  const eyesRef = useRef<EyePair[]>([]);
+  const eyeElementsRef = useRef<Map<number, HTMLDivElement>>(new Map());
   const cursorRef = useRef({ x: -999, y: -999 });
   const nextIdRef = useRef(0);
   const frameRef = useRef<number>(0);
+  const targetsRef = useRef<Map<number, { angle: number; speed: number }>>(new Map());
+
+  // Ref callback for eye DOM elements
+  const setEyeElement = useCallback((id: number, el: HTMLDivElement | null) => {
+    if (el) {
+      eyeElementsRef.current.set(id, el);
+    } else {
+      eyeElementsRef.current.delete(id);
+    }
+  }, []);
 
   // Track cursor
   useEffect(() => {
@@ -160,113 +167,127 @@ function GlowingEyes() {
 
   // Gradually spawn eyes from offscreen
   useEffect(() => {
-    // Spawn first one after a short delay
     const firstTimer = setTimeout(() => {
-      setEyes([spawnEyeOffscreen(nextIdRef.current++)]);
+      const eye = spawnEyeOffscreen(nextIdRef.current++);
+      eyesRef.current = [eye];
+      setEyeIds([eye.id]);
     }, 2000);
 
     const interval = setInterval(() => {
-      setEyes((prev) => {
-        if (prev.length >= MAX_EYES) return prev;
-        return [...prev, spawnEyeOffscreen(nextIdRef.current++)];
-      });
+      if (eyesRef.current.length >= MAX_EYES) return;
+      const eye = spawnEyeOffscreen(nextIdRef.current++);
+      eyesRef.current = [...eyesRef.current, eye];
+      setEyeIds(eyesRef.current.map(e => e.id));
     }, SPAWN_INTERVAL);
 
     return () => { clearTimeout(firstTimer); clearInterval(interval); };
   }, []);
 
-  // Target direction for smooth steering
-  const targetsRef = useRef<Map<number, { angle: number; speed: number }>>(new Map());
-
-  // Animation loop: smooth wandering + flee from cursor + remove offscreen
+  // Animation loop: update ref data + DOM directly, no React re-renders
   useEffect(() => {
     function tick() {
       const cursor = cursorRef.current;
       const w = window.innerWidth;
       const h = window.innerHeight;
+      let needsReactUpdate = false;
 
-      setEyes((prev) =>
-        prev
-          .map((eye) => {
-            let { x, y, vx, vy, wanderTimer, wanderSpeed } = eye;
+      eyesRef.current = eyesRef.current
+        .map((eye) => {
+          let { x, y, vx, vy, wanderTimer, wanderSpeed } = eye;
 
-            // Get or create target direction
-            if (!targetsRef.current.has(eye.id)) {
-              targetsRef.current.set(eye.id, {
-                angle: Math.atan2(vy, vx),
-                speed: wanderSpeed,
-              });
-            }
-            const target = targetsRef.current.get(eye.id)!;
+          if (!targetsRef.current.has(eye.id)) {
+            targetsRef.current.set(eye.id, {
+              angle: Math.atan2(vy, vx),
+              speed: wanderSpeed,
+            });
+          }
+          const target = targetsRef.current.get(eye.id)!;
 
-            // Change target direction occasionally
-            wanderTimer -= 1;
-            if (wanderTimer <= 0) {
-              // Subtle bias toward edges: pick a random point, but weight toward margins
-              const cx = w / 2;
-              const cy = h / 2;
-              // How far from center (0=center, 1=edge)
-              const fromCenterX = Math.abs(x - cx) / cx;
-              const fromCenterY = Math.abs(y - cy) / cy;
-              const fromCenter = Math.max(fromCenterX, fromCenterY);
+          wanderTimer -= 1;
+          if (wanderTimer <= 0) {
+            const cx = w / 2;
+            const cy = h / 2;
+            const fromCenterX = Math.abs(x - cx) / cx;
+            const fromCenterY = Math.abs(y - cy) / cy;
+            const fromCenter = Math.max(fromCenterX, fromCenterY);
 
-              let newAngle: number;
-              if (fromCenter < 0.3 && Math.random() < 0.6) {
-                // Near center — gently steer outward
-                const outwardAngle = Math.atan2(y - cy, x - cx);
-                newAngle = outwardAngle + (Math.random() - 0.5) * Math.PI * 0.8;
-              } else {
-                // Normal random direction
-                newAngle = Math.random() * Math.PI * 2;
-              }
-
-              target.angle = newAngle;
-              target.speed = 0.5 + Math.random() * 1.2;
-              wanderTimer = 100 + Math.random() * 250;
-              targetsRef.current.set(eye.id, target);
+            let newAngle: number;
+            if (fromCenter < 0.3 && Math.random() < 0.6) {
+              const outwardAngle = Math.atan2(y - cy, x - cx);
+              newAngle = outwardAngle + (Math.random() - 0.5) * Math.PI * 0.8;
+            } else {
+              newAngle = Math.random() * Math.PI * 2;
             }
 
-            // Smoothly steer toward target direction (lerp)
-            const currentAngle = Math.atan2(vy, vx);
-            let angleDiff = target.angle - currentAngle;
-            // Normalize to [-PI, PI]
-            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-            const steerAngle = currentAngle + angleDiff * 0.03;
+            target.angle = newAngle;
+            target.speed = 0.5 + Math.random() * 1.2;
+            wanderTimer = 100 + Math.random() * 250;
+            targetsRef.current.set(eye.id, target);
+          }
 
-            const currentSpeed = Math.sqrt(vx * vx + vy * vy);
-            const targetSpeed = target.speed;
-            const newSpeed = currentSpeed + (targetSpeed - currentSpeed) * 0.02;
+          const currentAngle = Math.atan2(vy, vx);
+          let angleDiff = target.angle - currentAngle;
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          const steerAngle = currentAngle + angleDiff * 0.03;
 
-            vx = Math.cos(steerAngle) * newSpeed;
-            vy = Math.sin(steerAngle) * newSpeed;
+          const currentSpeed = Math.sqrt(vx * vx + vy * vy);
+          const targetSpeed = target.speed;
+          const newSpeed = currentSpeed + (targetSpeed - currentSpeed) * 0.02;
 
-            // Flee from cursor (strength varies per individual)
-            const dx = x - cursor.x;
-            const dy = y - cursor.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 180 && dist > 0) {
-              const fleeAngle = Math.atan2(dy, dx);
-              // Individual flee strength: shy ones (high) vs bold ones (low)
-              const fleeStrength = 0.8 + (eye.id % 5) * 0.3; // 0.8 ~ 2.0
-              const force = ((180 - dist) / 180) * fleeStrength;
-              vx += Math.cos(fleeAngle) * force;
-              vy += Math.sin(fleeAngle) * force;
-            }
+          vx = Math.cos(steerAngle) * newSpeed;
+          vy = Math.sin(steerAngle) * newSpeed;
 
-            x += vx;
-            y += vy;
+          const dx = x - cursor.x;
+          const dy = y - cursor.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 180 && dist > 0) {
+            const fleeAngle = Math.atan2(dy, dx);
+            const fleeStrength = 0.8 + (eye.id % 5) * 0.3;
+            const force = ((180 - dist) / 180) * fleeStrength;
+            vx += Math.cos(fleeAngle) * force;
+            vy += Math.sin(fleeAngle) * force;
+          }
 
-            return { ...eye, x, y, vx, vy, wanderTimer, wanderSpeed: target.speed };
-          })
-          // Remove eyes that have gone far offscreen
-          .filter((eye) => {
-            const margin = 80;
-            const gone = eye.x < -margin || eye.x > w + margin || eye.y < -margin || eye.y > h + margin;
-            if (gone) targetsRef.current.delete(eye.id);
-            return !gone;
-          }),
-      );
+          x += vx;
+          y += vy;
+
+          // Mutate in-place (no object spread needed for ref data)
+          eye.x = x;
+          eye.y = y;
+          eye.vx = vx;
+          eye.vy = vy;
+          eye.wanderTimer = wanderTimer;
+          eye.wanderSpeed = target.speed;
+
+          // Update DOM directly — transform on parent, blink animation on child (no conflict)
+          const el = eyeElementsRef.current.get(eye.id);
+          if (el) {
+            el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            const cdx = x - cursor.x;
+            const cdy = y - cursor.y;
+            const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+            const nearCursor = cdist < 250;
+            const opacity = nearCursor ? Math.max(0.1, cdist / 400) : 0.7;
+            el.style.opacity = String(opacity);
+          }
+
+          return eye;
+        })
+        .filter((eye) => {
+          const margin = 80;
+          const gone = eye.x < -margin || eye.x > w + margin || eye.y < -margin || eye.y > h + margin;
+          if (gone) {
+            targetsRef.current.delete(eye.id);
+            needsReactUpdate = true;
+          }
+          return !gone;
+        });
+
+      // Only trigger React re-render when eyes are removed
+      if (needsReactUpdate) {
+        setEyeIds(eyesRef.current.map(e => e.id));
+      }
 
       frameRef.current = requestAnimationFrame(tick);
     }
@@ -277,31 +298,32 @@ function GlowingEyes() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[2]">
-      {eyes.map((eye) => {
-        const dx = eye.x - cursorRef.current.x;
-        const dy = eye.y - cursorRef.current.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const nearCursor = dist < 250;
-        const opacity = nearCursor ? Math.max(0.1, dist / 400) : 0.7;
+      <style>{`
+        @keyframes eye-blink {
+          0%, 45%, 55%, 100% { transform: scaleY(1); }
+          50% { transform: scaleY(0.1); }
+        }
+      `}</style>
+      {eyeIds.map((id) => {
+        const eye = eyesRef.current.find(e => e.id === id);
+        if (!eye) return null;
 
         return (
           <div
-            key={eye.id}
-            className="absolute"
+            key={id}
+            ref={(el) => setEyeElement(id, el)}
+            className="absolute left-0 top-0"
             style={{
-              left: eye.x,
-              top: eye.y,
-              opacity,
+              transform: `translate3d(${eye.x}px, ${eye.y}px, 0)`,
+              opacity: 0.7,
               transition: 'opacity 0.5s',
+              willChange: 'transform, opacity',
             }}
           >
-            <motion.div
+            <div
               className="flex gap-[5px]"
-              animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-              transition={{
-                duration: eye.blinkSpeed,
-                repeat: Infinity,
-                times: [0, 0.45, 0.5, 0.55, 1],
+              style={{
+                animation: `eye-blink ${eye.blinkSpeed}s ease-in-out infinite`,
               }}
             >
               <div
@@ -322,7 +344,7 @@ function GlowingEyes() {
                   boxShadow: `0 0 ${eye.size * 3}px ${eye.color}80`,
                 }}
               />
-            </motion.div>
+            </div>
           </div>
         );
       })}
@@ -577,22 +599,22 @@ function MeshGradient() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0">
       <motion.div
-        className="absolute -left-1/4 -top-1/4 h-[60vh] w-[60vh] rounded-full blur-[120px]"
-        style={{ background: 'rgba(100, 60, 255, 0.08)' }}
+        className="absolute -left-1/4 -top-1/4 h-[60vh] w-[60vh] rounded-full blur-[80px]"
+        style={{ background: 'rgba(100, 60, 255, 0.08)', willChange: 'transform' }}
         animate={{ x: [0, 200, 100, 0], y: [0, 100, 300, 0], scale: [1, 1.2, 0.9, 1] }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute -right-1/4 top-1/3 h-[50vh] w-[50vh] rounded-full blur-[120px]"
-        style={{ background: 'rgba(255, 60, 100, 0.06)' }}
+        className="absolute -right-1/4 top-1/3 h-[50vh] w-[50vh] rounded-full blur-[80px]"
+        style={{ background: 'rgba(255, 60, 100, 0.06)', willChange: 'transform' }}
         animate={{ x: [0, -150, -50, 0], y: [0, -100, 200, 0], scale: [1.1, 0.9, 1.2, 1.1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 35, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute bottom-0 left-1/3 h-[40vh] w-[40vh] rounded-full blur-[100px]"
-        style={{ background: 'rgba(60, 200, 255, 0.06)' }}
+        className="absolute bottom-0 left-1/3 h-[40vh] w-[40vh] rounded-full blur-[80px]"
+        style={{ background: 'rgba(60, 200, 255, 0.06)', willChange: 'transform' }}
         animate={{ x: [0, 100, -100, 0], y: [0, -200, -50, 0] }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 38, repeat: Infinity, ease: 'easeInOut' }}
       />
     </div>
   );
@@ -758,6 +780,7 @@ function TechMarquee() {
           className="flex w-max gap-3 whitespace-nowrap"
           style={{
             animation: `${reverse ? 'marquee-reverse' : 'marquee'} 40s linear infinite`,
+            willChange: 'transform',
           }}
         >
           {repeated.map((item, i) => (
