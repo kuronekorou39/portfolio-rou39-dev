@@ -9,6 +9,7 @@ import {
   signOut as authSignOut,
   updateNickname as authUpdateNickname,
   updateAvatar as authUpdateAvatar,
+  exchangeOAuthCode as authExchangeOAuthCode,
 } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
 
@@ -22,6 +23,7 @@ interface AuthContextType {
   signOut: () => void;
   updateNickname: (nickname: string) => Promise<void>;
   updateAvatar: (avatarKey: string) => Promise<void>;
+  exchangeOAuthCode: (code: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -71,8 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, avatar: avatarKey } : prev);
   }, []);
 
+  const exchangeOAuthCode = useCallback(async (code: string) => {
+    const u = await authExchangeOAuthCode(code);
+    const t = await getIdToken();
+    setUser(u);
+    setToken(t);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, confirmSignUp, signOut, updateNickname, updateAvatar }}>
+    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, confirmSignUp, signOut, updateNickname, updateAvatar, exchangeOAuthCode }}>
       {children}
     </AuthContext.Provider>
   );

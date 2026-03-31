@@ -26,10 +26,34 @@ export class AuthStack extends cdk.Stack {
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      email: cognito.UserPoolEmail.withSES({
+        fromEmail: 'noreply@rou39.dev',
+        fromName: 'rou39 Portfolio',
+        sesRegion: 'ap-northeast-1',
+      }),
     });
 
-    // Google OAuth provider (client ID/secret are set via environment or SSM)
-    // TODO: Google OAuth設定時にIdentityProviderGoogleを追加
+    // Cognito Domain (Hosted UI用)
+    const domain = this.userPool.addDomain('CognitoDomain', {
+      cognitoDomain: {
+        domainPrefix: 'rou39-portfolio',
+      },
+    });
+
+    // Google Identity Provider
+    const googleProvider = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleProvider', {
+      userPool: this.userPool,
+      clientId: process.env.GOOGLE_CLIENT_ID || 'PLACEHOLDER',
+      clientSecretValue: cdk.SecretValue.unsafePlainText(
+        process.env.GOOGLE_CLIENT_SECRET || 'PLACEHOLDER',
+      ),
+      scopes: ['openid', 'email', 'profile'],
+      attributeMapping: {
+        email: cognito.ProviderAttribute.GOOGLE_EMAIL,
+        nickname: cognito.ProviderAttribute.GOOGLE_NAME,
+        profilePicture: cognito.ProviderAttribute.GOOGLE_PICTURE,
+      },
+    });
 
     this.userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
       userPool: this.userPool,
@@ -37,15 +61,29 @@ export class AuthStack extends cdk.Stack {
       authFlows: {
         userSrp: true,
       },
+      supportedIdentityProviders: [
+        cognito.UserPoolClientIdentityProvider.COGNITO,
+        cognito.UserPoolClientIdentityProvider.GOOGLE,
+      ],
       oAuth: {
         flows: { authorizationCodeGrant: true },
         scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL, cognito.OAuthScope.PROFILE],
-        callbackUrls: ['http://localhost:5173/auth/callback'],
-        logoutUrls: ['http://localhost:5173/'],
+        callbackUrls: [
+          'http://localhost:5173/auth/callback',
+          'https://d1ahc0yyinui33.cloudfront.net/auth/callback',
+        ],
+        logoutUrls: [
+          'http://localhost:5173/',
+          'https://d1ahc0yyinui33.cloudfront.net/',
+        ],
       },
     });
+    this.userPoolClient.node.addDependency(googleProvider);
 
     new cdk.CfnOutput(this, 'UserPoolId', { value: this.userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: this.userPoolClient.userPoolClientId });
+    new cdk.CfnOutput(this, 'CognitoDomainUrl', {
+      value: `https://${domain.domainName}.auth.ap-northeast-1.amazoncognito.com`,
+    });
   }
 }

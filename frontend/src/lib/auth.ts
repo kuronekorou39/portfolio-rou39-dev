@@ -4,12 +4,19 @@ import {
   AuthenticationDetails,
   CognitoUserAttribute,
   CognitoUserSession,
+  CognitoIdToken,
+  CognitoAccessToken,
+  CognitoRefreshToken,
 } from 'amazon-cognito-identity-js';
 import { generateRandomIdentity } from './avatars';
 
+const USER_POOL_ID = 'ap-northeast-1_FJeIsc61q';
+const CLIENT_ID = '1pdmjkcrrdcu18bpt30een85o3';
+const COGNITO_DOMAIN = 'https://rou39-portfolio.auth.ap-northeast-1.amazoncognito.com';
+
 const userPool = new CognitoUserPool({
-  UserPoolId: 'ap-northeast-1_FJeIsc61q',
-  ClientId: '1pdmjkcrrdcu18bpt30een85o3',
+  UserPoolId: USER_POOL_ID,
+  ClientId: CLIENT_ID,
 });
 
 export interface AuthUser {
@@ -165,4 +172,59 @@ export function updateAvatar(avatarKey: string): Promise<void> {
       });
     });
   });
+}
+
+/**
+ * Exchange an OAuth authorization code for tokens via Cognito's token endpoint,
+ * then store them in localStorage so amazon-cognito-identity-js can pick them up.
+ */
+export async function exchangeOAuthCode(code: string): Promise<AuthUser> {
+  const redirectUri = `${window.location.origin}/auth/callback`;
+  const tokenEndpoint = `${COGNITO_DOMAIN}/oauth2/token`;
+
+  const response = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: CLIENT_ID,
+      redirect_uri: redirectUri,
+      code,
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Token exchange failed: ${text}`);
+  }
+
+  const data = await response.json();
+  const { id_token, access_token, refresh_token } = data;
+
+  // Decode the id_token to extract the username (sub or cognito:username)
+  const idToken = new CognitoIdToken({ IdToken: id_token });
+  const payload = idToken.decodePayload();
+  const username = (payload['cognito:username'] as string) || (payload.sub as string);
+
+  // Build a CognitoUserSession
+  const session = new CognitoUserSession({
+    IdToken: idToken,
+    AccessToken: new CognitoAccessToken({ AccessToken: access_token }),
+    RefreshToken: new CognitoRefreshToken({ RefreshToken: refresh_token || '' }),
+  });
+
+  // Create a CognitoUser and set the session in localStorage
+  const cognitoUser = new CognitoUser({
+    Username: username,
+    Pool: userPool,
+  });
+  cognitoUser.setSignInUserSession(session);
+
+  return sessionToUser(session);
+}
+
+/** Build the Google OAuth login URL for Cognito Hosted UI */
+export function getGoogleLoginUrl(): string {
+  const redirectUri = `${window.location.origin}/auth/callback`;
+  return `${COGNITO_DOMAIN}/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&identity_provider=Google&scope=openid+email+profile`;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   motion,
@@ -618,175 +618,129 @@ function StatsBar() {
   );
 }
 
-// ─── Horizontal scroll section ─────────────────────────────
-function HorizontalScroll() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] });
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-60%']);
-
+// ─── Featured projects — alternating scroll cards ──────────
+function FeaturedProjects() {
   return (
-    <section ref={containerRef} className="relative h-[300vh]">
-      <div className="sticky top-0 flex h-screen items-center overflow-hidden">
-        <motion.div style={{ x }} className="flex gap-8 pl-[10vw]">
-          {projects.map((project, i) => (
-            <ScrollCard key={project.id} project={project} index={i} />
-          ))}
-          <div className="flex h-[70vh] w-[40vw] min-w-[400px] shrink-0 items-center justify-center">
-            <motion.div className="text-center" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-              <p className="mb-4 text-7xl">→</p>
-              <Link to="/apps" className="text-2xl font-bold text-white underline decoration-2 underline-offset-4 transition-colors hover:text-blue-400">View All</Link>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
+    <div className="mx-auto max-w-5xl space-y-24 px-6 md:space-y-32">
+      {projects.map((project, i) => (
+        <ProjectShowcase key={project.id} project={project} index={i} />
+      ))}
+      <motion.div
+        className="flex justify-center pt-8"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+      >
+        <Link
+          to="/apps"
+          className="group inline-flex items-center gap-3 rounded-full border border-white/20 px-8 py-4 text-sm font-semibold text-white transition-all hover:border-white/50 hover:bg-white/5"
+        >
+          View All Projects
+          <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>→</motion.span>
+        </Link>
+      </motion.div>
+    </div>
   );
 }
 
-function ScrollCard({ project, index }: { project: (typeof projects)[0]; index: number }) {
+function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; index: number }) {
+  const isEven = index % 2 === 0;
   const cardRef = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 300, damping: 30 });
-  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [-12, 12]), { stiffness: 300, damping: 30 });
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ['start end', 'end start'],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [60, -60]);
 
   return (
     <motion.div
       ref={cardRef}
-      onMouseMove={(e) => {
-        const rect = cardRef.current!.getBoundingClientRect();
-        mx.set((e.clientX - rect.left) / rect.width - 0.5);
-        my.set((e.clientY - rect.top) / rect.height - 0.5);
-      }}
-      onMouseLeave={() => { mx.set(0); my.set(0); }}
-      style={{ rotateX, rotateY, transformPerspective: 1000 }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, margin: '-10%' }}
-      transition={{ duration: 0.6, delay: index * 0.08 }}
-      className="group relative h-[70vh] w-[40vw] min-w-[400px] shrink-0 cursor-pointer overflow-hidden rounded-3xl"
+      initial={{ opacity: 0, x: isEven ? -80 : 80 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, margin: '-15%' }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="absolute inset-0 opacity-20 transition-opacity duration-500 group-hover:opacity-40"
-        style={{ background: `radial-gradient(ellipse at 30% 20%, ${project.color}, transparent 60%), radial-gradient(ellipse at 70% 80%, ${project.accent}, transparent 60%)` }}
-      />
-      <div className="absolute inset-0 rounded-3xl border border-white/10" />
-      <div className="relative z-10 flex h-full flex-col justify-between p-10">
-        <motion.span className="inline-block self-start rounded-full border border-white/20 px-3 py-1 text-xs font-medium uppercase tracking-widest text-white/60"
-          initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + index * 0.08 }}>
-          {project.category}
-        </motion.span>
-        <div>
-          <motion.div className="mb-6 text-8xl" animate={{ y: [0, -8, 0], rotate: [0, 3, -3, 0] }}
-            transition={{ duration: 4, delay: index * 0.5, repeat: Infinity, ease: 'easeInOut' }}>
-            {project.emoji}
-          </motion.div>
-          <h3 className="mb-2 text-4xl font-black text-white">{project.title}</h3>
-          <p className="text-lg text-white/50">{project.desc}</p>
-        </div>
-      </div>
-      <motion.div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)' }}
-        animate={{ x: ['-100%', '100%'] }}
-        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-      />
-    </motion.div>
-  );
-}
-
-// ─── Interactive bento grid ────────────────────────────────
-function InteractiveGrid() {
-  const [selected, setSelected] = useState<(typeof projects)[0] | null>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rotateX = useSpring(useTransform(my, [0, 1], [3, -3]), { stiffness: 100, damping: 30 });
-  const rotateY = useSpring(useTransform(mx, [0, 1], [-3, 3]), { stiffness: 100, damping: 30 });
-
-  const handleMouse = useCallback((e: React.MouseEvent) => {
-    mx.set(e.clientX / window.innerWidth);
-    my.set(e.clientY / window.innerHeight);
-  }, []);
-
-  const sizes = [
-    'md:col-span-2 md:row-span-2', 'md:col-span-1 md:row-span-1', 'md:col-span-1 md:row-span-2',
-    'md:col-span-1 md:row-span-1', 'md:col-span-2 md:row-span-1', 'md:col-span-1 md:row-span-1', 'md:col-span-1 md:row-span-1',
-  ];
-
-  return (
-    <>
-      <motion.div onMouseMove={handleMouse} style={{ rotateX, rotateY, transformPerspective: 1500 }}
-        className="mx-auto grid max-w-6xl auto-rows-[180px] grid-cols-2 gap-3 px-6 md:grid-cols-4 md:gap-4">
-        {projects.map((project, i) => (
-          <motion.div
-            key={project.id}
-            className={`group relative cursor-pointer overflow-hidden rounded-2xl ${sizes[i]} border border-white/[0.06]`}
-            style={{ background: 'rgba(255,255,255,0.02)' }}
-            initial={{ opacity: 0, scale: 0.85 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            whileHover={{ scale: 1.03, zIndex: 10, borderColor: `${project.color}40`, transition: { duration: 0.2 } }}
-            onClick={() => setSelected(project)}
-          >
-            <motion.div className="absolute inset-0" initial={{ opacity: 0 }} whileHover={{ opacity: 1 }} transition={{ duration: 0.3 }}
-              style={{ background: `radial-gradient(circle at 30% 70%, ${project.color}20, transparent 60%)` }} />
-            <div className="relative z-10 flex h-full flex-col justify-between p-5 md:p-6">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25 transition-colors group-hover:text-white/50">{project.category}</span>
-                <motion.span className="text-2xl md:text-3xl" whileHover={{ scale: 1.4, rotate: 15 }} transition={{ type: 'spring', bounce: 0.6 }}>{project.emoji}</motion.span>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white/80 transition-colors group-hover:text-white md:text-xl">{project.title}</h3>
-                <p className="mt-0.5 text-xs text-white/25 transition-colors group-hover:text-white/50 md:text-sm">{project.desc}</p>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              style={{ boxShadow: `inset 0 0 40px ${project.color}10, 0 0 30px ${project.color}08` }} />
-          </motion.div>
-        ))}
-      </motion.div>
-
-      <AnimatePresence>
-        {selected && <ProjectModal project={selected} onClose={() => setSelected(null)} />}
-      </AnimatePresence>
-    </>
-  );
-}
-
-// ─── Project modal ─────────────────────────────────────────
-function ProjectModal({ project, onClose }: { project: (typeof projects)[0]; onClose: () => void }) {
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
-    window.addEventListener('keydown', handleKey);
-    document.body.style.overflow = 'hidden';
-    return () => { window.removeEventListener('keydown', handleKey); document.body.style.overflow = ''; };
-  }, [onClose]);
-
-  return (
-    <motion.div className="fixed inset-0 z-[200] flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-      <motion.div
-        className="relative z-10 mx-6 w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10"
-        style={{ background: `linear-gradient(135deg, ${project.color}15, ${project.accent}10, rgba(0,0,0,0.9))` }}
-        initial={{ scale: 0.8, y: 50, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.8, y: 50, opacity: 0 }}
-        transition={{ type: 'spring', bounce: 0.2 }}
+      <Link
+        to={`/apps/${project.id}`}
+        className={`group flex flex-col items-center gap-8 md:flex-row ${!isEven ? 'md:flex-row-reverse' : ''}`}
       >
-        <div className="selectable p-10">
-          <div className="mb-6 flex items-start justify-between">
-            <div>
-              <span className="mb-2 inline-block rounded-full border px-3 py-1 text-xs uppercase tracking-widest" style={{ borderColor: `${project.color}50`, color: project.color }}>{project.category}</span>
-              <h2 className="mt-3 text-4xl font-black text-white">{project.title}</h2>
-              <p className="mt-2 text-white/50">{project.desc}</p>
-            </div>
-            <motion.span className="text-6xl" animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>{project.emoji}</motion.span>
+        {/* Visual card */}
+        <motion.div
+          className="relative w-full overflow-hidden rounded-3xl md:w-1/2"
+          style={{ y }}
+        >
+          <div
+            className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl border border-white/[0.08]"
+          >
+            {/* Gradient background */}
+            <div
+              className="absolute inset-0 opacity-25 transition-opacity duration-700 group-hover:opacity-50"
+              style={{
+                background: `radial-gradient(ellipse at 30% 20%, ${project.color}, transparent 60%), radial-gradient(ellipse at 70% 80%, ${project.accent}, transparent 60%)`,
+              }}
+            />
+            {/* Emoji */}
+            <motion.span
+              className="relative z-10 text-8xl drop-shadow-lg md:text-9xl"
+              animate={{ y: [0, -10, 0], rotate: [0, 3, -3, 0] }}
+              transition={{ duration: 5, delay: index * 0.3, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {project.emoji}
+            </motion.span>
+            {/* Shine on hover */}
+            <motion.div
+              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 55%, transparent 60%)',
+              }}
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 3, repeat: Infinity, repeatDelay: 4 }}
+            />
           </div>
-          <div className="mt-8 flex gap-4">
-            <Link to={`/apps/${project.id}`} className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-transform hover:scale-105" style={{ background: project.accent }} onClick={onClose}>詳細ページへ →</Link>
-            <button onClick={onClose} className="rounded-full border border-white/20 px-6 py-3 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">閉じる</button>
-          </div>
+        </motion.div>
+
+        {/* Text content */}
+        <div className={`w-full md:w-1/2 ${isEven ? 'md:pl-8' : 'md:pr-8'}`}>
+          <motion.span
+            className="mb-3 inline-block rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]"
+            style={{ borderColor: `${project.accent}40`, color: project.accent }}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            {project.category}
+          </motion.span>
+          <motion.h3
+            className="mb-3 text-3xl font-black tracking-tight text-white transition-colors group-hover:text-white/90 md:text-4xl"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            {project.title}
+          </motion.h3>
+          <motion.p
+            className="mb-6 text-base leading-relaxed text-white/40 md:text-lg"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+          >
+            {project.desc}
+          </motion.p>
+          <motion.span
+            className="inline-flex items-center gap-2 text-sm font-medium text-white/50 transition-colors group-hover:text-white/80"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+          >
+            詳細を見る
+            <span className="transition-transform group-hover:translate-x-1">→</span>
+          </motion.span>
         </div>
-      </motion.div>
+      </Link>
     </motion.div>
   );
 }
@@ -885,24 +839,18 @@ export default function HomePage() {
         <StatsBar />
       </section>
 
-      {/* ══════ HORIZONTAL SCROLL ══════ */}
-      <section className="relative z-10">
-        <div className="px-6 py-12">
-          <motion.h2 className="mb-2 text-center text-xs font-semibold uppercase tracking-[0.3em] text-white/30"
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            Featured Projects
-          </motion.h2>
-        </div>
-        <HorizontalScroll />
-      </section>
-
-      {/* ══════ BENTO GRID ══════ */}
+      {/* ══════ FEATURED PROJECTS ══════ */}
       <section className="relative z-10 py-32">
-        <motion.div className="mb-16 text-center" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">All Projects</h2>
-          <p className="mt-3 text-3xl font-bold text-white/80 md:text-4xl">一覧で見る</p>
+        <motion.div
+          className="mb-20 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">Projects</h2>
+          <p className="mt-3 text-3xl font-bold text-white/80 md:text-4xl">つくったもの</p>
         </motion.div>
-        <InteractiveGrid />
+        <FeaturedProjects />
       </section>
 
       {/* ══════ TECH MARQUEE ══════ */}
