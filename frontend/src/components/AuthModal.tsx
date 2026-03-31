@@ -156,20 +156,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
-          {/* Backdrop */}
+          {/* Backdrop — semi-transparent to show site behind */}
           <motion.div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
             onClick={onClose}
           />
 
           {/* Modal */}
           <motion.div
-            className="relative z-10 w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#0a0a0f] p-8"
-            initial={{ scale: 0.9, y: 30, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.9, y: 30, opacity: 0 }}
-            transition={{ type: 'spring', bounce: 0.2 }}
+            className="relative z-10 w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#0a0a0f]/95 p-8 shadow-2xl"
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 8, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Close button */}
             <button
@@ -179,7 +180,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
 
-            <h2 className="mb-6 text-center text-2xl font-black tracking-tight text-white">
+            <h2 className="mb-3 text-center text-2xl font-black tracking-tight text-white">
               {mode === 'login' && 'Login'}
               {mode === 'signup' && 'Sign Up'}
               {mode === 'confirm' && 'Verify Email'}
@@ -187,18 +188,26 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {mode === 'reset' && 'Reset Password'}
             </h2>
 
-            {/* Error */}
-            <div className={`mb-4 rounded-lg border px-4 py-2.5 text-xs transition-opacity ${
-              error
-                ? 'border-red-500/20 bg-red-500/10 text-red-400 opacity-100'
-                : 'border-transparent opacity-0'
-            }`}>
-              {error || '\u00A0'}
-            </div>
+            {/* Error — only takes space when visible */}
+            {error && (
+              <div className="mb-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
+                {error}
+              </div>
+            )}
 
             {/* ═══ LOGIN ═══ */}
             {mode === 'login' && (
               <>
+                {/* Benefits */}
+                <div className="mb-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 text-[11px] leading-relaxed text-white/30">
+                  <p className="mb-1 text-white/40">できること：</p>
+                  <ul className="space-y-0.5 pl-3">
+                    <li>・レビュー / フィードバックの投稿（匿名OK）</li>
+                    <li>・限定アプリのダウンロード</li>
+                    <li>・その他、今後追加予定の機能</li>
+                  </ul>
+                </div>
+
                 {/* Google first */}
                 <a
                   href={getGoogleLoginUrl()}
@@ -239,6 +248,15 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {/* ═══ SIGNUP ═══ */}
             {mode === 'signup' && (
               <>
+                <div className="mb-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 text-[11px] leading-relaxed text-white/30">
+                  <p className="mb-1 text-white/40">できること：</p>
+                  <ul className="space-y-0.5 pl-3">
+                    <li>・レビュー / フィードバックの投稿（匿名OK）</li>
+                    <li>・限定アプリのダウンロード</li>
+                    <li>・その他、今後追加予定の機能</li>
+                  </ul>
+                </div>
+
                 <a
                   href={getGoogleLoginUrl()}
                   className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition-transform hover:scale-[1.02]"

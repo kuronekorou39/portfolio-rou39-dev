@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Editor</title>
+<style>
+  :root { --bg: #0a0a0c; --card: #111114; --border: #222228; --text: #e0e0e0; --dim: #666; --accent: #60a5fa; --danger: #f87171; --success: #4ade80; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Layout */
+  .app { display: flex; height: 100vh; }
+  .sidebar { width: 300px; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h1 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .sidebar-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sidebar-list { flex: 1; overflow-y: auto; }
+  .main { flex: 1; overflow-y: auto; padding: 32px; }
+
+  /* Buttons */
+  .btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { border-color: #444; background: #1a1a1e; }
+  .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #7cb8ff; }
+  .btn-danger { color: var(--danger); border-color: #442222; }
+  .btn-danger:hover { background: #1a0a0a; border-color: var(--danger); }
+  .btn-success { color: var(--success); border-color: #224422; }
+  .btn-success:hover { background: #0a1a0a; border-color: var(--success); }
+
+  /* Project list item */
+  .project-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .project-item:hover { background: #16161a; }
+  .project-item.active { background: #1a1a2e; border-left: 3px solid var(--accent); }
+  .project-item .title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .project-item .subtitle { font-size: 11px; color: var(--dim); }
+  .project-item .status-badge { display: inline-block; font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 99px; margin-top: 4px; text-transform: uppercase; }
+
+  /* Form */
+  .form-section { margin-bottom: 28px; }
+  .form-section h2 { font-size: 13px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 11px; color: var(--dim); font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--card); color: var(--text); font-size: 13px; font-family: inherit;
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group .hint { font-size: 10px; color: #555; }
+
+  /* Tags editor */
+  .tags-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); min-height: 36px; }
+  .tag { display: flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; background: #1a1a2e; font-size: 11px; color: var(--accent); }
+  .tag .remove { cursor: pointer; opacity: 0.5; font-size: 13px; }
+  .tag .remove:hover { opacity: 1; }
+  .tags-container input { border: none; background: transparent; color: var(--text); font-size: 12px; outline: none; flex: 1; min-width: 80px; }
+
+  /* Empty state */
+  .empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--dim); font-size: 14px; }
+
+  /* Status colors */
+  .status-active { background: #0a2a0a; color: var(--success); }
+  .status-development { background: #2a1a0a; color: #fbbf24; }
+  .status-coming-soon { background: #0a1a2a; color: var(--accent); }
+  .status-archived { background: #1a1a1a; color: #888; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; z-index: 999; animation: slideIn 0.3s; }
+  .toast-success { background: #0a2a0a; color: var(--success); border: 1px solid #224422; }
+  .toast-error { background: #2a0a0a; color: var(--danger); border: 1px solid #442222; }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* Markdown preview */
+  .md-preview { padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: #0d0d10; font-size: 12px; line-height: 1.6; color: #999; max-height: 200px; overflow-y: auto; }
+  .md-preview h1, .md-preview h2, .md-preview h3 { color: var(--text); margin: 8px 0 4px; }
+  .md-preview h1 { font-size: 16px; } .md-preview h2 { font-size: 14px; } .md-preview h3 { font-size: 13px; }
+  .md-preview ul, .md-preview ol { padding-left: 20px; }
+  .md-preview li { margin: 2px 0; }
+
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
+  .tab-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--dim); font-size: 11px; cursor: pointer; }
+  .tab-btn.active { background: var(--card); color: var(--text); border-color: #444; }
+
+  /* Screenshots */
+  .screenshots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .screenshot-card { position: relative; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card); }
+  .screenshot-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #000; }
+  .screenshot-card .screenshot-path { padding: 6px 8px; font-size: 10px; color: var(--dim); word-break: break-all; border-top: 1px solid var(--border); }
+  .screenshot-card .screenshot-actions { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
+  .screenshot-card .screenshot-actions button { width: 22px; height: 22px; border: none; border-radius: 4px; background: rgba(0,0,0,0.7); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .screenshot-card .screenshot-actions button:hover { background: rgba(0,0,0,0.9); }
+  .screenshot-add { border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; cursor: pointer; transition: border-color 0.15s; color: var(--dim); font-size: 12px; gap: 6px; }
+  .screenshot-add:hover { border-color: var(--accent); color: var(--accent); }
+  .screenshot-add .plus { font-size: 24px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>Project Editor</h1>
+      <div class="sidebar-actions">
+        <button class="btn" onclick="openFile()">Open JSON</button>
+        <button class="btn btn-success" onclick="saveFile()">Save</button>
+        <button class="btn btn-primary" onclick="addProject()">+ New</button>
+      </div>
+    </div>
+    <div class="sidebar-list" id="projectList"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="main" id="mainContent">
+    <div class="empty">JSONファイルを開いて編集を始めてください</div>
+  </div>
+</div>
+
+<script>
+let projects = [];
+let selectedIndex = -1;
+let fileHandle = null;
+
+const statusColors = {
+  active: 'status-active',
+  development: 'status-development',
+  'coming-soon': 'status-coming-soon',
+  archived: 'status-archived',
+};
+const statusLabels = { active: 'Active', development: 'In Dev', 'coming-soon': 'Coming Soon', archived: 'Archived' };
+const categories = ['web', 'mobile', 'extension', 'tool', 'other'];
+const statuses = ['active', 'development', 'coming-soon', 'archived'];
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+async function openFile() {
+  try {
+    [fileHandle] = await window.showOpenFilePicker({
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+    });
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    projects = JSON.parse(text);
+    renderList();
+    if (projects.length > 0) selectProject(0);
+    else showEmpty();
+    toast(`${projects.length} projects loaded`);
+  } catch (e) {
+    if (e.name !== 'AbortError') toast('Failed to open file', 'error');
+  }
+}
+
+async function saveFile() {
+  if (!fileHandle) {
+    try {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'projects.json',
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+      });
+    } catch (e) { return; }
+  }
+  try {
+    syncFormToProject();
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(projects, null, 2) + '\n');
+    await writable.close();
+    toast('Saved!');
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+function addProject() {
+  const id = 'new-project-' + Date.now();
+  projects.push({
+    id, title: 'New Project', subtitle: '', description: '', howToUse: '',
+    category: 'web', tags: [], platform: [], icon: '', screenshots: [],
+    links: {}, status: 'coming-soon', size: 'medium',
+    publishedAt: new Date().toISOString().split('T')[0],
+    updatedAt: new Date().toISOString().split('T')[0],
+  });
+  renderList();
+  selectProject(projects.length - 1);
+}
+
+function deleteProject(idx) {
+  if (!confirm(`"${projects[idx].title}" を削除しますか？`)) return;
+  projects.splice(idx, 1);
+  renderList();
+  if (projects.length === 0) { selectedIndex = -1; showEmpty(); }
+  else selectProject(Math.min(idx, projects.length - 1));
+}
+
+function duplicateProject(idx) {
+  const copy = JSON.parse(JSON.stringify(projects[idx]));
+  copy.id = copy.id + '-copy';
+  copy.title = copy.title + ' (Copy)';
+  projects.splice(idx + 1, 0, copy);
+  renderList();
+  selectProject(idx + 1);
+}
+
+function moveProject(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= projects.length) return;
+  [projects[idx], projects[newIdx]] = [projects[newIdx], projects[idx]];
+  renderList();
+  selectProject(newIdx);
+}
+
+function renderList() {
+  const list = document.getElementById('projectList');
+  list.innerHTML = projects.map((p, i) => `
+    <div class="project-item ${i === selectedIndex ? 'active' : ''}" onclick="selectProject(${i})">
+      <div class="title">${esc(p.title)}</div>
+      <div class="subtitle">${esc(p.subtitle || p.id)}</div>
+      <span class="status-badge ${statusColors[p.status] || ''}">${statusLabels[p.status] || p.status}</span>
+    </div>
+  `).join('');
+}
+
+function showEmpty() {
+  document.getElementById('mainContent').innerHTML = '<div class="empty">プロジェクトを選択または追加してください</div>';
+}
+
+function selectProject(idx) {
+  if (selectedIndex >= 0 && selectedIndex < projects.length) syncFormToProject();
+  selectedIndex = idx;
+  renderList();
+  renderForm();
+}
+
+function syncFormToProject() {
+  if (selectedIndex < 0 || selectedIndex >= projects.length) return;
+  const p = projects[selectedIndex];
+  const f = document.getElementById('editForm');
+  if (!f) return;
+
+  p.id = f.pId.value.trim();
+  p.title = f.pTitle.value.trim();
+  p.subtitle = f.pSubtitle.value.trim();
+  p.description = f.pDescription.value;
+  p.howToUse = f.pHowToUse.value;
+  p.category = f.pCategory.value;
+  p.status = f.pStatus.value;
+  p.size = f.pSize.value;
+  p.publishedAt = f.pPublishedAt.value;
+  p.updatedAt = f.pUpdatedAt.value;
+  p.icon = f.pIcon.value.trim();
+
+  p.links = {};
+  if (f.linkWeb.value.trim()) p.links.web = f.linkWeb.value.trim();
+  if (f.linkGithub.value.trim()) p.links.github = f.linkGithub.value.trim();
+  if (f.linkAppStore.value.trim()) p.links.appStore = f.linkAppStore.value.trim();
+  if (f.linkPlayStore.value.trim()) p.links.playStore = f.linkPlayStore.value.trim();
+  if (f.linkDownload.value.trim()) p.links.download = f.linkDownload.value.trim();
+}
+
+function renderForm() {
+  const p = projects[selectedIndex];
+  if (!p) return;
+  const main = document.getElementById('mainContent');
+
+  main.innerHTML = `
+    <form id="editForm" onsubmit="return false">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <h1 style="font-size:22px;font-weight:800">${esc(p.title)}</h1>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn" onclick="moveProject(${selectedIndex},-1)" title="Up">↑</button>
+          <button type="button" class="btn" onclick="moveProject(${selectedIndex},1)" title="Down">↓</button>
+          <button type="button" class="btn" onclick="duplicateProject(${selectedIndex})">Duplicate</button>
+          <button type="button" class="btn btn-danger" onclick="deleteProject(${selectedIndex})">Delete</button>
+        </div>
+      </div>
+
+      <!-- Basic info -->
+      <div class="form-section">
+        <h2>Basic Info</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>ID (URL slug)</label>
+            <input name="pId" value="${esc(p.id)}" placeholder="my-project">
+            <span class="hint">URLに使われる: /apps/{id}</span>
+          </div>
+          <div class="form-group">
+            <label>Icon (emoji)</label>
+            <input name="pIcon" value="${esc(p.icon)}" placeholder="🚀">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title</label>
+            <input name="pTitle" value="${esc(p.title)}" oninput="document.querySelector('h1').textContent=this.value">
+          </div>
+          <div class="form-group">
+            <label>Subtitle</label>
+            <input name="pSubtitle" value="${esc(p.subtitle)}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select name="pCategory">
+              ${categories.map(c => `<option value="${c}" ${p.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select name="pStatus">
+              ${statuses.map(s => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${statusLabels[s]}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Size (Card Display)</label>
+            <select name="pSize">
+              ${['large','medium','small'].map(s => `<option value="${s}" ${(p.size||'medium') === s ? 'selected' : ''}>${s === 'large' ? 'Large (2列幅)' : s === 'medium' ? 'Medium (通常)' : 'Small (コンパクト)'}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Published At</label>
+            <input type="date" name="pPublishedAt" value="${p.publishedAt || ''}">
+          </div>
+          <div class="form-group">
+            <label>Updated At</label>
+            <input type="date" name="pUpdatedAt" value="${p.updatedAt || ''}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tags & Platform -->
+      <div class="form-section">
+        <h2>Tags & Platform</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tags</label>
+            <div class="tags-container" id="tagsContainer">
+              ${(p.tags || []).map(t => `<span class="tag">${esc(t)}<span class="remove" onclick="removeTag(this,'tags')">×</span></span>`).join('')}
+              <input placeholder="Type and press Enter" onkeydown="addTag(event,'tags')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Platform</label>
+            <div class="tags-container" id="platformContainer">
+              ${(p.platform || []).map(t => `<span class="tag">${esc(t)}<span class="remove" onclick="removeTag(this,'platform')">×</span></span>`).join('')}
+              <input placeholder="Web, iOS, Android, Chrome..." onkeydown="addTag(event,'platform')">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-section">
+        <h2>Description (Markdown)</h2>
+        <div class="tab-bar">
+          <button type="button" class="tab-btn active" onclick="showTab(this,'descEdit')">Edit</button>
+          <button type="button" class="tab-btn" onclick="showTab(this,'descPreview')">Preview</button>
+        </div>
+        <div id="descEdit">
+          <div class="form-group">
+            <textarea name="pDescription" rows="10" oninput="updatePreview('descPreviewContent',this.value)">${esc(p.description)}</textarea>
+          </div>
+        </div>
+        <div id="descPreview" style="display:none">
+          <div class="md-preview" id="descPreviewContent"></div>
+        </div>
+      </div>
+
+      <!-- How to Use -->
+      <div class="form-section">
+        <h2>How to Use (Markdown)</h2>
+        <div class="tab-bar">
+          <button type="button" class="tab-btn active" onclick="showTab(this,'howtoEdit')">Edit</button>
+          <button type="button" class="tab-btn" onclick="showTab(this,'howtoPreview')">Preview</button>
+        </div>
+        <div id="howtoEdit">
+          <div class="form-group">
+            <textarea name="pHowToUse" rows="8" oninput="updatePreview('howtoPreviewContent',this.value)">${esc(p.howToUse)}</textarea>
+          </div>
+        </div>
+        <div id="howtoPreview" style="display:none">
+          <div class="md-preview" id="howtoPreviewContent"></div>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="form-section">
+        <h2>Links</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Web URL</label>
+            <input name="linkWeb" value="${esc(p.links?.web || '')}" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>GitHub</label>
+            <input name="linkGithub" value="${esc(p.links?.github || '')}" placeholder="https://github.com/...">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>App Store</label>
+            <input name="linkAppStore" value="${esc(p.links?.appStore || '')}" placeholder="https://apps.apple.com/...">
+          </div>
+          <div class="form-group">
+            <label>Google Play</label>
+            <input name="linkPlayStore" value="${esc(p.links?.playStore || '')}" placeholder="https://play.google.com/...">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Download</label>
+            <input name="linkDownload" value="${esc(p.links?.download || '')}" placeholder="S3 key or URL">
+          </div>
+        </div>
+      </div>
+
+      <!-- Screenshots -->
+      <div class="form-section">
+        <h2>Screenshots</h2>
+        <span class="hint" style="display:block;margin-bottom:10px">
+          画像を frontend/public/projects/ に配置し、パスを /projects/filename.png の形式で指定してください
+        </span>
+        <div class="screenshots-grid" id="screenshotsGrid">
+          ${(p.screenshots || []).map((s, i) => `
+            <div class="screenshot-card">
+              <img src="../frontend/public${s}" onerror="this.style.background='#1a1a2e';this.alt='Not found: ${esc(s)}'">
+              <div class="screenshot-actions">
+                <button onclick="moveScreenshot(${i},-1)" title="Left">←</button>
+                <button onclick="moveScreenshot(${i},1)" title="Right">→</button>
+                <button onclick="removeScreenshot(${i})" title="Delete" style="color:var(--danger)">×</button>
+              </div>
+              <div class="screenshot-path">${esc(s)}</div>
+            </div>
+          `).join('')}
+          <div class="screenshot-add" onclick="addScreenshotPrompt()">
+            <span class="plus">+</span>
+            <span>パスを追加</span>
+          </div>
+          <div class="screenshot-add" onclick="addScreenshotFromFile()">
+            <span class="plus">📁</span>
+            <span>ファイルから追加</span>
+          </div>
+        </div>
+      </div>
+    </form>
+  `;
+}
+
+function addTag(e, field) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const val = e.target.value.trim();
+  if (!val) return;
+
+  const p = projects[selectedIndex];
+  if (!p[field]) p[field] = [];
+  if (p[field].includes(val)) return;
+  p[field].push(val);
+
+  const container = e.target.parentElement;
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.innerHTML = `${esc(val)}<span class="remove" onclick="removeTag(this,'${field}')">×</span>`;
+  container.insertBefore(tag, e.target);
+  e.target.value = '';
+}
+
+function removeTag(el, field) {
+  const text = el.parentElement.childNodes[0].textContent;
+  const p = projects[selectedIndex];
+  p[field] = (p[field] || []).filter(t => t !== text);
+  el.parentElement.remove();
+}
+
+function addScreenshotPrompt() {
+  const path = prompt('スクリーンショットのパス (例: /projects/my-app-01.png)');
+  if (!path) return;
+  const p = projects[selectedIndex];
+  if (!p.screenshots) p.screenshots = [];
+  p.screenshots.push(path.trim());
+  renderForm();
+}
+
+async function addScreenshotFromFile() {
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description: 'Images', accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] } }],
+    });
+    const file = await handle.getFile();
+    const p = projects[selectedIndex];
+    const suggestedPath = `/projects/${p.id}-${file.name}`;
+    const path = prompt('保存先パス（frontend/public/ 以下）', suggestedPath);
+    if (!path) return;
+
+    // Copy file to frontend/public/
+    try {
+      const publicDirHandle = await window.showDirectoryPicker({ startIn: 'desktop' });
+      toast('ファイルを frontend/public/projects/ に手動でコピーしてください', 'error');
+    } catch(e) { /* ignore */ }
+
+    // Add path to screenshots regardless
+    if (!p.screenshots) p.screenshots = [];
+    p.screenshots.push(path.trim());
+    renderForm();
+    toast(`パス追加: ${path}（ファイルは frontend/public${path} に配置してください）`);
+  } catch (e) {
+    if (e.name !== 'AbortError') toast('Failed: ' + e.message, 'error');
+  }
+}
+
+function removeScreenshot(idx) {
+  const p = projects[selectedIndex];
+  p.screenshots.splice(idx, 1);
+  renderForm();
+}
+
+function moveScreenshot(idx, dir) {
+  const p = projects[selectedIndex];
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= p.screenshots.length) return;
+  [p.screenshots[idx], p.screenshots[newIdx]] = [p.screenshots[newIdx], p.screenshots[idx]];
+  renderForm();
+}
+
+function showTab(btn, panelId) {
+  const bar = btn.parentElement;
+  bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const section = bar.parentElement;
+  section.querySelectorAll(':scope > div[id]').forEach(d => d.style.display = 'none');
+  document.getElementById(panelId).style.display = '';
+
+  // Update preview content
+  if (panelId.includes('Preview')) {
+    const previewEl = document.getElementById(panelId + 'Content');
+    const textareaName = panelId.includes('desc') ? 'pDescription' : 'pHowToUse';
+    const textarea = document.querySelector(`[name="${textareaName}"]`);
+    if (previewEl && textarea) updatePreview(panelId + 'Content', textarea.value);
+  }
+}
+
+function updatePreview(elId, markdown) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  // Simple markdown to HTML
+  el.innerHTML = markdown
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveFile();
+  }
+});
+</script>
+</body>
+</html>

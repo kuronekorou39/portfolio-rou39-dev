@@ -38,10 +38,23 @@ export default function AppsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered =
+  const sizeOrder: Record<string, number> = { large: 0, medium: 1, small: 2 };
+  const statusOrder: Record<string, number> = {
+    active: 0,
+    development: 1,
+    'coming-soon': 2,
+    archived: 3,
+  };
+
+  const filtered = (
     filter === 'all'
       ? projects
-      : projects.filter((p) => p.category === filter);
+      : projects.filter((p) => p.category === filter)
+  ).sort((a, b) => {
+    const sizeDiff = (sizeOrder[a.size] ?? 1) - (sizeOrder[b.size] ?? 1);
+    if (sizeDiff !== 0) return sizeDiff;
+    return (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
+  });
 
   return (
     <div className="min-h-screen bg-[#060608] text-white">
@@ -98,6 +111,12 @@ export default function AppsPage() {
           <AnimatePresence mode="popLayout">
             {filtered.map((project, i) => {
               const status = statusLabel[project.status];
+              const isComingSoon = project.status === 'coming-soon';
+              const size = project.size || 'medium';
+              const isLarge = size === 'large';
+              const isSmall = size === 'small';
+              const screenshot = project.screenshots?.[0];
+
               return (
                 <motion.div
                   key={project.id}
@@ -106,76 +125,123 @@ export default function AppsPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3, delay: i * 0.05 }}
+                  className={isLarge ? 'sm:col-span-2' : ''}
                 >
                   <Link
                     to={`/apps/${project.id}`}
-                    className="group relative block overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all hover:border-white/20 hover:bg-white/[0.04]"
+                    className={`group relative block h-full overflow-hidden rounded-2xl transition-all hover:bg-white/[0.04] ${
+                      isComingSoon
+                        ? 'border border-dashed border-blue-400/20 bg-blue-400/[0.02] hover:border-blue-400/40'
+                        : 'border border-white/[0.06] bg-white/[0.02] hover:border-white/20'
+                    } ${isSmall ? 'p-4' : 'p-6'}`}
                   >
-                    {/* Top row: emoji + category + status */}
-                    <div className="mb-5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">
-                          {categoryEmoji[project.category]}
-                        </span>
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
-                          {categoryLabel[project.category]}
-                        </span>
+                    {/* Large: horizontal layout with screenshot */}
+                    {isLarge ? (
+                      <div className="flex gap-6">
+                        {/* Screenshot area */}
+                        <div className="hidden w-2/5 shrink-0 overflow-hidden rounded-xl bg-white/[0.03] sm:block">
+                          {screenshot ? (
+                            <img src={screenshot} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full min-h-[160px] items-center justify-center text-4xl opacity-20">
+                              {categoryEmoji[project.category]}
+                            </div>
+                          )}
+                        </div>
+                        {/* Content */}
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{categoryEmoji[project.category]}</span>
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
+                                {categoryLabel[project.category]}
+                              </span>
+                            </div>
+                            <span className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider" style={{ color: status.color }}>
+                              <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
+                              {status.text}
+                            </span>
+                          </div>
+                          <h2 className="mb-1.5 text-2xl font-bold text-white/80 transition-colors group-hover:text-white">
+                            {project.title}
+                          </h2>
+                          <p className="mb-4 text-sm text-white/30 transition-colors group-hover:text-white/45">
+                            {project.subtitle}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {project.tags.slice(0, 5).map((tag) => (
+                              <span key={tag} className="rounded-full border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-white/25">
+                                {tag}
+                              </span>
+                            ))}
+                            {project.tags.length > 5 && (
+                              <span className="px-1 text-[11px] text-white/15">+{project.tags.length - 5}</span>
+                            )}
+                          </div>
+                          <div className="mt-auto flex items-center gap-2 pt-4">
+                            {project.platform.map((p) => (
+                              <span key={p} className="text-[10px] font-medium uppercase tracking-wider text-white/15">{p}</span>
+                            ))}
+                            <span className="ml-auto flex items-center gap-1 text-[10px] text-white/15">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                              {viewCounts.get(project.id)?.toLocaleString() ?? '0'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <span
-                        className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider"
-                        style={{ color: status.color }}
-                      >
-                        <span
-                          className="inline-block h-1.5 w-1.5 rounded-full"
-                          style={{ background: status.color }}
-                        />
-                        {status.text}
-                      </span>
-                    </div>
+                    ) : (
+                      <>
+                        {/* Medium / Small: vertical layout */}
+                        <div className={`flex items-center justify-between ${isSmall ? 'mb-3' : 'mb-5'}`}>
+                          <div className="flex items-center gap-3">
+                            <span className={isSmall ? 'text-lg' : 'text-2xl'}>
+                              {categoryEmoji[project.category]}
+                            </span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
+                              {categoryLabel[project.category]}
+                            </span>
+                          </div>
+                          <span className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider" style={{ color: status.color }}>
+                            <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
+                            {status.text}
+                          </span>
+                        </div>
 
-                    {/* Title + subtitle */}
-                    <h2 className="mb-1.5 text-xl font-bold text-white/80 transition-colors group-hover:text-white">
-                      {project.title}
-                    </h2>
-                    <p className="mb-5 text-sm text-white/30 transition-colors group-hover:text-white/45">
-                      {project.subtitle}
-                    </p>
+                        <h2 className={`mb-1.5 font-bold text-white/80 transition-colors group-hover:text-white ${isSmall ? 'text-base' : 'text-xl'}`}>
+                          {project.title}
+                        </h2>
+                        <p className={`text-sm text-white/30 transition-colors group-hover:text-white/45 ${isSmall ? 'mb-3' : 'mb-5'}`}>
+                          {project.subtitle}
+                        </p>
 
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {project.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-white/25"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {project.tags.length > 3 && (
-                        <span className="px-1 text-[11px] text-white/15">
-                          +{project.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
+                        {/* Tags — hidden for small */}
+                        {!isSmall && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {project.tags.slice(0, 3).map((tag) => (
+                              <span key={tag} className="rounded-full border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-white/25">
+                                {tag}
+                              </span>
+                            ))}
+                            {project.tags.length > 3 && (
+                              <span className="px-1 text-[11px] text-white/15">+{project.tags.length - 3}</span>
+                            )}
+                          </div>
+                        )}
 
-                    {/* Platform badges */}
-                    <div className="mt-4 flex items-center gap-2">
-                      {project.platform.map((p) => (
-                        <span
-                          key={p}
-                          className="text-[10px] font-medium uppercase tracking-wider text-white/15"
-                        >
-                          {p}
-                        </span>
-                      ))}
-                      <span className="ml-auto flex items-center gap-1 text-[10px] text-white/15">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        {viewCounts.get(project.id)?.toLocaleString() ?? '0'}
-                      </span>
-                    </div>
+                        <div className={`flex items-center gap-2 ${isSmall ? '' : 'mt-4'}`}>
+                          {project.platform.map((p) => (
+                            <span key={p} className="text-[10px] font-medium uppercase tracking-wider text-white/15">{p}</span>
+                          ))}
+                          <span className="ml-auto flex items-center gap-1 text-[10px] text-white/15">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            {viewCounts.get(project.id)?.toLocaleString() ?? '0'}
+                          </span>
+                        </div>
+                      </>
+                    )}
 
                     {/* Hover arrow */}
-                    <div className="absolute bottom-6 right-6 text-white/0 transition-all group-hover:text-white/30">
+                    <div className={`absolute text-white/0 transition-all group-hover:text-white/30 ${isSmall ? 'bottom-4 right-4' : 'bottom-6 right-6'}`}>
                       →
                     </div>
                   </Link>

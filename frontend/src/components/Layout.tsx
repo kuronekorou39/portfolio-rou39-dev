@@ -41,7 +41,7 @@ export default function Layout() {
               ) : (
                 <button
                   onClick={() => setShowAuth(true)}
-                  className="rounded-full bg-white px-4 py-1.5 text-xs font-medium text-black transition-transform hover:scale-105"
+                  className="cursor-pointer rounded-full bg-white px-4 py-1.5 text-xs font-medium text-black transition-opacity hover:opacity-80"
                 >
                   Login
                 </button>

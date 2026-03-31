@@ -3,13 +3,12 @@ import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
-import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, getDownloadUrl } from '@/lib/api';
+import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, getDownloadUrl, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
-import type { Project } from '../../../shared/src/types';
-import type { Review } from '../../../shared/src/types';
+import type { Project, Review, Comment as ProjectComment } from '../../../shared/src/types';
 
-type Tab = 'about' | 'howto' | 'reviews';
+type Tab = 'about' | 'howto' | 'reviews' | 'feedback';
 
 function formatDateTime(iso: string): string {
   const d = new Date(iso);
@@ -121,23 +120,55 @@ export default function AppDetailPage() {
   const [editContent, setEditContent] = useState('');
   const [editSubmitting, setEditSubmitting] = useState(false);
 
+  // Interest state (coming-soon)
+  const [interestCount, setInterestCount] = useState(0);
+  const [isInterested, setIsInterested] = useState(false);
+  const [interestLoading, setInterestLoading] = useState(false);
+
+  // Comment state (coming-soon)
+  const [comments, setComments] = useState<ProjectComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+
   const reloadReviews = useCallback(() => {
     if (!id) return;
     fetchReviews(id).then(setReviews).catch(console.error);
   }, [id]);
 
+  const reloadComments = useCallback(() => {
+    if (!id) return;
+    fetchComments(id).then(setComments).catch(console.error);
+  }, [id]);
+
+  const reloadInterest = useCallback(() => {
+    if (!id) return;
+    fetchInterest(id, token ?? undefined)
+      .then((data) => {
+        setInterestCount(data.count);
+        setIsInterested(data.interested);
+      })
+      .catch(console.error);
+  }, [id, token]);
+
   useEffect(() => {
     if (!id) return;
     fetchProject(id)
-      .then(setProject)
+      .then((p) => {
+        setProject(p);
+        // Always load comments & interests (they persist across status changes)
+        reloadComments();
+        reloadInterest();
+        if (p.status !== 'coming-soon') {
+          reloadReviews();
+        }
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-    reloadReviews();
     incrementPageView(id).catch(console.error);
     fetchPageView(id)
       .then((data) => setViewCount(data.count))
       .catch(console.error);
-  }, [id, reloadReviews]);
+  }, [id, reloadReviews, reloadComments, reloadInterest]);
 
   const handleSubmitReview = async () => {
     if (!id || !token || newRating === 0 || !newContent.trim()) return;
@@ -190,6 +221,47 @@ export default function AppDetailPage() {
     }
   };
 
+  const handleToggleInterest = async () => {
+    if (!id || !token) return;
+    setInterestLoading(true);
+    try {
+      if (isInterested) {
+        await removeInterest(id, token);
+      } else {
+        await addInterest(id, token);
+      }
+      reloadInterest();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setInterestLoading(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!id || !token || !newComment.trim()) return;
+    setCommentSubmitting(true);
+    try {
+      await createComment(id, { content: newComment.trim() }, token);
+      setNewComment('');
+      reloadComments();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!id || !token) return;
+    try {
+      await deleteComment(id, commentId, token);
+      reloadComments();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDownload = async () => {
     if (!id || !token) return;
     setDownloadLoading(true);
@@ -233,11 +305,21 @@ export default function AppDetailPage() {
 
   const myReview = user ? reviews.find((r) => r.userId === user.userId) : null;
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'about', label: 'About' },
-    { key: 'howto', label: 'How to Use' },
-    { key: 'reviews', label: `Reviews (${reviews.length})` },
-  ];
+  const isComingSoon = project.status === 'coming-soon';
+
+  const tabs: { key: Tab; label: string }[] = isComingSoon
+    ? [
+        { key: 'about', label: 'About' },
+        { key: 'feedback', label: `Feedback (${comments.length})` },
+      ]
+    : [
+        { key: 'about', label: 'About' },
+        { key: 'howto', label: 'How to Use' },
+        { key: 'reviews', label: `Reviews (${reviews.length})` },
+        ...(comments.length > 0
+          ? [{ key: 'feedback' as Tab, label: `Feedback (${comments.length})` }]
+          : []),
+      ];
 
   return (
     <div className="min-h-screen bg-[#060608] text-white">
@@ -297,11 +379,32 @@ export default function AppDetailPage() {
 
           {/* Meta row */}
           <div className="mt-6 flex flex-wrap items-center gap-6">
-            {/* Rating */}
-            <div className="flex items-center gap-2">
-              <StarRating rating={avgRating} />
-              <span className="text-sm text-white/40">{avgRating.toFixed(1)}</span>
-            </div>
+            {/* Rating or Interest */}
+            {isComingSoon ? (
+              <button
+                onClick={user && token ? handleToggleInterest : openAuth}
+                disabled={interestLoading}
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                  isInterested
+                    ? 'border border-blue-400/30 bg-blue-400/10 text-blue-400'
+                    : 'border border-white/10 text-white/40 hover:border-white/30 hover:text-white/60'
+                }`}
+              >
+                {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
+              </button>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <StarRating rating={avgRating} />
+                  <span className="text-sm text-white/40">{avgRating.toFixed(1)}</span>
+                </div>
+                {interestCount > 0 && (
+                  <span className="text-xs text-blue-400/50">
+                    ★ {interestCount}人が注目
+                  </span>
+                )}
+              </>
+            )}
 
             {/* Platform */}
             <div className="flex gap-2">
@@ -339,8 +442,8 @@ export default function AppDetailPage() {
             ))}
           </div>
 
-          {/* Links */}
-          <div className="mt-6 flex flex-wrap gap-3">
+          {/* Links (hidden for coming-soon) */}
+          {!isComingSoon && <div className="mt-6 flex flex-wrap gap-3">
             {project.links.web && (
               <a
                 href={project.links.web}
@@ -399,7 +502,7 @@ export default function AppDetailPage() {
                 </button>
               )
             )}
-          </div>
+          </div>}
         </motion.div>
 
         {/* Divider */}
@@ -440,6 +543,94 @@ export default function AppDetailPage() {
             {activeTab === 'howto' && (
               <div className="selectable prose prose-invert max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-white/50 prose-li:text-white/50 prose-strong:text-white/70">
                 <Markdown>{project.howToUse}</Markdown>
+              </div>
+            )}
+
+            {activeTab === 'feedback' && (
+              <div>
+                {/* Comment form (only for coming-soon) */}
+                {isComingSoon ? (
+                <div className="mb-8 rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+                  {user && token ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-white/40">
+                        このアプリに対するフィードバックや要望を自由に書いてください
+                      </p>
+                      <textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="期待してます！ / こんな機能がほしい / 気になる点..."
+                        rows={3}
+                        maxLength={500}
+                        className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/20">{newComment.length}/500</span>
+                        <button
+                          onClick={handleSubmitComment}
+                          disabled={commentSubmitting || !newComment.trim()}
+                          className="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          {commentSubmitting ? '送信中...' : '投稿する'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={openAuth}
+                      className="text-sm text-white/40 underline transition-colors hover:text-white/60"
+                    >
+                      ログインしてフィードバックを投稿
+                    </button>
+                  )}
+                </div>
+                ) : (
+                <div className="mb-8 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                  <p className="text-sm text-white/30">開発中に寄せられたフィードバック</p>
+                </div>
+                )}
+
+                {/* Comment list */}
+                <div className="space-y-4">
+                  {comments.length === 0 && (
+                    <p className="py-8 text-center text-sm text-white/20">
+                      まだフィードバックはありません。最初の一言を！
+                    </p>
+                  )}
+                  {comments.map((comment, i) => (
+                    <motion.div
+                      key={comment.id}
+                      className="selectable rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
+                            {comment.userAvatar ? getAvatarEmoji(comment.userAvatar) : comment.userName[0].toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium text-white/60">{comment.userName}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {user && user.userId === comment.userId && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-red-400/40 transition-colors hover:text-red-400"
+                              title="削除"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                          )}
+                          <span className="text-xs text-white/15">{formatDateTime(comment.createdAt)}</span>
+                        </div>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/40">
+                        {comment.content}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
 

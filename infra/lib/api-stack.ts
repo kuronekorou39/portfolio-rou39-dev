@@ -12,6 +12,8 @@ interface ApiStackProps extends cdk.StackProps {
   projectsTable: dynamodb.Table;
   reviewsTable: dynamodb.Table;
   pageViewsTable: dynamodb.Table;
+  interestsTable: dynamodb.Table;
+  commentsTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
 }
@@ -42,6 +44,8 @@ export class ApiStack extends cdk.Stack {
       PROJECTS_TABLE: props.projectsTable.tableName,
       REVIEWS_TABLE: props.reviewsTable.tableName,
       PAGE_VIEWS_TABLE: props.pageViewsTable.tableName,
+      INTERESTS_TABLE: props.interestsTable.tableName,
+      COMMENTS_TABLE: props.commentsTable.tableName,
       ASSETS_BUCKET: props.assetsBucket.bucketName,
     };
 
@@ -125,6 +129,52 @@ export class ApiStack extends cdk.Stack {
     const pageViewsByProject = pageViews.addResource('{projectId}');
     pageViewsByProject.addMethod('POST', new apigateway.LambdaIntegration(pageViewsFn));
     pageViewsByProject.addMethod('GET', new apigateway.LambdaIntegration(pageViewsFn));
+
+    // --- Interests API ---
+    const interestsFn = new nodejs.NodejsFunction(this, 'InterestsFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/interests.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling: bundlingOptions,
+    });
+    props.interestsTable.grantReadWriteData(interestsFn);
+
+    const interests = this.api.root.addResource('interests');
+    const interestsByProject = interests.addResource('{projectId}');
+    interestsByProject.addMethod('GET', new apigateway.LambdaIntegration(interestsFn));
+    interestsByProject.addMethod('POST', new apigateway.LambdaIntegration(interestsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    interestsByProject.addMethod('DELETE', new apigateway.LambdaIntegration(interestsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    // --- Comments API ---
+    const commentsFn = new nodejs.NodejsFunction(this, 'CommentsFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/comments.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling: bundlingOptions,
+    });
+    props.commentsTable.grantReadWriteData(commentsFn);
+
+    const comments = this.api.root.addResource('comments');
+    const commentsByProject = comments.addResource('{projectId}');
+    commentsByProject.addMethod('GET', new apigateway.LambdaIntegration(commentsFn));
+    commentsByProject.addMethod('POST', new apigateway.LambdaIntegration(commentsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    const commentById = commentsByProject.addResource('{commentId}');
+    commentById.addMethod('DELETE', new apigateway.LambdaIntegration(commentsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: this.api.url });
   }

@@ -1,4 +1,4 @@
-import type { Project, Review } from '../../../shared/src/types';
+import type { Project, Review, InterestCount, Comment } from '../../../shared/src/types';
 
 const BASE_URL = '/api';
 
@@ -77,6 +77,58 @@ export async function getDownloadUrl(projectId: string, token: string): Promise<
     headers: authHeaders(token),
   });
   return data.url;
+}
+
+// Interests
+export async function fetchInterest(
+  projectId: string,
+  token?: string,
+): Promise<InterestCount> {
+  return request<InterestCount>(`/interests/${projectId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+}
+
+export async function addInterest(projectId: string, token: string): Promise<void> {
+  await request<void>(`/interests/${projectId}`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  });
+}
+
+export async function removeInterest(projectId: string, token: string): Promise<void> {
+  await request<void>(`/interests/${projectId}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+}
+
+// Comments
+export async function fetchComments(projectId: string): Promise<Comment[]> {
+  return request<Comment[]>(`/comments/${projectId}`);
+}
+
+export async function createComment(
+  projectId: string,
+  data: { content: string },
+  token: string,
+): Promise<Comment> {
+  return request<Comment>(`/comments/${projectId}`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteComment(
+  projectId: string,
+  commentId: string,
+  token: string,
+): Promise<void> {
+  await request<void>(`/comments/${projectId}/${commentId}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
 }
 
 // Page Views

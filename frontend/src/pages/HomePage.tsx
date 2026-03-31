@@ -9,6 +9,7 @@ import {
   useInView,
   AnimatePresence,
 } from 'framer-motion';
+import avatarImg from '@/assets/avatar.png';
 
 // ─── Data ──────────────────────────────────────────────────
 const projects = [
@@ -65,7 +66,7 @@ function CursorGlow() {
       />
       {/* Trail */}
       <motion.div
-        className="pointer-events-none fixed z-[9998] h-40 w-40 rounded-full mix-blend-screen"
+        className="pointer-events-none fixed z-[150] h-40 w-40 rounded-full mix-blend-screen"
         style={{
           x: trailX,
           y: trailY,
@@ -77,7 +78,7 @@ function CursorGlow() {
       />
       {/* Dot */}
       <motion.div
-        className="pointer-events-none fixed z-[9999] h-3 w-3 rounded-full bg-white mix-blend-difference"
+        className="pointer-events-none fixed z-[151] h-3 w-3 rounded-full bg-white mix-blend-difference"
         style={{
           x: springX,
           y: springY,
@@ -621,6 +622,42 @@ function MeshGradient() {
 }
 
 // ─── Stats bar ─────────────────────────────────────────────
+// ─── Hidden avatar — revealed by cursor proximity ─────────
+function HiddenAvatar() {
+  const imgRef = useRef<HTMLDivElement>(null);
+  const [mask, setMask] = useState('radial-gradient(circle 0px at -999px -999px, white, transparent)');
+
+  useEffect(() => {
+    function handleMouse(e: MouseEvent) {
+      if (!imgRef.current) return;
+      const rect = imgRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setMask(`radial-gradient(circle 120px at ${x}px ${y}px, white 0%, transparent 100%)`);
+    }
+    window.addEventListener('mousemove', handleMouse);
+    return () => window.removeEventListener('mousemove', handleMouse);
+  }, []);
+
+  return (
+    <div
+      ref={imgRef}
+      className="pointer-events-none absolute -left-44 top-1/2 hidden -translate-y-1/2 md:block lg:-left-56"
+    >
+      <img
+        src={avatarImg}
+        alt=""
+        className="h-52 w-52 object-contain lg:h-64 lg:w-64"
+        draggable={false}
+        style={{
+          WebkitMaskImage: mask,
+          maskImage: mask,
+        }}
+      />
+    </div>
+  );
+}
+
 function StatsBar() {
   const stats = [
     { label: 'PROJECTS', value: '10+' },
@@ -835,9 +872,12 @@ export default function HomePage() {
             Portfolio / Showcase
           </motion.div>
 
-          <h1 className="text-6xl font-black leading-[0.9] tracking-tighter md:text-8xl lg:text-[10rem]">
-            <SplitText>rou39</SplitText>
-          </h1>
+          <div className="relative inline-block">
+            <HiddenAvatar />
+            <h1 className="text-6xl font-black leading-[0.9] tracking-tighter md:text-8xl lg:text-[10rem]">
+              <SplitText>rou39</SplitText>
+            </h1>
+          </div>
 
           <div className="mt-6 text-xl text-white/40 md:text-2xl">
             <GlitchText>Full-Stack Developer</GlitchText>

@@ -7,7 +7,8 @@ export interface ProjectLinks {
 }
 
 export type ProjectCategory = 'web' | 'mobile' | 'extension' | 'tool' | 'other';
-export type ProjectStatus = 'active' | 'development' | 'archived';
+export type ProjectStatus = 'active' | 'development' | 'coming-soon' | 'archived';
+export type ProjectSize = 'large' | 'medium' | 'small';
 
 export interface Project {
   id: string;
@@ -22,6 +23,7 @@ export interface Project {
   screenshots: string[];
   links: ProjectLinks;
   status: ProjectStatus;
+  size: ProjectSize;
   publishedAt: string;
   updatedAt: string;
 }
@@ -41,4 +43,27 @@ export interface Review {
 export interface PageView {
   projectId: string;
   count: number;
+}
+
+export interface Interest {
+  projectId: string;
+  userId: string;
+  createdAt: string;
+}
+
+export interface InterestCount {
+  projectId: string;
+  count: number;
+  interested: boolean; // current user has shown interest
+}
+
+export interface Comment {
+  id: string;
+  projectId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 }

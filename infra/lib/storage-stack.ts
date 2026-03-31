@@ -7,6 +7,8 @@ export class StorageStack extends cdk.Stack {
   public readonly projectsTable: dynamodb.Table;
   public readonly reviewsTable: dynamodb.Table;
   public readonly pageViewsTable: dynamodb.Table;
+  public readonly interestsTable: dynamodb.Table;
+  public readonly commentsTable: dynamodb.Table;
   public readonly assetsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -40,6 +42,24 @@ export class StorageStack extends cdk.Stack {
     this.pageViewsTable = new dynamodb.Table(this, 'PageViewsTable', {
       tableName: 'portfolio-page-views',
       partitionKey: { name: 'projectId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Interests table (coming-soon projects)
+    this.interestsTable = new dynamodb.Table(this, 'InterestsTable', {
+      tableName: 'portfolio-interests',
+      partitionKey: { name: 'projectId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Comments table (coming-soon projects)
+    this.commentsTable = new dynamodb.Table(this, 'CommentsTable', {
+      tableName: 'portfolio-comments',
+      partitionKey: { name: 'projectId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });

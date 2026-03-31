@@ -58,6 +58,8 @@ const api = new ApiStack(app, 'PortfolioApi', {
   projectsTable: storage.projectsTable,
   reviewsTable: storage.reviewsTable,
   pageViewsTable: storage.pageViewsTable,
+  interestsTable: storage.interestsTable,
+  commentsTable: storage.commentsTable,
   assetsBucket: storage.assetsBucket,
   userPool: auth.userPool,
 });

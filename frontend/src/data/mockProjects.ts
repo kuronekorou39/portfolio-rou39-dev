@@ -87,7 +87,7 @@ export const mockProjects: Project[] = [
     icon: '',
     screenshots: [],
     links: {},
-    status: 'development',
+    status: 'coming-soon',
     publishedAt: '2026-01-01',
     updatedAt: '2026-03-15',
   },
@@ -148,5 +148,6 @@ export const categoryEmoji: Record<string, string> = {
 export const statusLabel: Record<string, { text: string; color: string }> = {
   active: { text: 'Active', color: '#00C853' },
   development: { text: 'In Dev', color: '#FFB347' },
+  'coming-soon': { text: 'Coming Soon', color: '#60A5FA' },
   archived: { text: 'Archived', color: '#888' },
 };

@@ -8,12 +8,14 @@ import AuthPage from '@/pages/AuthPage';
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import AprilFoolsPage from '@/pages/AprilFoolsPage';
 
 function App() {
   return (
     <AuthProvider>
     <BrowserRouter>
       <Routes>
+        <Route path="/april-fools" element={<AprilFoolsPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/apps" element={<AppsPage />} />
