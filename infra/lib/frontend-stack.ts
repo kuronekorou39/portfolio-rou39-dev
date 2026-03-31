@@ -4,11 +4,17 @@ import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import type { Construct } from 'constructs';
 import * as path from 'path';
 
 interface FrontendStackProps extends cdk.StackProps {
   api: apigateway.RestApi;
+  certificate: acm.ICertificate;
+  hostedZone: route53.IHostedZone;
+  domainName: string;
 }
 
 export class FrontendStack extends cdk.Stack {
@@ -54,6 +60,8 @@ export class FrontendStack extends cdk.Stack {
           }],
         },
       },
+      domainNames: [props.domainName, `www.${props.domainName}`],
+      certificate: props.certificate,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -69,6 +77,17 @@ export class FrontendStack extends cdk.Stack {
       ],
     });
 
+    // Route 53 DNS records
+    new route53.ARecord(this, 'SiteARecord', {
+      zone: props.hostedZone,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+    });
+    new route53.ARecord(this, 'SiteWwwARecord', {
+      zone: props.hostedZone,
+      recordName: 'www',
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+    });
+
     // Deploy frontend to S3
     new s3deploy.BucketDeployment(this, 'DeploySite', {
       sources: [s3deploy.Source.asset(path.join(__dirname, '../../frontend/dist'))],
@@ -77,6 +96,9 @@ export class FrontendStack extends cdk.Stack {
       distributionPaths: ['/*'],
     });
 
+    new cdk.CfnOutput(this, 'SiteUrl', {
+      value: `https://${props.domainName}`,
+    });
     new cdk.CfnOutput(this, 'DistributionUrl', {
       value: `https://${distribution.distributionDomainName}`,
     });

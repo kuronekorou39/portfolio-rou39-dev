@@ -23,7 +23,7 @@ interface AuthContextType {
   signOut: () => void;
   updateNickname: (nickname: string) => Promise<void>;
   updateAvatar: (avatarKey: string) => Promise<void>;
-  exchangeOAuthCode: (code: string) => Promise<void>;
+  exchangeOAuthCode: (code: string) => Promise<AuthUser>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -73,11 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, avatar: avatarKey } : prev);
   }, []);
 
-  const exchangeOAuthCode = useCallback(async (code: string) => {
+  const exchangeOAuthCode = useCallback(async (code: string): Promise<AuthUser> => {
     const u = await authExchangeOAuthCode(code);
     const t = await getIdToken();
     setUser(u);
     setToken(t);
+    return u;
   }, []);
 
   return (

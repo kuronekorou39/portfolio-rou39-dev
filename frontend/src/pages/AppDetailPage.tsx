@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
-import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, getDownloadUrl } from '@/lib/api';
+import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, getDownloadUrl } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
 import type { Project } from '../../../shared/src/types';
@@ -98,12 +98,14 @@ function InteractiveStarRating({
 export default function AppDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, token } = useAuth();
+  const { openAuth } = useOutletContext<{ openAuth: () => void }>();
   const [activeTab, setActiveTab] = useState<Tab>('about');
   const [project, setProject] = useState<Project | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [viewCount, setViewCount] = useState<number>(0);
 
   // Review form state
   const [newRating, setNewRating] = useState(0);
@@ -132,6 +134,9 @@ export default function AppDetailPage() {
       .finally(() => setLoading(false));
     reloadReviews();
     incrementPageView(id).catch(console.error);
+    fetchPageView(id)
+      .then((data) => setViewCount(data.count))
+      .catch(console.error);
   }, [id, reloadReviews]);
 
   const handleSubmitReview = async () => {
@@ -314,6 +319,12 @@ export default function AppDetailPage() {
             <span className="text-xs text-white/15">
               Updated {project.updatedAt}
             </span>
+
+            {/* Views */}
+            <div className="flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/25"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span className="text-xs text-white/25">{viewCount.toLocaleString()}</span>
+            </div>
           </div>
 
           {/* Tags */}
@@ -380,12 +391,12 @@ export default function AppDetailPage() {
                   {downloadLoading ? 'Preparing...' : 'Download'}
                 </button>
               ) : (
-                <Link
-                  to="/auth"
+                <button
+                  onClick={openAuth}
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white"
                 >
                   Download (Login required)
-                </Link>
+                </button>
               )
             )}
           </div>
@@ -476,12 +487,12 @@ export default function AppDetailPage() {
                         </div>
                       )
                     ) : (
-                      <Link
-                        to="/auth"
+                      <button
+                        onClick={openAuth}
                         className="text-sm text-white/40 underline transition-colors hover:text-white/60"
                       >
                         ログインしてレビューを投稿
-                      </Link>
+                      </button>
                     )}
                   </div>
                 </div>

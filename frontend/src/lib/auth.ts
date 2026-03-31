@@ -12,7 +12,7 @@ import { generateRandomIdentity } from './avatars';
 
 const USER_POOL_ID = 'ap-northeast-1_FJeIsc61q';
 const CLIENT_ID = '1pdmjkcrrdcu18bpt30een85o3';
-const COGNITO_DOMAIN = 'https://rou39-portfolio.auth.ap-northeast-1.amazoncognito.com';
+const COGNITO_DOMAIN = 'https://auth.rou39.com';
 
 const userPool = new CognitoUserPool({
   UserPoolId: USER_POOL_ID,
@@ -124,6 +124,26 @@ export function signOut(): void {
   if (cognitoUser) {
     cognitoUser.signOut();
   }
+}
+
+export function forgotPassword(email: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+    cognitoUser.forgotPassword({
+      onSuccess: () => resolve(),
+      onFailure: (err) => reject(new Error(err.message)),
+    });
+  });
+}
+
+export function confirmForgotPassword(email: string, code: string, newPassword: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+    cognitoUser.confirmPassword(code, newPassword, {
+      onSuccess: () => resolve(),
+      onFailure: (err) => reject(new Error(err.message)),
+    });
+  });
 }
 
 export function updateNickname(nickname: string): Promise<void> {

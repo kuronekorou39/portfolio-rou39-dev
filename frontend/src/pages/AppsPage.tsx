@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
-import { fetchProjects } from '@/lib/api';
+import { fetchProjects, fetchPageView } from '@/lib/api';
 import type { Project, ProjectCategory } from '../../../shared/src/types';
 
 const categories: { key: 'all' | ProjectCategory; label: string }[] = [
@@ -17,10 +17,23 @@ export default function AppsPage() {
   const [filter, setFilter] = useState<'all' | ProjectCategory>('all');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewCounts, setViewCounts] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     fetchProjects()
-      .then(setProjects)
+      .then((data) => {
+        setProjects(data);
+        // Fetch view counts for all projects
+        Promise.all(
+          data.map((p) =>
+            fetchPageView(p.id)
+              .then((res) => [p.id, res.count] as const)
+              .catch(() => [p.id, 0] as const)
+          )
+        ).then((results) => {
+          setViewCounts(new Map(results));
+        });
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -146,7 +159,7 @@ export default function AppsPage() {
                     </div>
 
                     {/* Platform badges */}
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 flex items-center gap-2">
                       {project.platform.map((p) => (
                         <span
                           key={p}
@@ -155,6 +168,10 @@ export default function AppsPage() {
                           {p}
                         </span>
                       ))}
+                      <span className="ml-auto flex items-center gap-1 text-[10px] text-white/15">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {viewCounts.get(project.id)?.toLocaleString() ?? '0'}
+                      </span>
                     </div>
 
                     {/* Hover arrow */}

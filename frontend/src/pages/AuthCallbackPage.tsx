@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { generateRandomIdentity } from '@/lib/avatars';
+import { updateNickname, updateAvatar } from '@/lib/auth';
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -24,7 +26,13 @@ export default function AuthCallbackPage() {
     }
 
     exchangeOAuthCode(code)
-      .then(() => {
+      .then(async (user) => {
+        // 初回Googleログイン時のみランダムなニックネームとアバターを設定
+        if (!user.nickname || user.nickname === '匿名') {
+          const { nickname, avatarKey } = generateRandomIdentity();
+          await updateNickname(nickname).catch(() => {});
+          await updateAvatar(avatarKey).catch(() => {});
+        }
         navigate('/apps', { replace: true });
       })
       .catch((err) => {

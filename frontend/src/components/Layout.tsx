@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import Logo from './Logo';
+import AuthModal from './AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
 
 export default function Layout() {
   const { user, loading, signOut } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#060608] text-gray-100">
@@ -36,12 +39,12 @@ export default function Layout() {
                   </button>
                 </div>
               ) : (
-                <Link
-                  to="/auth"
+                <button
+                  onClick={() => setShowAuth(true)}
                   className="rounded-full bg-white px-4 py-1.5 text-xs font-medium text-black transition-transform hover:scale-105"
                 >
                   Login
-                </Link>
+                </button>
               )
             )}
           </div>
@@ -49,7 +52,7 @@ export default function Layout() {
       </header>
 
       <main>
-        <Outlet />
+        <Outlet context={{ openAuth: () => setShowAuth(true) }} />
       </main>
 
       <footer className="border-t border-white/[0.06]">
@@ -57,6 +60,8 @@ export default function Layout() {
           &copy; {new Date().getFullYear()} rou39. All rights reserved.
         </div>
       </footer>
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }
