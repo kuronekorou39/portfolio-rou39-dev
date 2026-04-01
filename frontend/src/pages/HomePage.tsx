@@ -10,6 +10,7 @@ import {
   AnimatePresence,
 } from 'framer-motion';
 import avatarImg from '@/assets/avatar.png';
+import underConstructionImg from '@/assets/under-construction.png';
 
 // ─── Data ──────────────────────────────────────────────────
 const projects = [
@@ -36,49 +37,59 @@ function CursorGlow() {
   const trailY = useSpring(cursorY, { stiffness: 120, damping: 25 });
   const glowX = useSpring(cursorX, { stiffness: 60, damping: 20 });
   const glowY = useSpring(cursorY, { stiffness: 60, damping: 20 });
+  const [lightsOn, setLightsOn] = useState(false);
 
   useEffect(() => {
     function move(e: MouseEvent) {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
     }
+    const observer = new MutationObserver(() => {
+      setLightsOn(document.body.classList.contains('lights-on'));
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('mousemove', move);
     return () => {
       window.removeEventListener('mousemove', move);
+      observer.disconnect();
     };
   }, []);
 
   return (
     <>
-      {/* Ambient glow — large, slow-following */}
+      {/* Ambient glow — hidden when lights on */}
+      {!lightsOn && (
+        <motion.div
+          className="pointer-events-none fixed z-[5] rounded-full mix-blend-screen"
+          style={{
+            x: glowX,
+            y: glowY,
+            translateX: '-50%',
+            translateY: '-50%',
+            width: 350,
+            height: 350,
+            background: 'radial-gradient(circle, rgba(120,100,255,0.10) 0%, rgba(80,60,200,0.05) 40%, transparent 70%)',
+            willChange: 'transform',
+          }}
+        />
+      )}
+      {/* Trail — hidden when lights on */}
+      {!lightsOn && (
+        <motion.div
+          className="pointer-events-none fixed z-[150] h-40 w-40 rounded-full mix-blend-screen"
+          style={{
+            x: trailX,
+            y: trailY,
+            translateX: '-50%',
+            translateY: '-50%',
+            background: 'radial-gradient(circle, rgba(120,100,255,0.15) 0%, transparent 70%)',
+            willChange: 'transform',
+          }}
+        />
+      )}
+      {/* Dot — always visible, changes style for light mode */}
       <motion.div
-        className="pointer-events-none fixed z-[5] rounded-full mix-blend-screen"
-        style={{
-          x: glowX,
-          y: glowY,
-          translateX: '-50%',
-          translateY: '-50%',
-          width: 350,
-          height: 350,
-          background: 'radial-gradient(circle, rgba(120,100,255,0.10) 0%, rgba(80,60,200,0.05) 40%, transparent 70%)',
-          willChange: 'transform',
-        }}
-      />
-      {/* Trail */}
-      <motion.div
-        className="pointer-events-none fixed z-[150] h-40 w-40 rounded-full mix-blend-screen"
-        style={{
-          x: trailX,
-          y: trailY,
-          translateX: '-50%',
-          translateY: '-50%',
-          background: 'radial-gradient(circle, rgba(120,100,255,0.15) 0%, transparent 70%)',
-          willChange: 'transform',
-        }}
-      />
-      {/* Dot */}
-      <motion.div
-        className="pointer-events-none fixed z-[151] h-3 w-3 rounded-full bg-white mix-blend-difference"
+        className={`pointer-events-none fixed z-[151] rounded-full ${lightsOn ? 'h-4 w-4 bg-black/20' : 'h-3 w-3 bg-white mix-blend-difference'}`}
         style={{
           x: springX,
           y: springY,
@@ -298,12 +309,13 @@ function GlowingEyes() {
   }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[2]">
+    <div className="glowing-eyes-container pointer-events-none fixed inset-0 z-[2] transition-opacity duration-500">
       <style>{`
         @keyframes eye-blink {
           0%, 45%, 55%, 100% { transform: scaleY(1); }
           50% { transform: scaleY(0.1); }
         }
+        body.lights-on .glowing-eyes-container { opacity: 0 !important; }
       `}</style>
       {eyeIds.map((id) => {
         const eye = eyesRef.current.find(e => e.id === id);
@@ -354,59 +366,22 @@ function GlowingEyes() {
 }
 
 // ─── Hidden messages that appear when cursor is near ───────
-function HiddenMessages() {
-  const [cursorPos, setCursorPos] = useState({ x: -999, y: -999 });
-
-  useEffect(() => {
-    function handleMouse(e: MouseEvent) {
-      setCursorPos({ x: e.clientX, y: e.clientY + window.scrollY });
-    }
-    window.addEventListener('mousemove', handleMouse);
-    return () => window.removeEventListener('mousemove', handleMouse);
-  }, []);
-
-  const messages = [
-    { x: 100, y: 300, text: '👀 見つけた？', size: 'text-sm' },
-    { x: window.innerWidth - 120, y: 600, text: 'ここにも何かが...', size: 'text-xs' },
-    { x: 200, y: 1200, text: '🔍', size: 'text-2xl' },
-    { x: window.innerWidth - 200, y: 1800, text: 'Keep exploring...', size: 'text-sm' },
-    { x: 150, y: 2500, text: '💡 光の先に何がある？', size: 'text-xs' },
-    { x: window.innerWidth - 150, y: 3200, text: '✨', size: 'text-xl' },
-    { x: 100, y: 4000, text: 'まだまだ隠してるよ', size: 'text-xs' },
-  ];
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[3]">
-      {messages.map((msg, i) => {
-        const dx = msg.x - cursorPos.x;
-        const dy = msg.y - cursorPos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const visible = dist < 180;
-        const opacity = visible ? Math.max(0, (1 - dist / 180) * 0.7) : 0;
-
-        return (
-          <motion.div
-            key={i}
-            className={`absolute ${msg.size} font-medium text-white/60`}
-            style={{ left: msg.x, top: msg.y, transform: 'translate(-50%, -50%)' }}
-            animate={{ opacity }}
-            transition={{ duration: 0.4 }}
-          >
-            {msg.text}
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ─── Hidden switch — find it, click it, something fun happens
+// ─── Hidden light switch — flip to illuminate the entire page ─
 function HiddenSwitch() {
   const [cursorPos, setCursorPos] = useState({ x: -999, y: -999 });
   const [found, setFound] = useState(false);
-  const [activated, setActivated] = useState(false);
+  const [lightsOn, setLightsOn] = useState(false);
   const switchX = 50;
   const switchY = 800;
+
+  // Clean up filter on unmount (page navigation)
+  useEffect(() => {
+    return () => {
+      document.documentElement.style.filter = '';
+      document.documentElement.style.transition = '';
+      document.body.classList.remove('lights-on');
+    };
+  }, []);
 
   useEffect(() => {
     function handleMouse(e: MouseEvent) {
@@ -423,18 +398,33 @@ function HiddenSwitch() {
   const opacity = visible ? Math.max(0, 1 - dist / 150) : 0;
 
   if (!found && visible && dist < 80) {
-    // "discovered" state
     setTimeout(() => setFound(true), 0);
   }
 
   return (
     <>
       <motion.div
-        className="absolute z-[10] cursor-pointer"
+        className="absolute z-[120] cursor-pointer"
         style={{ left: switchX - 16, top: switchY - 24 }}
         animate={{ opacity: found ? 0.8 : opacity }}
         transition={{ duration: 0.3 }}
-        onClick={() => setActivated(true)}
+        onClick={() => {
+          setLightsOn((prev) => {
+            const next = !prev;
+            document.documentElement.style.transition = 'filter 0.6s ease';
+            document.documentElement.style.filter = next ? 'invert(1) hue-rotate(180deg)' : '';
+            document.body.classList.toggle('lights-on', next);
+            if (next) {
+              setTimeout(() => {
+                setLightsOn(false);
+                document.documentElement.style.transition = 'filter 1s ease';
+                document.documentElement.style.filter = '';
+                document.body.classList.remove('lights-on');
+              }, 10000);
+            }
+            return next;
+          });
+        }}
       >
         <motion.div
           className="flex h-[48px] w-[32px] items-center justify-center rounded-md border border-white/20 bg-white/5"
@@ -444,12 +434,15 @@ function HiddenSwitch() {
           }}
         >
           <motion.div
-            className="h-[18px] w-[10px] rounded-sm bg-white/30"
-            animate={activated ? { y: -4, background: 'rgba(255,220,100,0.8)' } : { y: 3 }}
+            className="h-[18px] w-[10px] rounded-sm"
+            animate={lightsOn
+              ? { y: -4, background: 'rgba(255,220,100,0.9)' }
+              : { y: 3, background: 'rgba(255,255,255,0.3)' }
+            }
             transition={{ type: 'spring', stiffness: 400 }}
           />
         </motion.div>
-        {found && !activated && (
+        {found && !lightsOn && (
           <motion.div
             className="mt-1 text-center text-[9px] text-white/30"
             initial={{ opacity: 0 }}
@@ -460,25 +453,7 @@ function HiddenSwitch() {
         )}
       </motion.div>
 
-      {/* Activation effect — brief colorful burst */}
-      <AnimatePresence>
-        {activated && (
-          <motion.div
-            className="pointer-events-none fixed inset-0 z-[400]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.6, 0] }}
-            transition={{ duration: 1.5 }}
-            onAnimationComplete={() => setActivated(false)}
-          >
-            <div
-              className="absolute h-full w-full"
-              style={{
-                background: `radial-gradient(circle at ${switchX}px ${switchY - window.scrollY}px, rgba(255,220,100,0.4), transparent 50%)`,
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Lights on — handled via document.documentElement.style.filter */}
     </>
   );
 }
@@ -626,6 +601,7 @@ function MeshGradient() {
 function HiddenAvatar() {
   const imgRef = useRef<HTMLDivElement>(null);
   const [mask, setMask] = useState('radial-gradient(circle 0px at -999px -999px, white, transparent)');
+  const [lightsOn, setLightsOn] = useState(false);
 
   useEffect(() => {
     function handleMouse(e: MouseEvent) {
@@ -635,8 +611,15 @@ function HiddenAvatar() {
       const y = e.clientY - rect.top;
       setMask(`radial-gradient(circle 120px at ${x}px ${y}px, white 0%, transparent 100%)`);
     }
+    const observer = new MutationObserver(() => {
+      setLightsOn(document.body.classList.contains('lights-on'));
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('mousemove', handleMouse);
-    return () => window.removeEventListener('mousemove', handleMouse);
+    return () => {
+      window.removeEventListener('mousemove', handleMouse);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -647,9 +630,9 @@ function HiddenAvatar() {
       <img
         src={avatarImg}
         alt=""
-        className="h-52 w-52 object-contain lg:h-64 lg:w-64"
+        className="h-52 w-52 object-contain transition-all duration-500 lg:h-64 lg:w-64"
         draggable={false}
-        style={{
+        style={lightsOn ? { filter: 'invert(1) hue-rotate(180deg)' } : {
           WebkitMaskImage: mask,
           maskImage: mask,
         }}
@@ -807,7 +790,25 @@ function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; in
 // ─── Tech marquee ──────────────────────────────────────────
 function TechMarquee() {
   const row1 = ['React', 'TypeScript', 'AWS Lambda', 'DynamoDB', 'Tailwind CSS', 'Node.js', 'Vite', 'React Native', 'Expo', 'Firebase'];
-  const row2 = ['CDK', 'CloudFront', 'S3', 'Cognito', 'API Gateway', 'Docker', 'Git', 'GitHub Actions', 'Webpack', 'Chart.js'];
+  const row2 = ['CDK', 'CloudFront', 'S3', 'Cognito', 'API Gateway', 'Docker', 'Git', 'GitHub Actions', 'Anal Sex', 'Chart.js'];
+  const heartContainerRef = useRef<HTMLDivElement>(null);
+
+  function handleSpecialClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        if (!heartContainerRef.current) return;
+        const el = document.createElement('span');
+        el.textContent = '❤️';
+        el.style.cssText = `position:fixed;left:${cx + (Math.random() - 0.5) * 40}px;top:${cy}px;font-size:18px;pointer-events:none;animation:heart-float 1.8s ease-out forwards;z-index:160;`;
+        heartContainerRef.current.appendChild(el);
+        setTimeout(() => el.remove(), 1800);
+      }, i * 120);
+    }
+  }
 
   function Row({ items, reverse = false }: { items: string[]; reverse?: boolean }) {
     const repeated = [...items, ...items, ...items, ...items];
@@ -820,9 +821,19 @@ function TechMarquee() {
             willChange: 'transform',
           }}
         >
-          {repeated.map((item, i) => (
-            <span key={`${item}-${i}`} className="inline-block rounded-full border border-white/10 px-5 py-2 text-sm font-medium text-white/30">{item}</span>
-          ))}
+          {repeated.map((item, i) => {
+            const isSpecial = item === 'Anal Sex';
+            return (
+              <span
+                key={`${item}-${i}`}
+                className={`inline-block rounded-full border border-white/10 px-5 py-2 text-sm font-medium text-white/30 ${isSpecial ? 'cursor-pointer transition-colors hover:border-pink-500/30 hover:text-pink-400/50' : ''}`}
+                onClick={isSpecial ? handleSpecialClick : undefined}
+                style={isSpecial ? { pointerEvents: 'auto' } : undefined}
+              >
+                {item}
+              </span>
+            );
+          })}
         </div>
       </div>
     );
@@ -839,11 +850,18 @@ function TechMarquee() {
           0% { transform: translateX(-25%); }
           100% { transform: translateX(0); }
         }
+        @keyframes heart-float {
+          0% { opacity: 0; transform: translateY(0) scale(0.5); }
+          15% { opacity: 1; transform: translateY(-10px) scale(1); }
+          100% { opacity: 0; transform: translateY(-100px) scale(1.3); }
+        }
       `}</style>
       <div className="space-y-3">
         <Row items={row1} />
         <Row items={row2} reverse />
       </div>
+      {/* Floating hearts container — DOM-only, no React re-renders */}
+      <div ref={heartContainerRef} className="pointer-events-none" />
     </>
   );
 }
@@ -861,15 +879,21 @@ export default function HomePage() {
 
       {/* Background toys (behind content) */}
       <GlowingEyes />
-      <HiddenMessages />
       <HiddenSwitch />
 
       {/* ══════ HERO ══════ */}
       <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }} className="text-center">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="mb-6 text-xs font-semibold uppercase tracking-[0.3em] text-white/30">
-            Portfolio / Showcase
+            className="mb-8">
+            <motion.img
+              src={underConstructionImg}
+              alt="準備中"
+              className="mx-auto h-24 w-24 object-contain drop-shadow-lg md:h-28 md:w-28"
+              draggable={false}
+              animate={{ rotate: [0, 2, -2, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            />
           </motion.div>
 
           <div className="relative inline-block">

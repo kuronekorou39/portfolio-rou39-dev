@@ -6,7 +6,7 @@ export interface ProjectLinks {
   download?: string;
 }
 
-export type ProjectCategory = 'web' | 'mobile' | 'extension' | 'tool' | 'other';
+export type ProjectCategory = 'web' | 'mobile' | 'desktop' | 'chrome-ext' | 'burp-ext' | 'other';
 export type ProjectStatus = 'active' | 'development' | 'coming-soon' | 'archived';
 export type ProjectSize = 'large' | 'medium' | 'small';
 

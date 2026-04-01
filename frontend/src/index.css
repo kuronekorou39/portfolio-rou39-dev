@@ -2,11 +2,13 @@
 
 html {
   scrollbar-gutter: stable;
+  overflow-x: hidden;
 }
 
 body {
   user-select: none;
   -webkit-user-select: none;
+  overflow-x: hidden;
 }
 
 /* Allow selection on specific elements */

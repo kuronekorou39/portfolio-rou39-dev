@@ -142,7 +142,7 @@
     "subtitle": "画像をドロップするだけでアイコン作成",
     "description": "# Icon Builder\n\nAI背景透過とレイヤー編集でアイコンを作成するデスクトップアプリ。画像をドラッグ&ドロップし、影・アウトライン・色調補正を適用して、マルチ解像度の.icoファイルとして出力。\n\n## 特徴\n\n- AI背景透過（rembg / U2-Net）\n- レイヤーベースのキャンバス編集（Konva.js）\n- 影・アウトライン・塗りつぶし・色調補正エフェクト\n- マルチ解像度 .ico / .png エクスポート\n- Undo/Redo対応",
     "howToUse": "## 使い方\n\n1. 画像をウィンドウにドラッグ&ドロップ\n2. 「背景透過」ボタンでAIが背景を自動除去\n3. エフェクト（影・アウトライン等）を適用\n4. エクスポート設定で解像度を選択\n5. .ico または .png で保存",
-    "category": "tool",
+    "category": "desktop",
     "tags": [
       "React",
       "Tauri",
@@ -170,7 +170,7 @@
     "subtitle": "Chrome拡張で8種のエンコード/デコードを即実行",
     "description": "# Multi Encoder/Decoder\n\nChromeのサイドパネルで8種類のエンコード/デコード変換をワンクリックで実行できる開発者向け拡張機能。\n\n## 対応フォーマット\n\n- Unicode\n- URL エンコーディング\n- Base64\n- HTML エンティティ\n- JSON\n- JWT デコード\n- ハッシュ（MD5/SHA1/SHA256等）\n- Hex",
     "howToUse": "## 使い方\n\n1. Chrome拡張をインストール\n2. ツールバーのアイコンをクリック → サイドパネルが開く\n3. タブで変換タイプを選択（Unicode/URL/Base64/JWT等）\n4. テキストを貼り付けてエンコード/デコードボタンをクリック\n5. 結果をコピー",
-    "category": "extension",
+    "category": "chrome-ext",
     "tags": [
       "JavaScript",
       "Chrome Extension",
@@ -195,7 +195,7 @@
     "subtitle": "ページ遷移をリアルタイムで可視化するブラウザ分析ツール",
     "description": "# FlowScope\n\nPlaywrightでブラウザを操作しながら、ページ遷移とHTTPリクエストを自動キャプチャし、Cytoscapeでフロー図として可視化するデスクトップツール。\n\n## 特徴\n\n- ページ遷移のリアルタイムグラフ表示（Cytoscape.js）\n- HTTPリクエストの自動キャプチャ・分析\n- DOM状態トラッキング\n- AI自動探索モード（Anthropic SDK連携）\n- デスクトップアプリ（Tauri）またはWeb起動",
     "howToUse": "## 使い方\n\n1. バックエンドを起動（python backend/main.py）\n2. フロントエンドを起動（npm run dev:vite）\n3. URLを入力してStartをクリック\n4. ブラウザで操作すると遷移がグラフに自動反映\n5. リクエスト詳細パネルでHTTP通信を分析",
-    "category": "tool",
+    "category": "desktop",
     "tags": [
       "React",
       "TypeScript",
@@ -225,7 +225,7 @@
     "subtitle": "ローカル開発環境のポート監視・管理ツール",
     "description": "# Local PortBoard\n\nTCP/UDPポートの使用状況をリアルタイム監視するシステムトレイアプリ。プロセス情報の表示、Docker/Kubernetesコンテナの自動検出、ワンクリックプロセス終了に対応。\n\n## 特徴\n\n- 2秒間隔のリアルタイムポートスキャン\n- プロセス名・PID・コマンドライン表示\n- Docker/K8sコンテナ自動検出\n- 安全なプロセス終了（確認ダイアログ付き）\n- 多言語対応・ダークテーマ\n- Windows & macOS 対応",
     "howToUse": "## 使い方\n\n1. アプリを起動するとシステムトレイに常駐\n2. トレイアイコンをクリックでポート一覧を表示\n3. ポート行をクリックでプロセス詳細を確認\n4. 右クリックでプロセス終了やファイアウォール情報を表示\n5. 設定でスキャン間隔・テーマ・言語を変更",
-    "category": "tool",
+    "category": "desktop",
     "tags": [
       "Preact",
       "Tauri",
@@ -278,7 +278,7 @@
     "subtitle": "Word/Excel/PowerPointのXML構造を直接編集",
     "description": "# Office内部構造エディタ\n\n.docx/.xlsx/.pptxファイルの内部XMLを直接編集できるデスクトップツール。ファイルツリーで構造を把握し、内蔵エディタまたは外部エディタ（VSCode等）で編集。自動バックアップ機能付き。\n\n## 特徴\n\n- Officeファイルの内部XML構造をツリー表示\n- シンタックスハイライト付き内蔵エディタ\n- VSCode/Notepad++等の外部エディタ連携\n- 自動バックアップ\n- 検索機能（Ctrl+F）",
     "howToUse": "## 使い方\n\n1. 「開く」で .docx/.xlsx/.pptx ファイルを選択\n2. ファイルツリーから編集したいXMLをダブルクリック\n3. 内蔵エディタまたは外部エディタ（VSCode等）で編集\n4. Ctrl+Sで保存\n5. 「名前を付けて保存」で元の形式として出力",
-    "category": "tool",
+    "category": "desktop",
     "tags": [
       "Python",
       "PyQt6",
@@ -303,7 +303,7 @@
     "subtitle": "画面上の領域をリアルタイムで拡大表示するルーペツール",
     "description": "# deka-mado\n\nWindows向けデスクトップ拡大ルーペ。DxCamによるハードウェアアクセラレーション画面キャプチャで、1.0x〜10.0xのスムーズなズーム表示。システムトレイ常駐。\n\n## 特徴\n\n- 1.0x〜10.0xリアルタイムズーム\n- DxCamハードウェアアクセラレーション\n- 最前面表示（常にトップ）\n- システムトレイ常駐\n- 枠表示/非表示の切り替え",
     "howToUse": "## 使い方\n\n1. 起動するとルーペウィンドウが表示される\n2. ウィンドウをドラッグして監視する領域に移動\n3. マウスホイールまたは +/- キーでズーム調整\n4. 右クリックでメニュー（倍率リセット・枠切替・終了）\n5. ✕ボタンでトレイに最小化",
-    "category": "tool",
+    "category": "desktop",
     "tags": [
       "Python",
       "pygame",
@@ -329,7 +329,7 @@
     "subtitle": "同じサイズの画像・動画を一括で切り抜き",
     "description": "# Batch Crop Tool\n\n画像や動画の切り抜き範囲を一度設定すれば、同じサイズのファイルすべてに一括適用できるGUIツール。アスペクト比ロック、ドラッグ&ドロップ、座標入力に対応。\n\n## 特徴\n\n- 画像・動画の一括クロップ\n- アスペクト比プリセット（16:9, 4:3, 1:1等）\n- ドラッグ&ドロップでファイル追加\n- 座標入力による正確な位置指定\n- FFmpegによる動画トリミング（音声保持）",
     "howToUse": "## 使い方\n\n1. 画像/動画をドラッグ&ドロップで追加\n2. ファイルを選択し、マウスドラッグで切り抜き範囲を設定\n3. アスペクト比固定を選択（任意）\n4. 「切り抜いて保存」で同サイズのファイルを一括処理",
-    "category": "tool",
+    "category": "desktop",
     "tags": [
       "Python",
       "PySide6",
@@ -355,7 +355,7 @@
     "subtitle": "Burp Suiteのマルチ攻撃をキュー方式で管理・実行",
     "description": "# Intruder Queue\n\nBurp Suite用の拡張機能。Intruderの複数攻撃をキューに追加し、タイミング・遅延を設定して順次実行。結果の保存・分析機能付き。\n\n## 特徴\n\n- 複数攻撃のキュー管理\n- タイミング・遅延の設定\n- 結果の保存・分析\n- ビジュアルキュー管理UI",
     "howToUse": "## 使い方\n\n1. Burp Suite で JAR を読み込む\n2. 「Intruder Queue」タブを開く\n3. コンテキストメニューからリクエストをキューに追加\n4. ペイロード・設定を管理\n5. 「Start」で順次実行、結果タブで確認",
-    "category": "extension",
+    "category": "burp-ext",
     "tags": [
       "Java",
       "Burp Suite",
@@ -381,7 +381,7 @@
     "subtitle": "HTTPリクエストチェーンを視覚的に構築・実行するBurp拡張",
     "description": "# Macro Builder\n\nBurp Suite用の拡張機能。HTTPリクエストを連鎖させ、レスポンスからのデータ抽出・パラメータ自動引き渡しをビジュアルに構築。Session Handling Rulesと連携。\n\n## 特徴\n\n- ビジュアルフローエディタ\n- リクエスト間のデータ抽出・パラメータチェイニング\n- regex/XPathによる値抽出\n- Session Handling Rulesとの連携\n- Proxy履歴からのリクエスト取り込み",
     "howToUse": "## 使い方\n\n1. Burp Suite で JAR を読み込む\n2. 「Macro Builder」タブでリクエストを追加\n3. リクエスト間のデータ抽出・パラメータ設定を定義\n4. フローエディタで実行順序を確認\n5. Session Handling Rulesから自動実行を登録",
-    "category": "extension",
+    "category": "burp-ext",
     "tags": [
       "Java",
       "Burp Suite",
@@ -407,7 +407,7 @@
     "subtitle": "ドメインごとのネットワーク通信を可視化するChrome拡張",
     "description": "# Domain Traffic Inspector\n\nブラウザのネットワーク通信をドメインごとに分類・可視化するChrome拡張機能。\n\n## 特徴\n\n- リアルタイムでトラフィックを監視\n- ドメインごとの通信量を円グラフで表示\n- サードパーティトラッカーの検出\n- エクスポート機能（CSV/JSON）",
     "howToUse": "## 使い方\n\n1. Chrome拡張機能をインストール\n2. 任意のWebサイトを閲覧\n3. 拡張機能アイコンをクリックしてダッシュボードを表示\n4. ドメインごとの通信量を確認",
-    "category": "extension",
+    "category": "chrome-ext",
     "tags": [
       "Chrome Extension",
       "TypeScript",

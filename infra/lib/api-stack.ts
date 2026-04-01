@@ -14,6 +14,7 @@ interface ApiStackProps extends cdk.StackProps {
   pageViewsTable: dynamodb.Table;
   interestsTable: dynamodb.Table;
   commentsTable: dynamodb.Table;
+  honeypotTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
 }
@@ -46,6 +47,7 @@ export class ApiStack extends cdk.Stack {
       PAGE_VIEWS_TABLE: props.pageViewsTable.tableName,
       INTERESTS_TABLE: props.interestsTable.tableName,
       COMMENTS_TABLE: props.commentsTable.tableName,
+      HONEYPOT_TABLE: props.honeypotTable.tableName,
       ASSETS_BUCKET: props.assetsBucket.bucketName,
     };
 
@@ -175,6 +177,20 @@ export class ApiStack extends cdk.Stack {
       authorizer,
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
+
+    // --- Honeypot API (no auth) ---
+    const honeypotFn = new nodejs.NodejsFunction(this, 'HoneypotFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/honeypot.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling: bundlingOptions,
+    });
+    props.honeypotTable.grantReadWriteData(honeypotFn);
+
+    const honeypot = this.api.root.addResource('honeypot');
+    const honeypotLog = honeypot.addResource('log');
+    honeypotLog.addMethod('POST', new apigateway.LambdaIntegration(honeypotFn));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: this.api.url });
   }

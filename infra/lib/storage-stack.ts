@@ -9,6 +9,7 @@ export class StorageStack extends cdk.Stack {
   public readonly pageViewsTable: dynamodb.Table;
   public readonly interestsTable: dynamodb.Table;
   public readonly commentsTable: dynamodb.Table;
+  public readonly honeypotTable: dynamodb.Table;
   public readonly assetsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -62,6 +63,16 @@ export class StorageStack extends cdk.Stack {
       sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Honeypot logs table
+    this.honeypotTable = new dynamodb.Table(this, 'HoneypotTable', {
+      tableName: 'portfolio-honeypot-logs',
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      timeToLiveAttribute: 'ttl',
     });
 
     // Assets bucket (screenshots, app files)
