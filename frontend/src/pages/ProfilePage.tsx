@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { avatars, getAvatarEmoji, generateRandomIdentity } from '@/lib/avatars';
+import { deleteAccount } from '@/lib/auth';
 
 export default function ProfilePage() {
-  const { user, loading, updateNickname, updateAvatar } = useAuth();
+  const { user, loading, updateNickname, updateAvatar, signOut } = useAuth();
+  const navigate = useNavigate();
   const [nickname, setNickname] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteInput, setDeleteInput] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     if (user && !initialized) {
@@ -172,6 +178,68 @@ export default function ProfilePage() {
             Back to Apps
           </Link>
         </p>
+
+        {/* Delete account */}
+        <div className="mb-12 mt-12 border-t border-white/[0.06] pt-6">
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full text-center text-xs text-white/15 transition-colors hover:text-red-400/50"
+            >
+              アカウントを削除
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-center text-xs text-red-400/70">
+                アカウントを削除するとログインできなくなります。投稿済みのレビューは匿名のまま残ります。この操作は取り消せません。
+              </p>
+              <p className="text-center text-xs text-white/30">
+                確認のため「<span className="text-white/60">削除</span>」と入力してください
+              </p>
+              <input
+                type="text"
+                value={deleteInput}
+                onChange={(e) => setDeleteInput(e.target.value)}
+                placeholder="削除"
+                className="w-full rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2 text-center text-sm text-white placeholder-white/15 outline-none focus:border-red-500/40"
+              />
+              {deleteError && (
+                <p className="text-center text-xs text-red-400">{deleteError}</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); setDeleteError(''); }}
+                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-xs text-white/40 transition-colors hover:border-white/20"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={async () => {
+                    if (deleteInput !== '削除') {
+                      setDeleteError('「削除」と入力してください');
+                      return;
+                    }
+                    setDeleting(true);
+                    setDeleteError('');
+                    try {
+                      await deleteAccount();
+                      signOut();
+                      navigate('/');
+                    } catch (err) {
+                      setDeleteError(err instanceof Error ? err.message : '削除に失敗しました');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                  disabled={deleting || deleteInput !== '削除'}
+                  className="flex-1 rounded-lg bg-red-500/80 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-30"
+                >
+                  {deleting ? '削除中...' : 'アカウントを完全に削除'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   );

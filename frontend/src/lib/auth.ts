@@ -126,6 +126,29 @@ export function signOut(): void {
   }
 }
 
+export function deleteAccount(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = userPool.getCurrentUser();
+    if (!cognitoUser) {
+      reject(new Error('Not signed in'));
+      return;
+    }
+    cognitoUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
+      if (err || !session?.isValid()) {
+        reject(new Error('Session invalid'));
+        return;
+      }
+      cognitoUser.deleteUser((err) => {
+        if (err) {
+          reject(new Error(err.message));
+          return;
+        }
+        resolve();
+      });
+    });
+  });
+}
+
 export function forgotPassword(email: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
