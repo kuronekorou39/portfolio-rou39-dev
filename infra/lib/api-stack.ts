@@ -178,6 +178,13 @@ export class ApiStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
+    const replies = commentById.addResource('replies');
+    replies.addMethod('GET', new apigateway.LambdaIntegration(commentsFn));
+    replies.addMethod('POST', new apigateway.LambdaIntegration(commentsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
     // --- Honeypot API (no auth) ---
     const honeypotFn = new nodejs.NodejsFunction(this, 'HoneypotFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,

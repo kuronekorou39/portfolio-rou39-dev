@@ -3,7 +3,7 @@ import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
-import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, getDownloadUrl, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment } from '@/lib/api';
+import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, getDownloadUrl, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment, fetchReplies, createReply } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
 import type { Project, Review, Comment as ProjectComment } from '../../../shared/src/types';
@@ -125,10 +125,17 @@ export default function AppDetailPage() {
   const [isInterested, setIsInterested] = useState(false);
   const [interestLoading, setInterestLoading] = useState(false);
 
-  // Comment state (coming-soon)
+  // Comment state
   const [comments, setComments] = useState<ProjectComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  // Thread (reply) state
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  const [threadReplies, setThreadReplies] = useState<Record<string, ProjectComment[]>>({});
+  const [threadLoading, setThreadLoading] = useState<Set<string>>(new Set());
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+  const [replySubmitting, setReplySubmitting] = useState<Set<string>>(new Set());
 
   const reloadReviews = useCallback(() => {
     if (!id) return;
@@ -155,12 +162,10 @@ export default function AppDetailPage() {
     fetchProject(id)
       .then((p) => {
         setProject(p);
-        // Always load comments & interests (they persist across status changes)
+        // Always load comments, interests & reviews
         reloadComments();
         reloadInterest();
-        if (p.status !== 'coming-soon') {
-          reloadReviews();
-        }
+        reloadReviews();
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
@@ -262,6 +267,71 @@ export default function AppDetailPage() {
     }
   };
 
+  const handleToggleThread = async (commentId: string) => {
+    if (expandedThreads.has(commentId)) {
+      setExpandedThreads((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
+      return;
+    }
+    // Expand and load replies
+    setExpandedThreads((prev) => new Set(prev).add(commentId));
+    if (!threadReplies[commentId]) {
+      await loadReplies(commentId);
+    }
+  };
+
+  const loadReplies = async (commentId: string) => {
+    if (!id) return;
+    setThreadLoading((prev) => new Set(prev).add(commentId));
+    try {
+      const replies = await fetchReplies(id, commentId);
+      setThreadReplies((prev) => ({ ...prev, [commentId]: replies }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setThreadLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
+    }
+  };
+
+  const handleSubmitReply = async (commentId: string) => {
+    if (!id || !token) return;
+    const text = (replyTexts[commentId] ?? '').trim();
+    if (!text) return;
+    setReplySubmitting((prev) => new Set(prev).add(commentId));
+    try {
+      await createReply(id, commentId, { content: text }, token);
+      setReplyTexts((prev) => ({ ...prev, [commentId]: '' }));
+      await loadReplies(commentId);
+      reloadComments(); // update replyCount
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setReplySubmitting((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
+    }
+  };
+
+  const handleDeleteReply = async (commentId: string, replyId: string) => {
+    if (!id || !token) return;
+    try {
+      await deleteComment(id, replyId, token);
+      await loadReplies(commentId);
+      reloadComments(); // update replyCount
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDownload = async () => {
     if (!id || !token) return;
     setDownloadLoading(true);
@@ -316,9 +386,7 @@ export default function AppDetailPage() {
         { key: 'about', label: 'About' },
         { key: 'howto', label: 'How to Use' },
         { key: 'reviews', label: `Reviews (${reviews.length})` },
-        ...(comments.length > 0
-          ? [{ key: 'feedback' as Tab, label: `Feedback (${comments.length})` }]
-          : []),
+        { key: 'feedback', label: `Feedback (${comments.length})` },
       ];
 
   return (
@@ -548,8 +616,7 @@ export default function AppDetailPage() {
 
             {activeTab === 'feedback' && (
               <div>
-                {/* Comment form (only for coming-soon) */}
-                {isComingSoon ? (
+                {/* Comment form */}
                 <div className="mb-8 rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
                   {user && token ? (
                     <div className="space-y-3">
@@ -584,11 +651,6 @@ export default function AppDetailPage() {
                     </button>
                   )}
                 </div>
-                ) : (
-                <div className="mb-8 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                  <p className="text-sm text-white/30">開発中に寄せられたフィードバック</p>
-                </div>
-                )}
 
                 {/* Comment list */}
                 <div className="space-y-4">
@@ -597,39 +659,158 @@ export default function AppDetailPage() {
                       まだフィードバックはありません。最初の一言を！
                     </p>
                   )}
-                  {comments.map((comment, i) => (
-                    <motion.div
-                      key={comment.id}
-                      className="selectable rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.08 }}
-                    >
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
-                            {comment.userAvatar ? getAvatarEmoji(comment.userAvatar) : comment.userName[0].toUpperCase()}
+                  {comments.map((comment, i) => {
+                    const replyCount = comment.replyCount ?? 0;
+                    const isThreadOpen = expandedThreads.has(comment.id);
+                    const replies = threadReplies[comment.id] ?? [];
+                    const isLoadingReplies = threadLoading.has(comment.id);
+                    const replyText = replyTexts[comment.id] ?? '';
+                    const isSubmittingReply = replySubmitting.has(comment.id);
+
+                    return (
+                      <motion.div
+                        key={comment.id}
+                        className="selectable rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.08 }}
+                      >
+                        {/* Comment header */}
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
+                              {comment.userAvatar ? getAvatarEmoji(comment.userAvatar) : comment.userName[0].toUpperCase()}
+                            </div>
+                            <span className="text-sm font-medium text-white/60">{comment.userName}</span>
                           </div>
-                          <span className="text-sm font-medium text-white/60">{comment.userName}</span>
+                          <div className="flex items-center gap-3">
+                            {user && user.userId === comment.userId && (
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-red-400/40 transition-colors hover:text-red-400"
+                                title="削除"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                              </button>
+                            )}
+                            <span className="text-xs text-white/15">{formatDateTime(comment.createdAt)}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          {user && user.userId === comment.userId && (
-                            <button
-                              onClick={() => handleDeleteComment(comment.id)}
-                              className="text-red-400/40 transition-colors hover:text-red-400"
-                              title="削除"
+
+                        {/* Comment body */}
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/40">
+                          {comment.content}
+                        </p>
+
+                        {/* Thread toggle button */}
+                        <div className="mt-3">
+                          <button
+                            onClick={() => handleToggleThread(comment.id)}
+                            className="inline-flex items-center gap-1.5 text-xs text-white/30 transition-colors hover:text-white/50"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            {isThreadOpen ? '返信を閉じる' : `返信 ${replyCount}件`}
+                          </button>
+                        </div>
+
+                        {/* Thread (replies) */}
+                        <AnimatePresence>
+                          {isThreadOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            </button>
+                              <div className="mt-4 border-l-2 border-white/[0.06] pl-4">
+                                {/* Loading spinner */}
+                                {isLoadingReplies && (
+                                  <div className="flex justify-center py-4">
+                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
+                                  </div>
+                                )}
+
+                                {/* Reply list */}
+                                {!isLoadingReplies && replies.length === 0 && (
+                                  <p className="py-3 text-xs text-white/20">まだ返信はありません</p>
+                                )}
+                                {!isLoadingReplies && replies.map((reply) => (
+                                  <motion.div
+                                    key={reply.id}
+                                    className="mb-3 rounded-lg border border-white/[0.04] bg-white/[0.015] p-3"
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                  >
+                                    <div className="mb-1.5 flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs">
+                                          {reply.userAvatar ? getAvatarEmoji(reply.userAvatar) : reply.userName[0].toUpperCase()}
+                                        </div>
+                                        <span className="text-xs font-medium text-white/50">{reply.userName}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {user && user.userId === reply.userId && (
+                                          <button
+                                            onClick={() => handleDeleteReply(comment.id, reply.id)}
+                                            className="text-red-400/40 transition-colors hover:text-red-400"
+                                            title="削除"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                          </button>
+                                        )}
+                                        <span className="text-[10px] text-white/15">{formatDateTime(reply.createdAt)}</span>
+                                      </div>
+                                    </div>
+                                    <p className="whitespace-pre-wrap text-xs leading-relaxed text-white/40">
+                                      {reply.content}
+                                    </p>
+                                  </motion.div>
+                                ))}
+
+                                {/* Reply input */}
+                                {user && token ? (
+                                  <div className="mt-3 flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={replyText}
+                                      onChange={(e) =>
+                                        setReplyTexts((prev) => ({ ...prev, [comment.id]: e.target.value }))
+                                      }
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                          e.preventDefault();
+                                          handleSubmitReply(comment.id);
+                                        }
+                                      }}
+                                      placeholder="返信を入力..."
+                                      maxLength={500}
+                                      className="flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                                    />
+                                    <button
+                                      onClick={() => handleSubmitReply(comment.id)}
+                                      disabled={isSubmittingReply || !replyText.trim()}
+                                      className="shrink-0 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+                                    >
+                                      {isSubmittingReply ? '...' : '送信'}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={openAuth}
+                                    className="mt-2 text-xs text-white/30 underline transition-colors hover:text-white/50"
+                                  >
+                                    ログインして返信
+                                  </button>
+                                )}
+                              </div>
+                            </motion.div>
                           )}
-                          <span className="text-xs text-white/15">{formatDateTime(comment.createdAt)}</span>
-                        </div>
-                      </div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/40">
-                        {comment.content}
-                      </p>
-                    </motion.div>
-                  ))}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             )}

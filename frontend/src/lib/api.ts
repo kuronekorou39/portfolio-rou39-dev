@@ -120,6 +120,26 @@ export async function createComment(
   });
 }
 
+export async function fetchReplies(
+  projectId: string,
+  commentId: string,
+): Promise<Comment[]> {
+  return request<Comment[]>(`/comments/${projectId}/${commentId}/replies`);
+}
+
+export async function createReply(
+  projectId: string,
+  commentId: string,
+  data: { content: string },
+  token: string,
+): Promise<Comment> {
+  return request<Comment>(`/comments/${projectId}/${commentId}/replies`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteComment(
   projectId: string,
   commentId: string,

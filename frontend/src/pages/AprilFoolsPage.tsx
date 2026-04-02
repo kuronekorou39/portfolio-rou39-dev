@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import thumbnail from '@/assets/april-fools-thumbnail.png';
-import { incrementPageView, fetchPageView } from '@/lib/api';
+import { fetchPageView } from '@/lib/api';
 
 // Pink-themed confetti for pig theme
 function Confetti() {
@@ -99,13 +99,12 @@ export default function AprilFoolsPage() {
   const [glitchTick, setGlitchTick] = useState(0);
   const [victimCount, setVictimCount] = useState<number | null>(null);
 
-  // Increment visitor count on first play
+  // Fetch final victim count (no longer incrementing)
   useEffect(() => {
     if (phase !== 'loading' || victimCount !== null) return;
-    incrementPageView('april-fools')
-      .then(() => fetchPageView('april-fools'))
+    fetchPageView('april-fools')
       .then((data) => setVictimCount(data.count))
-      .catch(() => setVictimCount(Math.floor(Math.random() * 300) + 128));
+      .catch(() => setVictimCount(309));
   }, [phase, victimCount]);
 
   // Tab title sync
@@ -473,8 +472,8 @@ export default function AprilFoolsPage() {
                 あなたは{' '}
                 <span className="text-lg font-bold text-pink-400">
                   {victimCount ?? '...'}
-                </span>{' '}
-                人目の犠牲者です
+                </span>
+                人が騙されました
               </p>
             </motion.div>
 
@@ -496,7 +495,7 @@ export default function AprilFoolsPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
             >
-              4月1日 エイプリルフール
+              2026.4.1 April Fools Event — 終了しました
             </motion.p>
           </motion.div>
         )}

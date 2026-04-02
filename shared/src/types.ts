@@ -60,10 +60,11 @@ export interface InterestCount {
 export interface Comment {
   id: string;
   projectId: string;
+  parentId?: string;
   userId: string;
   userName: string;
   userAvatar?: string;
   content: string;
   createdAt: string;
-  updatedAt: string;
+  replyCount?: number;
 }
