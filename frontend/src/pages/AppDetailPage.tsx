@@ -105,6 +105,7 @@ export default function AppDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [viewCount, setViewCount] = useState<number>(0);
+  const [downloadCount, setDownloadCount] = useState<number>(0);
 
   // Review form state
   const [newRating, setNewRating] = useState(0);
@@ -171,7 +172,10 @@ export default function AppDetailPage() {
       .finally(() => setLoading(false));
     incrementPageView(id).catch(console.error);
     fetchPageView(id)
-      .then((data) => setViewCount(data.count))
+      .then((data) => {
+        setViewCount(data.count);
+        setDownloadCount(data.downloadCount);
+      })
       .catch(console.error);
   }, [id, reloadReviews, reloadComments, reloadInterest]);
 
@@ -495,6 +499,12 @@ export default function AppDetailPage() {
             <div className="flex items-center gap-1.5">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/25"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <span className="text-xs text-white/25">{viewCount.toLocaleString()}</span>
+            </div>
+
+            {/* Downloads */}
+            <div className="flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/25"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span className="text-xs text-white/25">{downloadCount.toLocaleString()}</span>
             </div>
           </div>
 

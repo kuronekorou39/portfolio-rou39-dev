@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { docClient } from '../lib/dynamo';
@@ -7,6 +7,7 @@ import { ok, badRequest, notFound, serverError } from '../lib/response';
 
 const TABLE = process.env.PROJECTS_TABLE!;
 const BUCKET = process.env.ASSETS_BUCKET!;
+const PAGE_VIEWS_TABLE = process.env.PAGE_VIEWS_TABLE!;
 
 const s3 = new S3Client({});
 
@@ -38,6 +39,16 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
 
     const url = await getSignedUrl(s3, command, { expiresIn: 300 });
+
+    // ダウンロード数をインクリメント
+    await docClient.send(
+      new UpdateCommand({
+        TableName: PAGE_VIEWS_TABLE,
+        Key: { projectId },
+        UpdateExpression: 'ADD downloadCount :inc',
+        ExpressionAttributeValues: { ':inc': 1 },
+      })
+    );
 
     return ok({ url });
   } catch (error) {

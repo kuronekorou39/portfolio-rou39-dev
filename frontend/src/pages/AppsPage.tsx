@@ -24,20 +24,22 @@ export default function AppsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewCounts, setViewCounts] = useState<Map<string, number>>(new Map());
+  const [downloadCounts, setDownloadCounts] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     fetchProjects()
       .then((data) => {
         setProjects(data);
-        // Fetch view counts for all projects
+        // Fetch view counts and download counts for all projects
         Promise.all(
           data.map((p) =>
             fetchPageView(p.id)
-              .then((res) => [p.id, res.count] as const)
-              .catch(() => [p.id, 0] as const)
+              .then((res) => [p.id, res.count, res.downloadCount] as const)
+              .catch(() => [p.id, 0, 0] as const)
           )
         ).then((results) => {
-          setViewCounts(new Map(results));
+          setViewCounts(new Map(results.map(([id, count]) => [id, count])));
+          setDownloadCounts(new Map(results.map(([id, , dlCount]) => [id, dlCount])));
         });
       })
       .catch(console.error)
@@ -215,6 +217,10 @@ export default function AppsPage() {
                           <span className="ml-auto flex items-center gap-1 text-[10px] text-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             {viewCounts.get(project.id)?.toLocaleString() ?? '0'}
+                          </span>
+                          <span className="flex items-center gap-1 text-[10px] text-white/15">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            {downloadCounts.get(project.id)?.toLocaleString() ?? '0'}
                           </span>
                         </div>
 

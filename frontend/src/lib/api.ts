@@ -160,8 +160,8 @@ export async function incrementPageView(projectId: string): Promise<void> {
 
 export async function fetchPageView(
   projectId: string,
-): Promise<{ projectId: string; count: number }> {
-  return request<{ projectId: string; count: number }>(
+): Promise<{ projectId: string; count: number; downloadCount: number }> {
+  return request<{ projectId: string; count: number; downloadCount: number }>(
     `/page-views/${projectId}`,
   );
 }

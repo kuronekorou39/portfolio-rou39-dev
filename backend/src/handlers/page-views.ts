@@ -29,7 +29,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       const result = await docClient.send(
         new GetCommand({ TableName: TABLE, Key: { projectId } })
       );
-      return ok({ projectId, count: result.Item?.count ?? 0 });
+      return ok({
+        projectId,
+        count: result.Item?.count ?? 0,
+        downloadCount: result.Item?.downloadCount ?? 0,
+      });
     }
 
     return badRequest('Unsupported method');

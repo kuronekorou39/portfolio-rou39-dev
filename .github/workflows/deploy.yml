@@ -1,0 +1,67 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Deploy CDK
+        run: cd infra && npx cdk deploy --all --require-approval never
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+
+# ============================================================
+# GitHub Secrets の設定手順
+# ============================================================
+#
+# 1. GitHubリポジトリのページを開く
+# 2. Settings → Secrets and variables → Actions に移動
+# 3. "New repository secret" をクリックして、以下の5つを登録する
+#
+# ■ AWS_ACCESS_KEY_ID
+#   - IAMユーザー portfolio-deployer のアクセスキーID
+#   - 例: AKIA...
+#
+# ■ AWS_SECRET_ACCESS_KEY
+#   - IAMユーザー portfolio-deployer のシークレットアクセスキー
+#   - 例: wJalrX...
+#
+# ■ GOOGLE_CLIENT_ID
+#   - Google Cloud Console で発行した OAuth 2.0 クライアントID
+#   - 例: 123456789-xxxx.apps.googleusercontent.com
+#
+# ■ GOOGLE_CLIENT_SECRET
+#   - Google Cloud Console で発行した OAuth 2.0 クライアントシークレット
+#   - 例: GOCSPX-xxxx
+#
+# ■ ALERT_EMAIL
+#   - AWS予算アラートの通知先メールアドレス
+#   - 例: your-email@example.com
+#
+# ============================================================

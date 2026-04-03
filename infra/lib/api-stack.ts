@@ -109,6 +109,7 @@ export class ApiStack extends cdk.Stack {
     });
     props.projectsTable.grantReadData(downloadsFn);
     props.assetsBucket.grantRead(downloadsFn);
+    props.pageViewsTable.grantReadWriteData(downloadsFn);
 
     const downloads = this.api.root.addResource('downloads');
     const downloadByProject = downloads.addResource('{projectId}');
