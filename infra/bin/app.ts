@@ -9,6 +9,7 @@ import { StorageStack } from '../lib/storage-stack';
 import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
+import { MonitoringStack } from '../lib/monitoring-stack';
 
 const app = new cdk.App();
 
@@ -81,3 +82,6 @@ new FrontendStack(app, 'PortfolioFrontend', {
   hostedZone: frontendHostedZone,
   domainName: DOMAIN_NAME,
 });
+
+// Monitoring stack (budget alerts)
+new MonitoringStack(app, 'PortfolioMonitoring', { env });

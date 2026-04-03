@@ -469,7 +469,6 @@ export default function AprilFoolsPage() {
               transition={{ delay: 1.1, type: 'spring', damping: 15 }}
             >
               <p className="text-center text-sm text-white/50">
-                あなたは{' '}
                 <span className="text-lg font-bold text-pink-400">
                   {victimCount ?? '...'}
                 </span>
