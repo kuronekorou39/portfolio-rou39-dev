@@ -223,29 +223,31 @@
     "id": "local-port-board",
     "title": "Local PortBoard",
     "subtitle": "ローカル開発環境のポート監視・管理ツール",
-    "description": "# Local PortBoard\n\nTCP/UDPポートの使用状況をリアルタイム監視するシステムトレイアプリ。プロセス情報の表示、Docker/Kubernetesコンテナの自動検出、ワンクリックプロセス終了に対応。\n\n## 特徴\n\n- 2秒間隔のリアルタイムポートスキャン\n- プロセス名・PID・コマンドライン表示\n- Docker/K8sコンテナ自動検出\n- 安全なプロセス終了（確認ダイアログ付き）\n- 多言語対応・ダークテーマ\n- Windows & macOS 対応",
-    "howToUse": "## 使い方\n\n1. アプリを起動するとシステムトレイに常駐\n2. トレイアイコンをクリックでポート一覧を表示\n3. ポート行をクリックでプロセス詳細を確認\n4. 右クリックでプロセス終了やファイアウォール情報を表示\n5. 設定でスキャン間隔・テーマ・言語を変更",
+    "description": "# Local PortBoard\n\nローカルで稼働中のTCP/UDPポートをリアルタイム監視するシステムトレイ常駐アプリ。開発時に「このポート何が使ってる？」「ちゃんと止まってる？」をすぐ確認できます。\n\n## 作った動機\n\n開発中に開いているポートをすぐに確認したかった。特定ポートの稼働状況（起動済み/停止済み）を手軽にチェックしたかった。\n\n## 特徴\n\n- **リアルタイム監視** — 2秒間隔で自動スキャン（2〜20秒で調整可能）\n- **プロセス詳細** — プロセス名、PID、コマンドライン、メモリ使用量、起動時間\n- **Docker/K8s自動検出** — コンテナ名、イメージ、docker-composeサービスを識別。停止・再起動ボタン付き\n- **Cloudflare Tunnel検出** — トンネルURL表示\n- **WSLプロセス識別** — Windows上のWSLプロセスを区別\n- **カテゴリ自動分類** — Web、Database、Cache、Message Queue、DevTool、Runtime、Container\n- **Git プロジェクト検出** — プロセスの作業ディレクトリからプロジェクト名を自動取得\n- **安全なプロセス終了** — システムプロセス保護＋確認ダイアログ付きKILL\n- **Windowsファイアウォールルール表示**\n- **検索・フィルタ** — ポート番号、プロセス名、プロジェクト名、カテゴリ等で絞り込み\n- **ポート履歴** — ポートの出現・消失をタイムラインで記録\n- **日本語/英語 切り替え**\n- **ダーク/ライト テーマ**\n- **クリップボードコピー** — TSV形式で全データをエクスポート\n- **Windows & macOS 対応**（MSI / DMG インストーラー）",
+    "howToUse": "## インストール\n\n1. [GitHub Releases](https://github.com/kuronekorou39/local-port-board/releases) からOS・アーキテクチャに合ったインストーラーをダウンロード\n2. Windows: .msi を実行 / macOS: .dmg を開いてApplicationsにドラッグ\n\n## 使い方\n\n1. 起動するとシステムトレイに常駐\n2. トレイアイコンをクリックでポート一覧を表示（2秒ごとに自動更新）\n3. 検索バーやバッジフィルタ（WSL/Docker/K8s/DEV等）で絞り込み\n4. 行をクリックでプロセスの詳細情報を確認（コマンドライン、メモリ、ファイアウォール等）\n5. KILLボタンでプロセス終了、Dockerの停止・再起動も可能",
     "category": "desktop",
     "tags": [
       "Preact",
       "Tauri",
       "Rust",
       "Windows API",
-      "Vite",
-      "Tailwind CSS"
+      "Vitest"
     ],
     "platform": [
       "Windows",
       "macOS"
     ],
     "icon": "",
-    "screenshots": [],
+    "screenshots": [
+      "/projects/local-port-board-01.png"
+    ],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/local-port-board",
+      "download": "https://github.com/kuronekorou39/local-port-board/releases"
     },
     "status": "active",
     "publishedAt": "2025-05-01",
-    "updatedAt": "2026-02-12",
+    "updatedAt": "2026-04-03",
     "size": "medium"
   },
   {

@@ -15,12 +15,12 @@ import underConstructionImg from '@/assets/under-construction.png';
 // ─── Data ──────────────────────────────────────────────────
 const projects = [
   { id: 'u2b-loop', title: 'U2B Loop', desc: 'YouTube区間リピート', emoji: '🔁', category: 'Web', color: '#FF6B6B', accent: '#FF3333' },
-  { id: 'koko-meshi', title: 'Koko-Meshi', desc: '近くの飯屋を探す', emoji: '🍜', category: 'Mobile', color: '#FFB347', accent: '#FF8C00' },
-  { id: 'domain-inspector', title: 'Domain Inspector', desc: 'トラフィック可視化', emoji: '🔍', category: 'Extension', color: '#7EC8E3', accent: '#2196F3' },
-  { id: 'cryptid-assistant', title: 'Cryptid Assistant', desc: 'AI搭載アシスタント', emoji: '🤖', category: 'Web', color: '#C5B9FF', accent: '#7C4DFF' },
+  { id: 'koko-meshi', title: 'ココメシ', desc: 'AI食事記録＆グルメマップ', emoji: '🍜', category: 'Mobile', color: '#FFB347', accent: '#FF8C00' },
+  { id: 'domain-traffic-inspector', title: 'Domain Inspector', desc: 'トラフィック可視化', emoji: '🔍', category: 'Chrome Ext', color: '#7EC8E3', accent: '#2196F3' },
+  { id: 'cryptid-logic-solver', title: 'Cryptid Solver', desc: 'ボードゲーム推論ツール', emoji: '🧩', category: 'Web', color: '#C5B9FF', accent: '#7C4DFF' },
   { id: 'memoria', title: 'Memoria', desc: '思い出を記録・管理', emoji: '📸', category: 'Mobile', color: '#FFB7C5', accent: '#E91E63' },
-  { id: 'mobile-omniverse', title: 'Mobile Omniverse', desc: 'モバイル統合プラットフォーム', emoji: '🌐', category: 'Mobile', color: '#A8E6CF', accent: '#00C853' },
-  { id: 'mobile-bex', title: 'Mobile BEX', desc: 'モバイルブラウザ拡張', emoji: '🧩', category: 'Extension', color: '#FFE66D', accent: '#FFD600' },
+  { id: 'omniverse', title: 'OmniVerse', desc: 'X & Bluesky統合クライアント', emoji: '🌐', category: 'Mobile', color: '#A8E6CF', accent: '#00C853' },
+  { id: 'mobile-bex', title: 'Mobile BEX', desc: 'スマホでChrome拡張', emoji: '📱', category: 'Mobile', color: '#FFE66D', accent: '#FFD600' },
 ];
 
 // ═══════════════════════════════════════════════════════════
