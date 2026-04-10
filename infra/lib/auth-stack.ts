@@ -39,8 +39,12 @@ export class AuthStack extends cdk.Stack {
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-      // SES email is deferred until domain is verified in SES
-      // Using default Cognito email sender for now
+      email: cognito.UserPoolEmail.withSES({
+        fromEmail: 'noreply@rou39.com',
+        fromName: 'rou39 Portfolio',
+        sesRegion: 'ap-northeast-1',
+        sesVerifiedDomain: 'rou39.com',
+      }),
     });
 
     // Pre Sign Up Lambda trigger for account linking

@@ -37,22 +37,27 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp, confirmSignUp } = useAuth();
 
-  // Reset state when modal opens
+  // Reset state only when modal opens from closed state (not when reopening mid-flow)
+  const [wasOpen, setWasOpen] = useState(false);
   useEffect(() => {
-    if (isOpen) {
-      setMode('login');
+    if (isOpen && !wasOpen) {
+      // Only reset to login if not in a mid-flow state (reset/confirm)
+      if (mode !== 'reset' && mode !== 'confirm') {
+        setMode('login');
+        setPassword('');
+        setCode('');
+      }
       setError('');
-      setPassword('');
-      setCode('');
       setShowPassword(false);
     }
+    setWasOpen(isOpen);
   }, [isOpen]);
 
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && mode !== 'reset' && mode !== 'confirm') onClose();
     }
     window.addEventListener('keydown', handleKey);
     document.body.style.overflow = 'hidden';
@@ -60,7 +65,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       window.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, mode]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -159,9 +164,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           transition={{ duration: 0.15 }}
         >
           {/* Backdrop — semi-transparent to show site behind */}
+          {/* Don't close on backdrop click during reset/confirm flows */}
           <motion.div
             className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
-            onClick={onClose}
+            onClick={mode === 'reset' || mode === 'confirm' ? undefined : onClose}
           />
 
           {/* Modal */}
@@ -319,17 +325,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {/* ═══ RESET ═══ */}
             {mode === 'reset' && (
               <form onSubmit={handleResetPassword} className="space-y-4">
-                <p className="text-center text-sm text-white/40">
-                  Reset code sent to <span className="text-white/60">{email}</span>
-                </p>
-                <input type="text" placeholder="Reset code" value={code} onChange={(e) => setCode(e.target.value)} className={inputClass} required />
-                <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} placeholder="New password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={8} />
-                  {passwordToggle}
+                <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-center text-sm">
+                  <p className="font-semibold text-blue-300">{email}</p>
+                  <p className="mt-1 text-blue-300/80">に確認コードを送信しました</p>
+                  <p className="mt-1 text-xs text-blue-300/60">メールが届かない場合は迷惑メールフォルダを確認してください</p>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-white/50">確認コード</label>
+                  <input type="text" placeholder="6桁のコードを入力" value={code} onChange={(e) => setCode(e.target.value)} className={inputClass} required autoFocus />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-white/50">新しいパスワード</label>
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} placeholder="8文字以上（大文字・小文字・数字）" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={8} />
+                    {passwordToggle}
+                  </div>
                 </div>
                 <button type="submit" disabled={submitting} className={btnClass}>
                   {submitting ? 'Resetting...' : 'Reset Password'}
                 </button>
+                <p className="text-center">
+                  <button type="button" onClick={() => { setMode('login'); setError(''); setCode(''); setPassword(''); }} className="text-xs text-white/30 hover:text-white/50">Back to Login</button>
+                </p>
               </form>
             )}
           </motion.div>

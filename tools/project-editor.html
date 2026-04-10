@@ -185,7 +185,7 @@ function addProject() {
   projects.push({
     id, title: 'New Project', subtitle: '', description: '', howToUse: '',
     category: 'web', tags: [], platform: [], icon: '', screenshots: [],
-    links: {}, status: 'coming-soon', size: 'medium',
+    links: {}, downloads: [], status: 'coming-soon', size: 'medium',
     publishedAt: new Date().toISOString().split('T')[0],
     updatedAt: new Date().toISOString().split('T')[0],
   });
@@ -453,8 +453,53 @@ function renderForm() {
           </div>
         </div>
       </div>
+
+      <!-- Downloads -->
+      <div class="form-section">
+        <h2>Downloads</h2>
+        <span class="hint" style="display:block;margin-bottom:10px">
+          OS別のダウンロードURLを設定。1件なら直接DL、複数ならドロップダウンで表示されます
+        </span>
+        <div id="downloadsContainer" style="display:flex;flex-direction:column;gap:8px">
+          ${(p.downloads || []).map((dl, i) => `
+            <div style="display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card)">
+              <select onchange="updateDownload(${i},'os',this.value)" style="padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;width:80px">
+                ${['windows','mac','linux','android','ios','other'].map(o => `<option value="${o}" ${dl.os === o ? 'selected' : ''}>${o}</option>`).join('')}
+              </select>
+              <input value="${esc(dl.label)}" placeholder="Label (e.g. Windows x64 .msi)" onchange="updateDownload(${i},'label',this.value)"
+                style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px">
+              <input value="${esc(dl.url)}" placeholder="URL" onchange="updateDownload(${i},'url',this.value)"
+                style="flex:2;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px">
+              <button onclick="removeDownload(${i})" style="color:var(--danger);background:none;border:none;cursor:pointer;font-size:14px" title="Delete">×</button>
+            </div>
+          `).join('')}
+          <button onclick="addDownloadEntry()" class="btn" style="align-self:flex-start">+ Add Download</button>
+        </div>
+      </div>
     </form>
   `;
+}
+
+function addDownloadEntry() {
+  const p = projects[selectedIndex];
+  if (!p.downloads) p.downloads = [];
+  p.downloads.push({ label: '', url: '', os: 'windows' });
+  renderForm();
+}
+
+function updateDownload(idx, field, value) {
+  const p = projects[selectedIndex];
+  if (p.downloads && p.downloads[idx]) {
+    p.downloads[idx][field] = value;
+  }
+}
+
+function removeDownload(idx) {
+  const p = projects[selectedIndex];
+  if (p.downloads) {
+    p.downloads.splice(idx, 1);
+    renderForm();
+  }
 }
 
 function addTag(e, field) {

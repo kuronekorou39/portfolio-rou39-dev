@@ -6,6 +6,12 @@ export interface ProjectLinks {
   download?: string;
 }
 
+export interface DownloadEntry {
+  label: string;   // e.g. "Windows (x64)", "macOS (Apple Silicon)"
+  url: string;
+  os: 'windows' | 'mac' | 'linux' | 'android' | 'ios' | 'other';
+}
+
 export type ProjectCategory = 'web' | 'mobile' | 'desktop' | 'chrome-ext' | 'burp-ext' | 'other';
 export type ProjectStatus = 'active' | 'development' | 'coming-soon' | 'archived';
 export type ProjectSize = 'large' | 'medium' | 'small';
@@ -22,6 +28,7 @@ export interface Project {
   icon: string;
   screenshots: string[];
   links: ProjectLinks;
+  downloads?: DownloadEntry[];
   status: ProjectStatus;
   size: ProjectSize;
   publishedAt: string;

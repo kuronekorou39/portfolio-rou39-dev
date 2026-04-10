@@ -3,12 +3,89 @@ import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
-import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, getDownloadUrl, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment, fetchReplies, createReply } from '@/lib/api';
+import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment, fetchReplies, createReply } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
 import type { Project, Review, Comment as ProjectComment } from '../../../shared/src/types';
 
 type Tab = 'about' | 'howto' | 'reviews' | 'feedback';
+
+const GitHubIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+);
+
+const ExternalLinkIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+);
+
+const DownloadIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+);
+
+function detectOS(): string {
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('win')) return 'windows';
+  if (ua.includes('mac')) return 'mac';
+  if (ua.includes('linux')) return 'linux';
+  if (ua.includes('android')) return 'android';
+  if (ua.includes('iphone') || ua.includes('ipad')) return 'ios';
+  return 'other';
+}
+
+import type { DownloadEntry } from '../../../shared/src/types';
+
+function DownloadButton({ downloads, compact = false }: { downloads: DownloadEntry[]; compact?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const userOS = detectOS();
+
+  if (downloads.length === 1) {
+    return (
+      <a
+        href={downloads[0].url}
+        className={`flex items-center justify-center gap-1.5 rounded-xl bg-white font-semibold text-black ${compact ? 'flex-1 py-2.5 text-xs' : 'py-2.5 text-sm'}`}
+      >
+        <DownloadIcon size={compact ? 12 : 14} /> Download
+      </a>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex w-full items-center justify-center gap-1.5 rounded-xl bg-white font-semibold text-black ${compact ? 'py-2.5 text-xs' : 'py-2.5 text-sm'}`}
+      >
+        <DownloadIcon size={compact ? 12 : 14} /> Download ▾
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 right-0 top-full z-40 mt-1 overflow-hidden rounded-xl border border-white/10 bg-[#161b22] shadow-xl">
+            {downloads.map((dl, i) => {
+              const isRecommended = dl.os === userOS;
+              return (
+                <a
+                  key={i}
+                  href={dl.url}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors hover:bg-white/10 ${
+                    isRecommended ? 'bg-white/[0.04] text-white' : 'text-white/50'
+                  }`}
+                >
+                  <DownloadIcon size={12} />
+                  <span className="flex-1">{dl.label}</span>
+                  {isRecommended && (
+                    <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-medium text-blue-400">推奨</span>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function formatDateTime(iso: string): string {
   const d = new Date(iso);
@@ -99,11 +176,11 @@ export default function AppDetailPage() {
   const { user, token } = useAuth();
   const { openAuth } = useOutletContext<{ openAuth: () => void }>();
   const [activeTab, setActiveTab] = useState<Tab>('about');
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
   const [viewCount, setViewCount] = useState<number>(0);
   const [downloadCount, setDownloadCount] = useState<number>(0);
 
@@ -336,18 +413,18 @@ export default function AppDetailPage() {
     }
   };
 
-  const handleDownload = async () => {
-    if (!id || !token) return;
-    setDownloadLoading(true);
-    try {
-      const url = await getDownloadUrl(id, token);
-      window.location.href = url;
-    } catch (err) {
-      console.error('Download failed:', err);
-    } finally {
-      setDownloadLoading(false);
-    }
-  };
+  // Lightbox keyboard navigation
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKey = (e: KeyboardEvent) => {
+      const total = project?.screenshots?.length ?? 0;
+      if (e.key === 'Escape') setLightboxIndex(null);
+      else if (e.key === 'ArrowRight') setLightboxIndex((prev) => (prev !== null && prev < total - 1 ? prev + 1 : prev));
+      else if (e.key === 'ArrowLeft') setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxIndex, project?.screenshots?.length]);
 
   if (loading) {
     return (
@@ -384,18 +461,18 @@ export default function AppDetailPage() {
   const tabs: { key: Tab; label: string }[] = isComingSoon
     ? [
         { key: 'about', label: 'About' },
-        { key: 'feedback', label: `Feedback (${comments.length})` },
+        { key: 'feedback', label: 'Feedback' },
       ]
     : [
         { key: 'about', label: 'About' },
         { key: 'howto', label: 'How to Use' },
-        { key: 'reviews', label: `Reviews (${reviews.length})` },
-        { key: 'feedback', label: `Feedback (${comments.length})` },
+        { key: 'reviews', label: 'Reviews' },
+        ...(comments.length > 0 ? [{ key: 'feedback' as Tab, label: 'Feedback' }] : []),
       ];
 
   return (
     <div className="min-h-screen bg-[#060608] text-white">
-      <div className="mx-auto max-w-4xl px-6 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-12">
         {/* Back link */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -410,216 +487,149 @@ export default function AppDetailPage() {
           </Link>
         </motion.div>
 
-        {/* Hero section */}
+        {/* Two-column layout */}
         <motion.div
-          className="mt-8"
+          className="mt-4 flex flex-col gap-6 sm:mt-8 sm:gap-8 lg:flex-row"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex items-start gap-5">
-            {/* Icon */}
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-3xl">
-              {categoryEmoji[project.category]}
-            </div>
-
-            <div className="min-w-0">
-              {/* Category + Status */}
-              <div className="mb-2 flex items-center gap-3">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
-                  {categoryLabel[project.category]}
+          {/* ===== Left column: main content ===== */}
+          <div className="min-w-0 flex-1">
+            {/* Title + meta (mobile/tablet only — desktop shows in sidebar) */}
+            <div className="mb-4 lg:hidden">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xl">
+                  {categoryEmoji[project.category]}
                 </span>
-                <span
-                  className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider"
-                  style={{ color: status.color }}
-                >
-                  <span
-                    className="inline-block h-1.5 w-1.5 rounded-full"
-                    style={{ background: status.color }}
-                  />
-                  {status.text}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h1 className="mb-2 text-4xl font-black tracking-tight md:text-5xl">
-                {project.title}
-              </h1>
-              <p className="text-lg text-white/40">{project.subtitle}</p>
-            </div>
-          </div>
-
-          {/* Meta row */}
-          <div className="mt-6 flex flex-wrap items-center gap-6">
-            {/* Rating or Interest */}
-            {isComingSoon ? (
-              <button
-                onClick={user && token ? handleToggleInterest : openAuth}
-                disabled={interestLoading}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                  isInterested
-                    ? 'border border-blue-400/30 bg-blue-400/10 text-blue-400'
-                    : 'border border-white/10 text-white/40 hover:border-white/30 hover:text-white/60'
-                }`}
-              >
-                {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
-              </button>
-            ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <StarRating rating={avgRating} />
-                  <span className="text-sm text-white/40">{avgRating.toFixed(1)}</span>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl font-black tracking-tight">{project.title}</h1>
+                  <p className="text-xs text-white/40">{project.subtitle}</p>
                 </div>
-                {interestCount > 0 && (
-                  <span className="text-xs text-blue-400/50">
-                    ★ {interestCount}人が注目
-                  </span>
-                )}
-              </>
+                {/* Rating + views — top right */}
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  {!isComingSoon && reviews.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <StarRating rating={avgRating} />
+                      <span className="text-[10px] text-white/30">{avgRating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-[10px] text-white/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    {viewCount.toLocaleString()}
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-white/20">
+                    {project.platform.map((p) => (
+                      <span key={p} className="rounded bg-white/[0.06] px-1.5 py-0.5">{p}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Screenshots gallery */}
+            {project.screenshots && project.screenshots.length > 0 && (
+              <div className="mb-6">
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {project.screenshots.map((src, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setLightboxIndex(i)}
+                      className="shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/[0.06] transition-all hover:border-white/20"
+                    >
+                      <img
+                        src={src}
+                        alt={`${project.title} screenshot ${i + 1}`}
+                        className="h-44 w-auto object-cover sm:h-52"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
 
-            {/* Platform */}
-            <div className="flex gap-2">
-              {project.platform.map((p) => (
-                <span
-                  key={p}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/30"
+            {/* Mobile: action buttons + meta (hidden on desktop) */}
+            <div className="mb-4 lg:hidden">
+              {/* Action buttons */}
+              {!isComingSoon && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {project.links.web && (
+                    <a href={project.links.web} target="_blank" rel="noopener noreferrer"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
+                      <ExternalLinkIcon size={12} /> Open App
+                    </a>
+                  )}
+                  {project.downloads && project.downloads.length > 0 && (
+                    <div className="flex-1">
+                      <DownloadButton downloads={project.downloads} compact />
+                    </div>
+                  )}
+                  {!project.downloads?.length && project.links.download && (
+                    <a href={project.links.download} target="_blank" rel="noopener noreferrer"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
+                      <DownloadIcon size={12} /> Download
+                    </a>
+                  )}
+                  {project.links.github && (
+                    <a href={project.links.github} target="_blank" rel="noopener noreferrer"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 py-2.5 text-xs font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
+                      <GitHubIcon size={12} /> GitHub
+                    </a>
+                  )}
+                </div>
+              )}
+              {isComingSoon && (
+                <button
+                  onClick={user && token ? handleToggleInterest : openAuth}
+                  disabled={interestLoading}
+                  className={`mb-3 w-full rounded-lg py-2 text-xs font-medium transition-all ${
+                    isInterested
+                      ? 'border border-blue-400/30 bg-blue-400/10 text-blue-400'
+                      : 'border border-white/10 text-white/40'
+                  }`}
                 >
-                  {p}
-                </span>
+                  {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
+                </button>
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="mb-6 flex gap-1 overflow-x-auto border-b border-white/[0.06]">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`relative shrink-0 px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2.5 sm:text-sm ${
+                    activeTab === tab.key
+                      ? 'text-white'
+                      : 'text-white/30 hover:text-white/50'
+                  }`}
+                >
+                  {tab.label}
+                  {activeTab === tab.key && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-blue-400" />
+                  )}
+                </button>
               ))}
             </div>
 
-            {/* Date */}
-            <span className="text-xs text-white/15">
-              Updated {project.updatedAt}
-            </span>
-
-            {/* Views */}
-            <div className="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/25"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span className="text-xs text-white/25">{viewCount.toLocaleString()}</span>
-            </div>
-
-            {/* Downloads */}
-            <div className="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/25"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span className="text-xs text-white/25">{downloadCount.toLocaleString()}</span>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {project.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-white/[0.08] px-3 py-1 text-xs text-white/30"
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
               >
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          {/* Links (hidden for coming-soon) */}
-          {!isComingSoon && <div className="mt-6 flex flex-wrap gap-3">
-            {project.links.web && (
-              <a
-                href={project.links.web}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition-transform hover:scale-105"
-              >
-                Open App →
-              </a>
-            )}
-            {project.links.github && (
-              <a
-                href={project.links.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white"
-              >
-                GitHub
-              </a>
-            )}
-            {project.links.appStore && (
-              <a
-                href={project.links.appStore}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white"
-              >
-                App Store
-              </a>
-            )}
-            {project.links.playStore && (
-              <a
-                href={project.links.playStore}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white"
-              >
-                Google Play
-              </a>
-            )}
-            {project.links.download && (
-              token ? (
-                <button
-                  onClick={handleDownload}
-                  disabled={downloadLoading}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white disabled:opacity-50"
-                >
-                  {downloadLoading ? 'Preparing...' : 'Download'}
-                </button>
-              ) : (
-                <button
-                  onClick={openAuth}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white"
-                >
-                  Download (Login required)
-                </button>
-              )
-            )}
-          </div>}
-        </motion.div>
-
-        {/* Divider */}
-        <div className="my-10 h-px bg-white/[0.06]" />
-
-        {/* Tabs */}
-        <div className="mb-8 flex gap-1 rounded-xl border border-white/[0.06] bg-white/[0.02] p-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative rounded-lg px-5 py-2.5 text-sm font-medium transition-all ${
-                activeTab === tab.key
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/30 hover:text-white/50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
             {activeTab === 'about' && (
-              <div className="selectable prose prose-invert max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-white/50 prose-li:text-white/50 prose-strong:text-white/70">
+              <div className="selectable md-content">
                 <Markdown>{project.description}</Markdown>
               </div>
             )}
 
             {activeTab === 'howto' && (
-              <div className="selectable prose prose-invert max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-white/50 prose-li:text-white/50 prose-strong:text-white/70">
+              <div className="selectable md-content">
                 <Markdown>{project.howToUse}</Markdown>
               </div>
             )}
@@ -627,11 +637,11 @@ export default function AppDetailPage() {
             {activeTab === 'feedback' && (
               <div>
                 {/* Comment form */}
-                <div className="mb-8 rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+                <div className="mb-8 rounded-xl border-l-2 border-blue-400/30 bg-white/[0.02] p-4 sm:p-6">
                   {user && token ? (
                     <div className="space-y-3">
                       <p className="text-sm text-white/40">
-                        このアプリに対するフィードバックや要望を自由に書いてください
+                        忌憚ない意見をお待ちしています。匿名なので、思ったことを自由にどうぞ。バグ報告、改善案、要望、感想、何でもOK。
                       </p>
                       <textarea
                         value={newComment}
@@ -828,7 +838,7 @@ export default function AppDetailPage() {
             {activeTab === 'reviews' && (
               <div>
                 {/* Review summary */}
-                <div className="mb-8 flex items-center gap-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+                <div className="mb-8 flex items-center gap-6 rounded-xl border-l-2 border-blue-400/30 bg-white/[0.02] p-4 sm:p-6">
                   <div className="text-center">
                     <div className="text-4xl font-black">{avgRating.toFixed(1)}</div>
                     <StarRating rating={avgRating} />
@@ -979,8 +989,208 @@ export default function AppDetailPage() {
               </div>
             )}
           </motion.div>
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
+
+          {/* ===== Right column: sidebar (desktop only) ===== */}
+          <div className="hidden w-72 shrink-0 lg:block">
+            <div className="sticky top-20 space-y-5">
+              {/* Title (desktop only) */}
+              <div className="hidden lg:block">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-2xl">
+                    {categoryEmoji[project.category]}
+                  </span>
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
+                      {categoryLabel[project.category]}
+                    </span>
+                    <span
+                      className="ml-2 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider"
+                      style={{ color: status.color }}
+                    >
+                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
+                      {status.text}
+                    </span>
+                  </div>
+                </div>
+                <h1 className="mb-1 text-2xl font-black tracking-tight">{project.title}</h1>
+                <p className="text-sm text-white/40">{project.subtitle}</p>
+              </div>
+
+              {/* Action buttons */}
+              {!isComingSoon && (
+                <div className="flex flex-col gap-2">
+                  {project.links.web && (
+                    <a href={project.links.web} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02]">
+                      <ExternalLinkIcon size={14} /> Open App
+                    </a>
+                  )}
+                  {project.downloads && project.downloads.length > 0 && (
+                    <DownloadButton downloads={project.downloads} />
+                  )}
+                  {!project.downloads?.length && project.links.download && (
+                    <a href={project.links.download} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black">
+                      <DownloadIcon /> Download
+                    </a>
+                  )}
+                  {project.links.github && (
+                    <a href={project.links.github} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
+                      <GitHubIcon /> GitHub
+                    </a>
+                  )}
+                  {project.links.appStore && (
+                    <a href={project.links.appStore} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
+                      App Store
+                    </a>
+                  )}
+                  {project.links.playStore && (
+                    <a href={project.links.playStore} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
+                      Google Play
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Interest button (coming-soon) */}
+              {isComingSoon && (
+                <button
+                  onClick={user && token ? handleToggleInterest : openAuth}
+                  disabled={interestLoading}
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all ${
+                    isInterested
+                      ? 'border border-blue-400/30 bg-blue-400/10 text-blue-400'
+                      : 'border border-white/10 text-white/40 hover:border-white/30 hover:text-white/60'
+                  }`}
+                >
+                  {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
+                </button>
+              )}
+
+              {/* Info card */}
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                <div className="space-y-3 text-xs">
+                  {/* Rating */}
+                  {!isComingSoon && reviews.length > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/30">Rating</span>
+                      <div className="flex items-center gap-1.5">
+                        <StarRating rating={avgRating} />
+                        <span className="text-white/50">{avgRating.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {interestCount > 0 && !isComingSoon && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/30">Interested</span>
+                      <span className="text-blue-400/60">{interestCount}人</span>
+                    </div>
+                  )}
+                  {/* Platform */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/30">Platform</span>
+                    <div className="flex gap-1.5">
+                      {project.platform.map((p) => (
+                        <span key={p} className="rounded bg-white/[0.06] px-2 py-0.5 text-[10px] text-white/40">{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Views & Downloads */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/30">Views</span>
+                    <span className="text-white/40">{viewCount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/30">Downloads</span>
+                    <span className="text-white/40">{downloadCount.toLocaleString()}</span>
+                  </div>
+                  {/* Updated */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/30">Updated</span>
+                    <span className="text-white/40">{project.updatedAt}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/20">Tech Stack</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {project.tags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-white/[0.08] px-2.5 py-0.5 text-[11px] text-white/30">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
+
+      {/* Screenshot lightbox */}
+      <AnimatePresence>
+        {lightboxIndex !== null && project?.screenshots && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxIndex(null)}
+          >
+            {/* Close button */}
+            <button
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+              onClick={() => setLightboxIndex(null)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+
+            {/* Prev button */}
+            {lightboxIndex > 0 && (
+              <button
+                className="absolute left-4 z-10 rounded-full bg-white/10 p-3 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+            )}
+
+            {/* Image */}
+            <motion.img
+              key={lightboxIndex}
+              src={project.screenshots[lightboxIndex]}
+              alt=""
+              className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Next button */}
+            {lightboxIndex < project.screenshots.length - 1 && (
+              <button
+                className="absolute right-4 z-10 rounded-full bg-white/10 p-3 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            )}
+
+            {/* Counter */}
+            <div className="absolute bottom-4 text-xs text-white/30">
+              {lightboxIndex + 1} / {project.screenshots.length}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

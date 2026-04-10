@@ -3,6 +3,24 @@
 html {
   scrollbar-gutter: stable;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+
+/* Webkit scrollbar (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.15);
 }
 
 body {
@@ -16,4 +34,63 @@ body {
 .selectable * {
   user-select: text;
   -webkit-user-select: text;
+}
+
+/* Markdown content styling */
+.md-content h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.md-content h2::before {
+  content: '▍';
+  color: #60a5fa;
+  font-size: 1.1rem;
+}
+.md-content h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.md-content p {
+  color: rgba(255,255,255,0.45);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+.md-content ul, .md-content ol {
+  padding-left: 0;
+  list-style: none;
+  margin-bottom: 0.75rem;
+}
+.md-content li {
+  position: relative;
+  padding-left: 1.25rem;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  margin-bottom: 0.25rem;
+}
+.md-content li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: rgba(255,255,255,0.2);
+  font-weight: 700;
+}
+.md-content strong {
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+}
+.md-content > *:first-child {
+  margin-top: 0;
 }
