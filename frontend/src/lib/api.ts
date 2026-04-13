@@ -165,3 +165,35 @@ export async function fetchPageView(
     `/page-views/${projectId}`,
   );
 }
+
+// Game Scores
+export interface GameScoreEntry {
+  rank: number;
+  playerName: string;
+  score: number;
+  playedAt: string;
+  moveCount: number;
+}
+
+export async function submitGameScore(data: {
+  playerName: string;
+  score: number;
+  timeLimit: number;
+  boardSize: number;
+  replay: { seed: number; tilesPerMove: number; moves: string[] };
+}): Promise<{ id: string; verified: boolean }> {
+  return request<{ id: string; verified: boolean }>('/game-scores', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function fetchGameRanking(
+  mode: string,
+  limit = 50,
+): Promise<GameScoreEntry[]> {
+  return request<GameScoreEntry[]>(
+    `/game-scores?mode=${encodeURIComponent(mode)}&limit=${limit}`,
+  );
+}

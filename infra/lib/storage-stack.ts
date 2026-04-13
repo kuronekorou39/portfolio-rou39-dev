@@ -10,6 +10,7 @@ export class StorageStack extends cdk.Stack {
   public readonly interestsTable: dynamodb.Table;
   public readonly commentsTable: dynamodb.Table;
   public readonly honeypotTable: dynamodb.Table;
+  public readonly gameScoresTable: dynamodb.Table;
   public readonly assetsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -73,6 +74,20 @@ export class StorageStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       timeToLiveAttribute: 'ttl',
+    });
+
+    // Game scores table
+    this.gameScoresTable = new dynamodb.Table(this, 'GameScoresTable', {
+      tableName: 'portfolio-game-scores',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    this.gameScoresTable.addGlobalSecondaryIndex({
+      indexName: 'by-mode-score',
+      partitionKey: { name: 'mode', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'score', type: dynamodb.AttributeType.NUMBER },
     });
 
     // Assets bucket (screenshots, app files)

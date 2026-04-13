@@ -15,6 +15,7 @@ interface ApiStackProps extends cdk.StackProps {
   interestsTable: dynamodb.Table;
   commentsTable: dynamodb.Table;
   honeypotTable: dynamodb.Table;
+  gameScoresTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
 }
@@ -199,6 +200,23 @@ export class ApiStack extends cdk.Stack {
     const honeypot = this.api.root.addResource('honeypot');
     const honeypotLog = honeypot.addResource('log');
     honeypotLog.addMethod('POST', new apigateway.LambdaIntegration(honeypotFn));
+
+    // --- Game Scores API (no auth — anyone can submit/view) ---
+    const gameScoresFn = new nodejs.NodejsFunction(this, 'GameScoresFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/game-scores.ts'),
+      handler: 'handler',
+      environment: {
+        GAME_SCORES_TABLE: props.gameScoresTable.tableName,
+      },
+      bundling: bundlingOptions,
+      timeout: cdk.Duration.seconds(10),
+    });
+    props.gameScoresTable.grantReadWriteData(gameScoresFn);
+
+    const gameScores = this.api.root.addResource('game-scores');
+    gameScores.addMethod('GET', new apigateway.LambdaIntegration(gameScoresFn));
+    gameScores.addMethod('POST', new apigateway.LambdaIntegration(gameScoresFn));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: this.api.url });
   }
