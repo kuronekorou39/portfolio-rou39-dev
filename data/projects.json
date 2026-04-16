@@ -32,26 +32,31 @@
     "id": "omniverse",
     "title": "OmniVerse",
     "subtitle": "X & Bluesky 統合SNSクライアント",
-    "description": "# OmniVerse\n\nX（Twitter）とBlueskyを一つのアプリで管理できるマルチプラットフォームSNSクライアント。統合タイムライン、通知フィルタリング、フローティングオーバーレイウィンドウに対応。\n\n## 特徴\n\n- X & Bluesky アカウント統合管理\n- 統合タイムライン表示\n- 通知タイプ別フィルタリング\n- フローティングオーバーレイウィンドウ\n- ブックマーク・投稿機能",
-    "howToUse": "## 使い方\n\n1. アプリを起動し、XまたはBlueskyアカウントを追加\n2. OAuth認証でログイン\n3. 統合タイムラインでまとめてフィードを閲覧\n4. 通知・投稿・ブックマークをタブで切り替え\n5. オーバーレイモードで他アプリ上にタイムラインを常時表示",
+    "description": "## 作った経緯\n\nXとBlueskyを行ったり来たりするのが面倒すぎた。両方のTLを1画面で追いたい、通知もまとめて見たい、投稿もアカウント切り替えだけでサクッとやりたい。既存のクライアントだとどっちか片方しか対応してないか、統合しても微妙だったので自分で作った。\n\n## 主な機能\n\n- **統合タイムライン** — X・Blueskyの投稿を時系列で1フィードに表示\n- **マルチアカウント** — X最大4アカウント + Bluesky複数アカウントを同時管理\n- **投稿・リプライ・引用RT** — アカウント選んで即投稿。XはDOM操作方式でbot検知を回避\n- **統合通知** — 全アカウントの通知をまとめて表示、アカウント別フィルタも可\n- **オーバーレイウィンドウ** — 他アプリの上にTLをフローティング表示\n- **高速ドリップ** — 新着投稿がスムーズに流れ込むリアルタイム更新\n- **ブックマーク** — ローカル保存でプラットフォーム横断のブックマーク管理\n- **ユーザープロフィール** — 投稿一覧・メディア一覧・フォロー/フォロワー表示\n\n## カスタマイズ\n\n- テーマ（ダーク / ライト / システム連動）\n- フォント（Google Fonts、日本語フォント対応）\n- フォントサイズ・画像プレビューサイズ調整\n- センシティブコンテンツの表示設定（3モード）\n- コンパクトUI・FAB位置変更\n- フェッチ間隔・ドリップ速度の調整",
+    "howToUse": "## インストール\n\nGitHub Releases から APK（Android）をダウンロードしてインストール。\n\n## 使い方\n\n1. アプリを起動し、「アカウント追加」からXまたはBlueskyを選択\n2. WebView内でOAuth認証してログイン\n3. 統合タイムラインで全アカウントのフィードをまとめて閲覧\n4. 下部タブで通知・投稿・ブックマーク・設定を切り替え\n5. 投稿画面でアカウントを選んでポスト（リプライ・引用RTも対応）\n6. オーバーレイモードで他アプリ上にTLを常時表示\n7. 設定からテーマ・フォント・フェッチ間隔などをカスタマイズ",
     "category": "mobile",
     "tags": [
       "Flutter",
       "Dart",
       "Riverpod",
       "X API",
-      "Bluesky API"
+      "Bluesky API",
+      "WebView"
     ],
     "platform": [
-      "Android",
-      "iOS"
+      "Android"
     ],
     "icon": "",
     "screenshots": [],
-    "links": {},
+    "links": {
+      "github": "https://github.com/kuronekorou39/mobile-omniverse"
+    },
+    "downloads": [
+      { "label": "Android (.apk)", "url": "https://github.com/kuronekorou39/mobile-omniverse/releases/download/v1.9.4/OmniVerse-v1.9.4.apk", "os": "android" }
+    ],
     "status": "development",
     "publishedAt": "2025-07-20",
-    "updatedAt": "2026-03-31",
+    "updatedAt": "2026-04-08",
     "size": "large"
   },
   {
@@ -84,28 +89,32 @@
   {
     "id": "u2b-loop",
     "title": "U2B Loop",
-    "subtitle": "YouTube・ローカル動画のAB区間ループ再生プレーヤー",
-    "description": "# U2B Loop\n\nYouTube動画やローカル動画ファイルの特定区間をリピート再生できるPWAアプリ。A点とB点を設定するだけで、その区間を無限ループ再生。\n\n## 特徴\n\n- YouTube URLまたはローカル動画ファイル対応（ドラッグ&ドロップ）\n- A/Bキーでワンタッチ区間設定\n- ループ間ギャップ（0/2/5/10/30秒）\n- 再生速度変更\n- 設定の保存・共有URL生成\n- PWA対応（オフライン利用可）",
-    "howToUse": "## 使い方\n\n1. YouTube URLを貼り付け、またはローカル動画をドラッグ&ドロップ\n2. 「A」キーでループ開始点を設定\n3. 「B」キーでループ終了点を設定\n4. 「L」キーでループのON/OFFを切り替え\n5. 履歴に保存して次回すぐに呼び出し",
-    "category": "web",
+    "subtitle": "YouTube・ローカル動画のAB区間ループ再生アプリ",
+    "description": "## 作った経緯\n\n楽器練習や語学学習で「この部分だけ繰り返し聴きたい」が多すぎて作った。YouTubeでもローカル動画でも、A点とB点を設定するだけでその区間を無限ループ。\n\n## 主な機能\n\n- **1動画に最大10区間** — 複数のABリージョンを保存\n- **波形ドラッグ** — 波形上でA/B点をドラッグ設定\n- **プレイリスト** — 動画をグループ化して順番に再生\n- **タグ管理** — カテゴリ分けしてフィルタリング\n- **再生カウント** — 再生回数・累計時間を記録\n- **PiP/ミニプレーヤー** — 他の操作中もバックグラウンド再生\n- **音声エクスポート** — 区間の音声をファイルに保存\n- **速度変更** — 0.25x〜2.0x\n\nWeb版（レガシー）も公開中。",
+    "howToUse": "## インストール\n\nGitHub Releases から APK（Android）をダウンロードしてインストール。\n\n## 使い方\n\n1. YouTube URLを貼り付け、またはローカル動画を選択\n2. 波形上でA点・B点をドラッグして区間設定\n3. ループ再生開始。速度変更もOK\n4. 保存してタグやプレイリストで管理",
+    "category": "mobile",
     "tags": [
-      "JavaScript",
-      "YouTube API",
-      "PWA",
-      "Service Worker"
+      "Flutter",
+      "Dart",
+      "Riverpod",
+      "media_kit"
     ],
     "platform": [
-      "Web"
+      "Android",
+      "iOS"
     ],
     "icon": "",
     "screenshots": [],
     "links": {
-      "web": "#",
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/u2b-loop-app"
     },
+    "downloads": [
+      { "label": "Android (.apk)", "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-v1.39.1.apk", "os": "android" },
+      { "label": "iOS (.ipa)", "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-ios-v1.39.1.ipa", "os": "ios" }
+    ],
     "status": "active",
     "publishedAt": "2025-01-15",
-    "updatedAt": "2025-12-27",
+    "updatedAt": "2026-04-10",
     "size": "medium"
   },
   {
@@ -487,5 +496,33 @@
     "publishedAt": "2026-01-01",
     "updatedAt": "2026-03-15",
     "size": "medium"
+  },
+  {
+    "id": "u2b-loop-web",
+    "title": "U2B Loop (Web)",
+    "subtitle": "ブラウザで使えるAB区間ループ再生 — レガシー版",
+    "description": "## About\n\nU2B Loopの初代Web版。ブラウザだけで動くPWA。アプリ版の開発に伴い、こちらはレガシーとして公開中。\n\n新しいアプリ版（Android/iOS）では、複数リージョン・プレイリスト・タグ管理など多くの機能が追加されています。\n\n## 主な機能\n\n- **YouTube / ローカル動画** 対応\n- **A/Bキー** でワンタッチ区間設定\n- **波形表示**\n- **PWA** — オフラインでも利用可\n- **URL共有** — パラメータ付きで区間を共有",
+    "howToUse": "## 使い方\n\n1. サイトにアクセス\n2. YouTube URLを貼り付け or ローカル動画をドラッグ&ドロップ\n3. A/Bキーで区間設定 → Lキーでループ開始",
+    "category": "web",
+    "tags": [
+      "JavaScript",
+      "YouTube API",
+      "PWA"
+    ],
+    "platform": [
+      "Web"
+    ],
+    "icon": "",
+    "screenshots": [
+      "/projects/u2b-loop-web-01.png"
+    ],
+    "links": {
+      "web": "https://kuronekorou39.github.io/u2b-loop/",
+      "github": "https://github.com/kuronekorou39/u2b-loop"
+    },
+    "status": "active",
+    "publishedAt": "2024-06-01",
+    "updatedAt": "2025-12-27",
+    "size": "small"
   }
 ]

@@ -166,6 +166,19 @@ export async function fetchPageView(
   );
 }
 
+// Clip
+export async function createClip(text: string): Promise<{ code: string }> {
+  return request<{ code: string }>('/clip', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+}
+
+export async function fetchClip(code: string): Promise<{ text: string; createdAt: number }> {
+  return request<{ text: string; createdAt: number }>(`/clip/${encodeURIComponent(code)}`);
+}
+
 // Game Scores
 export interface GameScoreEntry {
   rank: number;

@@ -19,14 +19,7 @@ import {
 
 // ── Constants ──
 
-const TIME_OPTIONS = [
-  { label: '30s', value: 30 },
-  { label: '60s', value: 60 },
-  { label: '90s', value: 90 },
-  { label: '120s', value: 120 },
-  { label: '∞', value: 0 },
-];
-
+const TIME_LIMIT = 60;
 const BOARD_SIZE = 4;
 const TILES_PER_MOVE = 2;
 const MOVE_COOLDOWN_MS = 80;
@@ -73,10 +66,9 @@ function saveStoredName(name: string): void {
 export default function Game2048Page() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [score, setScore] = useState(0);
-  const [timeLimit, setTimeLimit] = useState(60);
-  const [timeLeftMs, setTimeLeftMs] = useState(60_000);
+  const [timeLeftMs, setTimeLeftMs] = useState(TIME_LIMIT * 1000);
   const [phase, setPhase] = useState<GamePhase>('idle');
-  const [bestScore, setBestScore] = useState(() => getStoredBest(60));
+  const [bestScore, setBestScore] = useState(() => getStoredBest(TIME_LIMIT));
 
   // Replay recording
   const seedRef = useRef(0);
@@ -116,20 +108,14 @@ export default function Game2048Page() {
       ? (boardWidth - (BOARD_SIZE + 1) * gap) / BOARD_SIZE
       : 0;
 
-  // ── Best score per time limit ──
-
-  useEffect(() => {
-    setBestScore(getStoredBest(timeLimit));
-  }, [timeLimit]);
-
   // ── Timer ──
 
   useEffect(() => {
-    if (phase !== 'playing' || timeLimit === 0) return;
+    if (phase !== 'playing') return;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - gameStartTimeRef.current;
-      const remaining = Math.max(0, timeLimit * 1000 - elapsed);
+      const remaining = Math.max(0, TIME_LIMIT * 1000 - elapsed);
       setTimeLeftMs(remaining);
 
       if (remaining <= 0) {
@@ -139,20 +125,20 @@ export default function Game2048Page() {
     }, 50);
 
     return () => clearInterval(interval);
-  }, [phase, timeLimit]);
+  }, [phase]);
 
   // ── Save best on game over ──
 
   useEffect(() => {
     if (phase === 'gameover' && score > bestScore) {
       setBestScore(score);
-      saveStoredBest(timeLimit, score);
+      saveStoredBest(TIME_LIMIT, score);
     }
   }, [phase]);
 
   // ── Load ranking ──
 
-  const currentMode = `2048-${timeLimit}s-${BOARD_SIZE}x${BOARD_SIZE}`;
+  const currentMode = `2048-${TIME_LIMIT}s-${BOARD_SIZE}x${BOARD_SIZE}`;
 
   const loadRanking = useCallback(() => {
     fetchGameRanking(currentMode, 20)
@@ -176,12 +162,12 @@ export default function Game2048Page() {
     const initial = createInitialTiles(BOARD_SIZE, random);
     setTiles(initial);
     setScore(0);
-    setTimeLeftMs(timeLimit * 1000);
+    setTimeLeftMs(TIME_LIMIT * 1000);
     setPhase('playing');
     setSubmitted(false);
     gameStartTimeRef.current = Date.now();
     isMovingRef.current = false;
-  }, [timeLimit]);
+  }, []);
 
   const handleMove = useCallback(
     (direction: Direction) => {
@@ -229,7 +215,7 @@ export default function Game2048Page() {
       await submitGameScore({
         playerName: name,
         score,
-        timeLimit,
+        timeLimit: TIME_LIMIT,
         boardSize: BOARD_SIZE,
         replay: {
           seed: seedRef.current,
@@ -293,16 +279,13 @@ export default function Game2048Page() {
 
   // ── Timer display values ──
 
-  const timerPercent =
-    timeLimit > 0 ? (timeLeftMs / (timeLimit * 1000)) * 100 : 100;
+  const timerPercent = (timeLeftMs / (TIME_LIMIT * 1000)) * 100;
   const timerColor =
     timerPercent > 50 ? '#34d399' : timerPercent > 25 ? '#fbbf24' : '#f87171';
   const timerText =
-    timeLimit === 0
-      ? '∞'
-      : timeLeftMs <= 10_000
-        ? `${(timeLeftMs / 1000).toFixed(1)}s`
-        : `${Math.ceil(timeLeftMs / 1000)}s`;
+    timeLeftMs <= 10_000
+      ? `${(timeLeftMs / 1000).toFixed(1)}s`
+      : `${Math.ceil(timeLeftMs / 1000)}s`;
 
   // ── Render ──
 
@@ -325,14 +308,12 @@ export default function Game2048Page() {
           <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
             2048
           </h1>
-          {timeLimit > 0 && (
             <p
-              className="text-xs font-semibold tracking-widest"
-              style={{ color: 'rgba(255,255,255,0.25)' }}
-            >
-              TIME ATTACK
-            </p>
-          )}
+            className="text-xs font-semibold tracking-widest"
+            style={{ color: 'rgba(255,255,255,0.25)' }}
+          >
+            TIME ATTACK
+          </p>
         </div>
         <div className="flex gap-2">
           <ScoreCard label="SCORE" value={score} />
@@ -345,7 +326,7 @@ export default function Game2048Page() {
       </div>
 
       {/* Timer bar */}
-      {timeLimit > 0 && phase !== 'idle' && (
+      {phase !== 'idle' && (
         <div className="mb-4 w-full">
           <div className="mb-1 text-right">
             <span
@@ -484,7 +465,7 @@ export default function Game2048Page() {
               className="text-lg font-bold"
               style={{ color: 'rgba(255,255,255,0.45)' }}
             >
-              {timeLimit > 0 ? 'TIME UP' : 'GAME OVER'}
+              TIME UP
             </p>
             <motion.p
               className="text-4xl font-black text-white"
@@ -554,30 +535,6 @@ export default function Game2048Page() {
           </motion.div>
         )}
       </div>
-
-      {/* Time selector (visible when not playing) */}
-      {phase !== 'playing' && (
-        <motion.div
-          className="mt-5 flex flex-wrap justify-center gap-2"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          {TIME_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => setTimeLimit(opt.value)}
-              className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-all ${
-                timeLimit === opt.value
-                  ? 'border-white/20 bg-white/10 text-white'
-                  : 'border-white/[0.06] text-white/30 hover:border-white/15 hover:text-white/50'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </motion.div>
-      )}
 
       {/* Hint text */}
       {phase === 'idle' && (

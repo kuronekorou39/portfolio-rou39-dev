@@ -11,6 +11,7 @@ export class StorageStack extends cdk.Stack {
   public readonly commentsTable: dynamodb.Table;
   public readonly honeypotTable: dynamodb.Table;
   public readonly gameScoresTable: dynamodb.Table;
+  public readonly clipsTable: dynamodb.Table;
   public readonly assetsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -88,6 +89,15 @@ export class StorageStack extends cdk.Stack {
       indexName: 'by-mode-score',
       partitionKey: { name: 'mode', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'score', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // Clips table (text sharing, TTL-based auto-delete)
+    this.clipsTable = new dynamodb.Table(this, 'ClipsTable', {
+      tableName: 'portfolio-clips',
+      partitionKey: { name: 'code', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: 'ttl',
     });
 
     // Assets bucket (screenshots, app files)

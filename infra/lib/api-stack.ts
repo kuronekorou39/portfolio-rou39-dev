@@ -16,6 +16,7 @@ interface ApiStackProps extends cdk.StackProps {
   commentsTable: dynamodb.Table;
   honeypotTable: dynamodb.Table;
   gameScoresTable: dynamodb.Table;
+  clipsTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
 }
@@ -217,6 +218,23 @@ export class ApiStack extends cdk.Stack {
     const gameScores = this.api.root.addResource('game-scores');
     gameScores.addMethod('GET', new apigateway.LambdaIntegration(gameScoresFn));
     gameScores.addMethod('POST', new apigateway.LambdaIntegration(gameScoresFn));
+
+    // --- Clip API (text sharing, no auth) ---
+    const clipFn = new nodejs.NodejsFunction(this, 'ClipFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/clip.ts'),
+      handler: 'handler',
+      environment: {
+        CLIPS_TABLE: props.clipsTable.tableName,
+      },
+      bundling: bundlingOptions,
+    });
+    props.clipsTable.grantReadWriteData(clipFn);
+
+    const clip = this.api.root.addResource('clip');
+    clip.addMethod('POST', new apigateway.LambdaIntegration(clipFn));
+    const clipByCode = clip.addResource('{code}');
+    clipByCode.addMethod('GET', new apigateway.LambdaIntegration(clipFn));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: this.api.url });
   }

@@ -14,7 +14,7 @@ import underConstructionImg from '@/assets/under-construction.png';
 
 // ─── Data ──────────────────────────────────────────────────
 const projects = [
-  { id: 'u2b-loop', title: 'U2B Loop', desc: 'YouTube区間リピート', emoji: '🔁', category: 'Web', color: '#FF6B6B', accent: '#FF3333' },
+  { id: 'u2b-loop', title: 'U2B Loop', desc: 'AB区間ループ再生アプリ', emoji: '🔁', category: 'Mobile', color: '#FF6B6B', accent: '#FF3333' },
   { id: 'koko-meshi', title: 'ココメシ', desc: 'AI食事記録＆グルメマップ', emoji: '🍜', category: 'Mobile', color: '#FFB347', accent: '#FF8C00' },
   { id: 'domain-traffic-inspector', title: 'Domain Inspector', desc: 'トラフィック可視化', emoji: '🔍', category: 'Chrome Ext', color: '#7EC8E3', accent: '#2196F3' },
   { id: 'cryptid-logic-solver', title: 'Cryptid Solver', desc: 'ボードゲーム推論ツール', emoji: '🧩', category: 'Web', color: '#C5B9FF', accent: '#7C4DFF' },
@@ -866,6 +866,72 @@ function TechMarquee() {
   );
 }
 
+// ─── Playground section ───────────────────────────────────
+const playgroundItems = [
+  {
+    to: '/clip',
+    title: 'Clip',
+    desc: 'テキストを貼って、リンクを生成。30分で消える。',
+    icon: '📋',
+    gradient: 'from-violet-500/20 to-fuchsia-500/20',
+    border: 'hover:border-violet-500/30',
+  },
+  {
+    to: '/games/2048',
+    title: '2048 Time Attack',
+    desc: '制限時間内にハイスコアを狙え。リプレイ検証付き。',
+    icon: '🎮',
+    gradient: 'from-amber-500/20 to-orange-500/20',
+    border: 'hover:border-amber-500/30',
+  },
+];
+
+function Playground() {
+  return (
+    <div className="mx-auto grid max-w-3xl gap-4 px-6 sm:grid-cols-2">
+      {playgroundItems.map((item, i) => (
+        <motion.div
+          key={item.to}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: i * 0.1 }}
+        >
+          <Link
+            to={item.to}
+            className={`group relative block overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-300 ${item.border} hover:bg-white/[0.04]`}
+          >
+            {/* Gradient glow on hover */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 transition-opacity duration-500 group-hover:opacity-100`}
+            />
+
+            <div className="relative z-10">
+              <span className="text-3xl">{item.icon}</span>
+              <h3 className="mt-4 text-lg font-bold text-white">
+                {item.title}
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/35 transition-colors group-hover:text-white/50">
+                {item.desc}
+              </p>
+              <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-white/25 transition-colors group-hover:text-white/50">
+                Try it
+                <motion.span
+                  className="inline-block"
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  →
+                </motion.span>
+              </span>
+            </div>
+          </Link>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════
@@ -938,6 +1004,24 @@ export default function HomePage() {
           <p className="mt-3 text-3xl font-bold text-white/80 md:text-4xl">つくったもの</p>
         </motion.div>
         <FeaturedProjects />
+      </section>
+
+      {/* ══════ PLAYGROUND ══════ */}
+      <section className="relative z-10 py-24">
+        <motion.div
+          className="mb-12 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">
+            Playground
+          </h2>
+          <p className="mt-3 text-xl font-bold text-white/60">
+            すぐに触れるやつ
+          </p>
+        </motion.div>
+        <Playground />
       </section>
 
       {/* ══════ TECH MARQUEE ══════ */}
