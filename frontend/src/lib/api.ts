@@ -166,6 +166,22 @@ export async function fetchPageView(
   );
 }
 
+// Contact
+export async function submitContact(data: {
+  name: string;
+  email: string;
+  category: string;
+  message: string;
+  _hp: string;
+  _ts: number;
+}): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>('/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
 // Clip
 export async function createClip(text: string): Promise<{ code: string }> {
   return request<{ code: string }>('/clip', {
@@ -182,20 +198,18 @@ export async function fetchClip(code: string): Promise<{ text: string; createdAt
 // Game Scores
 export interface GameScoreEntry {
   rank: number;
-  playerName: string;
   score: number;
   playedAt: string;
   moveCount: number;
 }
 
 export async function submitGameScore(data: {
-  playerName: string;
   score: number;
   timeLimit: number;
   boardSize: number;
   replay: { seed: number; tilesPerMove: number; moves: string[] };
-}): Promise<{ id: string; verified: boolean }> {
-  return request<{ id: string; verified: boolean }>('/game-scores', {
+}): Promise<{ id: string | null; verified: boolean; ranked: boolean }> {
+  return request<{ id: string | null; verified: boolean; ranked: boolean }>('/game-scores', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

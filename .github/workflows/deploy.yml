@@ -36,6 +36,9 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
 
+      - name: Seed projects data
+        run: node scripts/seed-projects.mjs
+
 # ============================================================
 # GitHub Secrets の設定手順
 # ============================================================

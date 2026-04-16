@@ -26,7 +26,8 @@
     "status": "development",
     "publishedAt": "2025-08-01",
     "updatedAt": "2026-03-04",
-    "size": "large"
+    "size": "large",
+    "published": false
   },
   {
     "id": "omniverse",
@@ -52,12 +53,17 @@
       "github": "https://github.com/kuronekorou39/mobile-omniverse"
     },
     "downloads": [
-      { "label": "Android (.apk)", "url": "https://github.com/kuronekorou39/mobile-omniverse/releases/download/v1.9.4/OmniVerse-v1.9.4.apk", "os": "android" }
+      {
+        "label": "Android (.apk)",
+        "url": "https://github.com/kuronekorou39/mobile-omniverse/releases/download/v1.9.4/OmniVerse-v1.9.4.apk",
+        "os": "android"
+      }
     ],
     "status": "development",
     "publishedAt": "2025-07-20",
     "updatedAt": "2026-04-08",
-    "size": "large"
+    "size": "large",
+    "published": false
   },
   {
     "id": "koko-meshi",
@@ -84,7 +90,8 @@
     "status": "development",
     "publishedAt": "2025-03-01",
     "updatedAt": "2026-03-24",
-    "size": "large"
+    "size": "large",
+    "published": false
   },
   {
     "id": "u2b-loop",
@@ -109,13 +116,22 @@
       "github": "https://github.com/kuronekorou39/u2b-loop-app"
     },
     "downloads": [
-      { "label": "Android (.apk)", "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-v1.39.1.apk", "os": "android" },
-      { "label": "iOS (.ipa)", "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-ios-v1.39.1.ipa", "os": "ios" }
+      {
+        "label": "Android (.apk)",
+        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-v1.39.1.apk",
+        "os": "android"
+      },
+      {
+        "label": "iOS (.ipa)",
+        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-ios-v1.39.1.ipa",
+        "os": "ios"
+      }
     ],
     "status": "active",
     "publishedAt": "2025-01-15",
     "updatedAt": "2026-04-10",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "cryptid-logic-solver",
@@ -143,7 +159,8 @@
     "status": "active",
     "publishedAt": "2025-09-10",
     "updatedAt": "2026-01-04",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "icon-builder",
@@ -171,7 +188,8 @@
     "status": "active",
     "publishedAt": "2025-10-01",
     "updatedAt": "2026-03-28",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "chrome-transcoder",
@@ -196,7 +214,8 @@
     "status": "active",
     "publishedAt": "2025-06-01",
     "updatedAt": "2026-03-16",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "flowscope",
@@ -226,7 +245,8 @@
     "status": "development",
     "publishedAt": "2025-11-01",
     "updatedAt": "2026-03-27",
-    "size": "large"
+    "size": "large",
+    "published": false
   },
   {
     "id": "local-port-board",
@@ -257,15 +277,32 @@
       "github": "https://github.com/kuronekorou39/local-port-board"
     },
     "downloads": [
-      { "label": "Windows (x64) .msi", "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64_ja-JP.msi", "os": "windows" },
-      { "label": "Windows (x64) .exe", "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64-setup.exe", "os": "windows" },
-      { "label": "macOS (Apple Silicon) .dmg", "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_aarch64.dmg", "os": "mac" },
-      { "label": "macOS (Intel) .dmg", "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64.dmg", "os": "mac" }
+      {
+        "label": "Windows (x64) .msi",
+        "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64_ja-JP.msi",
+        "os": "windows"
+      },
+      {
+        "label": "Windows (x64) .exe",
+        "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64-setup.exe",
+        "os": "windows"
+      },
+      {
+        "label": "macOS (Apple Silicon) .dmg",
+        "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_aarch64.dmg",
+        "os": "mac"
+      },
+      {
+        "label": "macOS (Intel) .dmg",
+        "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64.dmg",
+        "os": "mac"
+      }
     ],
     "status": "active",
     "publishedAt": "2025-05-01",
     "updatedAt": "2026-04-03",
-    "size": "medium"
+    "size": "medium",
+    "published": true
   },
   {
     "id": "actlog-app",
@@ -289,7 +326,8 @@
     "status": "development",
     "publishedAt": "2026-01-01",
     "updatedAt": "2026-04-01",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "office-raw-editor",
@@ -314,7 +352,8 @@
     "status": "active",
     "publishedAt": "2025-08-01",
     "updatedAt": "2026-01-31",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "deka-mado",
@@ -340,7 +379,8 @@
     "status": "active",
     "publishedAt": "2025-09-01",
     "updatedAt": "2026-02-13",
-    "size": "small"
+    "size": "small",
+    "published": false
   },
   {
     "id": "batch-crop-tool",
@@ -366,7 +406,8 @@
     "status": "active",
     "publishedAt": "2025-04-01",
     "updatedAt": "2025-11-25",
-    "size": "small"
+    "size": "small",
+    "published": false
   },
   {
     "id": "burp-intruder-queue",
@@ -392,7 +433,8 @@
     "status": "active",
     "publishedAt": "2025-12-01",
     "updatedAt": "2026-03-29",
-    "size": "small"
+    "size": "small",
+    "published": false
   },
   {
     "id": "burp-macro-builder",
@@ -418,7 +460,8 @@
     "status": "active",
     "publishedAt": "2025-12-01",
     "updatedAt": "2026-03-29",
-    "size": "small"
+    "size": "small",
+    "published": false
   },
   {
     "id": "domain-traffic-inspector",
@@ -443,7 +486,8 @@
     "status": "active",
     "publishedAt": "2025-06-01",
     "updatedAt": "2025-11-20",
-    "size": "small"
+    "size": "small",
+    "published": false
   },
   {
     "id": "mobile-bex",
@@ -470,7 +514,8 @@
     "status": "coming-soon",
     "publishedAt": "2025-11-05",
     "updatedAt": "2026-03-04",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "memoria",
@@ -495,7 +540,8 @@
     "status": "coming-soon",
     "publishedAt": "2026-01-01",
     "updatedAt": "2026-03-15",
-    "size": "medium"
+    "size": "medium",
+    "published": false
   },
   {
     "id": "u2b-loop-web",
@@ -523,6 +569,7 @@
     "status": "active",
     "publishedAt": "2024-06-01",
     "updatedAt": "2025-12-27",
-    "size": "small"
+    "size": "small",
+    "published": false
   }
 ]

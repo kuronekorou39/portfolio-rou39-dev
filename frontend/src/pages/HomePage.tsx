@@ -14,13 +14,7 @@ import underConstructionImg from '@/assets/under-construction.png';
 
 // ─── Data ──────────────────────────────────────────────────
 const projects = [
-  { id: 'u2b-loop', title: 'U2B Loop', desc: 'AB区間ループ再生アプリ', emoji: '🔁', category: 'Mobile', color: '#FF6B6B', accent: '#FF3333' },
-  { id: 'koko-meshi', title: 'ココメシ', desc: 'AI食事記録＆グルメマップ', emoji: '🍜', category: 'Mobile', color: '#FFB347', accent: '#FF8C00' },
-  { id: 'domain-traffic-inspector', title: 'Domain Inspector', desc: 'トラフィック可視化', emoji: '🔍', category: 'Chrome Ext', color: '#7EC8E3', accent: '#2196F3' },
-  { id: 'cryptid-logic-solver', title: 'Cryptid Solver', desc: 'ボードゲーム推論ツール', emoji: '🧩', category: 'Web', color: '#C5B9FF', accent: '#7C4DFF' },
-  { id: 'memoria', title: 'Memoria', desc: '思い出を記録・管理', emoji: '📸', category: 'Mobile', color: '#FFB7C5', accent: '#E91E63' },
-  { id: 'omniverse', title: 'OmniVerse', desc: 'X & Bluesky統合クライアント', emoji: '🌐', category: 'Mobile', color: '#A8E6CF', accent: '#00C853' },
-  { id: 'mobile-bex', title: 'Mobile BEX', desc: 'スマホでChrome拡張', emoji: '📱', category: 'Mobile', color: '#FFE66D', accent: '#FFD600' },
+  { id: 'local-port-board', title: 'Local PortBoard', desc: 'ローカル開発環境のポート監視・管理ツール', emoji: '🖥️', category: 'Desktop', color: '#7EC8E3', accent: '#2196F3' },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -1039,10 +1033,10 @@ export default function HomePage() {
             <h2 className="text-5xl font-black tracking-tight md:text-7xl">
               <SplitText>Let's talk.</SplitText>
             </h2>
-            <p className="mt-6 text-white/30">プロジェクトの相談、フィードバック、なんでも。</p>
+            <p className="mt-6 text-white/30">お仕事の依頼、フィードバック、なんでも。</p>
             <motion.div className="mt-10">
-              <Link to="/apps" className="group inline-flex items-center gap-4 rounded-full border border-white/20 px-10 py-5 text-sm font-semibold text-white transition-all hover:border-white/60 hover:bg-white hover:text-black">
-                Explore All Apps
+              <Link to="/contact" className="group inline-flex items-center gap-4 rounded-full border border-white/20 px-10 py-5 text-sm font-semibold text-white transition-all hover:border-white/60 hover:bg-white hover:text-black">
+                Contact
                 <motion.span className="inline-block" animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>→</motion.span>
               </Link>
             </motion.div>

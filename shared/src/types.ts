@@ -29,6 +29,7 @@ export interface Project {
   screenshots: string[];
   links: ProjectLinks;
   downloads?: DownloadEntry[];
+  published?: boolean;
   status: ProjectStatus;
   size: ProjectSize;
   publishedAt: string;

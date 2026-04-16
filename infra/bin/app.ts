@@ -64,6 +64,7 @@ const api = new ApiStack(app, 'PortfolioApi', {
   honeypotTable: storage.honeypotTable,
   gameScoresTable: storage.gameScoresTable,
   clipsTable: storage.clipsTable,
+  contactsTable: storage.contactsTable,
   assetsBucket: storage.assetsBucket,
   userPool: auth.userPool,
 });

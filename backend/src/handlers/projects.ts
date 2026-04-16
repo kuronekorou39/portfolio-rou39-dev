@@ -14,13 +14,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       const result = await docClient.send(
         new GetCommand({ TableName: TABLE, Key: { id: projectId } })
       );
-      if (!result.Item) return notFound('Project not found');
+      if (!result.Item || result.Item.published !== true) return notFound('Project not found');
       return ok(result.Item);
     }
 
     // GET /projects
     const result = await docClient.send(new ScanCommand({ TableName: TABLE }));
-    return ok(result.Items ?? []);
+    const items = (result.Items ?? []).filter((item) => item.published === true);
+    return ok(items);
   } catch (error) {
     console.error('Projects handler error:', error);
     return serverError();

@@ -12,6 +12,7 @@ export class StorageStack extends cdk.Stack {
   public readonly honeypotTable: dynamodb.Table;
   public readonly gameScoresTable: dynamodb.Table;
   public readonly clipsTable: dynamodb.Table;
+  public readonly contactsTable: dynamodb.Table;
   public readonly assetsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -83,6 +84,7 @@ export class StorageStack extends cdk.Stack {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      timeToLiveAttribute: 'ttl',
     });
 
     this.gameScoresTable.addGlobalSecondaryIndex({
@@ -97,6 +99,16 @@ export class StorageStack extends cdk.Stack {
       partitionKey: { name: 'code', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: 'ttl',
+    });
+
+    // Contacts table (inquiries + rate limit tracking)
+    this.contactsTable = new dynamodb.Table(this, 'ContactsTable', {
+      tableName: 'portfolio-contacts',
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       timeToLiveAttribute: 'ttl',
     });
 

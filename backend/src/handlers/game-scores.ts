@@ -2,7 +2,7 @@ import type {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
 } from 'aws-lambda';
-import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../lib/dynamo';
 import { ok, created, badRequest, serverError } from '../lib/response';
 import { randomUUID } from 'crypto';
@@ -162,7 +162,8 @@ function verifyReplay(
 
 const VALID_DIRECTIONS = new Set(['up', 'down', 'left', 'right']);
 const MAX_MOVES = 10000;
-const NAME_MAX_LEN = 20;
+const RANKING_SIZE = 100;
+const TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
 
 export async function handler(
   event: APIGatewayProxyEvent,
@@ -181,15 +182,7 @@ async function handleSubmit(
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body || '{}');
-  const { playerName, score, timeLimit, boardSize, replay } = body;
-
-  if (
-    !playerName ||
-    typeof playerName !== 'string' ||
-    playerName.trim().length === 0 ||
-    playerName.trim().length > NAME_MAX_LEN
-  )
-    return badRequest('playerName is required (max 20 chars)');
+  const { score, timeLimit, boardSize, replay } = body;
 
   if (typeof score !== 'number' || score < 0)
     return badRequest('Invalid score');
@@ -225,8 +218,38 @@ async function handleSubmit(
   if (!verified) return badRequest('Replay verification failed');
 
   const mode = `2048-${timeLimit}s-${boardSize}x${boardSize}`;
+
+  // Check if score qualifies for top N
+  const existing = await docClient.send(
+    new QueryCommand({
+      TableName: TABLE,
+      IndexName: 'by-mode-score',
+      KeyConditionExpression: '#m = :mode',
+      ExpressionAttributeNames: { '#m': 'mode' },
+      ExpressionAttributeValues: { ':mode': mode },
+      ScanIndexForward: false,
+      Limit: RANKING_SIZE,
+    }),
+  );
+
+  const entries = existing.Items || [];
+  if (entries.length >= RANKING_SIZE) {
+    const lowestScore = entries[entries.length - 1].score as number;
+    if (score <= lowestScore) {
+      return ok({ id: null, verified: true, ranked: false });
+    }
+    // Delete the lowest entry to make room
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE,
+        Key: { id: entries[entries.length - 1].id },
+      }),
+    );
+  }
+
   const id = randomUUID();
   const now = new Date().toISOString();
+  const ttl = Math.floor(Date.now() / 1000) + TTL_SECONDS;
 
   await docClient.send(
     new PutCommand({
@@ -234,17 +257,17 @@ async function handleSubmit(
       Item: {
         id,
         mode,
-        playerName: playerName.trim(),
         score,
         timeLimit,
         boardSize,
         playedAt: now,
         moveCount: replay.moves.length,
+        ttl,
       },
     }),
   );
 
-  return created({ id, verified: true });
+  return created({ id, verified: true, ranked: true });
 }
 
 async function handleList(
@@ -269,7 +292,6 @@ async function handleList(
 
   const items = (result.Items || []).map((item, i) => ({
     rank: i + 1,
-    playerName: item.playerName,
     score: item.score,
     playedAt: item.playedAt,
     moveCount: item.moveCount,

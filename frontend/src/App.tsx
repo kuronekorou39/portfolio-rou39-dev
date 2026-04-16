@@ -14,6 +14,7 @@ import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import Game2048Page from '@/pages/Game2048Page';
 import ClipPage from '@/pages/ClipPage';
 import ClipViewPage from '@/pages/ClipViewPage';
+import ContactPage from '@/pages/ContactPage';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/clip" element={<ClipPage />} />
           <Route path="/clip/:code" element={<ClipViewPage />} />
           <Route path="/games/2048" element={<Game2048Page />} />

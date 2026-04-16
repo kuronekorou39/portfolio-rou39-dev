@@ -45,22 +45,6 @@ function saveStoredBest(timeLimit: number, score: number): void {
   }
 }
 
-function getStoredName(): string {
-  try {
-    return localStorage.getItem('game2048_playerName') || '';
-  } catch {
-    return '';
-  }
-}
-
-function saveStoredName(name: string): void {
-  try {
-    localStorage.setItem('game2048_playerName', name);
-  } catch {
-    /* noop */
-  }
-}
-
 // ── Main Component ──
 
 export default function Game2048Page() {
@@ -77,9 +61,7 @@ export default function Game2048Page() {
 
   // Ranking
   const [ranking, setRanking] = useState<GameScoreEntry[]>([]);
-  const [playerName, setPlayerName] = useState(getStoredName);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [ranked, setRanked] = useState<boolean | null>(null);
 
   const isMovingRef = useRef(false);
   const gameStartTimeRef = useRef(0);
@@ -130,9 +112,28 @@ export default function Game2048Page() {
   // ── Save best on game over ──
 
   useEffect(() => {
-    if (phase === 'gameover' && score > bestScore) {
+    if (phase !== 'gameover') return;
+    if (score > bestScore) {
       setBestScore(score);
       saveStoredBest(TIME_LIMIT, score);
+    }
+    // Auto-submit score
+    if (score > 0) {
+      submitGameScore({
+        score,
+        timeLimit: TIME_LIMIT,
+        boardSize: BOARD_SIZE,
+        replay: {
+          seed: seedRef.current,
+          tilesPerMove: TILES_PER_MOVE,
+          moves: movesRef.current,
+        },
+      })
+        .then((res) => {
+          setRanked(res.ranked);
+          if (res.ranked) loadRanking();
+        })
+        .catch(() => setRanked(null));
     }
   }, [phase]);
 
@@ -164,7 +165,7 @@ export default function Game2048Page() {
     setScore(0);
     setTimeLeftMs(TIME_LIMIT * 1000);
     setPhase('playing');
-    setSubmitted(false);
+    setRanked(null);
     gameStartTimeRef.current = Date.now();
     isMovingRef.current = false;
   }, []);
@@ -203,34 +204,6 @@ export default function Game2048Page() {
     },
     [phase],
   );
-
-  // ── Submit score ──
-
-  const handleSubmit = async () => {
-    const name = playerName.trim();
-    if (!name || score === 0 || submitting) return;
-    setSubmitting(true);
-    saveStoredName(name);
-    try {
-      await submitGameScore({
-        playerName: name,
-        score,
-        timeLimit: TIME_LIMIT,
-        boardSize: BOARD_SIZE,
-        replay: {
-          seed: seedRef.current,
-          tilesPerMove: TILES_PER_MOVE,
-          moves: movesRef.current,
-        },
-      });
-      setSubmitted(true);
-      loadRanking();
-    } catch (err) {
-      console.error('Score submission failed:', err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   // ── Keyboard ──
 
@@ -496,33 +469,21 @@ export default function Game2048Page() {
               </p>
             )}
 
-            {/* Score submission */}
-            {score > 0 && !submitted && (
-              <div className="mb-3 flex w-56 gap-2">
-                <input
-                  type="text"
-                  maxLength={20}
-                  placeholder="名前"
-                  value={playerName}
-                  onChange={e => setPlayerName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/25"
-                />
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting || !playerName.trim()}
-                  className="rounded-lg bg-white/15 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/25 disabled:opacity-30"
-                >
-                  {submitting ? '...' : '登録'}
-                </button>
-              </div>
-            )}
-            {submitted && (
+            {/* Ranking result */}
+            {ranked === true && (
               <p
                 className="mb-3 text-xs font-medium"
                 style={{ color: '#34d399' }}
               >
                 ランキングに登録しました
+              </p>
+            )}
+            {ranked === false && (
+              <p
+                className="mb-3 text-xs"
+                style={{ color: 'rgba(255,255,255,0.25)' }}
+              >
+                ランキング圏外
               </p>
             )}
 
@@ -647,14 +608,14 @@ function Ranking({
             >
               {entry.rank}
             </span>
-            <span
-              className="flex-1 truncate text-sm text-white"
-              style={{ color: 'rgba(255,255,255,0.8)' }}
-            >
-              {entry.playerName}
-            </span>
-            <span className="text-sm font-bold text-white tabular-nums">
+            <span className="flex-1 text-sm font-bold text-white tabular-nums">
               {entry.score.toLocaleString()}
+            </span>
+            <span
+              className="text-xs tabular-nums"
+              style={{ color: 'rgba(255,255,255,0.25)' }}
+            >
+              {entry.moveCount} moves
             </span>
           </div>
         ))}

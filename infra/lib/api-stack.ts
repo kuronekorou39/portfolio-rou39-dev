@@ -5,6 +5,7 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -17,6 +18,7 @@ interface ApiStackProps extends cdk.StackProps {
   honeypotTable: dynamodb.Table;
   gameScoresTable: dynamodb.Table;
   clipsTable: dynamodb.Table;
+  contactsTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
 }
@@ -235,6 +237,29 @@ export class ApiStack extends cdk.Stack {
     clip.addMethod('POST', new apigateway.LambdaIntegration(clipFn));
     const clipByCode = clip.addResource('{code}');
     clipByCode.addMethod('GET', new apigateway.LambdaIntegration(clipFn));
+
+    // --- Contact API (inquiry form, no auth) ---
+    const contactFn = new nodejs.NodejsFunction(this, 'ContactFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/contact.ts'),
+      handler: 'handler',
+      environment: {
+        CONTACTS_TABLE: props.contactsTable.tableName,
+        NOTIFY_EMAIL: 'kuronekorou39@gmail.com',
+        FROM_EMAIL: 'noreply@rou39.com',
+      },
+      bundling: bundlingOptions,
+    });
+    props.contactsTable.grantReadWriteData(contactFn);
+    contactFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ses:SendEmail'],
+        resources: ['*'],
+      }),
+    );
+
+    const contact = this.api.root.addResource('contact');
+    contact.addMethod('POST', new apigateway.LambdaIntegration(contactFn));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: this.api.url });
   }
