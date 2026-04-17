@@ -11,6 +11,7 @@ import {
 } from 'framer-motion';
 import avatarImg from '@/assets/avatar.png';
 import underConstructionImg from '@/assets/under-construction.png';
+import { fetchContributions, type ContributionCalendar } from '@/lib/api';
 
 // ─── Data ──────────────────────────────────────────────────
 const projects = [
@@ -926,6 +927,66 @@ function Playground() {
   );
 }
 
+// ─── GitHub Contributions Graph ───────────────────────────
+function ContributionGraph() {
+  const [calendar, setCalendar] = useState<ContributionCalendar | null>(null);
+
+  useEffect(() => {
+    fetchContributions().then(setCalendar).catch(() => {});
+  }, []);
+
+  if (!calendar) return null;
+
+  const cellSize = 11;
+  const gap = 2;
+  const weeks = calendar.weeks;
+  const width = weeks.length * (cellSize + gap);
+  const height = 7 * (cellSize + gap);
+
+  return (
+    <motion.div
+      className="mx-auto max-w-4xl px-6"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+    >
+      <div className="overflow-x-auto rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        <div className="flex items-center justify-between mb-3">
+          <a
+            href="https://github.com/kuronekorou39"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-white/40 transition-colors hover:text-white/60"
+          >
+            @kuronekorou39
+          </a>
+          <span className="text-xs text-white/25">
+            {calendar.totalContributions.toLocaleString()} contributions
+          </span>
+        </div>
+        <svg width={width} height={height} className="mx-auto block">
+          {weeks.map((week, wi) =>
+            week.contributionDays.map((day, di) => (
+              <rect
+                key={day.date}
+                x={wi * (cellSize + gap)}
+                y={di * (cellSize + gap)}
+                width={cellSize}
+                height={cellSize}
+                rx={2}
+                fill={day.contributionCount === 0 ? 'rgba(255,255,255,0.04)' : day.color}
+                opacity={day.contributionCount === 0 ? 1 : 0.85}
+              >
+                <title>{`${day.date}: ${day.contributionCount} contributions`}</title>
+              </rect>
+            ))
+          )}
+        </svg>
+      </div>
+    </motion.div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════
@@ -1024,6 +1085,21 @@ export default function HomePage() {
           <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">Tech Stack</h2>
         </motion.div>
         <TechMarquee />
+      </section>
+
+      {/* ══════ CONTRIBUTIONS ══════ */}
+      <section className="relative z-10 py-20">
+        <motion.div
+          className="mb-12 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">
+            Activity
+          </h2>
+        </motion.div>
+        <ContributionGraph />
       </section>
 
       {/* ══════ CTA ══════ */}

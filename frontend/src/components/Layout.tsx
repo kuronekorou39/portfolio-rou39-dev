@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import AuthModal from './AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +8,11 @@ import { getAvatarEmoji } from '@/lib/avatars';
 export default function Layout() {
   const { user, loading, signOut } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-[#060608] text-gray-100">

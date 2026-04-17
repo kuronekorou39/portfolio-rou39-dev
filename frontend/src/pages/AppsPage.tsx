@@ -225,7 +225,7 @@ export default function AppsPage() {
                         </div>
 
                     {/* Hover arrow */}
-                    <div className={`absolute text-white/0 transition-all group-hover:text-white/30 ${isSmall ? 'bottom-4 right-4' : 'bottom-6 right-6'}`}>
+                    <div className={`absolute text-white/0 transition-all group-hover:text-white/30 ${isSmall ? 'right-4 top-4' : 'right-6 top-6'}`}>
                       →
                     </div>
                   </Link>

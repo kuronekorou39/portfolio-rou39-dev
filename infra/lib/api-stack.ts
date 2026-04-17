@@ -19,6 +19,7 @@ interface ApiStackProps extends cdk.StackProps {
   gameScoresTable: dynamodb.Table;
   clipsTable: dynamodb.Table;
   contactsTable: dynamodb.Table;
+  cacheTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
 }
@@ -260,6 +261,24 @@ export class ApiStack extends cdk.Stack {
 
     const contact = this.api.root.addResource('contact');
     contact.addMethod('POST', new apigateway.LambdaIntegration(contactFn));
+
+    // --- Contributions API (GitHub grass, cached) ---
+    const contributionsFn = new nodejs.NodejsFunction(this, 'ContributionsFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../../backend/src/handlers/contributions.ts'),
+      handler: 'handler',
+      environment: {
+        CACHE_TABLE: props.cacheTable.tableName,
+        GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+        GITHUB_USER: 'kuronekorou39',
+      },
+      bundling: bundlingOptions,
+      timeout: cdk.Duration.seconds(10),
+    });
+    props.cacheTable.grantReadWriteData(contributionsFn);
+
+    const contributions = this.api.root.addResource('contributions');
+    contributions.addMethod('GET', new apigateway.LambdaIntegration(contributionsFn));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: this.api.url });
   }

@@ -166,6 +166,22 @@ export async function fetchPageView(
   );
 }
 
+// Contributions (GitHub grass)
+export interface ContributionDay {
+  contributionCount: number;
+  date: string;
+  color: string;
+}
+
+export interface ContributionCalendar {
+  totalContributions: number;
+  weeks: { contributionDays: ContributionDay[] }[];
+}
+
+export async function fetchContributions(): Promise<ContributionCalendar> {
+  return request<ContributionCalendar>('/contributions');
+}
+
 // Contact
 export async function submitContact(data: {
   name: string;
