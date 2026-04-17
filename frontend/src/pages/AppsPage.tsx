@@ -176,9 +176,13 @@ export default function AppsPage() {
                     {/* All sizes: vertical layout */}
                         <div className={`flex items-center justify-between ${isSmall ? 'mb-3' : 'mb-5'}`}>
                           <div className="flex items-center gap-3">
-                            <span className={isSmall ? 'text-lg' : 'text-2xl'}>
-                              {categoryEmoji[project.category]}
-                            </span>
+                            {project.icon ? (
+                              <img src={project.icon} alt="" className={`rounded-full border border-white/10 object-cover ${isSmall ? 'h-6 w-6' : 'h-8 w-8'}`} />
+                            ) : (
+                              <span className={isSmall ? 'text-lg' : 'text-2xl'}>
+                                {categoryEmoji[project.category]}
+                              </span>
+                            )}
                             <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
                               {categoryLabel[project.category]}
                             </span>

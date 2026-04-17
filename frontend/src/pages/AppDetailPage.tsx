@@ -499,9 +499,13 @@ export default function AppDetailPage() {
             {/* Title + meta (mobile/tablet only — desktop shows in sidebar) */}
             <div className="mb-4 lg:hidden">
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xl">
-                  {categoryEmoji[project.category]}
-                </span>
+                {project.icon ? (
+                  <img src={project.icon} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xl">
+                    {categoryEmoji[project.category]}
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl font-black tracking-tight">{project.title}</h1>
                   <p className="text-xs text-white/40">{project.subtitle}</p>
@@ -998,9 +1002,13 @@ export default function AppDetailPage() {
               {/* Title (desktop only) */}
               <div className="hidden lg:block">
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-2xl">
-                    {categoryEmoji[project.category]}
-                  </span>
+                  {project.icon ? (
+                    <img src={project.icon} alt="" className="h-12 w-12 rounded-full border border-white/10 object-cover" />
+                  ) : (
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-2xl">
+                      {categoryEmoji[project.category]}
+                    </span>
+                  )}
                   <div>
                     <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
                       {categoryLabel[project.category]}

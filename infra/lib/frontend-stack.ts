@@ -23,6 +23,7 @@ export class FrontendStack extends cdk.Stack {
 
     // S3 bucket for SPA
     const siteBucket = new s3.Bucket(this, 'SiteBucket', {
+      bucketName: 'rou39-site',
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -41,12 +42,37 @@ export class FrontendStack extends cdk.Stack {
       functionName: 'portfolio-api-rewrite',
     });
 
+    // CloudFront Function to serve OGP HTML for social media crawlers
+    const ogpRewriteFn = new cloudfront.Function(this, 'OgpRewriteFunction', {
+      code: cloudfront.FunctionCode.fromInline(`
+        function handler(event) {
+          var request = event.request;
+          var ua = request.headers['user-agent'] ? request.headers['user-agent'].value : '';
+          var uri = request.uri;
+          var bots = ['Twitterbot','facebookexternalhit','Discordbot','Slackbot','LinkedInBot','WhatsApp','TelegramBot','Applebot'];
+          var isCrawler = false;
+          for (var i = 0; i < bots.length; i++) {
+            if (ua.indexOf(bots[i]) !== -1) { isCrawler = true; break; }
+          }
+          if (isCrawler && /^\\/apps\\/[a-z0-9-]+$/.test(uri)) {
+            request.uri = '/_ogp/' + uri.replace('/apps/', '') + '.html';
+          }
+          return request;
+        }
+      `),
+      functionName: 'portfolio-ogp-rewrite',
+    });
+
     // CloudFront distribution
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        functionAssociations: [{
+          function: ogpRewriteFn,
+          eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+        }],
       },
       additionalBehaviors: {
         '/api/*': {
@@ -94,6 +120,7 @@ export class FrontendStack extends cdk.Stack {
       destinationBucket: siteBucket,
       distribution,
       distributionPaths: ['/*'],
+      prune: false,
     });
 
     new cdk.CfnOutput(this, 'SiteUrl', {

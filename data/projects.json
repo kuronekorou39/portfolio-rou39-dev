@@ -33,8 +33,8 @@
     "id": "omniverse",
     "title": "OmniVerse",
     "subtitle": "X & Bluesky 統合SNSクライアント",
-    "description": "## 作った経緯\n\nXとBlueskyを行ったり来たりするのが面倒すぎた。両方のTLを1画面で追いたい、通知もまとめて見たい、投稿もアカウント切り替えだけでサクッとやりたい。既存のクライアントだとどっちか片方しか対応してないか、統合しても微妙だったので自分で作った。\n\n## 主な機能\n\n- **統合タイムライン** — X・Blueskyの投稿を時系列で1フィードに表示\n- **マルチアカウント** — X最大4アカウント + Bluesky複数アカウントを同時管理\n- **投稿・リプライ・引用RT** — アカウント選んで即投稿。XはDOM操作方式でbot検知を回避\n- **統合通知** — 全アカウントの通知をまとめて表示、アカウント別フィルタも可\n- **オーバーレイウィンドウ** — 他アプリの上にTLをフローティング表示\n- **高速ドリップ** — 新着投稿がスムーズに流れ込むリアルタイム更新\n- **ブックマーク** — ローカル保存でプラットフォーム横断のブックマーク管理\n- **ユーザープロフィール** — 投稿一覧・メディア一覧・フォロー/フォロワー表示\n\n## カスタマイズ\n\n- テーマ（ダーク / ライト / システム連動）\n- フォント（Google Fonts、日本語フォント対応）\n- フォントサイズ・画像プレビューサイズ調整\n- センシティブコンテンツの表示設定（3モード）\n- コンパクトUI・FAB位置変更\n- フェッチ間隔・ドリップ速度の調整",
-    "howToUse": "## インストール\n\nGitHub Releases から APK（Android）をダウンロードしてインストール。\n\n## 使い方\n\n1. アプリを起動し、「アカウント追加」からXまたはBlueskyを選択\n2. WebView内でOAuth認証してログイン\n3. 統合タイムラインで全アカウントのフィードをまとめて閲覧\n4. 下部タブで通知・投稿・ブックマーク・設定を切り替え\n5. 投稿画面でアカウントを選んでポスト（リプライ・引用RTも対応）\n6. オーバーレイモードで他アプリ上にTLを常時表示\n7. 設定からテーマ・フォント・フェッチ間隔などをカスタマイズ",
+    "description": "## 作った経緯\n\nXとBlueskyを行ったり来たりするのが面倒すぎた。両方のTLを1画面で追いたい、通知もまとめて見たい、投稿もアカウント切り替えだけでサクッとやりたい。あと他のアプリを使ってる時もTLを眺めていたい！\n\n## 主な機能\n\n- **統合タイムライン** — X・Blueskyの投稿を時系列で1フィードに表示\n- **マルチアカウント** — X最大4アカウント + Bluesky複数アカウントを同時管理\n- **統合通知** — 全アカウントの通知をまとめて表示、アカウント別フィルタも可\n- **オーバーレイウィンドウ** — 他アプリの上にTLをフローティング表示\n- **自動スクロール** — TLを自動で流し読みできるモード\n- 投稿・リプライ・引用RTなど基本操作にも対応\n\n## カスタマイズ\n\n- テーマ（ダーク / ライト / システム連動）\n- フォント（Google Fonts、日本語フォント対応）\n- フォントサイズ・画像プレビューサイズ調整\n- センシティブコンテンツの表示設定（3モード）\n- コンパクトUI・FAB位置変更\n- フェッチ間隔の調整\n\n## 免責事項・プライバシーポリシー\n\n[免責事項・プライバシーポリシーはこちら](https://rou39.com/omniverse/privacy-policy.html)",
+    "howToUse": "## インストール\n\nこのページの Download ボタンから APK をダウンロードしてインストール。\n\n## 使い方\n\n1. アプリを起動し、「アカウント追加」からXまたはBlueskyを選択\n2. WebView内でOAuth認証してログイン\n3. 統合タイムラインで全アカウントのフィードをまとめて閲覧\n4. オーバーレイモードで他アプリ上にTLを常時表示\n5. 設定からテーマ・フォント・フェッチ間隔などをカスタマイズ",
     "category": "mobile",
     "tags": [
       "Flutter",
@@ -47,23 +47,25 @@
     "platform": [
       "Android"
     ],
-    "icon": "",
-    "screenshots": [],
-    "links": {
-      "github": "https://github.com/kuronekorou39/mobile-omniverse"
-    },
+    "icon": "/projects/omniverse/icon.png",
+    "screenshots": [
+      "/projects/omniverse/snapshot-accounts.png",
+      "/projects/omniverse/snapshot-timeline.png",
+      "/projects/omniverse/snapshot-overlay.png"
+    ],
+    "links": {},
     "downloads": [
       {
         "label": "Android (.apk)",
-        "url": "https://github.com/kuronekorou39/mobile-omniverse/releases/download/v1.9.4/OmniVerse-v1.9.4.apk",
+        "url": "https://rou39.com/omniverse/OmniVerse-v1.13.10.apk",
         "os": "android"
       }
     ],
     "status": "development",
     "publishedAt": "2025-07-20",
-    "updatedAt": "2026-04-08",
+    "updatedAt": "2026-04-17",
     "size": "large",
-    "published": false
+    "published": true
   },
   {
     "id": "koko-meshi",
