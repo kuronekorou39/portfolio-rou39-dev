@@ -214,12 +214,14 @@ export async function fetchClip(code: string): Promise<{ text: string; createdAt
 // Game Scores
 export interface GameScoreEntry {
   rank: number;
+  playerName?: string;
   score: number;
   playedAt: string;
   moveCount: number;
 }
 
 export async function submitGameScore(data: {
+  playerName: string;
   score: number;
   timeLimit: number;
   boardSize: number;

@@ -182,7 +182,10 @@ async function handleSubmit(
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body || '{}');
-  const { score, timeLimit, boardSize, replay } = body;
+  const { playerName, score, timeLimit, boardSize, replay } = body;
+
+  if (!playerName || typeof playerName !== 'string' || playerName.trim().length === 0 || playerName.trim().length > 20)
+    return badRequest('playerName is required (max 20 chars)');
 
   if (typeof score !== 'number' || score < 0)
     return badRequest('Invalid score');
@@ -257,6 +260,7 @@ async function handleSubmit(
       Item: {
         id,
         mode,
+        playerName: playerName.trim(),
         score,
         timeLimit,
         boardSize,
@@ -292,6 +296,7 @@ async function handleList(
 
   const items = (result.Items || []).map((item, i) => ({
     rank: i + 1,
+    playerName: item.playerName ?? '',
     score: item.score,
     playedAt: item.playedAt,
     moveCount: item.moveCount,

@@ -61,6 +61,10 @@ export default function Game2048Page() {
 
   // Ranking
   const [ranking, setRanking] = useState<GameScoreEntry[]>([]);
+  const [playerName, setPlayerName] = useState(() => {
+    try { return localStorage.getItem('game2048_playerName') || ''; } catch { return ''; }
+  });
+  const [submitting, setSubmitting] = useState(false);
   const [ranked, setRanked] = useState<boolean | null>(null);
 
   const isMovingRef = useRef(false);
@@ -117,24 +121,6 @@ export default function Game2048Page() {
       setBestScore(score);
       saveStoredBest(TIME_LIMIT, score);
     }
-    // Auto-submit score
-    if (score > 0) {
-      submitGameScore({
-        score,
-        timeLimit: TIME_LIMIT,
-        boardSize: BOARD_SIZE,
-        replay: {
-          seed: seedRef.current,
-          tilesPerMove: TILES_PER_MOVE,
-          moves: movesRef.current,
-        },
-      })
-        .then((res) => {
-          setRanked(res.ranked);
-          if (res.ranked) loadRanking();
-        })
-        .catch(() => setRanked(null));
-    }
   }, [phase]);
 
   // ── Load ranking ──
@@ -165,6 +151,7 @@ export default function Game2048Page() {
     setScore(0);
     setTimeLeftMs(TIME_LIMIT * 1000);
     setPhase('playing');
+    setSubmitting(false);
     setRanked(null);
     gameStartTimeRef.current = Date.now();
     isMovingRef.current = false;
@@ -205,6 +192,34 @@ export default function Game2048Page() {
     [phase],
   );
 
+  // ── Submit score ──
+
+  const handleSubmit = async () => {
+    const name = playerName.trim();
+    if (!name || score === 0 || submitting) return;
+    setSubmitting(true);
+    try { localStorage.setItem('game2048_playerName', name); } catch { /* noop */ }
+    try {
+      const res = await submitGameScore({
+        playerName: name,
+        score,
+        timeLimit: TIME_LIMIT,
+        boardSize: BOARD_SIZE,
+        replay: {
+          seed: seedRef.current,
+          tilesPerMove: TILES_PER_MOVE,
+          moves: movesRef.current,
+        },
+      });
+      setRanked(res.ranked);
+      if (res.ranked) loadRanking();
+    } catch {
+      setRanked(null);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ── Keyboard ──
 
   useEffect(() => {
@@ -225,15 +240,21 @@ export default function Game2048Page() {
     return () => window.removeEventListener('keydown', onKey);
   }, [handleMove]);
 
-  // ── Touch / swipe ──
+  // ── Touch / swipe (page-wide during play, prevents scroll) ──
 
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
-  }, []);
+  useEffect(() => {
+    if (phase !== 'playing') return;
 
-  const onTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
+    function onTouchStart(e: TouchEvent) {
+      const t = e.touches[0];
+      touchStartRef.current = { x: t.clientX, y: t.clientY };
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (touchStartRef.current) e.preventDefault();
+    }
+
+    function onTouchEnd(e: TouchEvent) {
       if (!touchStartRef.current) return;
       const t = e.changedTouches[0];
       const dx = t.clientX - touchStartRef.current.x;
@@ -246,9 +267,17 @@ export default function Game2048Page() {
         handleMove(dy > 0 ? 'down' : 'up');
       }
       touchStartRef.current = null;
-    },
-    [handleMove],
-  );
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [phase, handleMove]);
 
   // ── Timer display values ──
 
@@ -341,8 +370,6 @@ export default function Game2048Page() {
           backgroundColor: 'rgba(255,255,255,0.03)',
           touchAction: 'none',
         }}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
       >
         {/* Background cells */}
         {boardWidth > 0 &&
@@ -469,7 +496,27 @@ export default function Game2048Page() {
               </p>
             )}
 
-            {/* Ranking result */}
+            {/* Score submission */}
+            {score > 0 && ranked === null && (
+              <div className="mb-3 flex w-56 gap-2">
+                <input
+                  type="text"
+                  maxLength={20}
+                  placeholder="名前"
+                  value={playerName}
+                  onChange={e => setPlayerName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/25"
+                />
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || !playerName.trim()}
+                  className="rounded-lg bg-white/15 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/25 disabled:opacity-30"
+                >
+                  {submitting ? '...' : '登録'}
+                </button>
+              </div>
+            )}
             {ranked === true && (
               <p
                 className="mb-3 text-xs font-medium"
@@ -608,14 +655,14 @@ function Ranking({
             >
               {entry.rank}
             </span>
-            <span className="flex-1 text-sm font-bold text-white tabular-nums">
-              {entry.score.toLocaleString()}
-            </span>
             <span
-              className="text-xs tabular-nums"
-              style={{ color: 'rgba(255,255,255,0.25)' }}
+              className="flex-1 truncate text-sm"
+              style={{ color: 'rgba(255,255,255,0.8)' }}
             >
-              {entry.moveCount} moves
+              {entry.playerName || '-'}
+            </span>
+            <span className="text-sm font-bold text-white tabular-nums">
+              {entry.score.toLocaleString()}
             </span>
           </div>
         ))}
