@@ -34,14 +34,18 @@ function detectOS(): string {
 
 import type { DownloadEntry } from '../../../shared/src/types';
 
-function DownloadButton({ downloads, compact = false }: { downloads: DownloadEntry[]; compact?: boolean }) {
+function dlUrl(projectId: string, os?: string): string {
+  return `/api/downloads/${projectId}${os ? `?os=${os}` : ''}`;
+}
+
+function DownloadButton({ projectId, downloads, compact = false }: { projectId: string; downloads: DownloadEntry[]; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const userOS = detectOS();
 
   if (downloads.length === 1) {
     return (
       <a
-        href={downloads[0].url}
+        href={dlUrl(projectId, downloads[0].os)}
         className={`flex items-center justify-center gap-1.5 rounded-xl bg-white font-semibold text-black ${compact ? 'flex-1 py-2.5 text-xs' : 'py-2.5 text-sm'}`}
       >
         <DownloadIcon size={compact ? 12 : 14} /> Download
@@ -66,7 +70,7 @@ function DownloadButton({ downloads, compact = false }: { downloads: DownloadEnt
               return (
                 <a
                   key={i}
-                  href={dl.url}
+                  href={dlUrl(projectId, dl.os)}
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors hover:bg-white/10 ${
                     isRecommended ? 'bg-white/[0.04] text-white' : 'text-white/50'
@@ -565,7 +569,7 @@ export default function AppDetailPage() {
                   )}
                   {project.downloads && project.downloads.length > 0 && (
                     <div className="flex-1">
-                      <DownloadButton downloads={project.downloads} compact />
+                      <DownloadButton projectId={project.id} downloads={project.downloads} compact />
                     </div>
                   )}
                   {!project.downloads?.length && project.links.download && (
@@ -1036,7 +1040,7 @@ export default function AppDetailPage() {
                     </a>
                   )}
                   {project.downloads && project.downloads.length > 0 && (
-                    <DownloadButton downloads={project.downloads} />
+                    <DownloadButton projectId={project.id} downloads={project.downloads} />
                   )}
                   {!project.downloads?.length && project.links.download && (
                     <a href={project.links.download} target="_blank" rel="noopener noreferrer"
@@ -1115,7 +1119,7 @@ export default function AppDetailPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-white/30">Downloads</span>
-                    <span className="text-white/40">{downloadCount.toLocaleString()}</span>
+                    <span className="text-white/40">{downloadCount > 0 ? downloadCount.toLocaleString() : '-'}</span>
                   </div>
                   {/* Updated */}
                   <div className="flex items-center justify-between">

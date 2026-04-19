@@ -57,7 +57,7 @@
     "downloads": [
       {
         "label": "Android (.apk)",
-        "url": "https://rou39.com/omniverse/OmniVerse-v1.13.10.apk",
+        "url": "https://rou39.com/omniverse/OmniVerse-v1.13.11.apk",
         "os": "android"
       }
     ],
@@ -333,29 +333,34 @@
   },
   {
     "id": "office-raw-editor",
-    "title": "Office内部構造エディタ",
-    "subtitle": "Word/Excel/PowerPointのXML構造を直接編集",
-    "description": "# Office内部構造エディタ\n\n.docx/.xlsx/.pptxファイルの内部XMLを直接編集できるデスクトップツール。ファイルツリーで構造を把握し、内蔵エディタまたは外部エディタ（VSCode等）で編集。自動バックアップ機能付き。\n\n## 特徴\n\n- Officeファイルの内部XML構造をツリー表示\n- シンタックスハイライト付き内蔵エディタ\n- VSCode/Notepad++等の外部エディタ連携\n- 自動バックアップ\n- 検索機能（Ctrl+F）",
-    "howToUse": "## 使い方\n\n1. 「開く」で .docx/.xlsx/.pptx ファイルを選択\n2. ファイルツリーから編集したいXMLをダブルクリック\n3. 内蔵エディタまたは外部エディタ（VSCode等）で編集\n4. Ctrl+Sで保存\n5. 「名前を付けて保存」で元の形式として出力",
+    "title": "Office Raw Editor",
+    "subtitle": "Word/Excel/PowerPointの内部XMLを直接編集できるGUIツール",
+    "description": "## 作った経緯\n\n自分用の小さなツール。OfficeファイルのXML解析やプレースホルダの修正をしたい時、毎回手動でZIP展開→XML編集→再ZIP→拡張子戻しをやるのが面倒すぎて作った。GUIでサッと開いて中身を見て直せるだけのもの。\n\n## 主な機能\n\n- **ファイルツリー表示** — .docx/.xlsx/.pptx を開くと内部構造をツリーで一覧表示\n- **内蔵XMLエディタ** — シンタックスハイライト・検索・折り返し・整形\n- **外部エディタ連携** — VSCode / Notepad++ などで直接編集も可能\n- **安全設計** — 元ファイルはコピーして作業、自動バックアップ付き\n- **対応形式** — Word (.docx/.docm), Excel (.xlsx/.xlsm), PowerPoint (.pptx/.pptm) など全16形式",
+    "howToUse": "## インストール\n\nPython 3.10 以上が必要です。\n\n```\npip install git+https://github.com/kuronekorou39/office-raw-editor.git\n```\n\n## 起動\n\n```\noffice-raw-editor\n```\n\n## 使い方\n\n1. 「ファイルを開く」で Office ファイルを選択（ドラッグ＆ドロップも可）\n2. ファイルツリーから編集したい XML をダブルクリック\n3. 内蔵エディタまたは外部エディタで編集\n4. 「保存」で元の形式として出力",
     "category": "desktop",
     "tags": [
       "Python",
       "PyQt6",
-      "XML"
+      "XML",
+      "Open Source"
     ],
     "platform": [
       "Windows"
     ],
     "icon": "",
-    "screenshots": [],
+    "screenshots": [
+      "/projects/office-raw-editor/snap-home.png",
+      "/projects/office-raw-editor/snap-tree.png",
+      "/projects/office-raw-editor/snap-editor.png"
+    ],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/office-raw-editor"
     },
     "status": "active",
     "publishedAt": "2025-08-01",
     "updatedAt": "2026-01-31",
-    "size": "medium",
-    "published": false
+    "size": "small",
+    "published": true
   },
   {
     "id": "deka-mado",

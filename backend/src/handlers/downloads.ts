@@ -1,46 +1,32 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { docClient } from '../lib/dynamo';
-import { ok, badRequest, notFound, serverError } from '../lib/response';
+import { badRequest, notFound, serverError } from '../lib/response';
 
-const TABLE = process.env.PROJECTS_TABLE!;
-const BUCKET = process.env.ASSETS_BUCKET!;
+const PROJECTS_TABLE = process.env.PROJECTS_TABLE!;
 const PAGE_VIEWS_TABLE = process.env.PAGE_VIEWS_TABLE!;
-
-const s3 = new S3Client({});
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     const projectId = event.pathParameters?.projectId;
-    if (!projectId) {
-      return badRequest('projectId is required');
-    }
+    if (!projectId) return badRequest('projectId is required');
 
-    // DynamoDB からプロジェクト情報を取得
+    const os = event.queryStringParameters?.os;
+
+    // Read project from DynamoDB
     const result = await docClient.send(
-      new GetCommand({ TableName: TABLE, Key: { id: projectId } })
+      new GetCommand({ TableName: PROJECTS_TABLE, Key: { id: projectId } })
     );
 
-    if (!result.Item) {
-      return notFound('Project not found');
-    }
+    if (!result.Item) return notFound('Project not found');
 
-    // ダウンロードリンクが存在するか確認
-    if (!result.Item.links?.download) {
-      return notFound('No download available for this project');
-    }
+    const downloads = result.Item.downloads as { label: string; url: string; os: string }[] | undefined;
+    if (!downloads || downloads.length === 0) return notFound('No downloads available');
 
-    // S3 署名付きURLを生成 (有効期限: 5分)
-    const command = new GetObjectCommand({
-      Bucket: BUCKET,
-      Key: `downloads/${projectId}/${projectId}.zip`,
-    });
+    // Find matching download by OS, or fall back to first
+    const entry = (os ? downloads.find(d => d.os === os) : null) || downloads[0];
 
-    const url = await getSignedUrl(s3, command, { expiresIn: 300 });
-
-    // ダウンロード数をインクリメント
+    // Increment download count
     await docClient.send(
       new UpdateCommand({
         TableName: PAGE_VIEWS_TABLE,
@@ -50,7 +36,15 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       })
     );
 
-    return ok({ url });
+    // 302 redirect to actual file
+    return {
+      statusCode: 302,
+      headers: {
+        Location: entry.url,
+        'Cache-Control': 'no-cache',
+      },
+      body: '',
+    };
   } catch (error) {
     console.error('Downloads handler error:', error);
     return serverError();

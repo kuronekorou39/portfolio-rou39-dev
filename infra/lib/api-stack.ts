@@ -118,10 +118,7 @@ export class ApiStack extends cdk.Stack {
 
     const downloads = this.api.root.addResource('downloads');
     const downloadByProject = downloads.addResource('{projectId}');
-    downloadByProject.addMethod('GET', new apigateway.LambdaIntegration(downloadsFn), {
-      authorizer,
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-    });
+    downloadByProject.addMethod('GET', new apigateway.LambdaIntegration(downloadsFn));
 
     // --- Page Views API ---
     const pageViewsFn = new nodejs.NodejsFunction(this, 'PageViewsFunction', {
