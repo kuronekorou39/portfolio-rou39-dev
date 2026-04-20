@@ -164,7 +164,7 @@ export default function AppsPage() {
                     {isLarge && (
                       <div className="-mx-6 -mt-6 mb-5 overflow-hidden bg-white/[0.03]">
                         {screenshot ? (
-                          <img src={screenshot} alt="" className="aspect-video w-full object-cover" />
+                          <img src={screenshot} alt="" className="aspect-video w-full object-cover" loading="lazy" />
                         ) : (
                           <div className="flex aspect-video items-center justify-center text-5xl opacity-10">
                             {categoryEmoji[project.category]}
@@ -177,7 +177,7 @@ export default function AppsPage() {
                         <div className={`flex items-center justify-between ${isSmall ? 'mb-3' : 'mb-5'}`}>
                           <div className="flex items-center gap-3">
                             {project.icon ? (
-                              <img src={project.icon} alt="" className={`rounded-full border border-white/10 object-cover ${isSmall ? 'h-6 w-6' : 'h-8 w-8'}`} />
+                              <img src={project.icon} alt="" className={`rounded-full border border-white/10 object-cover ${isSmall ? 'h-6 w-6' : 'h-8 w-8'}`} loading="lazy" />
                             ) : (
                               <span className={isSmall ? 'text-lg' : 'text-2xl'}>
                                 {categoryEmoji[project.category]}

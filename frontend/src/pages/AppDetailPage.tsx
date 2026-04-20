@@ -504,7 +504,7 @@ export default function AppDetailPage() {
             <div className="mb-4 lg:hidden">
               <div className="flex items-start gap-3">
                 {project.icon ? (
-                  <img src={project.icon} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
+                  <img src={project.icon} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" loading="lazy" />
                 ) : (
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xl">
                     {categoryEmoji[project.category]}
@@ -549,6 +549,7 @@ export default function AppDetailPage() {
                         src={src}
                         alt={`${project.title} screenshot ${i + 1}`}
                         className="h-44 w-auto object-cover sm:h-52"
+                        loading="lazy"
                       />
                     </button>
                   ))}
@@ -1007,7 +1008,7 @@ export default function AppDetailPage() {
               <div className="hidden lg:block">
                 <div className="mb-3 flex items-center gap-3">
                   {project.icon ? (
-                    <img src={project.icon} alt="" className="h-12 w-12 rounded-full border border-white/10 object-cover" />
+                    <img src={project.icon} alt="" className="h-12 w-12 rounded-full border border-white/10 object-cover" loading="lazy" />
                   ) : (
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-2xl">
                       {categoryEmoji[project.category]}
