@@ -38,6 +38,10 @@ export class ApiStack extends cdk.Stack {
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: ['Content-Type', 'Authorization'],
       },
+      deployOptions: {
+        throttlingRateLimit: 100,
+        throttlingBurstLimit: 200,
+      },
     });
 
     // Cognito Authorizer
