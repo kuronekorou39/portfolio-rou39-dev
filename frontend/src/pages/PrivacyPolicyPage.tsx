@@ -14,8 +14,7 @@ export default function PrivacyPolicyPage() {
 
         <div className="space-y-8 text-sm leading-relaxed text-white/50">
           <p>
-            このサイト（rou39.com）では、以下の情報を取得・保存しています。
-            難しいことは書きません。何を集めて、何に使っているかだけ説明します。
+            このサイト（rou39.com）で取得・保存している情報と、その利用目的について説明します。
           </p>
 
           <section>
