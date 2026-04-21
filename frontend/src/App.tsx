@@ -18,6 +18,7 @@ const Game2048Page = lazy(() => import('@/pages/Game2048Page'));
 const ClipPage = lazy(() => import('@/pages/ClipPage'));
 const ClipViewPage = lazy(() => import('@/pages/ClipViewPage'));
 const ContactPage = lazy(() => import('@/pages/ContactPage'));
+const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
 
 function PageLoader() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Route path="/clip" element={<ClipPage />} />
           <Route path="/clip/:code" element={<ClipViewPage />} />
           <Route path="/games/2048" element={<Game2048Page />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

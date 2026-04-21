@@ -61,8 +61,11 @@ export default function Layout() {
       </main>
 
       <footer className="border-t border-white/[0.06]">
-        <div className="mx-auto max-w-6xl px-6 py-8 text-center text-sm text-gray-400">
-          &copy; {new Date().getFullYear()} rou39. All rights reserved.
+        <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col items-center gap-2 text-sm text-gray-400">
+          <div>&copy; {new Date().getFullYear()} rou39. All rights reserved.</div>
+          <Link to="/privacy-policy" className="text-xs text-gray-600 transition-colors hover:text-gray-400">
+            Privacy Policy
+          </Link>
         </div>
       </footer>
 
