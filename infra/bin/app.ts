@@ -10,11 +10,20 @@ import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
+import { UranekoStorageStack } from '../lib/uraneko/storage-stack';
+import { UranekoSecretsStack } from '../lib/uraneko/secrets-stack';
+import { UranekoEmailStack } from '../lib/uraneko/email-stack';
+import { UranekoAuthClientStack } from '../lib/uraneko/auth-client-stack';
+import { UranekoIngestIamStack } from '../lib/uraneko/ingest-iam-stack';
+import { UranekoApiStack } from '../lib/uraneko/api-stack';
+import { UranekoFrontendStack } from '../lib/uraneko/frontend-stack';
+import { UranekoMonitoringStack } from '../lib/uraneko/monitoring-stack';
 
 const app = new cdk.App();
 
 const DOMAIN_NAME = 'rou39.com';
 const AUTH_DOMAIN = `auth.${DOMAIN_NAME}`;
+const URANEKO_SUBDOMAIN = `uraneko.${DOMAIN_NAME}`;
 const HOSTED_ZONE_ID = 'Z064847133X63Y56L8D3W';
 
 const env = {
@@ -89,3 +98,64 @@ new FrontendStack(app, 'PortfolioFrontend', {
 
 // Monitoring stack (budget alerts)
 new MonitoringStack(app, 'PortfolioMonitoring', { env });
+
+// ============================================================
+// uraneko.rou39.com (動画販売サブドメイン)
+// ============================================================
+
+const uranekoHostedZone = route53.HostedZone.fromHostedZoneAttributes(
+  app, 'UranekoHostedZone', {
+    hostedZoneId: HOSTED_ZONE_ID,
+    zoneName: DOMAIN_NAME,
+  },
+);
+
+const uranekoStorage = new UranekoStorageStack(app, 'UranekoStorage', { env });
+const uranekoSecrets = new UranekoSecretsStack(app, 'UranekoSecrets', { env });
+
+const uranekoEmail = new UranekoEmailStack(app, 'UranekoEmail', {
+  env,
+  hostedZone: uranekoHostedZone,
+  subdomain: URANEKO_SUBDOMAIN,
+});
+
+const uranekoAuthClient = new UranekoAuthClientStack(app, 'UranekoAuthClient', {
+  env,
+  userPool: auth.userPool,
+  subdomain: URANEKO_SUBDOMAIN,
+});
+void uranekoAuthClient;
+
+new UranekoIngestIamStack(app, 'UranekoIngest', {
+  env,
+  assetsBucket: uranekoStorage.assetsBucket,
+  tokensTable: uranekoStorage.tokensTable,
+});
+
+const uranekoApi = new UranekoApiStack(app, 'UranekoApi', {
+  env,
+  productsTable: uranekoStorage.productsTable,
+  tokensTable: uranekoStorage.tokensTable,
+  ordersTable: uranekoStorage.ordersTable,
+  assetsBucket: uranekoStorage.assetsBucket,
+  userPool: auth.userPool,
+  nowpaymentsApiKey: uranekoSecrets.nowpaymentsApiKey,
+  nowpaymentsIpnSecret: uranekoSecrets.nowpaymentsIpnSecret,
+  orderAccessSecret: uranekoSecrets.orderAccessSecret,
+  siteUrl: `https://${URANEKO_SUBDOMAIN}`,
+  fromEmail: uranekoEmail.fromAddress,
+});
+
+new UranekoFrontendStack(app, 'UranekoFrontend', {
+  env,
+  crossRegionReferences: true,
+  api: uranekoApi.api,
+  certificate,
+  hostedZone: uranekoHostedZone,
+  subdomain: URANEKO_SUBDOMAIN,
+});
+
+new UranekoMonitoringStack(app, 'UranekoMonitoring', {
+  env,
+  alertEmail: process.env.ALERT_EMAIL || 'alert@example.com',
+});

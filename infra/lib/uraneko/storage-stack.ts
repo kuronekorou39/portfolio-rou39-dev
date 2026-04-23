@@ -1,0 +1,72 @@
+import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import type { Construct } from 'constructs';
+
+export class UranekoStorageStack extends cdk.Stack {
+  public readonly productsTable: dynamodb.Table;
+  public readonly tokensTable: dynamodb.Table;
+  public readonly ordersTable: dynamodb.Table;
+  public readonly assetsBucket: s3.Bucket;
+
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // 商品マスタ
+    this.productsTable = new dynamodb.Table(this, 'ProductsTable', {
+      tableName: 'uraneko-video-products',
+      partitionKey: { name: 'product_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // 透かしトークン在庫
+    this.tokensTable = new dynamodb.Table(this, 'TokensTable', {
+      tableName: 'uraneko-video-tokens',
+      partitionKey: { name: 'token_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // 未割当トークンを古い順に取得するための GSI
+    // SK は "unassigned#2026-04-23T..." の形(status#created_at)で書き込む
+    this.tokensTable.addGlobalSecondaryIndex({
+      indexName: 'by_product_status',
+      partitionKey: { name: 'product_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'status_created_at', type: dynamodb.AttributeType.STRING },
+    });
+
+    // 購入記録
+    this.ordersTable = new dynamodb.Table(this, 'OrdersTable', {
+      tableName: 'uraneko-orders',
+      partitionKey: { name: 'order_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // ログインユーザーの購入履歴取得用
+    this.ordersTable.addGlobalSecondaryIndex({
+      indexName: 'by_user',
+      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
+    });
+
+    // 動画資産(stego mp4, サムネ等)
+    this.assetsBucket = new s3.Bucket(this, 'AssetsBucket', {
+      bucketName: `uraneko-assets-${this.account}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+          allowedOrigins: ['https://uraneko.rou39.com'],
+          allowedHeaders: ['*'],
+          maxAge: 3000,
+        },
+      ],
+    });
+
+    new cdk.CfnOutput(this, 'AssetsBucketName', { value: this.assetsBucket.bucketName });
+  }
+}
