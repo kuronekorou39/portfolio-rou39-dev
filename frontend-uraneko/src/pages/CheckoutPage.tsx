@@ -3,15 +3,93 @@ import { useParams } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { getIdToken, getGoogleLoginUrl } from '../lib/auth';
+import Ornament from '../components/bar/Ornament';
+import SectionLabel from '../components/bar/SectionLabel';
+import BarButton from '../components/bar/BarButton';
+import BrassFrame from '../components/bar/BrassFrame';
 
 const CURRENCIES = [
-  { value: '', label: '決済時に NOWPayments で選択' },
-  { value: 'btc', label: 'BTC (Bitcoin)' },
-  { value: 'btcln', label: 'BTC Lightning' },
-  { value: 'usdttrc20', label: 'USDT (TRC20)' },
+  { value: '', label: 'NOWPayments にて選択' },
+  { value: 'btc', label: 'BTC · Bitcoin' },
+  { value: 'btcln', label: 'BTC · Lightning' },
+  { value: 'usdttrc20', label: 'USDT · TRC20' },
   { value: 'usdc', label: 'USDC' },
   { value: 'ltc', label: 'LTC' },
 ];
+
+// ステッパー(01 会員選択 / 02 お支払い / 03 受領)
+function Stepper({ active }: { active: 1 | 2 | 3 }) {
+  const steps = [
+    { n: '01', label: '会員' },
+    { n: '02', label: 'お支払い' },
+    { n: '03', label: '受領' },
+  ];
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 28,
+        marginBottom: 48,
+      }}
+    >
+      {steps.map((s, i) => {
+        const index = i + 1;
+        const isActive = index === active;
+        const isDone = index < active;
+        return (
+          <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                transform: 'rotate(45deg)',
+                border: '1px solid var(--color-gold)',
+                background: isActive ? 'var(--color-gold)' : 'transparent',
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              <div
+                style={{
+                  transform: 'rotate(-45deg)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: isActive
+                    ? '#120808'
+                    : isDone
+                    ? 'var(--color-gold)'
+                    : 'var(--dim)',
+                }}
+              >
+                {isDone ? '✓' : s.n}
+              </div>
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-serif-jp)',
+                fontSize: 12,
+                letterSpacing: 3,
+                color: isActive
+                  ? 'var(--color-fg)'
+                  : isDone
+                  ? 'var(--muted)'
+                  : 'var(--dim)',
+              }}
+            >
+              {s.label}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ width: 40, height: 1, background: 'rgba(201,169,97,0.3)' }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +126,7 @@ export default function CheckoutPage() {
         }
       } else {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          setErr('メールアドレスが不正です');
+          setErr('メールアドレスの形式が正しくありません');
           setSubmitting(false);
           return;
         }
@@ -69,79 +147,362 @@ export default function CheckoutPage() {
     }
   }
 
-  if (err && !product) return <p className="text-red-400">エラー: {err}</p>;
-  if (!product) return <p className="text-neutral-400">読み込み中...</p>;
+  if (err && !product)
+    return (
+      <p style={{ color: '#e66', fontFamily: 'var(--font-serif-jp)' }}>エラー: {err}</p>
+    );
+  if (!product)
+    return (
+      <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
+        読み込み中...
+      </p>
+    );
 
   return (
-    <div className="mx-auto max-w-lg">
-      <h1 className="mb-2 text-2xl font-bold">購入手続き</h1>
-      <p className="mb-6 text-sm text-neutral-400">
-        {product.title} - ¥{product.price_jpy.toLocaleString()}
-      </p>
+    <div>
+      <Stepper active={2} />
 
-      <div className="mb-6 flex gap-2 rounded-md border border-white/10 bg-neutral-900 p-1 text-sm">
-        <button
-          onClick={() => setMode('login')}
-          className={`flex-1 rounded px-3 py-2 ${mode === 'login' ? 'bg-white text-black' : 'text-neutral-400'}`}
-        >
-          ログインして購入
-        </button>
-        <button
-          onClick={() => setMode('guest')}
-          className={`flex-1 rounded px-3 py-2 ${mode === 'guest' ? 'bg-white text-black' : 'text-neutral-400'}`}
-        >
-          ゲスト購入
-        </button>
-      </div>
-
-      {mode === 'login' && !user && (
-        <div className="mb-4 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm">
-          ログインしていません。
-          <a href={getGoogleLoginUrl()} className="ml-2 underline">
-            Google でログイン
-          </a>
-        </div>
-      )}
-
-      {mode === 'guest' && (
-        <div className="mb-4">
-          <label className="mb-1 block text-xs text-neutral-400">
-            メールアドレス(ダウンロードリンクの送信先)
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-white/10 bg-neutral-900 px-3 py-2 text-sm"
-            placeholder="you@example.com"
-          />
-        </div>
-      )}
-
-      <div className="mb-6">
-        <label className="mb-1 block text-xs text-neutral-400">支払い通貨</label>
-        <select
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
-          className="w-full rounded border border-white/10 bg-neutral-900 px-3 py-2 text-sm"
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {err && <p className="mb-4 text-sm text-red-400">{err}</p>}
-
-      <button
-        onClick={submit}
-        disabled={submitting || (mode === 'login' && !user)}
-        className="w-full rounded-md bg-white px-5 py-2.5 text-sm font-medium text-black hover:bg-neutral-200 disabled:opacity-50"
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 420px',
+          gap: 56,
+        }}
       >
-        {submitting ? '処理中...' : 'NOWPayments で支払いに進む'}
-      </button>
+        {/* 左:支払い方法 */}
+        <div>
+          <SectionLabel style={{ marginBottom: 14 }}>— お支払い方法 · METHOD</SectionLabel>
+
+          <BrassFrame padding="28px 32px" style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                marginBottom: 6,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 18,
+                  fontWeight: 300,
+                  letterSpacing: 3,
+                  color: 'var(--color-fg)',
+                }}
+              >
+                暗号資産 · Cryptocurrency
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 9,
+                  letterSpacing: 3,
+                  padding: '3px 9px',
+                  color: 'var(--color-gold-bright)',
+                  border: '1px solid rgba(201,169,97,0.6)',
+                }}
+              >
+                SELECTED
+              </div>
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontStyle: 'italic',
+                fontSize: 12,
+                letterSpacing: 2,
+                color: 'var(--muted)',
+                marginBottom: 20,
+              }}
+            >
+              Paid via NOWPayments · BTC / Lightning / USDT / USDC / LTC
+            </div>
+
+            {/* 会員/ゲスト切替 */}
+            <div
+              style={{
+                display: 'flex',
+                border: '1px solid rgba(201,169,97,0.25)',
+                marginBottom: 20,
+              }}
+            >
+              <button
+                onClick={() => setMode('login')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: mode === 'login' ? 'rgba(201,169,97,0.15)' : 'transparent',
+                  border: 'none',
+                  color: mode === 'login' ? 'var(--color-gold-bright)' : 'var(--muted)',
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 12,
+                  letterSpacing: 3,
+                  cursor: 'pointer',
+                }}
+              >
+                会員として購入
+              </button>
+              <button
+                onClick={() => setMode('guest')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: mode === 'guest' ? 'rgba(201,169,97,0.15)' : 'transparent',
+                  border: 'none',
+                  color: mode === 'guest' ? 'var(--color-gold-bright)' : 'var(--muted)',
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 12,
+                  letterSpacing: 3,
+                  cursor: 'pointer',
+                }}
+              >
+                非会員として購入
+              </button>
+            </div>
+
+            {mode === 'login' && !user && (
+              <div
+                style={{
+                  padding: 14,
+                  marginBottom: 18,
+                  border: '1px solid rgba(230,200,119,0.3)',
+                  background: 'rgba(230,200,119,0.05)',
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  color: 'var(--muted)',
+                }}
+              >
+                ログインしていません。
+                <a
+                  href={getGoogleLoginUrl()}
+                  style={{ marginLeft: 10, color: 'var(--color-gold)', textDecoration: 'underline' }}
+                >
+                  SIGN IN
+                </a>
+              </div>
+            )}
+
+            {mode === 'guest' && (
+              <div style={{ marginBottom: 18 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    letterSpacing: 3,
+                    color: 'var(--muted)',
+                    marginBottom: 8,
+                  }}
+                >
+                  EMAIL · ダウンロードURLの送信先
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'transparent',
+                    border: '1px solid rgba(201,169,97,0.25)',
+                    color: 'var(--color-fg)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 13,
+                    letterSpacing: 1,
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{ marginBottom: 4 }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  color: 'var(--muted)',
+                  marginBottom: 8,
+                }}
+              >
+                CURRENCY · 支払い通貨
+              </label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  background: 'transparent',
+                  border: '1px solid rgba(201,169,97,0.25)',
+                  color: 'var(--color-fg)',
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 13,
+                  letterSpacing: 1,
+                  outline: 'none',
+                  appearance: 'none',
+                }}
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.value} value={c.value} style={{ background: 'var(--color-panel)' }}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </BrassFrame>
+
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              letterSpacing: 2,
+              color: 'var(--dim)',
+              lineHeight: 1.8,
+            }}
+          >
+            ※ クレジットカード決済は取扱いございません。
+            <br />※ お支払い完了後、ご登録のメールに専用ダウンロードURLをお送りします。
+          </p>
+        </div>
+
+        {/* 右:明細 */}
+        <div>
+          <SectionLabel style={{ marginBottom: 14 }}>— 御明細 · ORDER</SectionLabel>
+          <BrassFrame padding="28px 28px">
+            <div style={{ marginBottom: 18 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  color: 'var(--color-gold)',
+                  marginBottom: 4,
+                }}
+              >
+                № {product.product_id}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 16,
+                  fontWeight: 300,
+                  letterSpacing: 2,
+                  color: 'var(--color-fg)',
+                  lineHeight: 1.4,
+                }}
+              >
+                {product.title}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: 'var(--muted)',
+                  marginTop: 6,
+                }}
+              >
+                {Math.floor(product.duration_sec / 60)} min
+              </div>
+            </div>
+
+            <Ornament style={{ margin: '18px 0' }} />
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                letterSpacing: 2,
+                color: 'var(--muted)',
+                marginBottom: 8,
+              }}
+            >
+              <span>SUBTOTAL</span>
+              <span>¥ {product.price_jpy.toLocaleString()}</span>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                paddingTop: 18,
+                borderTop: '1px solid rgba(201,169,97,0.3)',
+                marginTop: 18,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 4,
+                  color: 'var(--color-gold)',
+                }}
+              >
+                TOTAL
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 28,
+                  fontWeight: 300,
+                  letterSpacing: 3,
+                  color: 'var(--color-gold-bright)',
+                }}
+              >
+                ¥ {product.price_jpy.toLocaleString()}
+              </span>
+            </div>
+
+            {err && (
+              <p
+                style={{
+                  marginTop: 16,
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 12,
+                  color: '#e66',
+                }}
+              >
+                {err}
+              </p>
+            )}
+
+            <div style={{ marginTop: 24 }}>
+              <BarButton
+                onClick={submit}
+                disabled={submitting || (mode === 'login' && !user)}
+                size="lg"
+                style={{
+                  width: '100%',
+                  opacity: submitting || (mode === 'login' && !user) ? 0.5 : 1,
+                }}
+              >
+                {submitting ? '処理中...' : 'PROCEED · 送金へ進む'}
+              </BarButton>
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                textAlign: 'center',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9,
+                letterSpacing: 3,
+                color: 'var(--dim)',
+              }}
+            >
+              SSL · TLS 1.3 · SECURE
+            </div>
+          </BrassFrame>
+        </div>
+      </div>
     </div>
   );
 }

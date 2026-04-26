@@ -1,14 +1,80 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: #120808;
+  --color-panel: #1a0d0a;
+  --color-deep: #0a0503;
+  --color-velvet: #4a0f1a;
+  --color-velvet-deep: #2a0811;
+  --color-fg: #f2ead8;
+  --color-gold: #c9a961;
+  --color-gold-bright: #e6c877;
+  --color-silver: #8b8378;
+
+  --font-serif-jp: "Noto Serif JP", serif;
+  --font-serif: "Cormorant Garamond", "Noto Serif JP", serif;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 :root {
   color-scheme: dark;
+
+  --muted: rgba(242, 234, 216, 0.62);
+  --dim: rgba(242, 234, 216, 0.38);
+  --faint: rgba(242, 234, 216, 0.12);
+
+  --brass-line: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201, 169, 97, 0.5),
+    transparent
+  );
 }
 
 html,
 body,
 #root {
   min-height: 100%;
-  background: #0b0b0d;
-  color: #e5e5e5;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+/* 真鍮ダイヤ(四隅装飾) */
+.brass-diamond {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--color-gold);
+  transform: rotate(45deg);
+}
+
+/* 真鍮水平線 */
+.brass-hairline {
+  height: 1px;
+  background: var(--brass-line);
+}
+
+/* 四隅コーナーマーク(サムネ用) */
+.brass-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+/* ベルベット織り(サムネ・モーダル内) */
+.velvet-weave {
+  background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.025) 0 1px,
+      transparent 1px 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.15) 0 1px,
+      transparent 1px 2px
+    );
+  mix-blend-mode: overlay;
 }

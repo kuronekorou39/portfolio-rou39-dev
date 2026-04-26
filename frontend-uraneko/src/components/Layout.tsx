@@ -1,44 +1,207 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getGoogleLoginUrl } from '../lib/auth';
 
+const NAV_ITEMS: { to: string; label: string }[] = [
+  { to: '/', label: 'COLLECTION' },
+  { to: '/my/orders', label: 'LIBRARY' },
+];
+
 export default function Layout() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-neutral-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to="/" className="text-lg font-bold tracking-tight">
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--color-bg)',
+        color: 'var(--color-fg)',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
+      {/* ヘッダー */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '22px 60px',
+          borderBottom: '1px solid rgba(201,169,97,0.22)',
+          background:
+            'linear-gradient(180deg, var(--color-deep), var(--color-bg))',
+        }}
+      >
+        {/* 下端の真鍮ライン */}
+        <div
+          className="brass-hairline"
+          style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}
+        />
+
+        {/* ロゴ */}
+        <Link
+          to="/"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            textDecoration: 'none',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-serif-jp)',
+              fontSize: 22,
+              fontWeight: 300,
+              letterSpacing: 10,
+              color: 'var(--color-fg)',
+            }}
+          >
             uraneko
-          </Link>
-          <nav className="flex items-center gap-4 text-sm">
-            {user ? (
-              <>
-                <Link to="/my/orders" className="text-neutral-300 hover:text-white">
-                  購入履歴
-                </Link>
-                <span className="text-xs text-neutral-500">{user.email}</span>
-                <button onClick={signOut} className="text-neutral-400 hover:text-white">
-                  ログアウト
-                </button>
-              </>
-            ) : (
-              <a
-                href={getGoogleLoginUrl()}
-                className="text-neutral-300 hover:text-white"
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: 10,
+              letterSpacing: 6,
+              color: 'var(--color-gold)',
+              marginTop: 2,
+            }}
+          >
+            URA · NEKO — MEMBERS ONLY
+          </span>
+        </Link>
+
+        {/* ナビ */}
+        <nav
+          style={{
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 44,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 11,
+            letterSpacing: 4,
+          }}
+        >
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end
+              style={({ isActive }) => ({
+                position: 'relative',
+                paddingBottom: 4,
+                color: isActive ? 'var(--color-fg)' : 'var(--muted)',
+                textDecoration: 'none',
+              })}
+            >
+              {({ isActive }) => (
+                <>
+                  {item.label}
+                  {isActive && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: -2,
+                        height: 1,
+                        background: 'var(--color-gold)',
+                      }}
+                    />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* 右側 */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 22,
+            alignItems: 'center',
+            fontFamily: 'var(--font-sans)',
+            fontSize: 11,
+            letterSpacing: 3,
+            color: 'var(--muted)',
+          }}
+        >
+          {user ? (
+            <>
+              <span
+                style={{
+                  padding: '6px 14px',
+                  border: '1px solid rgba(201,169,97,0.6)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  color: 'var(--color-gold)',
+                  fontFamily: 'var(--font-mono)',
+                }}
+                title={user.email}
               >
-                ログイン
-              </a>
-            )}
-          </nav>
+                M {user.userId.slice(-4).toUpperCase()}
+              </span>
+              <button
+                onClick={signOut}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  cursor: 'pointer',
+                  fontSize: 11,
+                  letterSpacing: 3,
+                }}
+              >
+                SIGN OUT
+              </button>
+            </>
+          ) : (
+            <a
+              href={getGoogleLoginUrl()}
+              style={{
+                color: 'var(--color-gold)',
+                textDecoration: 'none',
+                letterSpacing: 4,
+              }}
+            >
+              SIGN IN
+            </a>
+          )}
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
+
+      {/* 本文 */}
+      <main
+        key={location.pathname}
+        style={{
+          maxWidth: 1280,
+          margin: '0 auto',
+          padding: '56px 60px',
+        }}
+      >
         <Outlet />
       </main>
-      <footer className="border-t border-white/10 py-6 text-center text-xs text-neutral-500">
-        uraneko.rou39.com ・ 18 歳未満の方はご利用いただけません
+
+      {/* フッター */}
+      <footer
+        style={{
+          borderTop: '1px solid rgba(201,169,97,0.18)',
+          padding: '28px 60px',
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          letterSpacing: 3,
+          color: 'var(--dim)',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span>URANEKO · ROU39.COM</span>
+        <span>R—18 · MEMBERS ONLY</span>
       </footer>
     </div>
   );
