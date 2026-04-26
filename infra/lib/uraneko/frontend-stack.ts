@@ -73,6 +73,9 @@ export class UranekoFrontendStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          // x-nowpayments-sig などのカスタムヘッダーを origin に forward する。
+          // Host ヘッダーは API Gateway 側で execute-api ドメインを期待するので除外。
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
           functionAssociations: [
             { function: apiRewriteFn, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
           ],

@@ -43,7 +43,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         order_id: order.order_id,
         status: order.status,
         product_id: order.product_id,
+        price_jpy: order.price_jpy,
+        currency: order.currency,
         created_at: order.created_at,
+        paid_at: order.paid_at,
         download_url: null,
       });
     }
@@ -68,6 +71,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       order_id: order.order_id,
       status: order.status,
       product_id: order.product_id,
+      price_jpy: order.price_jpy,
+      currency: order.currency,
       created_at: order.created_at,
       paid_at: order.paid_at,
       download_url: downloadUrl,
