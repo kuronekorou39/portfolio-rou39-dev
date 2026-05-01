@@ -19,6 +19,7 @@ const ClipPage = lazy(() => import('@/pages/ClipPage'));
 const ClipViewPage = lazy(() => import('@/pages/ClipViewPage'));
 const ContactPage = lazy(() => import('@/pages/ContactPage'));
 const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
+const RelationsPage = lazy(() => import('@/pages/RelationsPage'));
 
 function PageLoader() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="/april-fools" element={<AprilFoolsPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/relations" element={<RelationsPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/apps" element={<AppsPage />} />

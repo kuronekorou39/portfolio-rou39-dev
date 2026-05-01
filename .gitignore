@@ -23,3 +23,12 @@ Thumbs.db
 # Claude Code
 .claude/
 Snapshot_16.PNG
+
+# Relations 生データ (深さ2 JSONL は 2.4GB 超、Git管理しない)
+FF display/*.json
+FF display/*.jsonl
+
+# 軽量化後の depth2.json も 168MB あり GitHub 100MB制限超のため除外。
+# scripts/normalize-relations.mjs --threshold=100 で再生成可能。
+# CDK deploy 時にはローカルにこのファイルがある状態でビルドする。
+frontend/public/relations-app/data/depth2.json

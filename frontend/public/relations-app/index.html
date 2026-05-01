@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>相関図 — rou39</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;background:#eae6dd;font-family:"Noto Sans JP",system-ui,sans-serif;color:#1a1a1a;overflow:hidden}
+  #root{width:100vw;height:100vh}
+
+  /* リッチなローディング画面 */
+  .rl-load-root {
+    position:fixed; inset:0; z-index:99999;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at center, #f5f1e8 0%, #e8dfd0 100%);
+    color:#1a1a1a; font-family:"Noto Sans JP",system-ui,sans-serif;
+    transition: opacity .4s ease;
+  }
+  .rl-load-title { font-family:"Noto Serif JP",serif; font-size:32px; font-weight:600; letter-spacing:.18em; color:#1a1a1a; margin-bottom:6px; }
+  .rl-load-sub { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6a6258; margin-bottom:48px; }
+  .rl-load-ring { position:relative; width:160px; height:160px; margin-bottom:24px; }
+  .rl-load-ring svg { transform: rotate(-90deg); width:100%; height:100%; }
+  .rl-load-ring .bg { stroke:rgba(20,18,14,0.08); }
+  .rl-load-ring .fg { stroke:#b64727; transition: stroke-dashoffset .25s ease; }
+  .rl-load-ring .pct {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:"JetBrains Mono",monospace; font-size:26px; font-weight:500; color:#1a1a1a;
+  }
+  .rl-load-status { font-size:12px; color:#6a6258; letter-spacing:.08em; min-height:18px; }
+  .rl-load-bytes { font-family:"JetBrains Mono",monospace; font-size:10px; color:#9a8e80; margin-top:6px; letter-spacing:.04em; }
+  .rl-load-error { color:#b64727; font-size:13px; margin-top:24px; max-width:480px; text-align:center; line-height:1.6; }
+  .rl-load-pulse { animation: rl-pulse 1.4s ease-in-out infinite; }
+  @keyframes rl-pulse { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+</style>
+
+<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+<script src="src/orbit-controls.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="src/data.js"></script>
+<script src="src/loader.js"></script>
+<script src="src/graph3d.js"></script>
+
+<script type="text/babel" src="src/oz-viz.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function formatBytes(n) {
+  if (!n && n !== 0) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+// 進捗付き fetch (ReadableStream + Content-Length)
+async function fetchWithProgress(url, onProgress) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(url + ' fetch failed: ' + res.status);
+  const total = +(res.headers.get('Content-Length') || 0);
+  const reader = res.body.getReader();
+  const chunks = [];
+  let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    onProgress(received, total);
+  }
+  // チャンク結合 → text
+  const blob = new Blob(chunks);
+  return await blob.text();
+}
+
+function LoadingScreen({ progress, status, received, total, error, fading }) {
+  const C = 2 * Math.PI * 70; // 半径70, 円周
+  const dashOffset = C * (1 - Math.min(1, Math.max(0, progress)));
+  const pct = Math.round(progress * 100);
+  return (
+    <div className="rl-load-root" style={{ opacity: fading ? 0 : 1 }}>
+      <div className="rl-load-title">相関図</div>
+      <div className="rl-load-sub">Relations · 3D Visualizer</div>
+      <div className="rl-load-ring">
+        <svg viewBox="0 0 160 160">
+          <circle className="bg" cx="80" cy="80" r="70" fill="none" strokeWidth="3" />
+          <circle className="fg" cx="80" cy="80" r="70" fill="none" strokeWidth="3"
+            strokeDasharray={C} strokeDashoffset={dashOffset} strokeLinecap="round" />
+        </svg>
+        <div className="pct">{pct}%</div>
+      </div>
+      <div className="rl-load-status">{status}</div>
+      {total > 0 && (
+        <div className="rl-load-bytes">{formatBytes(received)} / {formatBytes(total)}</div>
+      )}
+      {error && <div className="rl-load-error">{error}</div>}
+    </div>
+  );
+}
+
+function App() {
+  const [graph, setGraph] = React.useState(null);
+  const [progress, setProgress] = React.useState(0);
+  const [status, setStatus] = React.useState('データを読み込み中…');
+  const [received, setReceived] = React.useState(0);
+  const [total, setTotal] = React.useState(0);
+  const [error, setError] = React.useState(null);
+  const [fading, setFading] = React.useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const text = await fetchWithProgress('data/depth2.json', (r, t) => {
+          setReceived(r); setTotal(t);
+          if (t > 0) setProgress(r / t);
+        });
+        setStatus('データを展開中…');
+        // 大きな JSON.parse は同期で時間がかかる → 1フレ譲って UI 反映
+        await new Promise(r => setTimeout(r, 30));
+        const records = JSON.parse(text);
+        setStatus('グラフを構築中…');
+        await new Promise(r => setTimeout(r, 30));
+        const root = window.OZLoader.guessRoot(records);
+        const g = window.OZLoader.convert(records, { rootHandle: root });
+        setStatus('描画準備中…');
+        setProgress(1);
+        await new Promise(r => setTimeout(r, 200));
+        setFading(true);
+        setTimeout(() => setGraph(g), 400);
+      } catch (e) {
+        setError('読み込みに失敗しました: ' + e.message);
+      }
+    })();
+  }, []);
+
+  if (!graph) {
+    return <LoadingScreen
+      progress={progress} status={status}
+      received={received} total={total}
+      error={error} fading={fading} />;
+  }
+  return <OZViz graph={graph} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>
