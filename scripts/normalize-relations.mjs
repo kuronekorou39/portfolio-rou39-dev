@@ -29,7 +29,9 @@ import { dirname, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SRC_DIR = resolve(ROOT, 'FF display');
-const OUT_PATH = resolve(ROOT, 'frontend/public/relations-app/data/depth2.json');
+// 出力先は --output で上書き可能(デフォルト depth2.json)
+// 例: --output=depth2-local.json (frontend/public/relations-app/data/ 配下に書き出す)
+const DATA_DIR = resolve(ROOT, 'frontend/public/relations-app/data/');
 const ROOT_HANDLE = 'kuronekorou39';
 
 const SRC_FILES = [
@@ -45,6 +47,7 @@ const args = Object.fromEntries(
     return [k, v ?? true];
   })
 );
+const OUT_PATH = resolve(DATA_DIR, args.output ?? 'depth2.json');
 const THRESHOLD = parseInt(args.threshold ?? '50', 10);
 
 console.log(`しきい値: ${THRESHOLD} (この人数以上の深さ1ユーザーがフォローしているターゲットだけ残す)`);

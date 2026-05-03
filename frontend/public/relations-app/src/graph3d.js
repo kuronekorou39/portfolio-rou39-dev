@@ -202,7 +202,8 @@
 
     // Renderer (alpha so CSS backdrop shows through subtly)
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // pixelRatio を 1.5 に制限。 スマホの高DPI(3.0+)で 4倍 ピクセル描画して GPU 負荷大なため。
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(W(), H());
     renderer.setClearColor(0x000000, 0);
     container.appendChild(renderer.domElement);
@@ -298,7 +299,8 @@
     scene.add(fill);
 
     // ─── Nodes: instanced mesh for speed, + separate "halo" sprites ────
-    const nodeSphereGeom = new THREE.SphereGeometry(1, 18, 14);
+    // 球は ほとんど アバターで隠れるので低 polygon でも視覚差わずか。 18×14 → 12×8 (1/3 polygon)
+    const nodeSphereGeom = new THREE.SphereGeometry(1, 12, 8);
     // transparent=true だと InstancedMesh 全体が「中心(0,0,0)で1個の透過物」として
     // back-to-front ソートされる → カメラが中心に近いと球が最後に描画されて Sprite を
     // 覆ってしまう。opaque にすれば depth buffer にピクセル単位で書かれて正しく前後判定。
@@ -718,12 +720,24 @@
       if (!rec) return;
       const p = nodePositions.get(nodeId);
       if (!p) return;
-      rec.sprite.position.set(p.x, p.y, p.z);
       const node = graph.byId.get(nodeId);
-      if (node) {
-        const s = sizeFor(node) * 2.2;
-        rec.sprite.scale.set(s, s, 1);
+      if (!node) return;
+      // カメラ方向オフセット (animate ループと同じロジック)。
+      // ノード中心に置くと animate スロットルで 1フレちらつくため、 ここでも補正。
+      const dx = camera.position.x - p.x;
+      const dy = camera.position.y - p.y;
+      const dz = camera.position.z - p.z;
+      const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (len > 0.001) {
+        const sphereRadius = sizeFor(node);
+        const offset = Math.min(sphereRadius + 0.15, len * 0.5);
+        const inv = offset / len;
+        rec.sprite.position.set(p.x + dx * inv, p.y + dy * inv, p.z + dz * inv);
+      } else {
+        rec.sprite.position.set(p.x, p.y, p.z);
       }
+      const s = sizeFor(node) * 2.2 * (nodeId === centerId ? 2.5 : 1);
+      rec.sprite.scale.set(s, s, 1);
     }
 
     function updateAllAvatarPositions() {
@@ -779,6 +793,7 @@
         .sort((a, b) => (b.followers || 0) - (a.followers || 0))
         .slice(0, limit);
       let cursor = 0, done = 0, ok = 0, fail = 0;
+      const total = queue.length;
 
       function loadOne(node) {
         return new Promise(resolve => {
@@ -799,18 +814,29 @@
               const s = sizeFor(node) * 2.2;
               sprite.scale.set(s, s, 1);
               sprite.userData.nodeId = node.id;
-              sprite.visible = isNodeVisible(node);
+              // 遠距離 culling も考慮 → ロード直後に「遠くで一瞬見える」 を防ぐ
+              let initVis = isNodeVisible(node);
+              if (initVis && p) {
+                const dxL = camera.position.x - p.x;
+                const dyL = camera.position.y - p.y;
+                const dzL = camera.position.z - p.z;
+                if ((dxL * dxL + dyL * dyL + dzL * dzL) > 200 * 200) initVis = false;
+              }
+              sprite.visible = initVis;
               avatarGroup.add(sprite);
               avatarSprites.set(node.id, { sprite, mat, tex });
+              // 登録直後に カメラ方向オフセット で即時補正 (ノード中心から ちらつかない)
+              updateAvatarPosition(node.id);
               ok++;
             } catch (err) {
               // 円形マスク段階で tainted canvas (CORS失敗) になることがある
               fail++;
             }
             done++;
+            handlers.avatarProgress?.(done, total);
             resolve();
           };
-          img.onerror = () => { fail++; done++; resolve(); };
+          img.onerror = () => { fail++; done++; handlers.avatarProgress?.(done, total); resolve(); };
           // _normal (48x48) → _bigger (73x73) で1.5倍解像度
           img.src = (node.avatarUrl || '').replace(/_normal\.(jpg|jpeg|png|webp)/i, '_bigger.$1');
         });
@@ -918,11 +944,18 @@
         }
         instMesh.setColorAt(i, c);
         if (av) {
-          av.sprite.visible = visible;
-          if (visible) {
-            av.sprite.position.set(p.x, p.y, p.z);
-            // アバターサイズは固定(球と同じく hover/select で変えない)
-            // 中央ノード (reroot 先) のアバターは目立たせるため拡大
+          // 遠距離 culling (animate と同じ FAR=200) も考慮して visible 設定
+          // → rebuildInstances 直後 1 フレだけ「遠くにあるはず のアバター」 が
+          //   一瞬見える ちらつき を防ぐ
+          let avVis = visible;
+          if (avVis) {
+            const dxA = camera.position.x - p.x;
+            const dyA = camera.position.y - p.y;
+            const dzA = camera.position.z - p.z;
+            if ((dxA * dxA + dyA * dyA + dzA * dzA) > 200 * 200) avVis = false;
+          }
+          av.sprite.visible = avVis;
+          if (avVis) {
             const isCenter = n.id === centerId;
             const aSize = sizeFor(n) * 2.2 * (isCenter ? 2.5 : 1);
             av.sprite.scale.set(aSize, aSize, 1);
@@ -932,11 +965,13 @@
       });
       instMesh.instanceMatrix.needsUpdate = true;
       if (instMesh.instanceColor) instMesh.instanceColor.needsUpdate = true;
+      // ノード位置が更新された直後にアバター位置も同期 (animate スロットルでの 1フレちらつき防止)
+      updateAllAvatarPositions();
     }
 
     // カメラに近接したノードを描画から外すしきい値(world unit)
     // この距離より近いノードは球もアバターも消す → 拡大されすぎた絵を回避
-    const CULL_NEAR = 5;
+    const CULL_NEAR = 12;
 
     function isNodeNearCulled(n) {
       if (n.isSelf) return false;
@@ -1146,7 +1181,7 @@
     let hoveredId = null;
     let selectedId = null;
 
-    const handlers = { hover: () => {}, click: () => {}, dblclick: () => {}, interact: () => {}, pan: () => {}, center: () => {} };
+    const handlers = { hover: () => {}, click: () => {}, dblclick: () => {}, interact: () => {}, pan: () => {}, center: () => {}, avatarProgress: null, fps: null };
 
     // ユーザー操作 (drag/wheel) を一元的に処理: focus アニメ中断 + 外部通知
     controls.onInteract = () => {
@@ -1258,9 +1293,20 @@
     let focusTarget = null; // {target: Vector3, dist}
     let lastCamRebuild = 0;
     const lastCamPos = new THREE.Vector3(9999, 9999, 9999);
+    // FPS 計測 (1秒毎に handlers.fps へ通知)
+    let fpsLastT = performance.now();
+    let fpsCount = 0;
     function animate() {
       rafId = requestAnimationFrame(animate);
       frame++;
+      fpsCount++;
+      const _nowT = performance.now();
+      if (_nowT - fpsLastT >= 1000) {
+        const fps = Math.round(fpsCount * 1000 / (_nowT - fpsLastT));
+        handlers.fps?.(fps);
+        fpsLastT = _nowT;
+        fpsCount = 0;
+      }
       controls.update();
 
       // Rebuild edges + instances when camera moved meaningfully (for depth-fade
@@ -1275,34 +1321,39 @@
         }
       }
 
-      // Avatar の位置補正 + 距離フェード(毎フレ、~3000 sprite で軽い)
-      // - オフセットは「現在の球の半径 (emph 連動)」+ 余裕。固定 sizeFor だと
-      //   hover/select で球が膨張したとき球がアバターを通り抜けてはみ出す。
-      // - 同時にカメラ距離で opacity 減衰(奥が薄く)
-      if (avatarSprites.size > 0) {
+      // Avatar 位置補正 + 距離フェード + 遠距離 描画スキップ
+      // - 2フレ毎にスロットル
+      // - len > FAR の sprite は visible=false で WebGL 描画自体スキップ
+      if (frame % 2 === 0 && avatarSprites.size > 0) {
         const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
-        const NEAR = 50, FAR = 140, MIN_OP = 0.12;
+        const NEAR = 50, FAR = 200, MIN_OP = 0.12;
         for (const [nodeId, { sprite, mat }] of avatarSprites) {
-          if (!sprite.visible) continue;
           const node = graph.byId.get(nodeId);
           const p = nodePositions.get(nodeId);
           if (!node || !p) continue;
           const dx = cx - p.x, dy = cy - p.y, dz = cz - p.z;
           const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          // 遠距離 sprite は描画完全スキップ (フレーム毎の描画コスト削減 = スマホ FPS向上)
+          if (len > FAR) {
+            if (sprite.visible) sprite.visible = false;
+            continue;
+          }
+          // フィルタで非可視 → スキップ
+          if (!isNodeVisible(node)) {
+            if (sprite.visible) sprite.visible = false;
+            continue;
+          }
+          if (!sprite.visible) sprite.visible = true;
           if (len > 0.001) {
-            // 球サイズは固定なのでオフセットも固定値(球の半径 + 余裕)
             const sphereRadius = sizeFor(node);
             const offset = Math.min(sphereRadius + 0.15, len * 0.5);
             const inv = offset / len;
             sprite.position.set(p.x + dx * inv, p.y + dy * inv, p.z + dz * inv);
           }
-          if (frame % 3 === 0) {
-            let op;
-            if (len <= NEAR) op = 1;
-            else if (len >= FAR) op = MIN_OP;
-            else op = 1 - ((len - NEAR) / (FAR - NEAR)) * (1 - MIN_OP);
-            if (Math.abs(mat.opacity - op) > 0.02) mat.opacity = op;
-          }
+          let op;
+          if (len <= NEAR) op = 1;
+          else op = Math.max(MIN_OP, 1 - ((len - NEAR) / (FAR - NEAR)) * (1 - MIN_OP));
+          if (Math.abs(mat.opacity - op) > 0.02) mat.opacity = op;
         }
       }
 
@@ -1371,7 +1422,7 @@
         const cn = graph.byId.get(centerId);
         if (cp && cn) {
           centerGlow.position.set(cp.x, cp.y, cp.z);
-          const glowSize = sizeFor(cn) * 5.6; // 中心アバター(2.2*2.5=5.5) の少し外
+          const glowSize = sizeFor(cn) * 9; // 中心アバター(2.2*2.5=5.5) の外側で光る
           centerGlow.scale.set(glowSize, glowSize, 1);
           centerGlow.material.opacity = 0.45 + Math.sin(frame * 0.05) * 0.12;
           centerGlow.visible = true;
@@ -1624,6 +1675,8 @@
       onInteract(cb) { handlers.interact = cb; },
       onPan(cb) { handlers.pan = cb; },
       onCenterChange(cb) { handlers.center = cb; },
+      onAvatarProgress(cb) { handlers.avatarProgress = cb; },
+      onFps(cb) { handlers.fps = cb; },
       getCenterId() { return centerId; },
       getCenterRelations() {
         return {

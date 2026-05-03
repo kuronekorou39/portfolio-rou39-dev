@@ -1,4 +1,4 @@
-// 相関図ページの React UI。
+// Relations ページの React UI。
 // 役割は3つだけ:
 //   1. 3D ビューワ (window.OZGraph3D.create) を初期化・破棄
 //   2. 検索・モード切替・凡例絞り込みなどの操作 UI を提供
@@ -18,30 +18,30 @@ const STYLES = `
 .rel-htoggle { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 5px 10px; border: 1px solid rgba(20,18,14,0.18); background: transparent; cursor: pointer; border-radius: 2px; font-family: inherit; color: inherit; }
 .rel-htoggle.on { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 
-.rel-panel { position: absolute; top: 56px; bottom: 16px; background: rgba(255,253,248,0.92); backdrop-filter: blur(12px); border: 1px solid rgba(20,18,14,0.10); border-radius: 4px; padding: 14px; z-index: 10; font-size: 12px; overflow-y: auto; box-shadow: 0 4px 14px rgba(0,0,0,.04); transition: transform .2s ease, opacity .2s ease, visibility 0s linear 0s; display: flex; flex-direction: column; }
+/* パネルはヘッダー直下に top:56、 ボタンと被らないよう bottom:76 で短めに */
+.rel-panel { position: absolute; top: 56px; bottom: 76px; background: rgba(255,253,248,0.78); backdrop-filter: blur(14px); border: 1px solid rgba(20,18,14,0.10); border-radius: 4px; padding: 14px; z-index: 10; font-size: 12px; overflow-y: auto; box-shadow: 0 4px 14px rgba(0,0,0,.04); transition: transform .2s ease, opacity .2s ease, visibility 0s linear 0s; display: flex; flex-direction: column; max-height: 720px; }
 .rel-section.rel-controls-section { margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(20,18,14,0.10); margin-bottom: 0; }
 .rel-panel-left { left: 16px; width: 240px; }
 .rel-panel-right { right: 16px; width: 280px; }
 /* closed 時は アニメ完了後に visibility: hidden → Tab 順 / マウス入力 から除外 */
 .rel-panel-left.closed { transform: translateX(calc(-100% - 32px)); opacity: 0; pointer-events: none; visibility: hidden; transition: transform .2s ease, opacity .2s ease, visibility 0s linear .2s; }
 .rel-panel-right.closed { transform: translateX(calc(100% + 32px)); opacity: 0; pointer-events: none; visibility: hidden; transition: transform .2s ease, opacity .2s ease, visibility 0s linear .2s; }
+/* 開閉ボタンは画面下端に固定 (パネル開いても動かない、 パネルが上で詰まる) */
 .rel-panel-toggle {
-  position: absolute; top: 64px; z-index: 11;
-  width: 36px; height: 36px; padding: 0;
+  position: absolute; bottom: 16px; z-index: 11;
+  width: 40px; height: 40px; padding: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; line-height: 1; font-weight: 600;
-  background: #fffdf8; /* 不透明 — 背景のノード/ラベルが透けて視認性悪化を防ぐ */
-  border: 1px solid rgba(20,18,14,0.18); border-radius: 4px;
+  background: #fffdf8;
+  border: 1px solid rgba(20,18,14,0.18); border-radius: 50%;
   cursor: pointer; color: #1a1a1a;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.10);
-  transition: background .15s ease, color .15s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
 }
-.rel-panel-toggle:hover { background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+.rel-panel-toggle:hover { background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
 .rel-panel-toggle.on { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.rel-panel-toggle.left { left: 16px; transition: left .2s ease, background .15s ease, color .15s ease; }
-.rel-panel-toggle.right { right: 16px; transition: right .2s ease, background .15s ease, color .15s ease; }
-.rel-panel-toggle.left.shifted { left: 272px; }   /* 左パネル left:16 + width:240 + 余白:16 */
-.rel-panel-toggle.right.shifted { right: 312px; } /* 右パネル right:16 + width:280 + 余白:16 */
+.rel-panel-toggle.left { left: 16px; }
+.rel-panel-toggle.right { right: 16px; }
 
 .rel-section { margin-bottom: 18px; }
 .rel-section-title { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6a6258; margin-bottom: 8px; }
@@ -115,6 +115,30 @@ const STYLES = `
 .rel-stat-clickable { cursor: pointer; transition: color .15s ease; border-bottom: 1px dashed transparent; }
 .rel-stat-clickable:hover { color: #b64727; border-bottom-color: rgba(182,71,39,0.4); }
 .rel-stat-clickable.active { color: #b64727; border-bottom-color: #b64727; font-weight: 600; }
+
+/* ─── スマホ / 狭幅対応 ─── */
+@media (max-width: 768px) {
+  .rel-header { padding: 8px 10px 8px 70px; gap: 8px; }
+  .rel-title { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rel-stats { display: none; } /* 統計表示は狭幅では割愛 */
+  .rel-htoggle { padding: 4px 7px; font-size: 9px; letter-spacing: .08em; }
+  .rel-htoggle.icon-btn { width: 26px; height: 26px; font-size: 13px; }
+
+  /* パネル: 画面ほぼ全幅、 ボタン直上、 高さは画面の 1/4 程度に圧縮 */
+  .rel-panel { padding: 12px; font-size: 13px; top: auto; bottom: 72px; max-height: 25vh; }
+  .rel-panel-left, .rel-panel-right { width: calc(100vw - 24px); max-width: 360px; }
+  /* スマホでは情報量を絞る: フォロー数/フォロー先の数値、 操作感度は省略 */
+  .rel-self-stats { display: none; }
+  .rel-controls-section { display: none; }
+  .rel-panel-left.closed { transform: translateX(-110vw); }
+  .rel-panel-right.closed { transform: translateX(110vw); }
+
+  /* タッチ対応で操作系を多少大きめに */
+  .rel-panel-toggle { width: 44px; height: 44px; font-size: 20px; }
+  .rel-mode-btn { padding: 8px 0; font-size: 12px; }
+  .rel-action-btn { padding: 10px; font-size: 12px; }
+  .rel-search { padding: 10px; font-size: 14px; }
+}
 `;
 
 function formatNum(n) {
@@ -147,6 +171,9 @@ function OZViz({ graph }) {
   const [query, setQuery] = useState('');
   const [autoRotate, setAutoRotate] = useState(true); // デフォルトで回転、 操作中だけ停止
   const [panned, setPanned] = useState(false); // 右クリックパンで target がずれたか
+  // アバター読込進捗 (loaded < total なら ヘッダーに表示、 完了で消す)
+  const [avatarProg, setAvatarProg] = useState({ loaded: 0, total: 0 });
+  const [fps, setFps] = useState(0);
   // 「選択ノードの 被フォロー/フォロー/相互 のみに絞る」 フィルタ
   // null = 解除、 { type: 'in'|'out'|'mutual', sourceId: string } = 該当のみ表示
   const [nodeFilter, setNodeFilter] = useState(null);
@@ -202,6 +229,10 @@ function OZViz({ graph }) {
       setNodeFilter(null);
       viz.setNodeFilter?.(null);
     });
+    // アバター読込進捗
+    viz.onAvatarProgress?.((loaded, total) => setAvatarProg({ loaded, total }));
+    // FPS 計測
+    viz.onFps?.((f) => setFps(f));
     return () => { viz.dispose(); };
     // eslint-disable-next-line
   }, []);
@@ -322,7 +353,7 @@ function OZViz({ graph }) {
         <div className="rel-canvas" ref={containerRef}></div>
 
         <header className="rel-header">
-          <span className="rel-title">相関図 — {selfNode?.handle || 'me'} の周辺</span>
+          <span className="rel-title">Relations — {selfNode?.handle || 'me'} の周辺</span>
           <span className="rel-stats">
             フォロー先 約{(Math.round(stats.follow / 100) / 10).toFixed(1)}千
             {' + '}
@@ -332,6 +363,16 @@ function OZViz({ graph }) {
             計 約{(Math.round(stats.total / 100) / 10).toFixed(1)}千人 / 約{Math.round(stats.edges / 10000)}万本
           </span>
           <span className="rel-spacer"></span>
+          {fps > 0 && (
+            <span style={{ fontSize: 10, color: fps >= 50 ? '#3a7a4a' : fps >= 30 ? '#9a8e80' : '#b64727', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '.04em' }}>
+              {fps}fps
+            </span>
+          )}
+          {avatarProg.total > 0 && avatarProg.loaded < avatarProg.total && (
+            <span style={{ fontSize: 10, color: '#9a8e80', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '.04em' }}>
+              アイコン {avatarProg.loaded}/{avatarProg.total}
+            </span>
+          )}
           {panned && (
             <button className="rel-htoggle"
               onClick={() => { threeRef.current?.resetView?.(); setPanned(false); }}
@@ -340,10 +381,10 @@ function OZViz({ graph }) {
           <button className={`rel-htoggle ${autoRotate ? 'on' : ''}`} onClick={() => setAutoRotate(v => !v)}>自動回転</button>
         </header>
 
-        {/* パネル開閉ボタン(ヘッダー直下、 ヘッダーから独立)。 開いてる時はパネルの隣にスライド */}
-        <button className={`rel-panel-toggle left ${showLeft ? 'on shifted' : ''}`}
+        {/* パネル開閉ボタン(画面下端固定、 円形FAB) */}
+        <button className={`rel-panel-toggle left ${showLeft ? 'on' : ''}`}
           onClick={() => setShowLeft(v => !v)} title="操作パネル ([ キー)">☰</button>
-        <button className={`rel-panel-toggle right ${showRight ? 'on shifted' : ''}`}
+        <button className={`rel-panel-toggle right ${showRight ? 'on' : ''}`}
           onClick={() => setShowRight(v => !v)} title="情報パネル (] キー)">ℹ</button>
 
         <aside className={`rel-panel rel-panel-left ${showLeft ? '' : 'closed'}`}>

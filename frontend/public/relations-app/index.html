@@ -2,13 +2,23 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>相関図 — rou39</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+<link rel="apple-touch-icon" href="/favicon-48.png" />
+<title>Relations — rou39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  html,body{margin:0;padding:0;background:#eae6dd;font-family:"Noto Sans JP",system-ui,sans-serif;color:#1a1a1a;overflow:hidden}
+  html,body{margin:0;padding:0;background:#eae6dd;font-family:"Noto Sans JP",system-ui,sans-serif;color:#1a1a1a;overflow:hidden;
+    /* スマホでタップ時の青ハイライト + テキスト選択を抑制 */
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-touch-callout:none;
+  }
+  /* 入力要素 (検索ボックス) は選択可 */
+  input, textarea { -webkit-user-select:text; user-select:text; }
   #root{width:100vw;height:100vh}
 
   /* リッチなローディング画面 */
@@ -34,6 +44,33 @@
   .rl-load-error { color:#b64727; font-size:13px; margin-top:24px; max-width:480px; text-align:center; line-height:1.6; }
   .rl-load-pulse { animation: rl-pulse 1.4s ease-in-out infinite; }
   @keyframes rl-pulse { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+
+  /* プラン選択画面 */
+  .rl-plan-grid { display:grid; grid-template-columns:repeat(3,minmax(200px,240px)); gap:16px; max-width:95vw; }
+  .rl-plan-card {
+    position:relative; padding:22px 20px;
+    background:#fffdf8; border:1px solid rgba(20,18,14,0.14); border-radius:6px;
+    cursor:pointer; text-align:left;
+    font-family:inherit; color:#1a1a1a;
+    transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .rl-plan-card:hover { border-color:#b64727; transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.08); }
+  .rl-plan-card.recommended { border-color:#b64727; box-shadow:0 4px 14px rgba(182,71,39,.12); }
+  .rl-plan-card.disabled { opacity:0.45; cursor:not-allowed; background:#f4f0e8; }
+  .rl-plan-card.disabled:hover { transform:none; border-color:rgba(20,18,14,0.14); box-shadow:none; }
+  .rl-plan-card-name { font-size:18px; font-weight:600; }
+  .rl-plan-card-size { font-family:"JetBrains Mono",monospace; font-size:13px; color:#b64727; margin-top:8px; }
+  .rl-plan-card-meta { font-size:11px; color:#6a6258; margin-top:6px; line-height:1.5; }
+  .rl-plan-card-desc { font-size:11px; color:#9a8e80; margin-top:10px; line-height:1.5; }
+  .rl-plan-card-badge {
+    position:absolute; top:-8px; right:12px;
+    background:#b64727; color:#fff;
+    font-size:9px; font-weight:600; padding:3px 9px; border-radius:10px;
+    letter-spacing:.14em; text-transform:uppercase;
+  }
+  @media (max-width:768px) {
+    .rl-plan-grid { grid-template-columns:1fr; width:90vw; max-width:320px; }
+  }
 </style>
 
 <script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
@@ -61,23 +98,24 @@ function formatBytes(n) {
 }
 
 // 進捗付き fetch (ReadableStream + Content-Length)
+// chunks を一度に Blob にせず、 TextDecoder で逐次 text に積む(モバイルメモリ節約)
 async function fetchWithProgress(url, onProgress) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(url + ' fetch failed: ' + res.status);
   const total = +(res.headers.get('Content-Length') || 0);
   const reader = res.body.getReader();
-  const chunks = [];
+  const decoder = new TextDecoder('utf-8');
+  let text = '';
   let received = 0;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    chunks.push(value);
+    text += decoder.decode(value, { stream: true });
     received += value.length;
     onProgress(received, total);
   }
-  // チャンク結合 → text
-  const blob = new Blob(chunks);
-  return await blob.text();
+  text += decoder.decode();
+  return text;
 }
 
 function LoadingScreen({ progress, status, received, total, error, fading }) {
@@ -86,8 +124,8 @@ function LoadingScreen({ progress, status, received, total, error, fading }) {
   const pct = Math.round(progress * 100);
   return (
     <div className="rl-load-root" style={{ opacity: fading ? 0 : 1 }}>
-      <div className="rl-load-title">相関図</div>
-      <div className="rl-load-sub">Relations · 3D Visualizer</div>
+      <div className="rl-load-title">Relations</div>
+      <div className="rl-load-sub">3D Visualizer</div>
       <div className="rl-load-ring">
         <svg viewBox="0 0 160 160">
           <circle className="bg" cx="80" cy="80" r="70" fill="none" strokeWidth="3" />
@@ -105,7 +143,65 @@ function LoadingScreen({ progress, status, received, total, error, fading }) {
   );
 }
 
+const PLANS = [
+  { id: 'light', name: 'ライト', file: 'data/depth2-t500.json',
+    sizeRaw: 79, sizeGz: 16, nodes: '約 3,000', edges: '約 53万',
+    desc: 'スマホ・低速回線向け。 共通フォロー先 500人以上で絞った軽量版' },
+  { id: 'standard', name: '標準', file: 'data/depth2.json',
+    sizeRaw: 169, sizeGz: 33, nodes: '約 6,500', edges: '約 100万',
+    desc: 'PC・一般向け。 共通フォロー先 100人以上を含む' },
+  { id: 'full', name: 'フル', file: 'data/depth2-t10.json',
+    sizeRaw: 329, sizeGz: 66, nodes: '約 45,000', edges: '約 220万',
+    desc: '高スペックPC向け。 共通フォロー先 10人以上を含む全部入り (ローカル限定)',
+    localOnly: true },
+];
+
+function PlanSelector({ onSelect }) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const variant = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('data') : null;
+  // クエリで指定されてれば自動選択 (ローカル検証用 ?data=t10 等)
+  React.useEffect(() => {
+    if (!variant) return;
+    onSelect({
+      id: variant, name: variant, file: `data/depth2-${variant}.json`,
+      sizeRaw: 0, sizeGz: 0, nodes: '?', edges: '?', desc: 'クエリ指定',
+    });
+  }, []);
+  if (variant) return null; // クエリ時は何も描画せず即 fetch へ
+
+  const recommended = isMobile ? 'light' : 'standard';
+  const isLocal = typeof window !== 'undefined'
+    && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  return (
+    <div className="rl-load-root">
+      <div className="rl-load-title">Relations</div>
+      <div className="rl-load-sub">読み込むデータを選択</div>
+      <div className="rl-plan-grid">
+        {PLANS.map(p => {
+          const disabled = p.localOnly && !isLocal;
+          return (
+            <button key={p.id} disabled={disabled}
+              className={`rl-plan-card ${p.id === recommended ? 'recommended' : ''} ${disabled ? 'disabled' : ''}`}
+              onClick={() => !disabled && onSelect(p)}>
+              {p.id === recommended && !disabled && <div className="rl-plan-card-badge">おすすめ</div>}
+              {disabled && <div className="rl-plan-card-badge" style={{ background:'#6a6258' }}>ローカル限定</div>}
+              <div className="rl-plan-card-name">{p.name}</div>
+              <div className="rl-plan-card-size">{p.sizeRaw}MB <span style={{ color:'#9a8e80' }}>(gzip 約{p.sizeGz}MB)</span></div>
+              <div className="rl-plan-card-meta">ノード {p.nodes} / エッジ {p.edges}</div>
+              <div className="rl-plan-card-desc">{p.desc}</div>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ marginTop:24, fontSize:10, color:'#9a8e80', letterSpacing:'.08em' }}>
+        ※ {isMobile ? 'スマホ判定: ライト推奨' : 'PC判定: 標準推奨'}
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [plan, setPlan] = React.useState(null);
   const [graph, setGraph] = React.useState(null);
   const [progress, setProgress] = React.useState(0);
   const [status, setStatus] = React.useState('データを読み込み中…');
@@ -115,14 +211,14 @@ function App() {
   const [fading, setFading] = React.useState(false);
 
   React.useEffect(() => {
+    if (!plan) return;
     (async () => {
       try {
-        const text = await fetchWithProgress('data/depth2.json', (r, t) => {
+        const text = await fetchWithProgress(plan.file, (r, t) => {
           setReceived(r); setTotal(t);
           if (t > 0) setProgress(r / t);
         });
         setStatus('データを展開中…');
-        // 大きな JSON.parse は同期で時間がかかる → 1フレ譲って UI 反映
         await new Promise(r => setTimeout(r, 30));
         const records = JSON.parse(text);
         setStatus('グラフを構築中…');
@@ -138,8 +234,9 @@ function App() {
         setError('読み込みに失敗しました: ' + e.message);
       }
     })();
-  }, []);
+  }, [plan]);
 
+  if (!plan) return <PlanSelector onSelect={setPlan} />;
   if (!graph) {
     return <LoadingScreen
       progress={progress} status={status}

@@ -31,22 +31,87 @@
     let scale = 1;
 
     const start = { x: 0, y: 0 };
-    let mode = null; // 'rotate' | 'pan'
+    let mode = null; // 'rotate' | 'pan' | 'pinch'
+
+    // 複数 pointer (タッチ) を track して、 2本指ピンチ + 中点パン を処理
+    const activePtrs = new Map(); // pointerId -> { x, y }
+    let pinchStartDist = 0;
+    let pinchStartMid = { x: 0, y: 0 };
 
     const self = this;
 
     dom.style.touchAction = 'none';
 
+    function applyPan(dx, dy) {
+      const offset = self.camera.position.clone().sub(self.target);
+      const distance = offset.length();
+      const fov = self.camera.fov * Math.PI / 180;
+      const worldH = 2 * Math.tan(fov / 2) * Math.max(distance, 25);
+      const h = dom.clientHeight;
+      const panX = -(dx / h) * worldH * self.panSpeed;
+      const panY = (dy / h) * worldH * self.panSpeed;
+      const mx = new V3().setFromMatrixColumn(self.camera.matrix, 0);
+      const my = new V3().setFromMatrixColumn(self.camera.matrix, 1);
+      panOffset.add(mx.multiplyScalar(panX));
+      panOffset.add(my.multiplyScalar(panY));
+      if (self.onPan) self.onPan();
+    }
+
     function onDown(e) {
       e.preventDefault();
       dom.setPointerCapture(e.pointerId);
-      start.x = e.clientX; start.y = e.clientY;
-      if (e.button === 2 || e.shiftKey) mode = 'pan';
-      else mode = 'rotate';
+      activePtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (activePtrs.size === 2) {
+        // 2本目で ピンチモードに切替
+        mode = 'pinch';
+        const [a, b] = [...activePtrs.values()];
+        pinchStartDist = Math.hypot(b.x - a.x, b.y - a.y);
+        pinchStartMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      } else if (activePtrs.size === 1) {
+        // 1本目: マウスボタン or shift で pan、 それ以外 rotate
+        if (e.button === 2 || e.shiftKey) mode = 'pan';
+        else mode = 'rotate';
+        start.x = e.clientX; start.y = e.clientY;
+      }
       if (self.onInteract) self.onInteract();
     }
+
     function onMove(e) {
-      if (!mode) return;
+      if (!activePtrs.has(e.pointerId)) return;
+      activePtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (mode === 'pinch' && activePtrs.size === 2) {
+        const [a, b] = [...activePtrs.values()];
+        const newDist = Math.hypot(b.x - a.x, b.y - a.y);
+        const newMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+
+        // ピンチ距離変化 → ズーム (targetRadius 経由で update() で lerp)
+        const distDelta = newDist - pinchStartDist;
+        if (Math.abs(distDelta) > 0.5) {
+          const cdx = self.camera.position.x - self.target.x;
+          const cdy = self.camera.position.y - self.target.y;
+          const cdz = self.camera.position.z - self.target.z;
+          const curDist = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz);
+          if (targetRadius === null) targetRadius = curDist;
+          // 広げる(distDelta>0) = 近づく(targetRadius--) 縮める = 離れる
+          targetRadius -= distDelta * 0.4 * self.zoomSpeed;
+          targetRadius = Math.max(self.minDistance, Math.min(self.maxDistance, targetRadius));
+          pinchStartDist = newDist;
+        }
+
+        // 中点移動 → パン
+        const midDx = newMid.x - pinchStartMid.x;
+        const midDy = newMid.y - pinchStartMid.y;
+        if (Math.abs(midDx) > 0.5 || Math.abs(midDy) > 0.5) {
+          applyPan(midDx, midDy);
+          pinchStartMid = newMid;
+        }
+        return;
+      }
+
+      if (!mode || mode === 'pinch') return;
+
       const dx = e.clientX - start.x;
       const dy = e.clientY - start.y;
       start.x = e.clientX; start.y = e.clientY;
@@ -55,23 +120,21 @@
         sphDelta.theta -= (2 * Math.PI * dx / w) * self.rotateSpeed;
         sphDelta.phi -= (2 * Math.PI * dy / h) * self.rotateSpeed;
       } else if (mode === 'pan') {
-        const offset = self.camera.position.clone().sub(self.target);
-        const distance = offset.length();
-        const fov = self.camera.fov * Math.PI / 180;
-        // 近接時もパンが極端に遅くならないよう下限 25 を保つ
-        const worldH = 2 * Math.tan(fov / 2) * Math.max(distance, 25);
-        const panX = -(dx / h) * worldH * self.panSpeed;
-        const panY = (dy / h) * worldH * self.panSpeed;
-        const mx = new V3().setFromMatrixColumn(self.camera.matrix, 0);
-        const my = new V3().setFromMatrixColumn(self.camera.matrix, 1);
-        panOffset.add(mx.multiplyScalar(panX));
-        panOffset.add(my.multiplyScalar(panY));
-        if (self.onPan) self.onPan();
+        applyPan(dx, dy);
       }
     }
+
     function onUp(e) {
       if (dom.hasPointerCapture(e.pointerId)) dom.releasePointerCapture(e.pointerId);
-      mode = null;
+      activePtrs.delete(e.pointerId);
+      if (activePtrs.size === 0) {
+        mode = null;
+      } else if (activePtrs.size === 1) {
+        // 2本指→1本指 に戻ったら rotate に戻す(残った指の位置で start 更新)
+        mode = 'rotate';
+        const [p] = [...activePtrs.values()];
+        start.x = p.x; start.y = p.y;
+      }
     }
     // 目標 radius (target からの距離)。 ホイールで加減し、 update() で sph.radius を lerp。
     // target は動かさないので回転軸が常に明確 (= 直近の選択ノード or 自分)。

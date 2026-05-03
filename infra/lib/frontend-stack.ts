@@ -68,7 +68,8 @@ export class FrontendStack extends cdk.Stack {
       responseHeadersPolicyName: 'portfolio-security-headers',
       securityHeadersBehavior: {
         contentTypeOptions: { override: true },
-        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+        // /relations は同オリジンの iframe で /relations-app/* を埋め込むため SAMEORIGIN
+        frameOptions: { frameOption: cloudfront.HeadersFrameOption.SAMEORIGIN, override: true },
         referrerPolicy: { referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
         strictTransportSecurity: { accessControlMaxAge: cdk.Duration.days(365), includeSubdomains: true, override: true },
         xssProtection: { protection: true, modeBlock: true, override: true },

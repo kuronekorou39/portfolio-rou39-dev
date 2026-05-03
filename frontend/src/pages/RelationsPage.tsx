@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom';
 export default function RelationsPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   return (
-    <div className="fixed inset-0 bg-[#eae6dd]">
+    <div className="fixed inset-0 bg-[#eae6dd]" style={{ WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none', userSelect: 'none' }}>
       <iframe
         ref={iframeRef}
-        src="/relations-app/index.html"
-        title="相関図"
+        // 親URLのクエリを iframe にも引き継ぐ (e.g. ?data=t10 でデータ切替)
+        src={`/relations-app/index.html${typeof window !== 'undefined' ? window.location.search : ''}`}
+        title="Relations"
         className="h-full w-full border-0"
         // ロード後に iframe にフォーカスを移す → 内部の Ctrl+F ハンドラが効く
         onLoad={() => iframeRef.current?.contentWindow?.focus()}
