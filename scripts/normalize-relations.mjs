@@ -22,7 +22,7 @@
 //
 // CLI: node scripts/normalize-relations.mjs --threshold=50
 
-import { createReadStream } from 'node:fs';
+import { createReadStream, createWriteStream } from 'node:fs';
 import { writeFile, mkdir, stat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { dirname, resolve } from 'node:path';
@@ -168,7 +168,18 @@ console.log(`Pass 2 完了 (${((Date.now() - t1) / 1000).toFixed(1)}秒): D1=${k
 // ----- 出力 -----
 
 await mkdir(dirname(OUT_PATH), { recursive: true });
-await writeFile(OUT_PATH, JSON.stringify(out), 'utf8');
+// レコード総数が数百万になると JSON.stringify(out) が V8 の string max length
+// (~512MB) を超えて RangeError になるので、配列を1要素ずつストリーミング書き出し。
+{
+  const ws = createWriteStream(OUT_PATH, { encoding: 'utf8' });
+  ws.write('[');
+  for (let i = 0; i < out.length; i++) {
+    if (i > 0) ws.write(',');
+    ws.write(JSON.stringify(out[i]));
+  }
+  ws.write(']');
+  await new Promise((res, rej) => ws.end(err => err ? rej(err) : res()));
+}
 const sz = (await stat(OUT_PATH)).size;
 console.log(`\n書き出し: ${OUT_PATH}`);
 console.log(`サイズ: ${(sz / 1024 / 1024).toFixed(2)} MB (生)、 推定gzip: ${(sz / 1024 / 1024 / 5).toFixed(2)} MB`);
