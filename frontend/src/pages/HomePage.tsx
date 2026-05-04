@@ -879,6 +879,14 @@ const playgroundItems = [
     gradient: 'from-amber-500/20 to-orange-500/20',
     border: 'hover:border-amber-500/30',
   },
+  {
+    to: '/relations',
+    title: 'Relations',
+    desc: 'X のフォロー関係を 3D 球面で可視化。',
+    icon: '🪐',
+    gradient: 'from-cyan-500/20 to-blue-500/20',
+    border: 'hover:border-cyan-500/30',
+  },
 ];
 
 function Playground() {
