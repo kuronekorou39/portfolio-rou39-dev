@@ -9,6 +9,7 @@ import { StorageStack } from '../lib/storage-stack';
 import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
+import { WafStack } from '../lib/waf-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { UranekoStorageStack } from '../lib/uraneko/storage-stack';
 import { UranekoSecretsStack } from '../lib/uraneko/secrets-stack';
@@ -87,6 +88,12 @@ const frontendHostedZone = route53.HostedZone.fromHostedZoneAttributes(
   },
 );
 
+// CloudFront 用 WAFv2 WebACL は us-east-1 必須
+const waf = new WafStack(app, 'PortfolioWaf', {
+  env: { account: env.account, region: 'us-east-1' },
+  crossRegionReferences: true,
+});
+
 new FrontendStack(app, 'PortfolioFrontend', {
   env,
   crossRegionReferences: true,
@@ -94,6 +101,7 @@ new FrontendStack(app, 'PortfolioFrontend', {
   certificate,
   hostedZone: frontendHostedZone,
   domainName: DOMAIN_NAME,
+  webAclArn: waf.webAclArn,
 });
 
 // Monitoring stack (budget alerts)

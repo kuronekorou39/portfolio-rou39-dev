@@ -15,6 +15,8 @@ interface FrontendStackProps extends cdk.StackProps {
   certificate: acm.ICertificate;
   hostedZone: route53.IHostedZone;
   domainName: string;
+  /** us-east-1 の WAFv2 WebACL ARN。 1 IP あたりのリクエスト数を制限する。 */
+  webAclArn?: string;
 }
 
 export class FrontendStack extends cdk.Stack {
@@ -102,6 +104,7 @@ export class FrontendStack extends cdk.Stack {
       },
       domainNames: [props.domainName, `www.${props.domainName}`],
       certificate: props.certificate,
+      webAclId: props.webAclArn,
       defaultRootObject: 'index.html',
       errorResponses: [
         {

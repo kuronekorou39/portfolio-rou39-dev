@@ -71,6 +71,30 @@
   @media (max-width:768px) {
     .rl-plan-grid { grid-template-columns:1fr; width:90vw; max-width:320px; }
   }
+
+  /* 大きいデータプラン選択時の確認モーダル */
+  .rl-confirm-overlay {
+    position:fixed; inset:0; background:rgba(20,18,14,0.55);
+    display:flex; align-items:center; justify-content:center; z-index:200;
+    backdrop-filter:blur(4px);
+  }
+  .rl-confirm-modal {
+    background:#fff; border:1px solid rgba(20,18,14,0.14);
+    padding:28px 32px; max-width:420px; width:90vw;
+    box-shadow:0 12px 36px rgba(0,0,0,0.18);
+  }
+  .rl-confirm-title { font-size:15px; font-weight:600; letter-spacing:.08em; }
+  .rl-confirm-body  { font-size:13px; color:#3a342c; line-height:1.7; margin-top:14px; }
+  .rl-confirm-body strong { color:#b64727; font-family:"JetBrains Mono",monospace; }
+  .rl-confirm-actions { margin-top:22px; display:flex; gap:10px; justify-content:flex-end; }
+  .rl-confirm-btn {
+    border:1px solid rgba(20,18,14,0.2); background:#fff; cursor:pointer;
+    padding:8px 18px; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    font-family:inherit;
+  }
+  .rl-confirm-btn:hover { background:#f4f0e8; }
+  .rl-confirm-btn.primary { background:#b64727; color:#fff; border-color:#b64727; }
+  .rl-confirm-btn.primary:hover { background:#9a3a1f; }
 </style>
 
 <script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
@@ -152,7 +176,8 @@ const PLANS = [
     desc: 'PC・一般向け。 共通フォロー先 100人以上を含む' },
   { id: 'large', name: '大量', file: 'data/depth2-t10.json',
     sizeRaw: 329, sizeGz: 66, nodes: '約 45,000', edges: '約 220万',
-    desc: 'ハイスペックPC向け。 共通フォロー先 10人以上を含む' },
+    desc: 'ハイスペックPC向け。 共通フォロー先 10人以上を含む',
+    confirmRequired: true },
   { id: 'full', name: 'フル', file: 'data/depth2-t1.json',
     sizeRaw: 693, sizeGz: 139, nodes: '約 110万', edges: '約 370万',
     desc: '取得した全データを表示する重量版 (ローカル限定)',
@@ -162,6 +187,7 @@ const PLANS = [
 function PlanSelector({ onSelect }) {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const variant = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('data') : null;
+  const [pending, setPending] = React.useState(null);
   // クエリで指定されてれば自動選択 (ローカル検証用 ?data=t10 等)
   React.useEffect(() => {
     if (!variant) return;
@@ -175,6 +201,10 @@ function PlanSelector({ onSelect }) {
   const recommended = isMobile ? 'light' : 'standard';
   const isLocal = typeof window !== 'undefined'
     && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const handleClick = (p) => {
+    if (p.confirmRequired) setPending(p);
+    else onSelect(p);
+  };
   return (
     <div className="rl-load-root">
       <div className="rl-load-title">Relations</div>
@@ -185,7 +215,7 @@ function PlanSelector({ onSelect }) {
           return (
             <button key={p.id} disabled={disabled}
               className={`rl-plan-card ${p.id === recommended ? 'recommended' : ''} ${disabled ? 'disabled' : ''}`}
-              onClick={() => !disabled && onSelect(p)}>
+              onClick={() => !disabled && handleClick(p)}>
               {p.id === recommended && !disabled && <div className="rl-plan-card-badge">おすすめ</div>}
               {disabled && <div className="rl-plan-card-badge" style={{ background:'#6a6258' }}>ローカル限定</div>}
               <div className="rl-plan-card-name">{p.name}</div>
@@ -199,6 +229,22 @@ function PlanSelector({ onSelect }) {
       <div style={{ marginTop:24, fontSize:10, color:'#9a8e80', letterSpacing:'.08em' }}>
         ※ {isMobile ? 'スマホ判定: ライト推奨' : 'PC判定: 標準推奨'}
       </div>
+
+      {pending && (
+        <div className="rl-confirm-overlay" onClick={() => setPending(null)}>
+          <div className="rl-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="rl-confirm-title">「{pending.name}」プランを選択</div>
+            <div className="rl-confirm-body">
+              これから <strong>{pending.sizeRaw}MB</strong> (gzip 後 約 {pending.sizeGz}MB) のデータをダウンロードします。
+              通信量・回線速度にご注意ください。続行しますか?
+            </div>
+            <div className="rl-confirm-actions">
+              <button className="rl-confirm-btn" onClick={() => setPending(null)}>キャンセル</button>
+              <button className="rl-confirm-btn primary" onClick={() => { const p = pending; setPending(null); onSelect(p); }}>続行</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
