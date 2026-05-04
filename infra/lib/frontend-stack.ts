@@ -72,8 +72,12 @@ export class FrontendStack extends cdk.Stack {
           for (var i = 0; i < bots.length; i++) {
             if (ua.indexOf(bots[i]) !== -1) { isCrawler = true; break; }
           }
-          if (isCrawler && /^\\/apps\\/[a-z0-9-]+$/.test(uri)) {
-            request.uri = '/_ogp/' + uri.replace('/apps/', '') + '.html';
+          if (isCrawler) {
+            if (/^\\/apps\\/[a-z0-9-]+$/.test(uri)) {
+              request.uri = '/_ogp/' + uri.replace('/apps/', '') + '.html';
+            } else if (uri === '/relations' || uri === '/relations/') {
+              request.uri = '/_ogp/relations.html';
+            }
           }
           return request;
         }
