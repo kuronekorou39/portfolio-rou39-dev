@@ -31,6 +31,22 @@ export class FrontendStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
+    // CloudFront standard access logs を S3 に配信。
+    // 後から Athena でファイル単位 (例: depth2-t10.json の取得数) や
+    // パス単位 (/relations のヒット数) を集計するため。
+    // 90 日経過で自動削除。 ストレージ費は月 $1 未満を見込み。
+    // CloudFront ログ配信は ACL を使うので ObjectOwnership を
+    // BUCKET_OWNER_PREFERRED (ACL 有効) にする必要がある。
+    const logBucket = new s3.Bucket(this, 'CloudFrontLogBucket', {
+      bucketName: 'rou39-cloudfront-logs',
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      lifecycleRules: [{ expiration: cdk.Duration.days(90) }],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
     // CloudFront Function to strip /api prefix
     const apiRewriteFn = new cloudfront.Function(this, 'ApiRewriteFunction', {
       code: cloudfront.FunctionCode.fromInline(`
@@ -105,6 +121,9 @@ export class FrontendStack extends cdk.Stack {
       domainNames: [props.domainName, `www.${props.domainName}`],
       certificate: props.certificate,
       webAclId: props.webAclArn,
+      logBucket,
+      logFilePrefix: 'cf/',
+      logIncludesCookies: false,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
