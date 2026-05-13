@@ -12,10 +12,12 @@
     "@aws-sdk/client-secrets-manager": "^3.1035.0",
     "@aws-sdk/client-ses": "^3.1035.0",
     "@aws-sdk/lib-dynamodb": "^3.750.0",
-    "@aws-sdk/s3-request-presigner": "^3.750.0"
+    "@aws-sdk/s3-request-presigner": "^3.750.0",
+    "mailparser": "^3.9.8"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.147",
+    "@types/mailparser": "^3.4.6",
     "typescript": "^5.7.0"
   }
 }

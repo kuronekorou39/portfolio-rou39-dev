@@ -10,6 +10,7 @@ import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
 import { WafStack } from '../lib/waf-stack';
+import { MailStack } from '../lib/mail-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { UranekoStorageStack } from '../lib/uraneko/storage-stack';
 import { UranekoSecretsStack } from '../lib/uraneko/secrets-stack';
@@ -106,6 +107,16 @@ new FrontendStack(app, 'PortfolioFrontend', {
 
 // Monitoring stack (budget alerts)
 new MonitoringStack(app, 'PortfolioMonitoring', { env });
+
+// Mail stack: rou39.com 宛のメールを SES で受信して Gmail に転送 (us-east-1 限定)
+new MailStack(app, 'PortfolioMail', {
+  env: { account: env.account, region: 'us-east-1' },
+  crossRegionReferences: true,
+  domainName: DOMAIN_NAME,
+  forwardTo: process.env.ALERT_EMAIL || 'kuronekorou39@gmail.com',
+  fromAddress: `forward@${DOMAIN_NAME}`,
+  hostedZone: frontendHostedZone,
+});
 
 // ============================================================
 // uraneko.rou39.com (動画販売サブドメイン)
