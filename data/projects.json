@@ -1,35 +1,5 @@
 [
   {
-    "id": "jinrou-verse",
-    "title": "人狼バース",
-    "subtitle": "ブラウザで遊べる3Dボイスチャット人狼ゲーム",
-    "description": "# 人狼バース\n\nブラウザだけで最大20人が同時参加できるリアルタイム3D人狼ゲーム。Three.jsによる3Dアバター、LiveKitによるボイスチャット、Socket.IOによるリアルタイム通信を統合。\n\n## 特徴\n\n- 3Dアバター選択・カスタマイズ\n- ブラウザ内蔵ボイスチャット（LiveKit）\n- リアルタイム投票・議論フェーズ\n- Stripe決済連携\n- Sentry監視",
-    "howToUse": "## 使い方\n\n1. ブラウザでアクセスし、ルームを作成または参加\n2. 3Dアバターを選択\n3. ゲーム開始後、ボイスチャットで議論\n4. 投票フェーズで怪しいプレイヤーに投票\n5. 人狼を全員追放するか、人狼が村人を減らせば決着",
-    "category": "web",
-    "tags": [
-      "Next.js",
-      "React",
-      "Three.js",
-      "Socket.IO",
-      "LiveKit",
-      "Supabase",
-      "TypeScript"
-    ],
-    "platform": [
-      "Web"
-    ],
-    "icon": "",
-    "screenshots": [],
-    "links": {
-      "github": "#"
-    },
-    "status": "development",
-    "publishedAt": "2025-08-01",
-    "updatedAt": "2026-03-04",
-    "size": "large",
-    "published": false
-  },
-  {
     "id": "omniverse",
     "title": "OmniVerse",
     "subtitle": "X & Bluesky 統合SNSクライアント",
@@ -93,7 +63,7 @@
     "publishedAt": "2025-03-01",
     "updatedAt": "2026-03-24",
     "size": "large",
-    "published": false
+    "published": true
   },
   {
     "id": "u2b-loop",
@@ -133,7 +103,7 @@
     "publishedAt": "2025-01-15",
     "updatedAt": "2026-04-10",
     "size": "medium",
-    "published": false
+    "published": true
   },
   {
     "id": "cryptid-logic-solver",
@@ -155,14 +125,13 @@
     "icon": "",
     "screenshots": [],
     "links": {
-      "web": "#",
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/cryptid-logic-solver"
     },
-    "status": "active",
+    "status": "development",
     "publishedAt": "2025-09-10",
     "updatedAt": "2026-01-04",
     "size": "medium",
-    "published": false
+    "published": true
   },
   {
     "id": "icon-builder",
@@ -185,13 +154,13 @@
     "icon": "",
     "screenshots": [],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/icon-builder"
     },
-    "status": "active",
+    "status": "development",
     "publishedAt": "2025-10-01",
     "updatedAt": "2026-03-28",
     "size": "medium",
-    "published": false
+    "published": true
   },
   {
     "id": "chrome-transcoder",
@@ -211,44 +180,13 @@
     "icon": "",
     "screenshots": [],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/chrome-transcoder"
     },
-    "status": "active",
+    "status": "development",
     "publishedAt": "2025-06-01",
     "updatedAt": "2026-03-16",
     "size": "medium",
-    "published": false
-  },
-  {
-    "id": "flowscope",
-    "title": "FlowScope",
-    "subtitle": "ページ遷移をリアルタイムで可視化するブラウザ分析ツール",
-    "description": "# FlowScope\n\nPlaywrightでブラウザを操作しながら、ページ遷移とHTTPリクエストを自動キャプチャし、Cytoscapeでフロー図として可視化するデスクトップツール。\n\n## 特徴\n\n- ページ遷移のリアルタイムグラフ表示（Cytoscape.js）\n- HTTPリクエストの自動キャプチャ・分析\n- DOM状態トラッキング\n- AI自動探索モード（Anthropic SDK連携）\n- デスクトップアプリ（Tauri）またはWeb起動",
-    "howToUse": "## 使い方\n\n1. バックエンドを起動（python backend/main.py）\n2. フロントエンドを起動（npm run dev:vite）\n3. URLを入力してStartをクリック\n4. ブラウザで操作すると遷移がグラフに自動反映\n5. リクエスト詳細パネルでHTTP通信を分析",
-    "category": "desktop",
-    "tags": [
-      "React",
-      "TypeScript",
-      "Python",
-      "Playwright",
-      "Cytoscape.js",
-      "FastAPI",
-      "Tauri"
-    ],
-    "platform": [
-      "Windows",
-      "Web"
-    ],
-    "icon": "",
-    "screenshots": [],
-    "links": {
-      "github": "#"
-    },
-    "status": "development",
-    "publishedAt": "2025-11-01",
-    "updatedAt": "2026-03-27",
-    "size": "large",
-    "published": false
+    "published": true
   },
   {
     "id": "local-port-board",
@@ -329,7 +267,7 @@
     "publishedAt": "2026-01-01",
     "updatedAt": "2026-04-01",
     "size": "medium",
-    "published": false
+    "published": true
   },
   {
     "id": "office-raw-editor",
@@ -435,13 +373,13 @@
     "icon": "",
     "screenshots": [],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/burp-extensions"
     },
-    "status": "active",
+    "status": "development",
     "publishedAt": "2025-12-01",
     "updatedAt": "2026-03-29",
     "size": "small",
-    "published": false
+    "published": true
   },
   {
     "id": "burp-macro-builder",
@@ -462,13 +400,13 @@
     "icon": "",
     "screenshots": [],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/burp-extensions"
     },
-    "status": "active",
+    "status": "development",
     "publishedAt": "2025-12-01",
     "updatedAt": "2026-03-29",
     "size": "small",
-    "published": false
+    "published": true
   },
   {
     "id": "domain-traffic-inspector",
@@ -521,32 +459,6 @@
     "status": "coming-soon",
     "publishedAt": "2025-11-05",
     "updatedAt": "2026-03-04",
-    "size": "medium",
-    "published": false
-  },
-  {
-    "id": "memoria",
-    "title": "Memoria",
-    "subtitle": "思い出を記録・管理するアプリ",
-    "description": "# Memoria\n\n写真と日記で思い出を記録・管理するモバイルアプリ。\n\n## 特徴\n\n- カレンダーUIで日付ごとに閲覧\n- 写真・テキスト・位置情報を紐づけ\n- タグ検索・全文検索\n- データのローカル保存（プライバシー重視）",
-    "howToUse": "## 使い方\n\n1. 日付を選んで新しい記録を追加\n2. 写真を撮影 or ギャラリーから選択\n3. テキストや気分を記録\n4. カレンダーやタグで振り返り",
-    "category": "mobile",
-    "tags": [
-      "React Native",
-      "SQLite",
-      "Expo",
-      "TypeScript"
-    ],
-    "platform": [
-      "iOS",
-      "Android"
-    ],
-    "icon": "",
-    "screenshots": [],
-    "links": {},
-    "status": "coming-soon",
-    "publishedAt": "2026-01-01",
-    "updatedAt": "2026-03-15",
     "size": "medium",
     "published": false
   },
