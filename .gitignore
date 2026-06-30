@@ -37,5 +37,8 @@ frontend/public/relations-app/data/depth2*.json
 /depth2.json
 /depth2-*.json
 
+# relations-app 移動作業の一時退避先 (depth2*.json 計 1.3GB を含むため誤コミット厳禁)
+relations-app-temp/
+
 # 別案件のデザインハンドオフ資料 (Git 管理対象外)
 AVbuySite/
