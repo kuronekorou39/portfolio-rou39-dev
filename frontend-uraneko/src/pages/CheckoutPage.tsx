@@ -9,12 +9,11 @@ import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
 
 const CURRENCIES = [
-  { value: '', label: 'NOWPayments にて選択' },
-  { value: 'btc', label: 'BTC · Bitcoin' },
-  { value: 'btcln', label: 'BTC · Lightning' },
-  { value: 'usdttrc20', label: 'USDT · TRC20' },
-  { value: 'usdc', label: 'USDC' },
-  { value: 'ltc', label: 'LTC' },
+  { value: '', label: 'NOWPayments の画面で選ぶ(おすすめ)' },
+  { value: 'usdttrc20', label: 'USDT (TRC20)・手数料が安い' },
+  { value: 'usdc', label: 'USDC・手数料が安い' },
+  { value: 'ltc', label: 'LTC・手数料が安い' },
+  { value: 'btc', label: 'BTC オンチェーン・手数料が高め' },
 ];
 
 // ステッパー(01 会員選択 / 02 お支払い / 03 受領)
@@ -353,6 +352,83 @@ export default function CheckoutPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* 送金手数料の目安(初心者向けヘルプ) */}
+            <div
+              style={{
+                marginTop: 18,
+                padding: '14px 16px',
+                border: '1px solid rgba(201,169,97,0.25)',
+                background: 'rgba(201,169,97,0.05)',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  color: 'var(--color-gold)',
+                  marginBottom: 10,
+                }}
+              >
+                — 送金手数料の目安 —
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 12,
+                  lineHeight: 1.9,
+                  color: 'var(--muted)',
+                  fontWeight: 300,
+                  marginBottom: 10,
+                }}
+              >
+                通貨によって、お客様が払う送金手数料が変わります。
+                <br />
+                安く済ませたい方は下の表をご参考にどうぞ。
+              </div>
+
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  lineHeight: 2,
+                  color: 'var(--color-fg)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>USDT (TRC20)</span>
+                  <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥150 ◎</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>USDC</span>
+                  <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥10 ◎</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>LTC</span>
+                  <span>約 ¥30</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e6a060' }}>
+                  <span>BTC オンチェーン</span>
+                  <span>約 ¥5,000 ⚠</span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 11,
+                  lineHeight: 1.7,
+                  color: 'var(--dim)',
+                  fontWeight: 300,
+                }}
+              >
+                BTC で送る場合、<strong style={{ color: 'var(--muted)' }}>GMO コイン・DMM Bitcoin・SBI VC トレード</strong>
+                からなら送金が無料です。<strong style={{ color: 'var(--muted)' }}>bitFlyer・Coincheck</strong>
+                からだと約 ¥5,000 かかってしまうのでご注意ください。
+              </div>
             </div>
           </BrassFrame>
 
