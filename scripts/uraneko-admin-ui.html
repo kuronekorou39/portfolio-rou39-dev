@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>uraneko ローカル管理</title>
+<style>
+  :root { --bg:#140b0b; --panel:#1e1414; --line:#3a2a2a; --gold:#c9a961; --fg:#e8ddd0; --muted:#a08f80; --dim:#6b5c52; --danger:#e06a6a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,"Hiragino Kaku Gothic ProN",sans-serif; font-size:14px; }
+  header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:16px; }
+  header h1 { font-size:16px; letter-spacing:3px; margin:0; color:var(--gold); font-weight:500; }
+  header .bucket { font-family:monospace; font-size:11px; color:var(--dim); }
+  header .warn { margin-left:auto; font-size:11px; color:var(--dim); }
+  main { max-width:1080px; margin:0 auto; padding:24px; }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 20px; margin-bottom:22px; }
+  section h2 { font-size:13px; letter-spacing:2px; margin:0 0 14px; color:var(--gold); font-weight:500; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th { color:var(--muted); font-weight:500; font-size:11px; letter-spacing:1px; }
+  td.mono, .mono { font-family:monospace; }
+  input,select,button { font:inherit; }
+  input,select { background:#0f0909; border:1px solid var(--line); color:var(--fg); padding:7px 9px; border-radius:5px; }
+  input[type=number]{ width:110px; }
+  button { background:transparent; border:1px solid var(--gold); color:var(--gold); padding:7px 14px; border-radius:5px; cursor:pointer; letter-spacing:1px; }
+  button:hover { background:rgba(201,169,97,0.12); }
+  button.small { padding:4px 9px; font-size:12px; }
+  button.danger { border-color:var(--danger); color:var(--danger); }
+  button.danger:hover { background:rgba(224,106,106,0.12); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-top:6px; }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field label { font-size:10px; letter-spacing:1px; color:var(--muted); }
+  .badge { font-size:10px; padding:2px 8px; border-radius:10px; border:1px solid var(--line); }
+  .badge.on { color:#8fd08f; border-color:#3a5a3a; }
+  .badge.off { color:var(--dim); }
+  .badge.sold { color:var(--danger); border-color:#5a3a3a; }
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#0f0909; border:1px solid var(--gold); color:var(--fg); padding:10px 18px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; max-width:80vw; }
+  #toast.show { opacity:1; }
+  #toast.err { border-color:var(--danger); color:var(--danger); }
+  .muted { color:var(--muted); font-size:12px; }
+  .hint { color:var(--dim); font-size:11px; margin-top:4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>uraneko 管理</h1>
+  <span class="bucket" id="bucket">…</span>
+  <span class="warn">ローカル専用 · 127.0.0.1</span>
+</header>
+<main>
+  <section>
+    <h2>商品 · PRODUCTS <button class="small" onclick="loadProducts()" style="margin-left:8px">更新</button>
+      <label class="muted" style="margin-left:12px"><input type="checkbox" id="showAll" onchange="loadProducts()"> 未公開も表示</label>
+    </h2>
+    <table>
+      <thead><tr><th>product_id</th><th>タイトル</th><th>価格(円)</th><th>公開</th><th>在庫</th><th>販売済</th><th></th></tr></thead>
+      <tbody id="products"><tr><td colspan="7" class="muted">読み込み中…</td></tr></tbody>
+    </table>
+
+    <h2 style="margin-top:22px">新規 / 上書き商品</h2>
+    <div class="row">
+      <div class="field"><label>product_id [a-z0-9-]</label><input id="p_id" placeholder="my-movie-1"></div>
+      <div class="field"><label>タイトル</label><input id="p_title" placeholder="作品名"></div>
+      <div class="field"><label>価格(円)</label><input id="p_price" type="number" min="0" value="5000"></div>
+      <div class="field"><label>長さ(秒)</label><input id="p_dur" type="number" min="0" value="0"></div>
+      <div class="field"><label><input type="checkbox" id="p_pub"> 公開する</label></div>
+      <button onclick="createProduct()">保存</button>
+    </div>
+    <div class="field" style="margin-top:10px"><label>説明</label><input id="p_desc" placeholder="任意" style="width:100%"></div>
+    <div class="hint">既定は非公開。在庫トークンを入れてから公開するのが安全です。</div>
+  </section>
+
+  <section>
+    <h2>在庫投入(動画) · INGEST</h2>
+    <div class="row">
+      <div class="field"><label>対象商品</label><select id="ing_product"></select></div>
+      <div class="field" style="flex:1; min-width:280px"><label>この PC 上の mp4 パス</label><input id="ing_path" placeholder="C:\\path\\to\\stego.mp4" style="width:100%"></div>
+      <button onclick="ingest()">投入(在庫+1)</button>
+    </div>
+    <div class="hint">S3 に動画を置き、未割当トークンを1件作成します(= 在庫+1)。bits は未指定なら自動生成(テスト用)。本番は ghost-code 生成物を使ってください。</div>
+  </section>
+
+  <section>
+    <h2>クーポン · COUPONS <button class="small" onclick="loadCoupons()" style="margin-left:8px">更新</button></h2>
+    <table>
+      <thead><tr><th>コード</th><th>割引</th><th>対象商品</th><th>利用</th><th>期限</th><th></th></tr></thead>
+      <tbody id="coupons"><tr><td colspan="6" class="muted">読み込み中…</td></tr></tbody>
+    </table>
+    <h2 style="margin-top:22px">クーポン発行</h2>
+    <div class="row">
+      <div class="field"><label>対象商品</label><select id="c_product"></select></div>
+      <div class="field"><label>割引率(1-100%)</label><input id="c_percent" type="number" min="1" max="100" value="50"></div>
+      <div class="field"><label>利用上限</label><input id="c_max" type="number" min="1" value="100"></div>
+      <div class="field"><label>コード(空=自動生成)</label><input id="c_code" placeholder="任意"></div>
+      <div class="field"><label>有効期限(任意 ISO)</label><input id="c_expires" placeholder="2026-12-31T23:59:59Z"></div>
+      <button onclick="addCoupon()">発行</button>
+    </div>
+    <div class="hint">100%(無料)クーポンはコード16文字以上必須。空欄なら128bitで自動生成します。</div>
+  </section>
+
+  <section>
+    <h2>メンテナンス</h2>
+    <div class="row">
+      <button onclick="backfill(true)">トークン修復 dry-run</button>
+      <button onclick="backfill(false)">トークン修復 実行</button>
+    </div>
+    <div class="hint">status_created_at 欠落トークン(在庫として認識されない不整合)を修復します。</div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+let productCache = [];
+
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr ? ' err' : '');
+  setTimeout(() => { t.className = ''; }, isErr ? 4500 : 2500);
+}
+
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+async function loadProducts() {
+  const all = document.getElementById('showAll').checked;
+  const tbody = document.getElementById('products');
+  try {
+    const items = await api('GET', '/api/products?all=' + (all ? '1' : '0'));
+    productCache = items;
+    populateProductSelects(items);
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="7" class="muted">商品なし</td></tr>'; return; }
+    tbody.innerHTML = items.map((p) => {
+      const inv = p.inventory || { unassigned: 0, assigned: 0 };
+      const sold = inv.unassigned === 0;
+      const pub = p.published
+        ? '<span class="badge on">公開</span>'
+        : '<span class="badge off">非公開</span>';
+      const invBadge = sold ? '<span class="badge sold">0(売切)</span>' : inv.unassigned;
+      return '<tr>' +
+        '<td class="mono">' + esc(p.product_id) + '</td>' +
+        '<td>' + esc(p.title) + '</td>' +
+        '<td><input type="number" value="' + p.price_jpy + '" style="width:100px" id="pr_' + esc(p.product_id) + '">' +
+          '<button class="small" onclick="savePrice(\'' + esc(p.product_id) + '\')">✓</button></td>' +
+        '<td>' + pub + '</td>' +
+        '<td>' + invBadge + '</td>' +
+        '<td>' + inv.assigned + '</td>' +
+        '<td><button class="small" onclick="togglePublish(\'' + esc(p.product_id) + '\',' + (!p.published) + ')">' +
+          (p.published ? '非公開に' : '公開に') + '</button></td>' +
+        '</tr>';
+    }).join('');
+  } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
+}
+
+function populateProductSelects(items) {
+  const opts = items.map((p) => '<option value="' + esc(p.product_id) + '">' + esc(p.product_id) + '</option>').join('');
+  document.getElementById('ing_product').innerHTML = opts;
+  document.getElementById('c_product').innerHTML = opts;
+}
+
+async function savePrice(id) {
+  const price = Number(document.getElementById('pr_' + id).value);
+  try { await api('POST', '/api/products/price', { product_id: id, price_jpy: price }); toast('価格を更新: ' + id + ' → ¥' + price); loadProducts(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function togglePublish(id, next) {
+  try { await api('POST', '/api/products/publish', { product_id: id, published: next }); toast(id + ' を' + (next ? '公開' : '非公開') + 'に'); loadProducts(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function createProduct() {
+  const body = {
+    product_id: document.getElementById('p_id').value.trim(),
+    title: document.getElementById('p_title').value.trim(),
+    price_jpy: Number(document.getElementById('p_price').value),
+    duration_sec: Number(document.getElementById('p_dur').value),
+    description: document.getElementById('p_desc').value,
+    published: document.getElementById('p_pub').checked,
+  };
+  try { const r = await api('POST', '/api/products', body); toast('保存: ' + r.product_id); loadProducts(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function ingest() {
+  const body = {
+    product_id: document.getElementById('ing_product').value,
+    file_path: document.getElementById('ing_path').value.trim(),
+  };
+  if (!body.file_path) return toast('mp4 のパスを入力してください', true);
+  try { const r = await api('POST', '/api/ingest', body); toast('在庫+1: ' + r.token_id + ' (' + r.bytes + ' bytes)'); loadProducts(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function loadCoupons() {
+  const tbody = document.getElementById('coupons');
+  try {
+    const items = await api('GET', '/api/coupons');
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">クーポンなし</td></tr>'; return; }
+    tbody.innerHTML = items.map((c) => '<tr>' +
+      '<td class="mono">' + esc(c.coupon_code) + '</td>' +
+      '<td>' + c.discount_percent + '%</td>' +
+      '<td class="mono">' + esc(c.product_id) + '</td>' +
+      '<td>' + c.redeemed_count + '/' + c.max_redemptions + '</td>' +
+      '<td class="mono">' + esc(c.expires_at || '-') + '</td>' +
+      '<td><button class="small danger" onclick="delCoupon(\'' + esc(c.coupon_code) + '\')">削除</button></td>' +
+      '</tr>').join('');
+  } catch (e) { tbody.innerHTML = '<tr><td colspan="6" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
+}
+
+async function addCoupon() {
+  const body = {
+    product_id: document.getElementById('c_product').value,
+    discount_percent: Number(document.getElementById('c_percent').value),
+    max_redemptions: Number(document.getElementById('c_max').value),
+    coupon_code: document.getElementById('c_code').value.trim() || undefined,
+    expires_at: document.getElementById('c_expires').value.trim() || undefined,
+  };
+  try { const r = await api('POST', '/api/coupons', body); toast('発行: ' + r.coupon_code + ' (' + r.discount_percent + '%)'); document.getElementById('c_code').value = r.coupon_code; loadCoupons(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function delCoupon(code) {
+  if (!confirm('クーポン ' + code + ' を削除しますか?')) return;
+  try { await api('POST', '/api/coupons/delete', { coupon_code: code }); toast('削除: ' + code); loadCoupons(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function backfill(dryRun) {
+  try { const r = await api('POST', '/api/tokens/backfill', { dryRun }); toast('scanned=' + r.scanned + ' ' + (r.dryRun ? 'would-fix' : 'fixed') + '=' + r.fixed); loadProducts(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function init() {
+  try { const b = await api('GET', '/api/bucket'); document.getElementById('bucket').textContent = b.bucket; } catch {}
+  await loadProducts();
+  await loadCoupons();
+}
+init();
+</script>
+</body>
+</html>
