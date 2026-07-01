@@ -64,6 +64,10 @@ export class UranekoApiStack extends cdk.Stack {
     const runtime = lambda.Runtime.NODEJS_20_X;
     const handlerDir = path.join(__dirname, '../../../backend/src/handlers/uraneko');
 
+    // SES 送信は uraneko の送信ドメイン identity に限定(resource:'*' の過剰付与を避ける)
+    const sesDomain = props.fromEmail.split('@')[1] ?? props.fromEmail;
+    const sesIdentityArn = `arn:aws:ses:${this.region}:${this.account}:identity/${sesDomain}`;
+
     // --- list products ---
     const listProductsFn = new nodejs.NodejsFunction(this, 'ListProductsFn', {
       runtime,
@@ -104,7 +108,7 @@ export class UranekoApiStack extends cdk.Stack {
     checkoutFn.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         actions: ['ses:SendEmail'],
-        resources: ['*'],
+        resources: [sesIdentityArn],
       }),
     );
 
@@ -125,7 +129,7 @@ export class UranekoApiStack extends cdk.Stack {
     webhookFn.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         actions: ['ses:SendEmail'],
-        resources: ['*'],
+        resources: [sesIdentityArn],
       }),
     );
 
