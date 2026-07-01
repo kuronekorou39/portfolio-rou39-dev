@@ -10,8 +10,11 @@ import {
 // 本家 rou39.com と同じ UserPool を共有(uraneko 用 App Client のみ新規)
 const USER_POOL_ID = 'ap-northeast-1_FJeIsc61q';
 
-// TODO: デプロイ後に CfnOutput: UranekoAuthClient/UranekoUserPoolClientId で取得した値に置換
-const CLIENT_ID = import.meta.env.VITE_URANEKO_CLIENT_ID || 'PLACEHOLDER_CLIENT_ID';
+// uraneko 用 App Client ID(UranekoAuthClientStack が作成 / CfnOutput UranekoUserPoolClientId)。
+// Cognito の SPA 用 App Client ID はブラウザバンドルに露出する公開値(秘密ではない)なので、
+// 本家 frontend/ と同様にソースへ直書きする。これによりクリーンビルドでも再現性を保つ。
+// UranekoAuthClient スタックを作り直して ClientId が変わった場合のみ、この値を更新すること。
+const CLIENT_ID = '2tl63ie3vglgsicfo4iaprpdtu';
 
 const COGNITO_DOMAIN = 'https://auth.rou39.com';
 

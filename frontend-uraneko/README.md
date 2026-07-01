@@ -4,11 +4,27 @@
 
 本家 `frontend/` とは完全に独立したプロジェクト。
 
-## デプロイ後の初期設定
+## Cognito App Client ID
 
-1. `cdk deploy UranekoAuthClient` の CfnOutput `UranekoUserPoolClientId` をコピー
-2. ビルド時に環境変数で渡す: `VITE_URANEKO_CLIENT_ID=<client_id> npm run build`
-   もしくは `src/lib/auth.ts` の `CLIENT_ID` 既定値を差し替え
+Cognito の App Client ID は `src/lib/auth.ts` の `CLIENT_ID` に直書きしている
+(本家 `frontend/` と同じ方式。SPA 用 App Client ID はバンドルに露出する公開値で秘密ではない)。
+環境変数には依存しないので、クリーンビルドでもそのまま正しくビルドできる。
+
+`UranekoAuthClient` スタックを作り直して ClientId が変わった場合のみ、
+`cdk deploy UranekoAuthClient` の CfnOutput `UranekoUserPoolClientId` の値を
+`src/lib/auth.ts` の `CLIENT_ID` に反映する。
+
+## 本番デプロイ
+
+CI(`.github/workflows/deploy.yml`)は本家 frontend のみビルドし、frontend-uraneko は
+ビルドしない(`UranekoFrontendStack` は `dist` 不在時は既存を温存)。
+フロント変更を本番反映するには、ローカルでビルドしてから uraneko フロントを個別デプロイする:
+
+```
+npm install
+npm run build          # dist/ を生成(CLIENT_ID は直書きなので env 不要)
+cd ../infra && npx cdk deploy UranekoFrontend
+```
 
 ## ローカル開発
 
