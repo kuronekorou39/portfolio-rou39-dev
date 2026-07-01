@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type OrderSummary } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { getIdToken, getGoogleLoginUrl } from '../lib/auth';
+import { getIdToken, beginGoogleLogin } from '../lib/auth';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
@@ -73,7 +73,14 @@ export default function MyOrdersPage() {
           <br />
           会員ログインが必要です。
         </p>
-        <a href={getGoogleLoginUrl()} style={{ textDecoration: 'none' }}>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            void beginGoogleLogin();
+          }}
+          style={{ textDecoration: 'none' }}
+        >
           <BarButton size="lg">SIGN IN · ログイン</BarButton>
         </a>
       </div>

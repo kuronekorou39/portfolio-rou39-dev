@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getGoogleLoginUrl } from '../lib/auth';
+import { beginGoogleLogin } from '../lib/auth';
 
 const NAV_ITEMS: { to: string; label: string }[] = [
   { to: '/', label: 'COLLECTION' },
@@ -162,7 +162,11 @@ export default function Layout() {
             </>
           ) : (
             <a
-              href={getGoogleLoginUrl()}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                void beginGoogleLogin();
+              }}
               style={{
                 color: 'var(--color-gold)',
                 textDecoration: 'none',

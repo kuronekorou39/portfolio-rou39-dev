@@ -222,6 +222,19 @@ export function updateAvatar(avatarKey: string): Promise<void> {
  * then store them in localStorage so amazon-cognito-identity-js can pick them up.
  */
 export async function exchangeOAuthCode(code: string): Promise<AuthUser> {
+  // Validate state (CSRF) and pull the single-use PKCE verifier. Clear both up front.
+  const returnedState = new URLSearchParams(window.location.search).get('state');
+  const storedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+  const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+  sessionStorage.removeItem(OAUTH_STATE_KEY);
+  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+  if (!storedState || storedState !== returnedState) {
+    throw new Error('OAuth state mismatch (possible CSRF). Please sign in again.');
+  }
+  if (!verifier) {
+    throw new Error('Missing PKCE verifier. Please sign in again.');
+  }
+
   const redirectUri = `${window.location.origin}/auth/callback`;
   const tokenEndpoint = `${COGNITO_DOMAIN}/oauth2/token`;
 
@@ -233,6 +246,7 @@ export async function exchangeOAuthCode(code: string): Promise<AuthUser> {
       client_id: CLIENT_ID,
       redirect_uri: redirectUri,
       code,
+      code_verifier: verifier,
     }),
   });
 
@@ -266,8 +280,43 @@ export async function exchangeOAuthCode(code: string): Promise<AuthUser> {
   return sessionToUser(session);
 }
 
-/** Build the Google OAuth login URL for Cognito Hosted UI */
-export function getGoogleLoginUrl(): string {
-  const redirectUri = `${window.location.origin}/auth/callback`;
-  return `${COGNITO_DOMAIN}/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&identity_provider=Google&scope=openid+email+profile`;
+// --- PKCE (RFC 7636) + state for the OAuth authorization-code flow ---
+// Public client (no client secret): PKCE prevents auth-code interception,
+// state prevents login CSRF. verifier/state survive the redirect via sessionStorage.
+const PKCE_VERIFIER_KEY = 'rou39_pkce_verifier';
+const OAUTH_STATE_KEY = 'rou39_oauth_state';
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function randomUrlSafe(byteLength: number): string {
+  const arr = new Uint8Array(byteLength);
+  crypto.getRandomValues(arr);
+  return base64UrlEncode(arr);
+}
+async function pkceChallenge(verifier: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return base64UrlEncode(new Uint8Array(digest));
+}
+
+/** Prepare PKCE + state, then redirect to Cognito Hosted UI (Google). */
+export async function beginGoogleLogin(): Promise<void> {
+  const verifier = randomUrlSafe(32); // base64url 43 chars (within PKCE 43-128)
+  const state = randomUrlSafe(16);
+  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  sessionStorage.setItem(OAUTH_STATE_KEY, state);
+  const challenge = await pkceChallenge(verifier);
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    redirect_uri: `${window.location.origin}/auth/callback`,
+    identity_provider: 'Google',
+    scope: 'openid email profile',
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    state,
+  });
+  window.location.assign(`${COGNITO_DOMAIN}/oauth2/authorize?${params.toString()}`);
 }

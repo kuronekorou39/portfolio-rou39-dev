@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { getGoogleLoginUrl, forgotPassword, confirmForgotPassword } from '@/lib/auth';
+import { beginGoogleLogin, forgotPassword, confirmForgotPassword } from '@/lib/auth';
 
 type Mode = 'login' | 'signup' | 'confirm' | 'forgot' | 'reset';
 
@@ -216,7 +216,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 {/* Google first */}
                 <a
-                  href={getGoogleLoginUrl()}
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void beginGoogleLogin();
+                  }}
                   className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition-transform hover:scale-[1.02]"
                 >
                   <GoogleIcon />
@@ -264,7 +268,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
 
                 <a
-                  href={getGoogleLoginUrl()}
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void beginGoogleLogin();
+                  }}
                   className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition-transform hover:scale-[1.02]"
                 >
                   <GoogleIcon />

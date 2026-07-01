@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateRandomIdentity } from '@/lib/avatars';
@@ -10,7 +10,11 @@ export default function AuthCallbackPage() {
   const { exchangeOAuthCode } = useAuth();
   const [error, setError] = useState('');
 
+  const ran = useRef(false);
   useEffect(() => {
+    // single-use authorization code: never exchange twice (StrictMode / effect re-runs).
+    if (ran.current) return;
+    ran.current = true;
     const code = searchParams.get('code');
     const errorParam = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');

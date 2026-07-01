@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { getIdToken, getGoogleLoginUrl } from '../lib/auth';
+import { getIdToken, beginGoogleLogin } from '../lib/auth';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
@@ -301,7 +301,11 @@ export default function CheckoutPage() {
               >
                 ログインしていません。
                 <a
-                  href={getGoogleLoginUrl()}
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void beginGoogleLogin();
+                  }}
                   style={{ marginLeft: 10, color: 'var(--color-gold)', textDecoration: 'underline' }}
                 >
                   SIGN IN

@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { getCurrentUser, signOut as signOutAuth, type AuthUser } from '../lib/auth';
 
 interface AuthCtx {
@@ -14,22 +22,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refresh = async () => {
+  // refresh / signOut / value を安定化する。未メモ化だと value が毎レンダー新規になり、
+  // refresh を依存に持つ効果(AuthCallbackPage)が再実行され OAuth コード交換が二重発火する。
+  const refresh = useCallback(async () => {
     setLoading(true);
     setUser(await getCurrentUser());
     setLoading(false);
-  };
-
-  useEffect(() => {
-    refresh();
   }, []);
 
-  const signOut = () => {
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const signOut = useCallback(() => {
     signOutAuth();
     setUser(null);
-  };
+  }, []);
 
-  return <Ctx.Provider value={{ user, loading, refresh, signOut }}>{children}</Ctx.Provider>;
+  const value = useMemo(() => ({ user, loading, refresh, signOut }), [user, loading, refresh, signOut]);
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useAuth(): AuthCtx {

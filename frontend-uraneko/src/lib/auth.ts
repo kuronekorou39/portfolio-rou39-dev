@@ -62,17 +62,68 @@ export function signOut(): void {
   userPool.getCurrentUser()?.signOut();
 }
 
-export function getGoogleLoginUrl(): string {
-  const redirectUri = `${window.location.origin}/auth/callback`;
-  return `${COGNITO_DOMAIN}/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&identity_provider=Google&scope=openid+email+profile`;
+// --- PKCE (RFC 7636) + state による OAuth 認可コードフローの保護 ---
+// public client(client secret 無し)のため、認可コード傍受対策に PKCE、
+// ログイン CSRF 対策に state を用いる。verifier/state は redirect を跨ぐので sessionStorage に保存。
+const PKCE_VERIFIER_KEY = 'uraneko_pkce_verifier';
+const OAUTH_STATE_KEY = 'uraneko_oauth_state';
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function randomUrlSafe(byteLength: number): string {
+  const arr = new Uint8Array(byteLength);
+  crypto.getRandomValues(arr);
+  return base64UrlEncode(arr);
+}
+async function pkceChallenge(verifier: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return base64UrlEncode(new Uint8Array(digest));
 }
 
-export function getCognitoLoginUrl(): string {
-  const redirectUri = `${window.location.origin}/auth/callback`;
-  return `${COGNITO_DOMAIN}/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid+email+profile`;
+async function beginOAuth(provider?: 'Google'): Promise<void> {
+  const verifier = randomUrlSafe(32); // base64url 43 文字(PKCE 規定 43-128 内)
+  const state = randomUrlSafe(16);
+  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  sessionStorage.setItem(OAUTH_STATE_KEY, state);
+  const challenge = await pkceChallenge(verifier);
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    redirect_uri: `${window.location.origin}/auth/callback`,
+    scope: 'openid email profile',
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    state,
+  });
+  if (provider) params.set('identity_provider', provider);
+  window.location.assign(`${COGNITO_DOMAIN}/oauth2/authorize?${params.toString()}`);
+}
+
+export function beginGoogleLogin(): Promise<void> {
+  return beginOAuth('Google');
+}
+
+export function beginCognitoLogin(): Promise<void> {
+  return beginOAuth();
 }
 
 export async function exchangeOAuthCode(code: string): Promise<AuthUser> {
+  // state 検証(CSRF)+ PKCE verifier 取り出し。使い切りなので先にクリアする。
+  const returnedState = new URLSearchParams(window.location.search).get('state');
+  const storedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+  const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+  sessionStorage.removeItem(OAUTH_STATE_KEY);
+  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+  if (!storedState || storedState !== returnedState) {
+    throw new Error('state が一致しません(CSRF の疑い)。ログインをやり直してください。');
+  }
+  if (!verifier) {
+    throw new Error('PKCE 検証値がありません。ログインをやり直してください。');
+  }
+
   const redirectUri = `${window.location.origin}/auth/callback`;
   const res = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, {
     method: 'POST',
@@ -82,6 +133,7 @@ export async function exchangeOAuthCode(code: string): Promise<AuthUser> {
       client_id: CLIENT_ID,
       redirect_uri: redirectUri,
       code,
+      code_verifier: verifier,
     }),
   });
   if (!res.ok) throw new Error(`token exchange failed: ${await res.text()}`);
