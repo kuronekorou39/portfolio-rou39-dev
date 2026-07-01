@@ -156,6 +156,7 @@ const uranekoApi = new UranekoApiStack(app, 'UranekoApi', {
   productsTable: uranekoStorage.productsTable,
   tokensTable: uranekoStorage.tokensTable,
   ordersTable: uranekoStorage.ordersTable,
+  couponsTable: uranekoStorage.couponsTable,
   assetsBucket: uranekoStorage.assetsBucket,
   userPool: auth.userPool,
   nowpaymentsApiKey: uranekoSecrets.nowpaymentsApiKey,

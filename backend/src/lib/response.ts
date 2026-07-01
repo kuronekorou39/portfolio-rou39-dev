@@ -38,6 +38,14 @@ export function forbidden(message = 'Forbidden') {
   };
 }
 
+export function conflict(message = 'Conflict') {
+  return {
+    statusCode: 409,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ error: message }),
+  };
+}
+
 export function serverError(message = 'Internal server error') {
   return {
     statusCode: 500,

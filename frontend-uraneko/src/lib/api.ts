@@ -22,6 +22,14 @@ export interface Product {
   price_jpy: number;
   duration_sec: number;
   thumbnail_s3_key: string;
+  available?: boolean; // 在庫(未割当トークン)有無。未定義なら不明扱い
+}
+
+export interface CheckoutResult {
+  order_id: string;
+  invoice_url?: string; // 通常/割引あり: NOWPayments 決済ページ
+  free?: boolean; // 100%割引(無料)購入
+  complete_url?: string; // 無料購入時の受領ページ(署名トークン付き)
 }
 
 export interface OrderSummary {
@@ -46,8 +54,11 @@ export const api = {
   getProduct(id: string): Promise<Product> {
     return request<Product>(`/products/${id}`);
   },
-  checkout(params: { product_id: string; email?: string; pay_currency?: string }, idToken?: string | null) {
-    return request<{ order_id: string; invoice_url: string }>('/checkout', {
+  checkout(
+    params: { product_id: string; email?: string; pay_currency?: string; coupon_code?: string },
+    idToken?: string | null,
+  ) {
+    return request<CheckoutResult>('/checkout', {
       method: 'POST',
       headers: authHeaders(idToken),
       body: JSON.stringify(params),

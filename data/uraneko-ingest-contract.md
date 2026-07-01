@@ -28,20 +28,23 @@ Key:    videos/{product_id}/{token_id}.mp4
 
 ```json
 {
-  "token_id":    "<UUID v4>",
-  "product_id":  "<product_id と同じ値>",
-  "s3_key":      "videos/{product_id}/{token_id}.mp4",
-  "bits":        "<40文字の '01' 文字列>",
-  "status":      "unassigned",
-  "assigned_to": null,
-  "assigned_at": null,
-  "order_id":    null,
-  "created_at":  "<ISO8601 UTC, 例: 2026-04-23T10:00:00.000Z>"
+  "token_id":          "<UUID v4>",
+  "product_id":        "<product_id と同じ値>",
+  "s3_key":            "videos/{product_id}/{token_id}.mp4",
+  "bits":              "<40文字の '01' 文字列>",
+  "status":            "unassigned",
+  "status_created_at": "unassigned#<created_at と同じ ISO8601, 例: unassigned#2026-04-23T10:00:00.000Z>",
+  "assigned_to":       null,
+  "assigned_at":       null,
+  "order_id":          null,
+  "created_at":        "<ISO8601 UTC, 例: 2026-04-23T10:00:00.000Z>"
 }
 ```
 
 - `bits` は透かしビット列(40bit、`"0"`/`"1"` の 40文字文字列)
 - `status` は必ず `"unassigned"` で登録
+- **`status_created_at` は必須**。GSI `by_product_status` のソートキーで、`"{status}#{created_at}"` 形式(投入時は必ず `"unassigned#" + created_at`、`created_at` と同じ ISO8601 値を使う)。
+  **このフィールドが無いとトークンが GSI に載らず、購入時の在庫検索(未割当トークンの取得)に一切ヒットせず、在庫があっても全購入が失敗する。** 購入が確定するとトークン割当時に uraneko API が自動で `"assigned#..."` へ書き換えるため、ghost-code 側は投入時の `"unassigned#..."` のみ設定すればよい。
 - `null` 値は DynamoDB の `NULL` 型で OK
 
 ## 書き込み順序(重要)

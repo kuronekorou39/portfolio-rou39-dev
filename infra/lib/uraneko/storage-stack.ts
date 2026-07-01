@@ -7,6 +7,7 @@ export class UranekoStorageStack extends cdk.Stack {
   public readonly productsTable: dynamodb.Table;
   public readonly tokensTable: dynamodb.Table;
   public readonly ordersTable: dynamodb.Table;
+  public readonly couponsTable: dynamodb.Table;
   public readonly assetsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -49,6 +50,14 @@ export class UranekoStorageStack extends cdk.Stack {
       indexName: 'by_user',
       partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
+    });
+
+    // クーポン(特定商品限定・総利用上限で管理)
+    this.couponsTable = new dynamodb.Table(this, 'CouponsTable', {
+      tableName: 'uraneko-coupons',
+      partitionKey: { name: 'coupon_code', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
     // 動画資産(stego mp4, サムネ等)

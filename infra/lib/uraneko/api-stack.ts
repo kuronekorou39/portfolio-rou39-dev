@@ -13,6 +13,7 @@ interface UranekoApiStackProps extends cdk.StackProps {
   productsTable: dynamodb.ITable;
   tokensTable: dynamodb.ITable;
   ordersTable: dynamodb.ITable;
+  couponsTable: dynamodb.ITable;
   assetsBucket: s3.IBucket;
   userPool: cognito.IUserPool;
   nowpaymentsApiKey: secretsmanager.ISecret;
@@ -49,6 +50,7 @@ export class UranekoApiStack extends cdk.Stack {
       PRODUCTS_TABLE: props.productsTable.tableName,
       TOKENS_TABLE: props.tokensTable.tableName,
       ORDERS_TABLE: props.ordersTable.tableName,
+      COUPONS_TABLE: props.couponsTable.tableName,
       ASSETS_BUCKET: props.assetsBucket.bucketName,
       URANEKO_SITE_URL: props.siteUrl,
       URANEKO_API_URL: `${props.siteUrl}/api`,
@@ -93,7 +95,18 @@ export class UranekoApiStack extends cdk.Stack {
     });
     props.productsTable.grantReadData(checkoutFn);
     props.ordersTable.grantReadWriteData(checkoutFn);
+    props.couponsTable.grantReadWriteData(checkoutFn);
     props.nowpaymentsApiKey.grantRead(checkoutFn);
+    // 100%割引(無料購入)経路は checkout 内で直接フルフィルするため、
+    // webhook と同等の権限(トークン割当・注文アクセス署名・SES送信)が必要。
+    props.tokensTable.grantReadWriteData(checkoutFn);
+    props.orderAccessSecret.grantRead(checkoutFn);
+    checkoutFn.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        actions: ['ses:SendEmail'],
+        resources: ['*'],
+      }),
+    );
 
     // --- webhook (認証なし、HMAC 検証で認可) ---
     const webhookFn = new nodejs.NodejsFunction(this, 'WebhookFn', {

@@ -192,11 +192,17 @@ export default function ProductPage() {
             </div>
           </BrassFrame>
 
-          <Link to={`/checkout/${product.product_id}`} style={{ textDecoration: 'none' }}>
-            <BarButton size="lg" style={{ width: '100%' }}>
-              BUY NOW · 購入へ進む
+          {product.available === false ? (
+            <BarButton size="lg" disabled style={{ width: '100%', opacity: 0.5 }}>
+              SOLD OUT · 在庫切れ
             </BarButton>
-          </Link>
+          ) : (
+            <Link to={`/checkout/${product.product_id}`} style={{ textDecoration: 'none' }}>
+              <BarButton size="lg" style={{ width: '100%' }}>
+                BUY NOW · 購入へ進む
+              </BarButton>
+            </Link>
+          )}
 
           <p
             style={{

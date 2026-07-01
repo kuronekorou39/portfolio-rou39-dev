@@ -3,14 +3,10 @@ import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, serverError, forbidden } from '../../lib/response';
 import { verifyIpnSignature } from '../../lib/uraneko/nowpayments';
-import { claimToken } from '../../lib/uraneko/token-claim';
-import { sendDownloadEmail } from '../../lib/uraneko/email';
-import { signOrderToken } from '../../lib/uraneko/order-token';
-import type { Order, OrderStatus, VideoProduct } from '../../lib/uraneko/types';
+import { fulfillPaidOrder } from '../../lib/uraneko/fulfill';
+import type { Order, OrderStatus } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
-const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE!;
-const SITE_BASE_URL = process.env.URANEKO_SITE_URL!;
 
 // NOWPayments payment_status → 自分のOrderStatus
 function mapStatus(paymentStatus: string): OrderStatus {
@@ -85,62 +81,20 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return ok({ ok: true, status: newStatus });
     }
 
-    // 支払い完了: トークン割当 → orders 更新 → メール送信
-    const token = await claimToken({
-      product_id: order.product_id,
-      user_id: order.user_id,
-      order_id,
-    });
-    if (!token) {
-      console.error('Token exhausted for product', order.product_id, 'order', order_id);
-      await docClient.send(
-        new UpdateCommand({
-          TableName: ORDERS_TABLE,
-          Key: { order_id },
-          UpdateExpression: 'SET #s = :s',
-          ExpressionAttributeNames: { '#s': 'status' },
-          ExpressionAttributeValues: { ':s': 'failed' },
-        }),
+    // 支払い完了: 共通フルフィル(トークン割当 → orders 更新 → DLメール送信)
+    const result = await fulfillPaidOrder(order);
+    if (!result.ok) {
+      // トークン枯渇は在庫補充が必要な恒久失敗。500 で NOWPayments に無限再送させず、
+      // 200 で受領して再送を止め、ログで手動対応(在庫補充/返金)を促す。
+      console.error(
+        'FULFILL FAILED (manual action needed):',
+        result.reason,
+        'product',
+        order.product_id,
+        'order',
+        order_id,
       );
-      return serverError('token exhausted');
-    }
-
-    const paid_at = new Date().toISOString();
-    await docClient.send(
-      new UpdateCommand({
-        TableName: ORDERS_TABLE,
-        Key: { order_id },
-        UpdateExpression: 'SET #s = :s, token_id = :t, paid_at = :p',
-        ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: {
-          ':s': 'paid',
-          ':t': token.token_id,
-          ':p': paid_at,
-        },
-      }),
-    );
-
-    // 商品タイトル取得(メール用)
-    const prod = await docClient.send(
-      new GetCommand({ TableName: PRODUCTS_TABLE, Key: { product_id: order.product_id } }),
-    );
-    const product = prod.Item as VideoProduct | undefined;
-    const title = product?.title ?? order.product_id;
-
-    // メール経由の注文アクセストークンを署名
-    const accessToken = await signOrderToken(order_id);
-    const downloadPageUrl = `${SITE_BASE_URL}/order/${order_id}/complete?token=${accessToken}`;
-
-    try {
-      await sendDownloadEmail({
-        to: order.email,
-        productTitle: title,
-        orderId: order_id,
-        downloadPageUrl,
-      });
-    } catch (sesErr) {
-      console.error('SES send failed (order still paid):', sesErr);
-      // 支払いは成立しているので 200 を返す。ユーザーは購入履歴から取得可
+      return ok({ ok: false, status: 'failed', reason: result.reason });
     }
 
     return ok({ ok: true, status: 'paid' });

@@ -16,6 +16,22 @@ const CURRENCIES = [
   { value: 'btc', label: 'BTC オンチェーン・手数料が高め' },
 ];
 
+// サーバのエラーコード → 利用者向けの日本語メッセージ
+const ERROR_MESSAGES: Record<string, string> = {
+  sold_out: '申し訳ございません。ただ今この作品は在庫切れです。',
+  coupon_invalid: 'クーポンコードが無効です。',
+  coupon_expired: 'このクーポンは有効期限が切れています。',
+  coupon_exhausted: 'このクーポンは利用上限に達しました。',
+  coupon_not_applicable: 'このクーポンはこの作品には使えません。',
+  amount_too_small: '割引後の金額が最低取引額を下回るため決済できません。',
+  invalid_amount: '金額が不正です。もう一度お試しください。',
+  email_invalid: 'メールアドレスの形式が正しくありません。',
+  'email required': 'メールアドレスを入力してください。',
+};
+function friendlyError(msg: string): string {
+  return ERROR_MESSAGES[msg] ?? msg;
+}
+
 // ステッパー(01 会員選択 / 02 お支払い / 03 受領)
 function Stepper({ active }: { active: 1 | 2 | 3 }) {
   const steps = [
@@ -97,6 +113,7 @@ export default function CheckoutPage() {
   const [mode, setMode] = useState<'login' | 'guest'>(user ? 'login' : 'guest');
   const [email, setEmail] = useState('');
   const [currency, setCurrency] = useState('');
+  const [coupon, setCoupon] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -136,12 +153,21 @@ export default function CheckoutPage() {
           product_id: product.product_id,
           email: buyerEmail,
           pay_currency: currency || undefined,
+          coupon_code: coupon.trim() || undefined,
         },
         idToken,
       );
-      window.location.href = res.invoice_url;
+      if (res.free && res.complete_url) {
+        // 100%割引: 決済不要。受領ページ(署名トークン付き)へ直接遷移
+        window.location.href = res.complete_url;
+      } else if (res.invoice_url) {
+        window.location.href = res.invoice_url;
+      } else {
+        setErr('決済URLの取得に失敗しました。時間をおいて再度お試しください。');
+        setSubmitting(false);
+      }
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(friendlyError((e as Error).message));
       setSubmitting(false);
     }
   }
@@ -352,6 +378,51 @@ export default function CheckoutPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* クーポン(任意) */}
+            <div style={{ marginTop: 18 }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  color: 'var(--muted)',
+                  marginBottom: 8,
+                }}
+              >
+                COUPON · クーポンコード(お持ちの方)
+              </label>
+              <input
+                type="text"
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value)}
+                placeholder="任意"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  background: 'transparent',
+                  border: '1px solid rgba(201,169,97,0.25)',
+                  color: 'var(--color-fg)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 13,
+                  letterSpacing: 1,
+                  outline: 'none',
+                }}
+              />
+              <div
+                style={{
+                  marginTop: 6,
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 10,
+                  letterSpacing: 1,
+                  color: 'var(--dim)',
+                  fontWeight: 300,
+                }}
+              >
+                割引後の金額は次の決済画面に表示されます(100%割引は決済不要で受領ページへ進みます)。
+              </div>
             </div>
 
             {/* 送金手数料の目安(初心者向けヘルプ) */}

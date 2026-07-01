@@ -2,6 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
 import { ok, serverError } from '../../lib/response';
+import { hasAvailableToken } from '../../lib/uraneko/token-claim';
 import type { VideoProduct } from '../../lib/uraneko/types';
 
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE!;
@@ -28,7 +29,13 @@ export async function handler(_event: APIGatewayProxyEvent): Promise<APIGatewayP
         ExpressionAttributeValues: { ':t': true },
       }),
     );
-    const items = ((res.Items as VideoProduct[] | undefined) ?? []).map(toPublicProduct);
+    const products = (res.Items as VideoProduct[] | undefined) ?? [];
+    const items = await Promise.all(
+      products.map(async (p) => ({
+        ...toPublicProduct(p),
+        available: await hasAvailableToken(p.product_id),
+      })),
+    );
     return ok(items);
   } catch (err) {
     console.error('list-products error:', err);
