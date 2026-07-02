@@ -77,6 +77,8 @@ export class UranekoApiStack extends cdk.Stack {
       bundling,
     });
     props.productsTable.grantReadData(listProductsFn);
+    // available(在庫有無)判定で tokens テーブルの GSI by_product_status を Query する
+    props.tokensTable.grantReadData(listProductsFn);
 
     // --- get product ---
     const getProductFn = new nodejs.NodejsFunction(this, 'GetProductFn', {
@@ -87,6 +89,8 @@ export class UranekoApiStack extends cdk.Stack {
       bundling,
     });
     props.productsTable.grantReadData(getProductFn);
+    // available(在庫有無)判定で tokens テーブルの GSI by_product_status を Query する
+    props.tokensTable.grantReadData(getProductFn);
 
     // --- checkout (ログインでもゲストでも動く、Cognito 認証は任意) ---
     const checkoutFn = new nodejs.NodejsFunction(this, 'CheckoutFn', {
