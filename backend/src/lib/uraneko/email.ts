@@ -18,7 +18,7 @@ export async function sendDownloadEmail(params: {
     `以下のURLから動画をダウンロードできます:`,
     downloadPageUrl,
     ``,
-    `※このURLはあなた専用です。他人と共有しないでください(透かしによって特定されます)。`,
+    `※このURLはあなた専用です。他人と共有しないでください。`,
     `※注文番号: ${orderId}`,
     ``,
     `---`,
@@ -30,7 +30,7 @@ export async function sendDownloadEmail(params: {
       <h2 style="color:#222">${escapeHtml(productTitle)} のご購入ありがとうございます</h2>
       <p>以下のリンクから動画をダウンロードできます:</p>
       <p><a href="${escapeAttr(downloadPageUrl)}" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px">動画をダウンロード</a></p>
-      <p style="color:#b00">※このURLはあなた専用です。他人と共有しないでください(透かしによって流出元が特定されます)。</p>
+      <p style="color:#b00">※このURLはあなた専用です。他人と共有しないでください。</p>
       <p style="color:#888;font-size:12px">注文番号: ${escapeHtml(orderId)}</p>
       <hr style="border:none;border-top:1px solid #ddd;margin:30px 0" />
       <p style="color:#888;font-size:12px">uraneko.rou39.com</p>
