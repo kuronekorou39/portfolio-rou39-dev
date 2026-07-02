@@ -3,6 +3,10 @@ import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-sec
 
 const BASE_URL = process.env.NOWPAYMENTS_BASE_URL || 'https://api.nowpayments.io/v1';
 const API_KEY_SECRET_NAME = process.env.NOWPAYMENTS_API_KEY_SECRET!;
+
+// 割引後の下限額(円)。これ未満は NOWPayments の最低取引額割れで invoice が失敗する。
+// checkout(事前ガード)とクーポン検証 API(表示用チェック)で共用。
+export const MIN_INVOICE_JPY = 100;
 const IPN_SECRET_SECRET_NAME = process.env.NOWPAYMENTS_IPN_SECRET_SECRET!;
 
 const sm = new SecretsManagerClient({});

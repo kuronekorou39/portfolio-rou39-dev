@@ -92,6 +92,17 @@ export class UranekoApiStack extends cdk.Stack {
     // available(在庫有無)判定で tokens テーブルの GSI by_product_status を Query する
     props.tokensTable.grantReadData(getProductFn);
 
+    // --- validate coupon (購入画面の「適用」ボタン用。注文を作らず利用枠も消費しない) ---
+    const validateCouponFn = new nodejs.NodejsFunction(this, 'ValidateCouponFn', {
+      runtime,
+      entry: path.join(handlerDir, 'validate-coupon.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+    });
+    props.productsTable.grantReadData(validateCouponFn);
+    props.couponsTable.grantReadData(validateCouponFn);
+
     // --- checkout (ログインでもゲストでも動く、Cognito 認証は任意) ---
     const checkoutFn = new nodejs.NodejsFunction(this, 'CheckoutFn', {
       runtime,
@@ -165,6 +176,9 @@ export class UranekoApiStack extends cdk.Stack {
     products.addMethod('GET', new apigateway.LambdaIntegration(listProductsFn));
     const productById = products.addResource('{product_id}');
     productById.addMethod('GET', new apigateway.LambdaIntegration(getProductFn));
+
+    const coupons = this.api.root.addResource('coupons');
+    coupons.addResource('validate').addMethod('POST', new apigateway.LambdaIntegration(validateCouponFn));
 
     const checkout = this.api.root.addResource('checkout');
     checkout.addMethod('POST', new apigateway.LambdaIntegration(checkoutFn));

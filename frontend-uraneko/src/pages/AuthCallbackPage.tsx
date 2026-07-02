@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { exchangeOAuthCode } from '../lib/auth';
+import { exchangeOAuthCode, consumeAuthReturnTo } from '../lib/auth';
 import { useAuth } from '../contexts/AuthContext';
 import SectionLabel from '../components/bar/SectionLabel';
 
@@ -24,7 +24,7 @@ export default function AuthCallbackPage() {
       try {
         await exchangeOAuthCode(code);
         await refresh();
-        navigate('/', { replace: true });
+        navigate(consumeAuthReturnTo() ?? '/', { replace: true });
       } catch (e) {
         setErr((e as Error).message);
       }

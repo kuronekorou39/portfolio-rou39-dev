@@ -3,7 +3,7 @@ import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { createHash, randomUUID } from 'crypto';
 import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, notFound, conflict, serverError } from '../../lib/response';
-import { createInvoice } from '../../lib/uraneko/nowpayments';
+import { createInvoice, MIN_INVOICE_JPY } from '../../lib/uraneko/nowpayments';
 import { hasAvailableToken } from '../../lib/uraneko/token-claim';
 import {
   getCoupon,
@@ -19,8 +19,6 @@ const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE!;
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
 const SITE_BASE_URL = process.env.URANEKO_SITE_URL!; // https://uraneko.rou39.com
 const API_BASE_URL = process.env.URANEKO_API_URL!; // https://uraneko.rou39.com/api
-// 割引後の下限額。これ未満は NOWPayments の最低取引額割れで invoice が失敗するため事前に弾く。
-const MIN_INVOICE_JPY = 100;
 
 function emailHash(email: string): string {
   return createHash('sha256').update(email.trim().toLowerCase()).digest('hex').slice(0, 16);

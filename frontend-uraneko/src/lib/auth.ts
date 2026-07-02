@@ -67,6 +67,24 @@ export function signOut(): void {
 // ログイン CSRF 対策に state を用いる。verifier/state は redirect を跨ぐので sessionStorage に保存。
 const PKCE_VERIFIER_KEY = 'uraneko_pkce_verifier';
 const OAUTH_STATE_KEY = 'uraneko_oauth_state';
+const AUTH_RETURN_TO_KEY = 'uraneko_auth_return_to';
+
+// ログイン完了後に戻るアプリ内パス。redirect を跨ぐので sessionStorage に保存する。
+function rememberReturnTo(returnTo?: string): void {
+  if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+    sessionStorage.setItem(AUTH_RETURN_TO_KEY, returnTo);
+  } else {
+    // 未指定なら前回ログイン中断時の残留値を消す(古いチェックアウトへ飛ばないように)
+    sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
+  }
+}
+
+/** ログイン開始時に保存した戻り先を取り出す(使い切り)。アプリ内パスのみ許可。 */
+export function consumeAuthReturnTo(): string | null {
+  const v = sessionStorage.getItem(AUTH_RETURN_TO_KEY);
+  sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
+  return v && v.startsWith('/') && !v.startsWith('//') ? v : null;
+}
 
 function base64UrlEncode(bytes: Uint8Array): string {
   let s = '';
@@ -102,11 +120,13 @@ async function beginOAuth(provider?: 'Google'): Promise<void> {
   window.location.assign(`${COGNITO_DOMAIN}/oauth2/authorize?${params.toString()}`);
 }
 
-export function beginGoogleLogin(): Promise<void> {
+export function beginGoogleLogin(returnTo?: string): Promise<void> {
+  rememberReturnTo(returnTo);
   return beginOAuth('Google');
 }
 
-export function beginCognitoLogin(): Promise<void> {
+export function beginCognitoLogin(returnTo?: string): Promise<void> {
+  rememberReturnTo(returnTo);
   return beginOAuth();
 }
 

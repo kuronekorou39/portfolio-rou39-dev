@@ -25,6 +25,14 @@ export interface Product {
   available?: boolean; // 在庫(未割当トークン)有無。未定義なら不明扱い
 }
 
+export interface CouponValidationResult {
+  valid: boolean;
+  reason?: string; // 無効時のエラーコード(coupon_invalid 等)
+  discount_percent?: number;
+  original_price_jpy?: number;
+  final_price_jpy?: number;
+}
+
 export interface CheckoutResult {
   order_id: string;
   invoice_url?: string; // 通常/割引あり: NOWPayments 決済ページ
@@ -53,6 +61,14 @@ export const api = {
   },
   getProduct(id: string): Promise<Product> {
     return request<Product>(`/products/${id}`);
+  },
+  // クーポンの事前検証(注文は作らない)。購入画面の「適用」ボタン用
+  validateCoupon(params: { product_id: string; coupon_code: string }) {
+    return request<CouponValidationResult>('/coupons/validate', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(params),
+    });
   },
   checkout(
     params: { product_id: string; email?: string; pay_currency?: string; coupon_code?: string },
