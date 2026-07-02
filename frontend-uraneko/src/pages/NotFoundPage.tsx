@@ -10,7 +10,7 @@ export default function NotFoundPage() {
       <h1
         style={{
           fontFamily: 'var(--font-serif-jp)',
-          fontSize: 72,
+          fontSize: 'clamp(44px, 15vw, 72px)',
           fontWeight: 200,
           letterSpacing: 10,
           color: 'var(--color-gold)',

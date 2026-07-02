@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
+import { useIsNarrow } from '../lib/useIsNarrow';
 import Thumbnail from '../components/bar/Thumbnail';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 
 export default function HomePage() {
+  const isNarrow = useIsNarrow();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -19,10 +21,10 @@ export default function HomePage() {
       <section
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 420px',
-          gap: 56,
+          gridTemplateColumns: isNarrow ? '1fr' : '1fr 420px',
+          gap: isNarrow ? 40 : 56,
           alignItems: 'center',
-          marginBottom: 80,
+          marginBottom: isNarrow ? 56 : 80,
         }}
       >
         <div>
@@ -32,7 +34,7 @@ export default function HomePage() {
           <h1
             style={{
               fontFamily: 'var(--font-serif-jp)',
-              fontSize: 56,
+              fontSize: 'clamp(34px, 9vw, 56px)',
               fontWeight: 200,
               letterSpacing: 6,
               lineHeight: 1.2,

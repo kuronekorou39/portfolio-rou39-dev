@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
+import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
 import { getIdToken, beginGoogleLogin } from '../lib/auth';
 import Ornament from '../components/bar/Ornament';
@@ -76,7 +77,7 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 28,
+        gap: 'clamp(10px, 3vw, 28px)',
         marginBottom: 48,
       }}
     >
@@ -85,11 +86,14 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
         const isActive = index === active;
         const isDone = index < active;
         return (
-          <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div
+            key={s.n}
+            style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 2vw, 14px)' }}
+          >
             <div
               style={{
-                width: 44,
-                height: 44,
+                width: 'clamp(34px, 8vw, 44px)',
+                height: 'clamp(34px, 8vw, 44px)',
                 transform: 'rotate(45deg)',
                 border: '1px solid var(--color-gold)',
                 background: isActive ? 'var(--color-gold)' : 'transparent',
@@ -128,7 +132,13 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
               {s.label}
             </div>
             {i < steps.length - 1 && (
-              <div style={{ width: 40, height: 1, background: 'rgba(201,169,97,0.3)' }} />
+              <div
+                style={{
+                  width: 'clamp(14px, 4vw, 40px)',
+                  height: 1,
+                  background: 'rgba(201,169,97,0.3)',
+                }}
+              />
             )}
           </div>
         );
@@ -145,6 +155,7 @@ interface AppliedCoupon {
 
 export default function CheckoutPage() {
   const { id } = useParams<{ id: string }>();
+  const isNarrow = useIsNarrow();
   const { user, loading: authLoading } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
@@ -305,7 +316,13 @@ export default function CheckoutPage() {
           </div>
 
           <SectionLabel style={{ marginBottom: 14 }}>— ご購入方法の選択 · ACCOUNT</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+              gap: 24,
+            }}
+          >
             <BrassFrame padding="28px 28px">
               <div
                 style={{
@@ -388,8 +405,8 @@ export default function CheckoutPage() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 420px',
-          gap: 56,
+          gridTemplateColumns: isNarrow ? '1fr' : '1fr 420px',
+          gap: isNarrow ? 36 : 56,
         }}
       >
         {/* 左:購入者 → クーポン → お支払い方法 */}
@@ -458,7 +475,7 @@ export default function CheckoutPage() {
                 }}
                 placeholder="任意"
                 disabled={applying}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: 1, minWidth: 0 }}
               />
               <button
                 onClick={() => void applyCoupon()}

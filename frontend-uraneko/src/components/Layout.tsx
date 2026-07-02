@@ -27,8 +27,10 @@ export default function Layout() {
           top: 0,
           zIndex: 10,
           display: 'flex',
+          flexWrap: 'wrap',
+          rowGap: 14,
           alignItems: 'center',
-          padding: '22px 60px',
+          padding: '18px clamp(16px, 4vw, 60px)',
           borderBottom: '1px solid rgba(201,169,97,0.22)',
           background:
             'linear-gradient(180deg, var(--color-deep), var(--color-bg))',
@@ -80,7 +82,8 @@ export default function Layout() {
             flex: 1,
             display: 'flex',
             justifyContent: 'center',
-            gap: 44,
+            gap: 'clamp(20px, 5vw, 44px)',
+            minWidth: 160,
             fontFamily: 'var(--font-sans)',
             fontSize: 11,
             letterSpacing: 4,
@@ -185,7 +188,7 @@ export default function Layout() {
         style={{
           maxWidth: 1280,
           margin: '0 auto',
-          padding: '56px 60px',
+          padding: 'clamp(28px, 6vw, 56px) clamp(16px, 4vw, 60px)',
         }}
       >
         <Outlet />
@@ -195,12 +198,14 @@ export default function Layout() {
       <footer
         style={{
           borderTop: '1px solid rgba(201,169,97,0.18)',
-          padding: '28px 60px',
+          padding: '24px clamp(16px, 4vw, 60px)',
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
           letterSpacing: 3,
           color: 'var(--dim)',
           display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
           justifyContent: 'space-between',
         }}
       >

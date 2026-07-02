@@ -34,7 +34,7 @@ export default function AgeGateModal() {
 
       {/* 上下のラベル */}
       <div
-        className="absolute left-[60px] right-[60px] top-7 flex justify-between"
+        className="absolute left-4 right-4 top-7 flex flex-wrap justify-between gap-x-4 gap-y-1 sm:left-[60px] sm:right-[60px]"
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
@@ -51,7 +51,7 @@ export default function AgeGateModal() {
         <div
           className="relative"
           style={{
-            padding: '56px 48px',
+            padding: 'clamp(32px, 8vw, 56px) clamp(20px, 6vw, 48px)',
             border: '1px solid rgba(201,169,97,0.7)',
             background: 'rgba(10,5,3,0.35)',
             backdropFilter: 'blur(4px)',
@@ -86,9 +86,9 @@ export default function AgeGateModal() {
           <div
             style={{
               fontFamily: 'var(--font-serif-jp)',
-              fontSize: 56,
+              fontSize: 'clamp(36px, 10vw, 56px)',
               fontWeight: 200,
-              letterSpacing: 14,
+              letterSpacing: 'clamp(6px, 2.5vw, 14px)',
               color: 'var(--color-fg)',
               lineHeight: 1,
             }}

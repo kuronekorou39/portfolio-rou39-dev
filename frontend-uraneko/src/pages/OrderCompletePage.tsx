@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { api, type OrderDetail } from '../lib/api';
+import { useIsNarrow } from '../lib/useIsNarrow';
 import { getIdToken } from '../lib/auth';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
@@ -9,6 +10,7 @@ import BrassFrame from '../components/bar/BrassFrame';
 
 export default function OrderCompletePage() {
   const { id } = useParams<{ id: string }>();
+  const isNarrow = useIsNarrow();
   const [params] = useSearchParams();
   const emailToken = params.get('token');
 
@@ -47,8 +49,8 @@ export default function OrderCompletePage() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 420px',
-          gap: 56,
+          gridTemplateColumns: isNarrow ? '1fr' : '1fr 420px',
+          gap: isNarrow ? 40 : 56,
         }}
       >
         {/* 左 */}
@@ -59,7 +61,7 @@ export default function OrderCompletePage() {
           <h1
             style={{
               fontFamily: 'var(--font-serif-jp)',
-              fontSize: 52,
+              fontSize: 'clamp(32px, 9vw, 52px)',
               fontWeight: 200,
               letterSpacing: 6,
               lineHeight: 1.25,

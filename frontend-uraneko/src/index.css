@@ -41,6 +41,12 @@ body,
   font-family: var(--font-sans);
 }
 
+/* スマホ幅で固定px要素がはみ出しても横スクロールさせない安全網 */
+html,
+body {
+  overflow-x: hidden;
+}
+
 /* 真鍮ダイヤ(四隅装飾) */
 .brass-diamond {
   position: absolute;

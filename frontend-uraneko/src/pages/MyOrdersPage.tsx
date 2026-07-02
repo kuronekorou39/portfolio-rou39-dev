@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type OrderSummary } from '../lib/api';
+import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
 import { getIdToken, beginGoogleLogin } from '../lib/auth';
 import Ornament from '../components/bar/Ornament';
@@ -31,6 +32,7 @@ function StatusBadge({ status }: { status: OrderSummary['status'] }) {
 }
 
 export default function MyOrdersPage() {
+  const isNarrow = useIsNarrow();
   const { user, loading } = useAuth();
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -102,8 +104,18 @@ export default function MyOrdersPage() {
   return (
     <div>
       {/* 会員マストヘッド */}
-      <BrassFrame padding="36px 40px" background="var(--color-panel)" style={{ marginBottom: 48 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 40 }}>
+      <BrassFrame
+        padding="clamp(22px, 5vw, 36px) clamp(20px, 5vw, 40px)"
+        background="var(--color-panel)"
+        style={{ marginBottom: 48 }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 'clamp(20px, 4vw, 40px)',
+          }}
+        >
           <div>
             <SectionLabel style={{ marginBottom: 8 }}>— MEMBER</SectionLabel>
             <div
@@ -124,6 +136,7 @@ export default function MyOrdersPage() {
                 letterSpacing: 3,
                 color: 'var(--muted)',
                 marginTop: 4,
+                overflowWrap: 'anywhere',
               }}
             >
               {user.email}
@@ -233,12 +246,12 @@ export default function MyOrdersPage() {
               key={o.order_id}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 160px 120px 120px',
+                gridTemplateColumns: isNarrow ? '1fr auto' : '1fr 160px 120px 120px',
                 alignItems: 'center',
-                padding: '20px 24px',
+                padding: isNarrow ? '16px 16px' : '20px 24px',
                 borderBottom:
                   i === orders.length - 1 ? 'none' : '1px solid rgba(201,169,97,0.12)',
-                gap: 24,
+                gap: isNarrow ? '10px 16px' : 24,
               }}
             >
               <div>

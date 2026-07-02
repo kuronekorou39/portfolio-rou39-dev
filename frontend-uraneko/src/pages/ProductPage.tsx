@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
+import { useIsNarrow } from '../lib/useIsNarrow';
 import Thumbnail from '../components/bar/Thumbnail';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
@@ -9,6 +10,7 @@ import BrassFrame from '../components/bar/BrassFrame';
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
+  const isNarrow = useIsNarrow();
   const [product, setProduct] = useState<Product | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -52,8 +54,8 @@ export default function ProductPage() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 460px',
-          gap: 56,
+          gridTemplateColumns: isNarrow ? '1fr' : '1fr 460px',
+          gap: isNarrow ? 40 : 56,
         }}
       >
         {/* 左:プレビュー */}
@@ -101,7 +103,7 @@ export default function ProductPage() {
           <h1
             style={{
               fontFamily: 'var(--font-serif-jp)',
-              fontSize: 40,
+              fontSize: 'clamp(28px, 8vw, 40px)',
               fontWeight: 200,
               letterSpacing: 4,
               lineHeight: 1.3,
@@ -169,7 +171,7 @@ export default function ProductPage() {
             <div
               style={{
                 fontFamily: 'var(--font-serif-jp)',
-                fontSize: 40,
+                fontSize: 'clamp(30px, 9vw, 40px)',
                 fontWeight: 300,
                 letterSpacing: 4,
                 color: 'var(--color-gold-bright)',
