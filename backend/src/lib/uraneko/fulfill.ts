@@ -48,14 +48,22 @@ export async function fulfillPaidOrder(order: Order): Promise<FulfillResult> {
     // 注文単位で冪等化: token_id 未設定のときだけ確定する。
     // paid 写像 IPN の並行到達 / 5xx 再送で二重フルフィルされても、
     // 勝つのは1実行だけ。負けた実行は自分が claim したトークンを在庫へ戻す。
+    // 注意: checkout は注文作成時に token_id を null「値」で書き込むため、
+    // DynamoDB 上は属性が存在する。attribute_not_exists だけだと初回フルフィルが
+    // 必ず条件不成立になるので、「null のまま」も未フルフィルとして受け入れる。
     await docClient.send(
       new UpdateCommand({
         TableName: ORDERS_TABLE,
         Key: { order_id: order.order_id },
-        ConditionExpression: 'attribute_not_exists(token_id)',
+        ConditionExpression: 'attribute_not_exists(token_id) OR token_id = :nullToken',
         UpdateExpression: 'SET #s = :s, token_id = :t, paid_at = :p',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':s': 'paid', ':t': token.token_id, ':p': paid_at },
+        ExpressionAttributeValues: {
+          ':s': 'paid',
+          ':t': token.token_id,
+          ':p': paid_at,
+          ':nullToken': null,
+        },
       }),
     );
   } catch (err: unknown) {
