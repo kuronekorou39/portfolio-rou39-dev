@@ -19,10 +19,10 @@ function StatusBadge({ status }: { status: OrderSummary['status'] }) {
         fontSize: 9,
         letterSpacing: 3,
         padding: '3px 9px',
-        color: paid ? '#120808' : failed ? '#e66' : 'var(--color-gold)',
+        color: paid ? '#0a0a0b' : failed ? '#e66' : 'var(--color-gold)',
         background: paid ? 'var(--color-gold)' : 'transparent',
         border: `1px solid ${
-          paid ? 'var(--color-gold)' : failed ? 'rgba(230,102,102,0.6)' : 'rgba(201,169,97,0.5)'
+          paid ? 'var(--color-gold)' : failed ? 'rgba(230,102,102,0.6)' : 'rgba(168,166,158,0.5)'
         }`,
       }}
     >
@@ -60,7 +60,7 @@ export default function MyOrdersPage() {
   if (!user)
     return (
       <div style={{ textAlign: 'center', padding: '60px 0' }}>
-        <SectionLabel style={{ marginBottom: 18 }}>— MEMBERS ONLY</SectionLabel>
+        <SectionLabel style={{ marginBottom: 18 }}>— ACCOUNT</SectionLabel>
         <p
           style={{
             fontFamily: 'var(--font-serif-jp)',
@@ -71,9 +71,9 @@ export default function MyOrdersPage() {
             marginBottom: 32,
           }}
         >
-          購入履歴のご確認には
+          記録の閲覧には
           <br />
-          会員ログインが必要です。
+          ログインが必要。
         </p>
         <a
           href="#"
@@ -117,17 +117,17 @@ export default function MyOrdersPage() {
           }}
         >
           <div>
-            <SectionLabel style={{ marginBottom: 8 }}>— MEMBER</SectionLabel>
+            <SectionLabel style={{ marginBottom: 8 }}>— ACCOUNT</SectionLabel>
             <div
               style={{
-                fontFamily: 'var(--font-serif-jp)',
-                fontSize: 28,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 18,
                 fontWeight: 300,
                 letterSpacing: 4,
                 color: 'var(--color-fg)',
               }}
             >
-              お客様
+              member
             </div>
             <div
               style={{
@@ -203,7 +203,7 @@ export default function MyOrdersPage() {
               color: 'var(--color-fg)',
             }}
           >
-            お預かり品
+            記録
           </h2>
         </div>
         <div
@@ -214,7 +214,7 @@ export default function MyOrdersPage() {
             color: 'var(--muted)',
           }}
         >
-          {orders.length} ITEMS
+          {orders.length} FILES
         </div>
       </div>
 
@@ -230,7 +230,7 @@ export default function MyOrdersPage() {
             letterSpacing: 2,
           }}
         >
-          まだお預かり品がございません。
+          記録なし。
         </p>
       ) : (
         <ul
@@ -238,7 +238,7 @@ export default function MyOrdersPage() {
             listStyle: 'none',
             padding: 0,
             margin: 0,
-            border: '1px solid rgba(201,169,97,0.25)',
+            border: '1px solid rgba(168,166,158,0.25)',
           }}
         >
           {orders.map((o, i) => (
@@ -250,7 +250,7 @@ export default function MyOrdersPage() {
                 alignItems: 'center',
                 padding: isNarrow ? '16px 16px' : '20px 24px',
                 borderBottom:
-                  i === orders.length - 1 ? 'none' : '1px solid rgba(201,169,97,0.12)',
+                  i === orders.length - 1 ? 'none' : '1px solid rgba(168,166,158,0.12)',
                 gap: isNarrow ? '10px 16px' : 24,
               }}
             >
@@ -296,11 +296,10 @@ export default function MyOrdersPage() {
                   <Link
                     to={`/order/${o.order_id}/complete`}
                     style={{
-                      fontFamily: 'var(--font-serif)',
-                      fontSize: 11,
-                      fontStyle: 'italic',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
                       letterSpacing: 3,
-                      color: 'var(--color-gold)',
+                      color: 'var(--color-gold-bright)',
                       textDecoration: 'underline',
                     }}
                   >

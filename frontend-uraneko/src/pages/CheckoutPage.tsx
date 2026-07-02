@@ -10,24 +10,24 @@ import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
 
 const CURRENCIES = [
-  { value: '', label: 'NOWPayments の画面で選ぶ(おすすめ)' },
-  { value: 'usdttrc20', label: 'USDT (TRC20)・手数料が安い' },
-  { value: 'usdc', label: 'USDC・手数料が安い' },
-  { value: 'ltc', label: 'LTC・手数料が安い' },
-  { value: 'btc', label: 'BTC オンチェーン・手数料が高め' },
+  { value: '', label: '決済画面で選ぶ(推奨)' },
+  { value: 'usdttrc20', label: 'USDT (TRC20) · 手数料 低' },
+  { value: 'usdc', label: 'USDC · 手数料 低' },
+  { value: 'ltc', label: 'LTC · 手数料 低' },
+  { value: 'btc', label: 'BTC オンチェーン · 手数料 高' },
 ];
 
 // サーバのエラーコード → 利用者向けの日本語メッセージ
 const ERROR_MESSAGES: Record<string, string> = {
-  sold_out: '申し訳ございません。ただ今この作品は在庫切れです。',
-  coupon_invalid: 'クーポンコードが無効です。',
-  coupon_expired: 'このクーポンは有効期限が切れています。',
-  coupon_exhausted: 'このクーポンは利用上限に達しました。',
-  coupon_not_applicable: 'このクーポンはこの作品には使えません。',
-  amount_too_small: '割引後の金額が最低取引額を下回るため決済できません。',
-  invalid_amount: '金額が不正です。もう一度お試しください。',
-  email_invalid: 'メールアドレスの形式が正しくありません。',
-  'email required': 'メールアドレスを入力してください。',
+  sold_out: '在庫なし。',
+  coupon_invalid: '無効なコード。',
+  coupon_expired: '期限切れのコード。',
+  coupon_exhausted: 'このコードは使い切られている。',
+  coupon_not_applicable: 'この作品には使えないコード。',
+  amount_too_small: '割引後の金額が最低取引額を下回る。',
+  invalid_amount: '金額が不正。やり直してください。',
+  email_invalid: 'メールアドレスの形式が不正。',
+  'email required': 'メールアドレスが必要。',
 };
 function friendlyError(msg: string): string {
   return ERROR_MESSAGES[msg] ?? msg;
@@ -48,7 +48,7 @@ const inputStyle: CSSProperties = {
   width: '100%',
   padding: '12px 14px',
   background: 'transparent',
-  border: '1px solid rgba(201,169,97,0.25)',
+  border: '1px solid rgba(168,166,158,0.25)',
   color: 'var(--color-fg)',
   fontFamily: 'var(--font-mono)',
   fontSize: 13,
@@ -64,12 +64,12 @@ const noteStyle: CSSProperties = {
   fontWeight: 300,
 };
 
-// ステッパー(01 会員選択 / 02 お支払い / 03 受領)
+// ステッパー(01 アカウント / 02 支払い / 03 受け渡し)
 function Stepper({ active }: { active: 1 | 2 | 3 }) {
   const steps = [
-    { n: '01', label: '会員' },
-    { n: '02', label: 'お支払い' },
-    { n: '03', label: '受領' },
+    { n: '01', label: 'アカウント' },
+    { n: '02', label: '支払い' },
+    { n: '03', label: '受け渡し' },
   ];
   return (
     <div
@@ -94,21 +94,19 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
               style={{
                 width: 'clamp(34px, 8vw, 44px)',
                 height: 'clamp(34px, 8vw, 44px)',
-                transform: 'rotate(45deg)',
                 border: '1px solid var(--color-gold)',
-                background: isActive ? 'var(--color-gold)' : 'transparent',
+                background: isActive ? 'var(--color-gold-bright)' : 'transparent',
                 display: 'grid',
                 placeItems: 'center',
               }}
             >
               <div
                 style={{
-                  transform: 'rotate(-45deg)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 10,
                   letterSpacing: 2,
                   color: isActive
-                    ? '#120808'
+                    ? '#0a0a0b'
                     : isDone
                     ? 'var(--color-gold)'
                     : 'var(--dim)',
@@ -136,7 +134,7 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
                 style={{
                   width: 'clamp(14px, 4vw, 40px)',
                   height: 1,
-                  background: 'rgba(201,169,97,0.3)',
+                  background: 'rgba(168,166,158,0.3)',
                 }}
               />
             )}
@@ -160,7 +158,7 @@ export default function CheckoutPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
-  // ステージ: 01 会員選択 → 02 お支払い
+  // ステージ: 01 アカウント → 02 支払い
   const [stage, setStage] = useState<'account' | 'payment'>('account');
   const [guestConfirmed, setGuestConfirmed] = useState(false);
   const [email, setEmail] = useState('');
@@ -194,7 +192,7 @@ export default function CheckoutPage() {
 
   function proceedAsGuest() {
     if (!EMAIL_RE.test(email)) {
-      setEmailErr('メールアドレスの形式が正しくありません');
+      setEmailErr('メールアドレスの形式が不正。');
       return;
     }
     setEmailErr(null);
@@ -211,7 +209,7 @@ export default function CheckoutPage() {
     if (!product) return;
     const code = coupon.trim();
     if (!code) {
-      setCouponErr('クーポンコードを入力してください');
+      setCouponErr('コードを入力。');
       return;
     }
     setApplying(true);
@@ -226,7 +224,7 @@ export default function CheckoutPage() {
       }
     } catch {
       setApplied(null);
-      setCouponErr('クーポンの確認に失敗しました。時間をおいて再度お試しください。');
+      setCouponErr('確認に失敗。時間をおいて再試行。');
     } finally {
       setApplying(false);
     }
@@ -243,7 +241,7 @@ export default function CheckoutPage() {
     setErr(null);
     // 未適用のまま入力されたコードは、適用して金額を確認してから購入してもらう
     if (coupon.trim() && !applied) {
-      setErr('クーポンコードは「適用」ボタンで確認してから購入にお進みください。');
+      setErr('コードは「適用」で確認してから進む。');
       return;
     }
     setSubmitting(true);
@@ -253,7 +251,7 @@ export default function CheckoutPage() {
       if (user) {
         idToken = await getIdToken();
         if (!idToken) {
-          setErr('ログインの有効期限が切れました。もう一度ログインしてください。');
+          setErr('セッション切れ。ログインし直してください。');
           setSubmitting(false);
           return;
         }
@@ -275,7 +273,7 @@ export default function CheckoutPage() {
       } else if (res.invoice_url) {
         window.location.href = res.invoice_url;
       } else {
-        setErr('決済URLの取得に失敗しました。時間をおいて再度お試しください。');
+        setErr('決済URLの取得に失敗。時間をおいて再試行。');
         setSubmitting(false);
       }
     } catch (e) {
@@ -315,7 +313,7 @@ export default function CheckoutPage() {
             {product.title} — ¥ {product.price_jpy.toLocaleString()}
           </div>
 
-          <SectionLabel style={{ marginBottom: 14 }}>— ご購入方法の選択 · ACCOUNT</SectionLabel>
+          <SectionLabel style={{ marginBottom: 14 }}>— ACCOUNT · 購入方法</SectionLabel>
           <div
             style={{
               display: 'grid',
@@ -337,9 +335,9 @@ export default function CheckoutPage() {
                 ログインして購入
               </div>
               <div style={{ ...noteStyle, marginBottom: 20 }}>
-                Google アカウントでログインします。
+                Google アカウントでログイン。
                 <br />
-                購入履歴がマイページに残り、ダウンロードURLをいつでも確認できます。
+                購入記録が残り、リンクをいつでも再取得できる。
               </div>
               <BarButton
                 onClick={() => void beginGoogleLogin(`/checkout/${id}`)}
@@ -363,11 +361,11 @@ export default function CheckoutPage() {
                 ログインせずに購入
               </div>
               <div style={{ ...noteStyle, marginBottom: 20 }}>
-                購入履歴は残りません。
+                記録は残らない。
                 <br />
-                ダウンロードURLは、ご入力のメールアドレスにお送りします。
+                リンクは入力したアドレスに送る。
               </div>
-              <label style={labelStyle}>EMAIL · ダウンロードURLの送信先</label>
+              <label style={labelStyle}>EMAIL · 送信先</label>
               <input
                 type="email"
                 value={email}
@@ -388,7 +386,7 @@ export default function CheckoutPage() {
                 </p>
               )}
               <BarButton onClick={proceedAsGuest} style={{ width: '100%', marginTop: 16 }}>
-                このメールアドレスで進む
+                このアドレスで進む
               </BarButton>
             </BrassFrame>
           </div>
@@ -397,7 +395,7 @@ export default function CheckoutPage() {
     );
   }
 
-  // ---- 02 お支払い ----
+  // ---- 02 支払い ----
   return (
     <div>
       <Stepper active={2} />
@@ -409,10 +407,10 @@ export default function CheckoutPage() {
           gap: isNarrow ? 36 : 56,
         }}
       >
-        {/* 左:購入者 → クーポン → お支払い方法 */}
+        {/* 左:購入者 → クーポン → 支払い方法 */}
         <div>
           {/* 購入者 */}
-          <SectionLabel style={{ marginBottom: 14 }}>— ご購入者 · ACCOUNT</SectionLabel>
+          <SectionLabel style={{ marginBottom: 14 }}>— BUYER · 購入者</SectionLabel>
           <div
             style={{
               display: 'flex',
@@ -420,7 +418,7 @@ export default function CheckoutPage() {
               alignItems: 'baseline',
               gap: 16,
               padding: '14px 16px',
-              border: '1px solid rgba(201,169,97,0.25)',
+              border: '1px solid rgba(168,166,158,0.25)',
               marginBottom: 28,
             }}
           >
@@ -444,7 +442,7 @@ export default function CheckoutPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {user ? '会員(購入履歴が残ります)' : 'ゲスト(履歴は残りません)'}
+              {user ? '会員 · 記録あり' : 'ゲスト · 記録なし'}
               {!user && (
                 <a
                   href="#"
@@ -461,9 +459,9 @@ export default function CheckoutPage() {
           </div>
 
           {/* クーポン */}
-          <SectionLabel style={{ marginBottom: 14 }}>— クーポン · COUPON</SectionLabel>
+          <SectionLabel style={{ marginBottom: 14 }}>— COUPON · コード</SectionLabel>
           <BrassFrame padding="22px 24px" style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>COUPON · クーポンコード(お持ちの方)</label>
+            <label style={labelStyle}>CODE · 所持者のみ</label>
             <div style={{ display: 'flex', gap: 10 }}>
               <input
                 type="text"
@@ -482,8 +480,8 @@ export default function CheckoutPage() {
                 disabled={applying || !coupon.trim() || applied !== null}
                 style={{
                   padding: '12px 22px',
-                  background: applied ? 'rgba(201,169,97,0.15)' : 'transparent',
-                  border: '1px solid rgba(201,169,97,0.6)',
+                  background: applied ? 'rgba(168,166,158,0.15)' : 'transparent',
+                  border: '1px solid rgba(168,166,158,0.6)',
                   color: 'var(--color-gold-bright)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 11,
@@ -513,15 +511,15 @@ export default function CheckoutPage() {
                 style={{
                   marginTop: 12,
                   padding: '10px 14px',
-                  border: '1px solid rgba(230,200,119,0.4)',
-                  background: 'rgba(230,200,119,0.07)',
+                  border: '1px solid rgba(184,181,172,0.4)',
+                  background: 'rgba(184,181,172,0.07)',
                   fontFamily: 'var(--font-serif-jp)',
                   fontSize: 12,
                   letterSpacing: 1.5,
                   color: 'var(--color-gold-bright)',
                 }}
               >
-                {applied.percent}% OFF を適用しました(−¥ {discount.toLocaleString()})
+                {applied.percent}% OFF 適用 · −¥ {discount.toLocaleString()}
                 <a
                   href="#"
                   onClick={(e) => {
@@ -536,8 +534,8 @@ export default function CheckoutPage() {
             )}
           </BrassFrame>
 
-          {/* お支払い方法(無料なら不要) */}
-          <SectionLabel style={{ marginBottom: 14 }}>— お支払い方法 · METHOD</SectionLabel>
+          {/* 支払い方法(無料なら不要) */}
+          <SectionLabel style={{ marginBottom: 14 }}>— PAYMENT · 支払い</SectionLabel>
           {isFree ? (
             <BrassFrame padding="24px 28px" style={{ marginBottom: 20 }}>
               <div
@@ -550,9 +548,9 @@ export default function CheckoutPage() {
                   color: 'var(--color-fg)',
                 }}
               >
-                クーポンの適用により、お支払いは不要です。
+                支払いは発生しない。
                 <br />
-                「購入を完了する」を押すと、ダウンロードURLをメールでお送りします。
+                「取引を完了する」でダウンロードリンクをメールに送る。
               </div>
             </BrassFrame>
           ) : (
@@ -583,7 +581,7 @@ export default function CheckoutPage() {
                     letterSpacing: 3,
                     padding: '3px 9px',
                     color: 'var(--color-gold-bright)',
-                    border: '1px solid rgba(201,169,97,0.6)',
+                    border: '1px solid rgba(168,166,158,0.6)',
                   }}
                 >
                   SELECTED
@@ -591,15 +589,14 @@ export default function CheckoutPage() {
               </div>
               <div
                 style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontStyle: 'italic',
-                  fontSize: 12,
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
                   letterSpacing: 2,
                   color: 'var(--muted)',
                   marginBottom: 20,
                 }}
               >
-                Paid via NOWPayments · BTC / Lightning / USDT / USDC / LTC
+                via nowpayments · btc / lightning / usdt / usdc / ltc
               </div>
 
               <div style={{ marginBottom: 4 }}>
@@ -626,8 +623,8 @@ export default function CheckoutPage() {
                 style={{
                   marginTop: 18,
                   padding: '14px 16px',
-                  border: '1px solid rgba(201,169,97,0.25)',
-                  background: 'rgba(201,169,97,0.05)',
+                  border: '1px solid rgba(168,166,158,0.25)',
+                  background: 'rgba(168,166,158,0.05)',
                 }}
               >
                 <div
@@ -642,9 +639,7 @@ export default function CheckoutPage() {
                   — 送金手数料の目安 —
                 </div>
                 <div style={{ ...noteStyle, marginBottom: 10 }}>
-                  通貨によって、お客様が払う送金手数料が変わります。
-                  <br />
-                  安く済ませたい方は下の表をご参考にどうぞ。
+                  送金手数料は通貨で変わる。目安:
                 </div>
 
                 <div
@@ -683,9 +678,9 @@ export default function CheckoutPage() {
                     fontWeight: 300,
                   }}
                 >
-                  BTC で送る場合、<strong style={{ color: 'var(--muted)' }}>GMO コイン・DMM Bitcoin・SBI VC トレード</strong>
-                  からなら送金が無料です。<strong style={{ color: 'var(--muted)' }}>bitFlyer・Coincheck</strong>
-                  からだと約 ¥5,000 かかってしまうのでご注意ください。
+                  BTC は <strong style={{ color: 'var(--muted)' }}>GMOコイン / DMM Bitcoin / SBI VC</strong>
+                  からなら送金無料。<strong style={{ color: 'var(--muted)' }}>bitFlyer / Coincheck</strong>
+                  は約 ¥5,000 かかる。
                 </div>
               </div>
             </BrassFrame>
@@ -700,14 +695,14 @@ export default function CheckoutPage() {
               lineHeight: 1.8,
             }}
           >
-            ※ クレジットカード決済は取扱いございません。
-            <br />※ お支払い完了後、ご登録のメールに専用ダウンロードURLをお送りします。
+            ※ カード決済は無い。
+            <br />※ 支払い確認後、専用リンクをメールで送る。
           </p>
         </div>
 
         {/* 右:明細 */}
         <div>
-          <SectionLabel style={{ marginBottom: 14 }}>— 御明細 · ORDER</SectionLabel>
+          <SectionLabel style={{ marginBottom: 14 }}>— ORDER · 明細</SectionLabel>
           <BrassFrame padding="28px 28px">
             <div style={{ marginBottom: 18 }}>
               <div
@@ -786,7 +781,7 @@ export default function CheckoutPage() {
                 justifyContent: 'space-between',
                 alignItems: 'baseline',
                 paddingTop: 18,
-                borderTop: '1px solid rgba(201,169,97,0.3)',
+                borderTop: '1px solid rgba(168,166,158,0.3)',
                 marginTop: 18,
               }}
             >
@@ -865,9 +860,9 @@ export default function CheckoutPage() {
                 }}
               >
                 {submitting
-                  ? '処理中...'
+                  ? '処理中……'
                   : isFree
-                  ? 'COMPLETE · 購入を完了する'
+                  ? 'COMPLETE · 取引を完了する'
                   : 'PROCEED · 送金へ進む'}
               </BarButton>
             </div>

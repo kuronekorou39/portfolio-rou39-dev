@@ -1,25 +1,15 @@
 import type { CSSProperties } from 'react';
 
-export default function Ornament({
-  mark = '✦',
-  style,
-}: {
-  mark?: string;
-  style?: CSSProperties;
-}) {
+// コールド化以前は中央にマーク(✦/❖)入りだった区切り線。現在は素の罫線のみ。
+export default function Ornament({ style }: { style?: CSSProperties }) {
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
         color: 'var(--color-gold)',
         ...style,
       }}
     >
-      <div className="brass-hairline" style={{ flex: 1 }} />
-      <div style={{ fontSize: 10, opacity: 0.8 }}>{mark}</div>
-      <div className="brass-hairline" style={{ flex: 1 }} />
+      <div className="brass-hairline" />
     </div>
   );
 }

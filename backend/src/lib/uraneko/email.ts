@@ -11,29 +11,28 @@ export async function sendDownloadEmail(params: {
 }): Promise<void> {
   const { to, productTitle, orderId, downloadPageUrl } = params;
 
-  const subject = `[uraneko.rou39.com] ご購入ありがとうございます - ${productTitle}`;
+  const subject = `[uraneko] 受け渡し — ${productTitle}`;
   const textBody = [
-    `${productTitle} のご購入ありがとうございます。`,
+    `${productTitle} の受け渡しリンク:`,
     ``,
-    `以下のURLから動画をダウンロードできます:`,
     downloadPageUrl,
     ``,
-    `※このURLはあなた専用です。他人と共有しないでください。`,
-    `※注文番号: ${orderId}`,
+    `※ このリンクは購入者専用。共有不可。`,
+    `※ 注文番号: ${orderId}`,
     ``,
     `---`,
-    `uraneko.rou39.com`,
+    `uraneko — private archive`,
   ].join('\n');
 
   const htmlBody = `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:20px">
-      <h2 style="color:#222">${escapeHtml(productTitle)} のご購入ありがとうございます</h2>
-      <p>以下のリンクから動画をダウンロードできます:</p>
-      <p><a href="${escapeAttr(downloadPageUrl)}" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px">動画をダウンロード</a></p>
-      <p style="color:#b00">※このURLはあなた専用です。他人と共有しないでください。</p>
+      <h2 style="color:#222">${escapeHtml(productTitle)} — 受け渡し</h2>
+      <p>以下のリンクから取得できます:</p>
+      <p><a href="${escapeAttr(downloadPageUrl)}" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px">ダウンロード</a></p>
+      <p style="color:#555">※ このリンクは購入者専用。共有不可。</p>
       <p style="color:#888;font-size:12px">注文番号: ${escapeHtml(orderId)}</p>
       <hr style="border:none;border-top:1px solid #ddd;margin:30px 0" />
-      <p style="color:#888;font-size:12px">uraneko.rou39.com</p>
+      <p style="color:#888;font-size:12px">uraneko — private archive</p>
     </div>
   `;
 

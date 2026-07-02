@@ -17,23 +17,22 @@ export default function NotFoundPage() {
           margin: 0,
         }}
       >
-        迷い子
+        該当なし
       </h1>
       <div
         style={{
-          fontFamily: 'var(--font-serif)',
-          fontStyle: 'italic',
-          fontSize: 14,
+          fontFamily: 'var(--font-mono)',
+          fontSize: 12,
           letterSpacing: 3,
           color: 'var(--muted)',
           marginTop: 8,
         }}
       >
-        A page that is not here.
+        nothing here.
       </div>
-      <Ornament mark="✦" style={{ margin: '36px auto', maxWidth: 280 }} />
+      <Ornament style={{ margin: '36px auto', maxWidth: 280 }} />
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <BarButton variant="outline">← 入口へ戻る</BarButton>
+        <BarButton variant="outline">← INDEX に戻る</BarButton>
       </Link>
     </div>
   );

@@ -36,8 +36,8 @@ export default function Thumbnail({
         aspectRatio: ratio,
         overflow: 'hidden',
         background:
-          'radial-gradient(ellipse at 50% -10%, #4a0f1a 0%, #2a0811 40%, #180508 75%, #080203 100%)',
-        border: '1px solid rgba(201,169,97,0.3)',
+          'radial-gradient(ellipse at 50% -10%, #1c1c20 0%, #131316 40%, #0d0d0f 75%, #060607 100%)',
+        border: '1px solid rgba(168,166,158,0.3)',
         ...style,
       }}
     >
@@ -51,7 +51,7 @@ export default function Thumbnail({
           width: '140%',
           height: 140,
           background:
-            'radial-gradient(ellipse, rgba(201,169,97,0.28) 0%, transparent 65%)',
+            'radial-gradient(ellipse, rgba(200,198,190,0.12) 0%, transparent 65%)',
           pointerEvents: 'none',
         }}
       />
@@ -130,8 +130,8 @@ export default function Thumbnail({
             letterSpacing: 3,
             padding: '3px 9px',
             color: 'var(--color-gold-bright)',
-            border: '1px solid rgba(201,169,97,0.6)',
-            background: 'rgba(10,5,3,0.4)',
+            border: '1px solid rgba(168,166,158,0.6)',
+            background: 'rgba(10,10,11,0.45)',
             fontFamily: 'var(--font-sans)',
             textTransform: 'uppercase',
           }}
@@ -181,10 +181,9 @@ export default function Thumbnail({
           {subtitle && (
             <div
               style={{
-                fontFamily: 'var(--font-serif)',
-                fontStyle: 'italic',
-                fontSize: cover ? 15 : 12,
-                letterSpacing: 2,
+                fontFamily: 'var(--font-mono)',
+                fontSize: cover ? 12 : 10,
+                letterSpacing: 3,
                 color: 'var(--muted)',
                 marginTop: 10,
                 fontWeight: 300,
@@ -240,9 +239,9 @@ export default function Thumbnail({
             position: 'absolute',
             bottom: 14,
             left: 22,
-            fontFamily: 'var(--font-serif)',
-            fontSize: 12,
-            color: 'var(--color-gold)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            color: 'var(--color-gold-bright)',
             letterSpacing: 2,
           }}
         >

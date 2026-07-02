@@ -45,7 +45,7 @@ export default function ProductPage() {
         }}
       >
         <Link to="/" style={{ color: 'var(--dim)', textDecoration: 'none' }}>
-          COLLECTION
+          INDEX
         </Link>
         <span style={{ margin: '0 12px' }}>/</span>
         <span style={{ color: 'var(--muted)' }}>{product.product_id.toUpperCase()}</span>
@@ -68,9 +68,9 @@ export default function ProductPage() {
             subtitle="preview"
           />
 
-          <Ornament mark="❖" style={{ margin: '40px 0' }} />
+          <Ornament style={{ margin: '40px 0' }} />
 
-          <SectionLabel style={{ marginBottom: 14 }}>— 作品について · SYNOPSIS</SectionLabel>
+          <SectionLabel style={{ marginBottom: 14 }}>— DESCRIPTION · 内容</SectionLabel>
           <p
             style={{
               fontFamily: 'var(--font-serif-jp)',
@@ -114,7 +114,7 @@ export default function ProductPage() {
             {product.title}
           </h1>
 
-          <Ornament mark="✦" style={{ margin: '28px 0', maxWidth: 180 }} />
+          <Ornament style={{ margin: '28px 0', maxWidth: 180 }} />
 
           {/* スペック */}
           <div
@@ -182,26 +182,25 @@ export default function ProductPage() {
             </div>
             <div
               style={{
-                fontFamily: 'var(--font-serif)',
-                fontStyle: 'italic',
-                fontSize: 11,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
                 letterSpacing: 2,
                 color: 'var(--dim)',
                 marginTop: 6,
               }}
             >
-              payable in crypto · BTC / USDT / USDC / LTC
+              crypto only · btc / usdt / usdc / ltc
             </div>
           </BrassFrame>
 
           {product.available === false ? (
             <BarButton size="lg" disabled style={{ width: '100%', opacity: 0.5 }}>
-              SOLD OUT · 在庫切れ
+              OUT OF STOCK · 在庫なし
             </BarButton>
           ) : (
             <Link to={`/checkout/${product.product_id}`} style={{ textDecoration: 'none' }}>
               <BarButton size="lg" style={{ width: '100%' }}>
-                BUY NOW · 購入へ進む
+                ACQUIRE · 入手する
               </BarButton>
             </Link>
           )}
@@ -216,8 +215,7 @@ export default function ProductPage() {
               lineHeight: 1.8,
             }}
           >
-            ※ 本作品には購入者固有の不可視透かしが埋め込まれます。
-            <br />※ 流出時には購入者の特定が可能です。
+            ※ 複製には購入者固有の識別子が埋め込まれる。
           </p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { beginGoogleLogin } from '../lib/auth';
 
 const NAV_ITEMS: { to: string; label: string }[] = [
-  { to: '/', label: 'COLLECTION' },
+  { to: '/', label: 'INDEX' },
   { to: '/my/orders', label: 'LIBRARY' },
 ];
 
@@ -31,7 +31,7 @@ export default function Layout() {
           rowGap: 14,
           alignItems: 'center',
           padding: '18px clamp(16px, 4vw, 60px)',
-          borderBottom: '1px solid rgba(201,169,97,0.22)',
+          borderBottom: '1px solid rgba(168,166,158,0.22)',
           background:
             'linear-gradient(180deg, var(--color-deep), var(--color-bg))',
         }}
@@ -64,15 +64,14 @@ export default function Layout() {
           </span>
           <span
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 10,
-              letterSpacing: 6,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              letterSpacing: 4,
               color: 'var(--color-gold)',
               marginTop: 2,
             }}
           >
-            URA · NEKO — MEMBERS ONLY
+            private archive — 18+
           </span>
         </Link>
 
@@ -139,7 +138,7 @@ export default function Layout() {
               <span
                 style={{
                   padding: '6px 14px',
-                  border: '1px solid rgba(201,169,97,0.6)',
+                  border: '1px solid rgba(168,166,158,0.6)',
                   fontSize: 10,
                   letterSpacing: 3,
                   color: 'var(--color-gold)',
@@ -197,7 +196,7 @@ export default function Layout() {
       {/* フッター */}
       <footer
         style={{
-          borderTop: '1px solid rgba(201,169,97,0.18)',
+          borderTop: '1px solid rgba(168,166,158,0.18)',
           padding: '24px clamp(16px, 4vw, 60px)',
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
@@ -209,8 +208,8 @@ export default function Layout() {
           justifyContent: 'space-between',
         }}
       >
-        <span>URANEKO · ROU39.COM</span>
-        <span>R—18 · MEMBERS ONLY</span>
+        <span>uraneko — private archive</span>
+        <span style={{ color: 'var(--color-accent)' }}>18+ · rou39.com</span>
       </footer>
     </div>
   );

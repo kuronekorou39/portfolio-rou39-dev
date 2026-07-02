@@ -9,7 +9,7 @@ export default function AgeGateModal() {
       className="fixed inset-0 z-50 overflow-hidden"
       style={{
         background:
-          'radial-gradient(ellipse at 50% 40%, #4a0f1a 0%, #2a0811 35%, #160608 70%, #060203 100%)',
+          'radial-gradient(ellipse at 50% 40%, #17171a 0%, #0e0e10 35%, #08080a 70%, #050506 100%)',
       }}
     >
       {/* 縦方向のベルベットひだ */}
@@ -28,7 +28,7 @@ export default function AgeGateModal() {
         style={{
           top: -200,
           background:
-            'radial-gradient(ellipse, rgba(201,169,97,0.25) 0%, transparent 60%)',
+            'radial-gradient(ellipse, rgba(168,166,158,0.25) 0%, transparent 60%)',
         }}
       />
 
@@ -42,8 +42,8 @@ export default function AgeGateModal() {
           color: 'var(--dim)',
         }}
       >
-        <span>EST. 令和八年 · URANEKO · ROU39</span>
-        <span>MEMBERS ONLY · R—18</span>
+        <span>uraneko — private archive</span>
+        <span style={{ color: 'var(--color-accent)' }}>18+ only</span>
       </div>
 
       {/* 中央の真鍮額縁 */}
@@ -52,7 +52,7 @@ export default function AgeGateModal() {
           className="relative"
           style={{
             padding: 'clamp(32px, 8vw, 56px) clamp(20px, 6vw, 48px)',
-            border: '1px solid rgba(201,169,97,0.7)',
+            border: '1px solid rgba(168,166,158,0.7)',
             background: 'rgba(10,5,3,0.35)',
             backdropFilter: 'blur(4px)',
           }}
@@ -62,7 +62,7 @@ export default function AgeGateModal() {
             className="pointer-events-none absolute"
             style={{
               inset: 8,
-              border: '1px solid rgba(201,169,97,0.3)',
+              border: '1px solid rgba(168,166,158,0.3)',
             }}
           />
           {/* 四隅のダイヤ */}
@@ -80,7 +80,7 @@ export default function AgeGateModal() {
               marginBottom: 28,
             }}
           >
-            — 御入店 · ENTRANCE —
+            — ACCESS —
           </div>
 
           <div
@@ -97,16 +97,15 @@ export default function AgeGateModal() {
           </div>
           <div
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 16,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
               letterSpacing: 6,
               color: 'var(--color-gold-bright)',
               marginTop: 14,
               fontWeight: 300,
             }}
           >
-            URA · NEKO
+            private archive
           </div>
 
           {/* 装飾区切り */}
@@ -129,22 +128,21 @@ export default function AgeGateModal() {
               marginBottom: 8,
             }}
           >
-            本サイトはアダルトコンテンツを含みます。
+            成人向けの映像アーカイブ。
             <br />
-            閲覧には 18 歳以上であることが必要です。
+            18歳未満は閲覧できません。
           </p>
           <p
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 12,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
               lineHeight: 1.8,
               color: 'var(--dim)',
-              letterSpacing: 1.5,
+              letterSpacing: 2,
               marginBottom: 36,
             }}
           >
-            This site is for verified adults only.
+            18+ only. no exceptions.
           </p>
 
           <div className="flex gap-3">
@@ -153,35 +151,35 @@ export default function AgeGateModal() {
               style={{
                 flex: 1,
                 padding: '12px 18px',
-                fontFamily: 'var(--font-serif)',
-                fontSize: 12,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
                 fontWeight: 500,
-                letterSpacing: 5,
+                letterSpacing: 3,
                 color: 'var(--color-gold)',
                 background: 'transparent',
-                border: '1px solid rgba(201,169,97,0.6)',
+                border: '1px solid rgba(168,166,158,0.6)',
                 cursor: 'pointer',
                 transition: 'background 150ms',
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.background = 'rgba(201,169,97,0.08)')
+                (e.currentTarget.style.background = 'rgba(168,166,158,0.08)')
               }
               onMouseLeave={(e) =>
                 (e.currentTarget.style.background = 'transparent')
               }
             >
-              退出
+              閉じる
             </button>
             <button
               onClick={confirm}
               style={{
                 flex: 1.3,
                 padding: '12px 18px',
-                fontFamily: 'var(--font-serif)',
-                fontSize: 12,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
                 fontWeight: 500,
-                letterSpacing: 7,
-                color: '#120808',
+                letterSpacing: 3,
+                color: '#0a0a0b',
                 background: 'var(--color-gold)',
                 border: '1px solid var(--color-gold)',
                 cursor: 'pointer',
@@ -194,7 +192,7 @@ export default function AgeGateModal() {
                 (e.currentTarget.style.background = 'var(--color-gold)')
               }
             >
-              ENTER · 入店する
+              18歳以上 — 入る
             </button>
           </div>
         </div>

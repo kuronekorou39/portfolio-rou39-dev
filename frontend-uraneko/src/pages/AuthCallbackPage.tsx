@@ -44,7 +44,7 @@ export default function AuthCallbackPage() {
           letterSpacing: 2,
         }}
       >
-        {err ? err : '楽屋口を確認しております...'}
+        {err ? err : '照合中……'}
       </p>
     </div>
   );

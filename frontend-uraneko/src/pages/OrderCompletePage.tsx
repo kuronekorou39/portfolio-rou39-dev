@@ -56,7 +56,7 @@ export default function OrderCompletePage() {
         {/* 左 */}
         <div>
           <SectionLabel style={{ marginBottom: 18 }}>
-            — {paid ? 'THANK YOU' : 'AWAITING CONFIRMATION'}
+            — {paid ? 'DELIVERED' : 'AWAITING CONFIRMATION'}
           </SectionLabel>
           <h1
             style={{
@@ -70,44 +70,35 @@ export default function OrderCompletePage() {
             }}
           >
             {paid ? (
-              <>
-                ありがとう
-                <br />
-                ございました。
-              </>
+              <>受け渡し完了。</>
             ) : (
-              <>
-                送金を
-                <br />
-                お待ちしております。
-              </>
+              <>送金待ち。</>
             )}
           </h1>
           <div
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 16,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 12,
               letterSpacing: 3,
               color: 'var(--muted)',
               marginTop: 14,
               fontWeight: 300,
             }}
           >
-            {paid ? 'Your private copy is ready.' : 'Waiting for network confirmations.'}
+            {paid ? 'your copy is ready.' : 'waiting for confirmations.'}
           </div>
 
-          <Ornament mark="❖" style={{ margin: '36px 0', maxWidth: 320 }} />
+          <Ornament style={{ margin: '36px 0', maxWidth: 320 }} />
 
           {paid && order.download_url && (
             <>
-              <SectionLabel style={{ marginBottom: 14 }}>— お預かり品 · DELIVERED</SectionLabel>
+              <SectionLabel style={{ marginBottom: 14 }}>— FILE · 受け渡し</SectionLabel>
               <a
                 href={order.download_url}
                 download
                 style={{ textDecoration: 'none' }}
               >
-                <BarButton size="lg">↓ DOWNLOAD · 動画を取得</BarButton>
+                <BarButton size="lg">↓ DOWNLOAD · 取得</BarButton>
               </a>
               {order.download_url_expires_in && (
                 <p
@@ -120,8 +111,8 @@ export default function OrderCompletePage() {
                     lineHeight: 1.8,
                   }}
                 >
-                  ※ このURLはあなた専用です。他人との共有は絶対にお控えください。
-                  <br />※ 有効期限 {Math.floor(order.download_url_expires_in / 60)} 分 · 透かしにより流出時の特定が可能
+                  ※ このリンクは購入者専用。共有不可。
+                  <br />※ 有効期限 {Math.floor(order.download_url_expires_in / 60)} 分。
                 </p>
               )}
             </>
@@ -158,7 +149,7 @@ export default function OrderCompletePage() {
 
           <div style={{ marginTop: 48, display: 'flex', gap: 14 }}>
             <Link to="/" style={{ textDecoration: 'none' }}>
-              <BarButton variant="outline">← コレクションへ戻る</BarButton>
+              <BarButton variant="outline">← INDEX に戻る</BarButton>
             </Link>
           </div>
         </div>
@@ -172,40 +163,15 @@ export default function OrderCompletePage() {
                 position: 'absolute',
                 top: 18,
                 right: 18,
-                width: 82,
-                height: 82,
-                borderRadius: '50%',
-                border: `2px solid ${paid ? 'var(--color-gold)' : 'rgba(201,169,97,0.35)'}`,
-                display: 'grid',
-                placeItems: 'center',
-                transform: 'rotate(-8deg)',
-                boxShadow: paid ? 'inset 0 0 20px rgba(201,169,97,0.25)' : 'none',
+                padding: '5px 10px',
+                border: `1px solid ${paid ? 'var(--color-gold-bright)' : 'rgba(168,166,158,0.35)'}`,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9,
+                letterSpacing: 3,
+                color: paid ? 'var(--color-gold-bright)' : 'var(--dim)',
               }}
             >
-              <div style={{ textAlign: 'center' }}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-serif-jp)',
-                    fontSize: 14,
-                    fontWeight: 300,
-                    letterSpacing: 3,
-                    color: paid ? 'var(--color-gold-bright)' : 'var(--dim)',
-                  }}
-                >
-                  {paid ? '領収' : '待機'}
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 8,
-                    letterSpacing: 2,
-                    color: paid ? 'var(--color-gold)' : 'var(--dim)',
-                    marginTop: 2,
-                  }}
-                >
-                  {paid ? 'PAID' : 'PENDING'}
-                </div>
-              </div>
+              {paid ? 'PAID' : 'PENDING'}
             </div>
 
             <div

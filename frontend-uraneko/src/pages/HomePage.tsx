@@ -29,7 +29,7 @@ export default function HomePage() {
       >
         <div>
           <SectionLabel style={{ marginBottom: 18 }}>
-            — COLLECTION № I · THE FIRST DOSSIER
+            — ARCHIVE 001
           </SectionLabel>
           <h1
             style={{
@@ -42,24 +42,21 @@ export default function HomePage() {
               color: 'var(--color-fg)',
             }}
           >
-            夜の<span style={{ color: 'var(--color-gold)' }}>帳</span>が
-            <br />
-            降りる前に。
+            表にない<span style={{ color: 'var(--color-gold-bright)' }}>棚</span>。
           </h1>
           <div
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 16,
-              letterSpacing: 3,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 12,
+              letterSpacing: 4,
               color: 'var(--muted)',
               marginTop: 18,
               fontWeight: 300,
             }}
           >
-            Private works, for members only.
+            unlisted private works.
           </div>
-          <Ornament mark="❖" style={{ margin: '32px 0', maxWidth: 260 }} />
+          <Ornament style={{ margin: '32px 0', maxWidth: 260 }} />
           <p
             style={{
               fontFamily: 'var(--font-serif-jp)',
@@ -70,9 +67,9 @@ export default function HomePage() {
               maxWidth: 440,
             }}
           >
-            会員制映像販売所「uraneko」。
+            会員制の映像アーカイブ。
             <br />
-            一本ごとに固有の印を刻んだ、個別配信作品をお届けいたします。
+            作品ごとに、購入者だけの複製を渡す。
           </p>
         </div>
 
@@ -89,7 +86,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 品書セクション */}
+      {/* 収蔵一覧セクション */}
       <section>
         <div
           style={{
@@ -101,7 +98,7 @@ export default function HomePage() {
         >
           <div>
             <SectionLabel style={{ marginBottom: 10 }}>
-              — THIS MONTH&apos;S SELECTION
+              — INDEX
             </SectionLabel>
             <h2
               style={{
@@ -113,7 +110,7 @@ export default function HomePage() {
                 color: 'var(--color-fg)',
               }}
             >
-              品書
+              収蔵
             </h2>
           </div>
           <div
@@ -124,7 +121,7 @@ export default function HomePage() {
               color: 'var(--muted)',
             }}
           >
-            {products ? `${products.length} WORKS` : '—'}
+            {products ? `${products.length} FILES` : '—'}
           </div>
         </div>
 
@@ -150,7 +147,7 @@ export default function HomePage() {
               letterSpacing: 2,
             }}
           >
-            現在お出しできる品がございません。
+            現在、収蔵はない。
           </p>
         )}
 
