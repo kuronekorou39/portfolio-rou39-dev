@@ -7,7 +7,7 @@
  */
 import { createRequire } from 'module';
 import { execSync } from 'child_process';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHmac } from 'crypto';
 
 const require = createRequire(new URL('../../backend/', import.meta.url).href);
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
@@ -20,20 +20,39 @@ const {
   QueryCommand,
   ScanCommand,
 } = require('@aws-sdk/lib-dynamodb');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
 export const REGION = 'ap-northeast-1';
 export const PRODUCTS_TABLE = 'uraneko-video-products';
 export const TOKENS_TABLE = 'uraneko-video-tokens';
+export const ORDERS_TABLE = 'uraneko-orders';
 export const COUPONS_TABLE = 'uraneko-coupons';
 export const STATUS_GSI = 'by_product_status';
 export const PRODUCT_ID_RE = /^[a-z0-9-]+$/;
+// 発行URL(署名DLリンク)再現用。backend の secrets-stack / order-token.ts と一致させること。
+export const ORDER_ACCESS_SECRET_NAME = 'uraneko/order-access-secret';
+export const SITE_BASE_URL = 'https://uraneko.rou39.com';
+const ORDER_TOKEN_TTL_SEC = 60 * 60 * 24 * 30; // order-token.ts と同じ 30 日
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: REGION }));
 let _s3;
 function s3() {
   if (!_s3) _s3 = new S3Client({ region: REGION });
   return _s3;
+}
+let _sm;
+function sm() {
+  if (!_sm) _sm = new SecretsManagerClient({ region: REGION });
+  return _sm;
+}
+let _orderSecret;
+async function orderAccessSecret() {
+  if (_orderSecret) return _orderSecret;
+  const res = await sm().send(new GetSecretValueCommand({ SecretId: ORDER_ACCESS_SECRET_NAME }));
+  if (!res.SecretString) invalid(`${ORDER_ACCESS_SECRET_NAME} が未設定です`);
+  _orderSecret = res.SecretString;
+  return _orderSecret;
 }
 
 let _bucket;
@@ -347,4 +366,69 @@ export async function deleteCoupon(coupon_code) {
   if (!coupon_code) invalid('coupon_code required');
   await ddb.send(new DeleteCommand({ TableName: COUPONS_TABLE, Key: { coupon_code } }));
   return { coupon_code, deleted: true };
+}
+
+// --- orders(購入・発行の紐づけ一覧) ---
+
+// 全注文を新しい順で返す。注文レコードに token_id / email / coupon_code / 金額が
+// 含まれるので、これ自体が「注文 - 動画トークン - 購入者 - クーポン」の紐づけになる。
+export async function listOrders() {
+  const items = [];
+  let ExclusiveStartKey;
+  do {
+    const res = await ddb.send(new ScanCommand({ TableName: ORDERS_TABLE, ExclusiveStartKey }));
+    items.push(...(res.Items ?? []));
+    ExclusiveStartKey = res.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
+  items.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  return items;
+}
+
+/**
+ * 購入者に発行された署名付きダウンロードURLを再生成する。
+ * backend/src/lib/uraneko/order-token.ts と同一形式(<order_id>.<exp>.<hmac>)。
+ * メール紛失時の再発行や、管理画面での確認に使う。
+ */
+export async function downloadUrlFor(order_id) {
+  if (!order_id) invalid('order_id required');
+  const order = (await ddb.send(new GetCommand({ TableName: ORDERS_TABLE, Key: { order_id } }))).Item;
+  if (!order) invalid(`order not found: ${order_id}`);
+  const secret = await orderAccessSecret();
+  const exp = Math.floor(Date.now() / 1000) + ORDER_TOKEN_TTL_SEC;
+  const payload = `${order_id}.${exp}`;
+  const mac = createHmac('sha256', secret).update(payload).digest('hex').slice(0, 32);
+  const token = `${payload}.${mac}`;
+  return {
+    order_id,
+    status: order.status,
+    url: `${SITE_BASE_URL}/order/${order_id}/complete?token=${token}`,
+    expires_at: new Date(exp * 1000).toISOString(),
+  };
+}
+
+/**
+ * 未割当トークンを1件削除する(DDB + S3 の動画本体)。テストトークンの入れ替え用。
+ * 販売済み(assigned)は購入者のDLを壊すので削除不可。
+ */
+export async function deleteToken(token_id) {
+  if (!token_id) invalid('token_id required');
+  const cur = (await ddb.send(new GetCommand({ TableName: TOKENS_TABLE, Key: { token_id } }))).Item;
+  if (!cur) invalid(`token not found: ${token_id}`);
+  if (cur.status !== 'unassigned') {
+    invalid('販売済み(assigned)のトークンは削除できません(購入者のダウンロードが壊れます)');
+  }
+  // 先に DDB を条件付きで消してから S3。未割当のまま消せた場合のみ実体を消す。
+  await ddb.send(
+    new DeleteCommand({
+      TableName: TOKENS_TABLE,
+      Key: { token_id },
+      ConditionExpression: '#s = :u',
+      ExpressionAttributeNames: { '#s': 'status' },
+      ExpressionAttributeValues: { ':u': 'unassigned' },
+    }),
+  );
+  if (cur.s3_key) {
+    await s3().send(new DeleteObjectCommand({ Bucket: assetsBucket(), Key: cur.s3_key }));
+  }
+  return { token_id, deleted: true, s3_key: cur.s3_key ?? null };
 }

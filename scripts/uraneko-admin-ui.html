@@ -77,7 +77,10 @@
       <div class="field" style="flex:1; min-width:280px"><label>この PC 上の mp4 パス</label><input id="ing_path" placeholder="C:\\path\\to\\stego.mp4" style="width:100%"></div>
       <button onclick="ingest()">投入(在庫+1)</button>
     </div>
-    <div class="hint">S3 に動画を置き、未割当トークンを1件作成します(= 在庫+1)。bits は未指定なら自動生成(テスト用)。本番は ghost-code 生成物を使ってください。</div>
+    <div class="row">
+      <div class="field" style="flex:1; min-width:280px"><label>ghost code(bits・40桁の 0/1。動画に焼いた実コードを記録)</label><input id="ing_bits" placeholder="例: 0110…(空欄=自動生成。本番は実コードを入れる)" style="width:100%" class="mono"></div>
+    </div>
+    <div class="hint">S3 に動画を置き、未割当トークンを1件作成します(= 在庫+1)。<strong>ghost code は動画に埋め込んだ透かしと同じ 40bit を入れてください</strong>(流出時の追跡に使う)。空欄だと自動生成の乱数になり、動画の実コードと一致しなくなります。</div>
   </section>
 
   <section>
@@ -106,6 +109,15 @@
       <button onclick="addCoupon()">発行</button>
     </div>
     <div class="hint">100%(無料)クーポンはコード16文字以上必須。空欄なら128bitで自動生成します。</div>
+  </section>
+
+  <section>
+    <h2>購入・発行 · ORDERS <button class="small" onclick="loadOrders()" style="margin-left:8px">更新</button></h2>
+    <table>
+      <thead><tr><th>注文ID</th><th>商品</th><th>状態</th><th>購入者メアド</th><th>動画トークン</th><th>クーポン</th><th>金額</th><th>日時</th><th>発行URL</th></tr></thead>
+      <tbody id="orders"><tr><td colspan="9" class="muted">読み込み中…</td></tr></tbody>
+    </table>
+    <div class="hint">1注文=1本のユニークな動画(トークン)。発行URLは購入者に送った署名付きDLリンクを再生成します(30日有効・メール紛失時の再発行に)。</div>
   </section>
 
   <section>
@@ -160,18 +172,23 @@ async function loadProducts() {
       const thumb = p.thumbnail_s3_key
         ? '<span class="badge on">✓</span>'
         : '<span class="badge off">—</span>';
+      const pid = esc(p.product_id);
       return '<tr>' +
-        '<td class="mono">' + esc(p.product_id) + '</td>' +
+        '<td class="mono">' + pid + '</td>' +
         '<td>' + esc(p.title) + '</td>' +
-        '<td><input type="number" value="' + p.price_jpy + '" style="width:100px" id="pr_' + esc(p.product_id) + '">' +
-          '<button class="small" onclick="savePrice(\'' + esc(p.product_id) + '\')">✓</button></td>' +
+        '<td><input type="number" value="' + p.price_jpy + '" style="width:100px" id="pr_' + pid + '">' +
+          '<button class="small" onclick="savePrice(\'' + pid + '\')">✓</button></td>' +
         '<td>' + thumb + '</td>' +
         '<td>' + pub + '</td>' +
         '<td>' + invBadge + '</td>' +
         '<td>' + inv.assigned + '</td>' +
-        '<td><button class="small" onclick="togglePublish(\'' + esc(p.product_id) + '\',' + (!p.published) + ')">' +
+        '<td style="white-space:nowrap">' +
+          '<button class="small" onclick="toggleTokens(\'' + pid + '\')">詳細</button> ' +
+          '<button class="small" onclick="togglePublish(\'' + pid + '\',' + (!p.published) + ')">' +
           (p.published ? '非公開に' : '公開に') + '</button></td>' +
-        '</tr>';
+        '</tr>' +
+        '<tr id="det_' + pid + '" style="display:none"><td colspan="8" style="background:#0f0909">' +
+          '<div id="detbody_' + pid + '" class="muted">…</div></td></tr>';
     }).join('');
   } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
 }
@@ -208,13 +225,97 @@ async function createProduct() {
 }
 
 async function ingest() {
+  const bits = document.getElementById('ing_bits').value.trim();
+  if (bits && !/^[01]{40}$/.test(bits)) return toast('ghost code は 40 桁の 0/1 で入力してください', true);
   const body = {
     product_id: document.getElementById('ing_product').value,
     file_path: document.getElementById('ing_path').value.trim(),
+    bits: bits || undefined,
   };
   if (!body.file_path) return toast('mp4 のパスを入力してください', true);
-  try { const r = await api('POST', '/api/ingest', body); toast('在庫+1: ' + r.token_id + ' (' + r.bytes + ' bytes)'); loadProducts(); }
+  try { const r = await api('POST', '/api/ingest', body); toast('在庫+1: ' + r.token_id + ' (' + r.bytes + ' bytes)'); document.getElementById('ing_path').value = ''; document.getElementById('ing_bits').value = ''; loadProducts(); }
   catch (e) { toast(e.message, true); }
+}
+
+async function toggleTokens(pid) {
+  const row = document.getElementById('det_' + pid);
+  if (!row) return;
+  if (row.style.display !== 'none') { row.style.display = 'none'; return; }
+  row.style.display = '';
+  const body = document.getElementById('detbody_' + pid);
+  body.textContent = '読み込み中…';
+  try {
+    const items = await api('GET', '/api/tokens?all=1&product_id=' + encodeURIComponent(pid));
+    if (!items.length) { body.innerHTML = '<span class="muted">トークンなし(在庫0)</span>'; return; }
+    body.innerHTML = '<table><thead><tr><th>token_id</th><th>状態</th><th>bits(透かし)</th><th>紐づく注文</th><th>作成</th><th></th></tr></thead><tbody>' +
+      items.map((t) => {
+        const un = t.status === 'unassigned';
+        const st = un ? '<span class="badge on">在庫</span>' : '<span class="badge sold">販売済</span>';
+        const del = un
+          ? '<button class="small danger" onclick="delToken(\'' + esc(t.token_id) + '\',\'' + pid + '\')">削除</button>'
+          : '<span class="muted" title="購入者のDLが壊れるため削除不可">—</span>';
+        return '<tr>' +
+          '<td class="mono">' + esc(t.token_id) + '</td>' +
+          '<td>' + st + '</td>' +
+          '<td class="mono" style="font-size:11px">' + esc(t.bits || '-') + '</td>' +
+          '<td class="mono">' + esc(t.order_id || '-') + '</td>' +
+          '<td class="mono" style="font-size:11px">' + esc((t.created_at || '').slice(0, 19)) + '</td>' +
+          '<td>' + del + '</td>' +
+          '</tr>';
+      }).join('') + '</tbody></table>';
+  } catch (e) { body.innerHTML = '<span class="err">' + esc(e.message) + '</span>'; toast(e.message, true); }
+}
+
+async function delToken(token_id, pid) {
+  if (!confirm('トークン ' + token_id + ' と動画本体(S3)を削除します。よろしいですか?')) return;
+  try {
+    await api('POST', '/api/tokens/delete', { token_id });
+    toast('削除: ' + token_id);
+    await loadProducts();
+    // 展開状態を維持して再表示
+    const row = document.getElementById('det_' + pid);
+    if (row) { row.style.display = 'none'; toggleTokens(pid); }
+  } catch (e) { toast(e.message, true); }
+}
+
+async function loadOrders() {
+  const tbody = document.getElementById('orders');
+  try {
+    const items = await api('GET', '/api/orders');
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="9" class="muted">注文なし</td></tr>'; return; }
+    tbody.innerHTML = items.map((o) => {
+      const paid = o.status === 'paid';
+      const stCls = paid ? 'on' : (o.status === 'failed' || o.status === 'expired') ? 'sold' : 'off';
+      const coupon = o.coupon_code
+        ? esc(o.coupon_code) + (o.discount_jpy ? ' (−¥' + Number(o.discount_jpy).toLocaleString() + ')' : '')
+        : '<span class="muted">—</span>';
+      const amount = (o.original_price_jpy && o.original_price_jpy !== o.price_jpy)
+        ? '<span style="text-decoration:line-through;color:var(--dim)">¥' + Number(o.original_price_jpy).toLocaleString() + '</span> ¥' + Number(o.price_jpy).toLocaleString()
+        : '¥' + Number(o.price_jpy).toLocaleString();
+      const urlBtn = paid
+        ? '<button class="small" onclick="showUrl(\'' + esc(o.order_id) + '\')">URL生成</button>'
+        : '<span class="muted">—</span>';
+      return '<tr>' +
+        '<td class="mono" style="font-size:11px">' + esc(o.order_id) + '</td>' +
+        '<td class="mono">' + esc(o.product_id) + '</td>' +
+        '<td><span class="badge ' + stCls + '">' + esc(o.status) + '</span></td>' +
+        '<td class="mono" style="font-size:11px">' + esc(o.email || '-') + '</td>' +
+        '<td class="mono" style="font-size:11px">' + esc(o.token_id || '-') + '</td>' +
+        '<td>' + coupon + '</td>' +
+        '<td style="white-space:nowrap">' + amount + '</td>' +
+        '<td class="mono" style="font-size:11px">' + esc((o.created_at || '').slice(0, 19)) + '</td>' +
+        '<td>' + urlBtn + '</td>' +
+        '</tr>';
+    }).join('');
+  } catch (e) { tbody.innerHTML = '<tr><td colspan="9" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
+}
+
+async function showUrl(order_id) {
+  try {
+    const r = await api('POST', '/api/orders/url', { order_id });
+    try { await navigator.clipboard.writeText(r.url); toast('発行URLをクリップボードにコピー(30日有効)'); }
+    catch { window.prompt('発行URL(30日有効):', r.url); }
+  } catch (e) { toast(e.message, true); }
 }
 
 async function uploadThumbnail() {
@@ -270,6 +371,7 @@ async function init() {
   try { const b = await api('GET', '/api/bucket'); document.getElementById('bucket').textContent = b.bucket; } catch {}
   await loadProducts();
   await loadCoupons();
+  await loadOrders();
 }
 init();
 </script>

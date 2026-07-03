@@ -27,7 +27,10 @@ const USAGE = `uraneko 管理 CLI
   products publish <product_id> <true|false>     公開フラグを切替
   inventory [<product_id>]                        在庫(未割当/割当)を表示
   tokens list <product_id> [--all]               トークン一覧(既定は未割当のみ)
+  tokens delete <token_id>                        未割当トークンを削除(DDB+S3、テスト入替用)
   tokens backfill [--dry-run]                     status_created_at 欠落トークンを修復
+  orders list                                    全注文(注文-トークン-購入者-クーポン)
+  orders url <order_id>                          購入者の署名付きDLリンクを再生成(30日有効)
   ingest --id <product_id> --file <local.mp4> [--bits <40bit>] [--token-id <uuid>]
                                                  動画を S3 に置きトークンを1件投入(在庫+1)
   products thumbnail --id <product_id> --file <local.jpg|png|webp>
@@ -156,6 +159,32 @@ async function tokensList(positional, flags) {
   console.log(`(${items.length} 件)`);
 }
 
+async function tokensDelete(positional) {
+  const token_id = positional[0];
+  if (!token_id) die('usage: tokens delete <token_id>');
+  const r = await store.deleteToken(token_id);
+  console.log(`[OK] deleted token ${r.token_id}${r.s3_key ? ` (+ s3://.../${r.s3_key})` : ''}`);
+}
+
+async function ordersList() {
+  const items = await store.listOrders();
+  if (items.length === 0) return console.log('(注文なし)');
+  for (const o of items) {
+    const disc = o.coupon_code ? `  coupon=${o.coupon_code}(−¥${o.discount_jpy ?? 0})` : '';
+    console.log(
+      `${o.order_id}  ${o.product_id}  [${o.status}]  ¥${o.price_jpy}  ${o.email ?? '-'}  token=${o.token_id ?? '-'}${disc}`,
+    );
+  }
+}
+
+async function ordersUrl(positional) {
+  const order_id = positional[0];
+  if (!order_id) die('usage: orders url <order_id>');
+  const r = await store.downloadUrlFor(order_id);
+  console.log(`[${r.status}] ${r.url}`);
+  console.log(`(有効期限 ${r.expires_at})`);
+}
+
 async function tokensBackfill(flags) {
   const r = await store.backfillTokens({ dryRun: Boolean(flags['dry-run']) });
   for (const d of r.details) console.log(`[${r.dryRun ? 'DRY' : 'FIX'}] ${d.token_id} -> ${d.status_created_at}`);
@@ -238,8 +267,15 @@ async function main() {
       case 'tokens': {
         const { positional, flags } = parseArgs(argv.slice(2));
         if (sub === 'list') return await tokensList(positional, flags);
+        if (sub === 'delete') return await tokensDelete(positional);
         if (sub === 'backfill') return await tokensBackfill(flags);
-        return die('tokens: unknown subcommand (list|backfill)');
+        return die('tokens: unknown subcommand (list|delete|backfill)');
+      }
+      case 'orders': {
+        const { positional } = parseArgs(argv.slice(2));
+        if (sub === 'list') return await ordersList();
+        if (sub === 'url') return await ordersUrl(positional);
+        return die('orders: unknown subcommand (list|url)');
       }
       case 'ingest': {
         const { flags } = parseArgs(argv.slice(1));
