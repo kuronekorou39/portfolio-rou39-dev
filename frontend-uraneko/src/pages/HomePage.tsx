@@ -42,7 +42,7 @@ export default function HomePage() {
               color: 'var(--color-fg)',
             }}
           >
-            表にない<span style={{ color: 'var(--color-gold-bright)' }}>棚</span>。
+            ケモナーの<span style={{ color: 'var(--color-gold-bright)' }}>闇</span>。
           </h1>
           <div
             style={{
