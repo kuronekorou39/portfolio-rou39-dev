@@ -172,6 +172,7 @@ export default function HomePage() {
                   subtitle={`${Math.floor(p.duration_sec / 60)} min`}
                   price={`¥ ${p.price_jpy.toLocaleString()}`}
                   badge={p.available === false ? '在庫切れ' : undefined}
+                  image={p.thumbnail_url}
                 />
               </Link>
             ))}

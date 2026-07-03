@@ -66,6 +66,18 @@ const routes = {
       token_id: body.token_id || undefined,
     });
   },
+  'POST /api/products/thumbnail': async (_q, body) => {
+    if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の画像パス)が必要です');
+    let fileBytes;
+    try {
+      fileBytes = readFileSync(body.file_path);
+    } catch {
+      throw new store.ValidationError(`ファイルが読めません: ${body.file_path}`);
+    }
+    const dot = body.file_path.lastIndexOf('.');
+    const ext = dot >= 0 ? body.file_path.slice(dot) : '';
+    return store.putThumbnail({ product_id: body.product_id, fileBytes, ext });
+  },
   'GET /api/coupons': async (q) => store.listCoupons({ product: q.get('product') || undefined }),
   'POST /api/coupons': async (_q, body) => store.addCoupon(body),
   'POST /api/coupons/delete': async (_q, body) => store.deleteCoupon(body.coupon_code),

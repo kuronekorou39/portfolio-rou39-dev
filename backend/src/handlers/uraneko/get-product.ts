@@ -3,6 +3,7 @@ import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
 import { ok, notFound, badRequest, serverError } from '../../lib/response';
 import { hasAvailableToken } from '../../lib/uraneko/token-claim';
+import { presignThumbnail } from '../../lib/uraneko/thumbnail';
 import type { VideoProduct } from '../../lib/uraneko/types';
 
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE!;
@@ -24,7 +25,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       description: item.description,
       price_jpy: item.price_jpy,
       duration_sec: item.duration_sec,
-      thumbnail_s3_key: item.thumbnail_s3_key,
+      thumbnail_url: await presignThumbnail(item.thumbnail_s3_key),
       available: await hasAvailableToken(item.product_id),
     });
   } catch (err) {

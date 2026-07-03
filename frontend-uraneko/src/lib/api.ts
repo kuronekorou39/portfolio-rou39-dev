@@ -21,7 +21,7 @@ export interface Product {
   description: string;
   price_jpy: number;
   duration_sec: number;
-  thumbnail_s3_key: string;
+  thumbnail_url?: string | null; // サムネの presigned URL。未設定なら null
   available?: boolean; // 在庫(未割当トークン)有無。未定義なら不明扱い
 }
 

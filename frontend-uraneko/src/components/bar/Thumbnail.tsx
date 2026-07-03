@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 
 interface Props {
   title?: string;
@@ -10,12 +10,13 @@ interface Props {
   artist?: string;
   ratio?: string; // e.g. "16/9" "4/5" "16/10"
   cover?: boolean;
+  image?: string | null; // 設定時は実サムネ画像を表示(未設定ならテキスト placeholder)
   style?: CSSProperties;
 }
 
 /**
- * BarThumb 相当。動画サムネイル placeholder。
- * 露骨な画像は出さない方針なので、常にテキスト中央表示 + 真鍮枠の装飾。
+ * 動画サムネイル枠。image があれば実画像を cover 表示し、
+ * 無ければテキスト placeholder(枠装飾のみ)を表示する。
  */
 export default function Thumbnail({
   title,
@@ -27,8 +28,14 @@ export default function Thumbnail({
   artist,
   ratio = '16/9',
   cover = false,
+  image,
   style,
 }: Props) {
+  // 画像取得に失敗(署名URL期限切れ・S3エラー等)したらテキスト placeholder に戻す。
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => setImgError(false), [image]); // URL 差し替え時はエラー状態をリセット
+  const showImage = Boolean(image) && !imgError;
+
   return (
     <div
       style={{
@@ -41,6 +48,22 @@ export default function Thumbnail({
         ...style,
       }}
     >
+      {/* 実サムネ画像(あれば最下層に cover 表示。失敗時は placeholder へフォールバック) */}
+      {showImage && (
+        <img
+          src={image ?? undefined}
+          alt={title ?? ''}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
       {/* 暖色ダウンライト */}
       <div
         style={{
@@ -140,7 +163,7 @@ export default function Thumbnail({
         </div>
       )}
 
-      {title && (
+      {title && !showImage && (
         <div
           style={{
             position: 'absolute',

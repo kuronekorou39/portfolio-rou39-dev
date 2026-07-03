@@ -3,12 +3,13 @@ import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
 import { ok, serverError } from '../../lib/response';
 import { hasAvailableToken } from '../../lib/uraneko/token-claim';
+import { presignThumbnail } from '../../lib/uraneko/thumbnail';
 import type { VideoProduct } from '../../lib/uraneko/types';
 
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE!;
 
-// API レスポンスには bits / source_s3_key を絶対含めない。
-// 商品マスタ側には bits は無いが、念のためクライアント向けに返す属性を限定する。
+// API レスポンスには bits / source_s3_key / 生の s3_key を絶対含めない。
+// サムネは presigned URL(thumbnail_url)にして内部キーは出さない。
 function toPublicProduct(p: VideoProduct) {
   return {
     product_id: p.product_id,
@@ -16,7 +17,6 @@ function toPublicProduct(p: VideoProduct) {
     description: p.description,
     price_jpy: p.price_jpy,
     duration_sec: p.duration_sec,
-    thumbnail_s3_key: p.thumbnail_s3_key,
   };
 }
 
@@ -34,6 +34,7 @@ export async function handler(_event: APIGatewayProxyEvent): Promise<APIGatewayP
       products.map(async (p) => ({
         ...toPublicProduct(p),
         available: await hasAvailableToken(p.product_id),
+        thumbnail_url: await presignThumbnail(p.thumbnail_s3_key),
       })),
     );
     return ok(items);

@@ -30,6 +30,8 @@ const USAGE = `uraneko 管理 CLI
   tokens backfill [--dry-run]                     status_created_at 欠落トークンを修復
   ingest --id <product_id> --file <local.mp4> [--bits <40bit>] [--token-id <uuid>]
                                                  動画を S3 に置きトークンを1件投入(在庫+1)
+  products thumbnail --id <product_id> --file <local.jpg|png|webp>
+                                                 サムネ画像を S3 に置き商品に紐付け
   coupons add --code <c> --product <pid> --percent <1-100> --max <n> [--expires <iso>]
                                                  クーポン発行(特定商品限定・総利用上限)
   coupons list [--product <pid>]                 クーポン一覧
@@ -99,11 +101,24 @@ async function productsPut(flags) {
       source_s3_key: flags.source,
       pool_target: flags['pool-target'],
       pool_threshold: flags['pool-threshold'],
-      published: Boolean(flags.published),
+      // --published 明示時のみ true。未指定は undefined にして既存の公開状態を温存
+      // (部分更新 `products put --id x --price Y` で誤って非公開化しないため)
+      published: 'published' in flags ? true : undefined,
     };
   }
   const item = await store.putProduct(input);
   console.log(`[OK] put product ${item.product_id} (¥${item.price_jpy}, ${item.published ? '公開' : '非公開'})`);
+}
+
+async function productsThumbnail(flags) {
+  if (!flags.id) die('--id <product_id> required');
+  if (!flags.file) die('--file <local.jpg|png|webp> required');
+  const fileBytes = readFileSync(flags.file);
+  const dot = String(flags.file).lastIndexOf('.');
+  const ext = dot >= 0 ? String(flags.file).slice(dot) : '';
+  const r = await store.putThumbnail({ product_id: flags.id, fileBytes, ext });
+  console.log(`[S3] put s3://${r.bucket}/${r.thumbnail_s3_key} (${r.bytes} bytes)`);
+  console.log(`[DDB] ${r.product_id} thumbnail_s3_key -> ${r.thumbnail_s3_key}`);
 }
 
 async function productsSetPrice(positional) {
@@ -211,9 +226,10 @@ async function main() {
         if (sub === 'list') return await productsList(flags);
         if (sub === 'get') return await productsGet(positional);
         if (sub === 'put') return await productsPut(flags);
+        if (sub === 'thumbnail') return await productsThumbnail(flags);
         if (sub === 'set-price') return await productsSetPrice(positional);
         if (sub === 'publish') return await productsPublish(positional);
-        return die('products: unknown subcommand (list|get|put|set-price|publish)');
+        return die('products: unknown subcommand (list|get|put|thumbnail|set-price|publish)');
       }
       case 'inventory': {
         const { positional } = parseArgs(argv.slice(1));

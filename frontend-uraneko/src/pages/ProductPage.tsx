@@ -66,6 +66,7 @@ export default function ProductPage() {
             code={`№ ${product.product_id}`}
             title={product.title}
             subtitle="preview"
+            image={product.thumbnail_url}
           />
 
           <Ornament style={{ margin: '40px 0' }} />

@@ -95,30 +95,77 @@ export async function listProducts({ all = false } = {}) {
   return Promise.all(items.map(async (p) => ({ ...p, inventory: await inventoryOf(p.product_id) })));
 }
 
-// 商品を投入/更新。既存の created_at は温存。
+// 商品を投入/更新。既存の created_at・サムネ・source・pool 設定は
+// 入力に無ければ温存する(GUI の編集フォームがこれらを送らずに上書き消去するのを防ぐ)。
 export async function putProduct(input) {
   const product_id = String(input.product_id ?? '');
   if (!PRODUCT_ID_RE.test(product_id)) invalid('product_id は [a-z0-9-]+ である必要があります');
   const price = Number(input.price_jpy);
   if (!Number.isInteger(price) || price < 0) invalid('price_jpy は 0 以上の整数(円)である必要があります');
+  // thumbnail_s3_key は公開APIが presign する。videos/ 等を紛れ込ませないよう prefix を強制。
+  if (input.thumbnail_s3_key && !String(input.thumbnail_s3_key).startsWith('thumbnails/')) {
+    invalid('thumbnail_s3_key は thumbnails/ で始まる必要があります');
+  }
 
+  const existing = await getProduct(product_id);
+  // 入力に無いフィールドは既存値を温存する(部分更新で他フィールドを消さない)。
   const item = {
     product_id,
-    title: input.title ?? product_id,
-    description: input.description ?? '',
+    title: input.title ?? existing?.title ?? product_id,
+    description: input.description ?? existing?.description ?? '',
     price_jpy: price,
-    duration_sec: Number.isFinite(Number(input.duration_sec)) ? Number(input.duration_sec) : 0,
-    thumbnail_s3_key: input.thumbnail_s3_key ?? '',
-    source_s3_key: input.source_s3_key ?? '',
-    pool_target: Number.isFinite(Number(input.pool_target)) ? Number(input.pool_target) : 0,
-    pool_threshold: Number.isFinite(Number(input.pool_threshold)) ? Number(input.pool_threshold) : 0,
-    published: Boolean(input.published),
-    created_at: new Date().toISOString(),
+    duration_sec: Number.isFinite(Number(input.duration_sec))
+      ? Number(input.duration_sec)
+      : existing?.duration_sec ?? 0,
+    thumbnail_s3_key: input.thumbnail_s3_key ?? existing?.thumbnail_s3_key ?? '',
+    source_s3_key: input.source_s3_key ?? existing?.source_s3_key ?? '',
+    pool_target: Number.isFinite(Number(input.pool_target))
+      ? Number(input.pool_target)
+      : existing?.pool_target ?? 0,
+    pool_threshold: Number.isFinite(Number(input.pool_threshold))
+      ? Number(input.pool_threshold)
+      : existing?.pool_threshold ?? 0,
+    published: input.published !== undefined ? Boolean(input.published) : existing?.published ?? false,
+    created_at: existing?.created_at ?? new Date().toISOString(),
   };
-  const existing = await getProduct(product_id);
-  if (existing?.created_at) item.created_at = existing.created_at;
   await ddb.send(new PutCommand({ TableName: PRODUCTS_TABLE, Item: item }));
   return item;
+}
+
+// 対応するサムネ画像の拡張子 → Content-Type
+const THUMB_CONTENT_TYPES = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+};
+
+// サムネ画像を S3 に置き、商品の thumbnail_s3_key を更新する。
+// 契約の書込順序は動画と同じく S3 → DDB。key は thumbnails/<product_id><ext>。
+export async function putThumbnail({ product_id, fileBytes, ext }) {
+  if (!PRODUCT_ID_RE.test(String(product_id ?? ''))) invalid('product_id は [a-z0-9-]+');
+  if (!fileBytes || !fileBytes.length) invalid('画像ファイルの内容が空です');
+  const e = String(ext ?? '').toLowerCase();
+  const contentType = THUMB_CONTENT_TYPES[e];
+  if (!contentType) invalid('画像は .jpg / .jpeg / .png / .webp のみ対応');
+  if (!(await getProduct(product_id))) {
+    invalid(`product not found: ${product_id}(先に商品を作成してください)`);
+  }
+
+  const s3_key = `thumbnails/${product_id}${e}`;
+  const bucket = assetsBucket();
+  await s3().send(
+    new PutObjectCommand({ Bucket: bucket, Key: s3_key, Body: fileBytes, ContentType: contentType }),
+  );
+  await ddb.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { product_id },
+      UpdateExpression: 'SET thumbnail_s3_key = :k',
+      ExpressionAttributeValues: { ':k': s3_key },
+    }),
+  );
+  return { product_id, thumbnail_s3_key: s3_key, bucket, bytes: fileBytes.length };
 }
 
 export async function setPrice(product_id, price_jpy) {

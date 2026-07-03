@@ -79,6 +79,8 @@ export class UranekoApiStack extends cdk.Stack {
     props.productsTable.grantReadData(listProductsFn);
     // available(在庫有無)判定で tokens テーブルの GSI by_product_status を Query する
     props.tokensTable.grantReadData(listProductsFn);
+    // サムネの presigned GET URL 生成用。videos/ を読めないよう thumbnails/ に限定
+    props.assetsBucket.grantRead(listProductsFn, 'thumbnails/*');
 
     // --- get product ---
     const getProductFn = new nodejs.NodejsFunction(this, 'GetProductFn', {
@@ -91,6 +93,8 @@ export class UranekoApiStack extends cdk.Stack {
     props.productsTable.grantReadData(getProductFn);
     // available(在庫有無)判定で tokens テーブルの GSI by_product_status を Query する
     props.tokensTable.grantReadData(getProductFn);
+    // サムネの presigned GET URL 生成用。videos/ を読めないよう thumbnails/ に限定
+    props.assetsBucket.grantRead(getProductFn, 'thumbnails/*');
 
     // --- validate coupon (購入画面の「適用」ボタン用。注文を作らず利用枠も消費しない) ---
     const validateCouponFn = new nodejs.NodejsFunction(this, 'ValidateCouponFn', {

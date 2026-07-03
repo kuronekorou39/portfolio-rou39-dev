@@ -53,8 +53,8 @@
       <label class="muted" style="margin-left:12px"><input type="checkbox" id="showAll" onchange="loadProducts()"> 未公開も表示</label>
     </h2>
     <table>
-      <thead><tr><th>product_id</th><th>タイトル</th><th>価格(円)</th><th>公開</th><th>在庫</th><th>販売済</th><th></th></tr></thead>
-      <tbody id="products"><tr><td colspan="7" class="muted">読み込み中…</td></tr></tbody>
+      <thead><tr><th>product_id</th><th>タイトル</th><th>価格(円)</th><th>サムネ</th><th>公開</th><th>在庫</th><th>販売済</th><th></th></tr></thead>
+      <tbody id="products"><tr><td colspan="8" class="muted">読み込み中…</td></tr></tbody>
     </table>
 
     <h2 style="margin-top:22px">新規 / 上書き商品</h2>
@@ -78,6 +78,16 @@
       <button onclick="ingest()">投入(在庫+1)</button>
     </div>
     <div class="hint">S3 に動画を置き、未割当トークンを1件作成します(= 在庫+1)。bits は未指定なら自動生成(テスト用)。本番は ghost-code 生成物を使ってください。</div>
+  </section>
+
+  <section>
+    <h2>サムネ画像 · THUMBNAIL</h2>
+    <div class="row">
+      <div class="field"><label>対象商品</label><select id="th_product"></select></div>
+      <div class="field" style="flex:1; min-width:280px"><label>この PC 上の画像パス(jpg/png/webp)</label><input id="th_path" placeholder="C:\\path\\to\\cover.jpg" style="width:100%"></div>
+      <button onclick="uploadThumbnail()">アップロード</button>
+    </div>
+    <div class="hint">S3 に画像を置き商品に紐付けます。サイト一覧・商品ページに反映(縦長 4:5 推奨)。差し替えは同じ商品に再アップロードするだけです。</div>
   </section>
 
   <section>
@@ -139,7 +149,7 @@ async function loadProducts() {
     const items = await api('GET', '/api/products?all=' + (all ? '1' : '0'));
     productCache = items;
     populateProductSelects(items);
-    if (!items.length) { tbody.innerHTML = '<tr><td colspan="7" class="muted">商品なし</td></tr>'; return; }
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="8" class="muted">商品なし</td></tr>'; return; }
     tbody.innerHTML = items.map((p) => {
       const inv = p.inventory || { unassigned: 0, assigned: 0 };
       const sold = inv.unassigned === 0;
@@ -147,11 +157,15 @@ async function loadProducts() {
         ? '<span class="badge on">公開</span>'
         : '<span class="badge off">非公開</span>';
       const invBadge = sold ? '<span class="badge sold">0(売切)</span>' : inv.unassigned;
+      const thumb = p.thumbnail_s3_key
+        ? '<span class="badge on">✓</span>'
+        : '<span class="badge off">—</span>';
       return '<tr>' +
         '<td class="mono">' + esc(p.product_id) + '</td>' +
         '<td>' + esc(p.title) + '</td>' +
         '<td><input type="number" value="' + p.price_jpy + '" style="width:100px" id="pr_' + esc(p.product_id) + '">' +
           '<button class="small" onclick="savePrice(\'' + esc(p.product_id) + '\')">✓</button></td>' +
+        '<td>' + thumb + '</td>' +
         '<td>' + pub + '</td>' +
         '<td>' + invBadge + '</td>' +
         '<td>' + inv.assigned + '</td>' +
@@ -159,12 +173,13 @@ async function loadProducts() {
           (p.published ? '非公開に' : '公開に') + '</button></td>' +
         '</tr>';
     }).join('');
-  } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
+  } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
 }
 
 function populateProductSelects(items) {
   const opts = items.map((p) => '<option value="' + esc(p.product_id) + '">' + esc(p.product_id) + '</option>').join('');
   document.getElementById('ing_product').innerHTML = opts;
+  document.getElementById('th_product').innerHTML = opts;
   document.getElementById('c_product').innerHTML = opts;
 }
 
@@ -199,6 +214,16 @@ async function ingest() {
   };
   if (!body.file_path) return toast('mp4 のパスを入力してください', true);
   try { const r = await api('POST', '/api/ingest', body); toast('在庫+1: ' + r.token_id + ' (' + r.bytes + ' bytes)'); loadProducts(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function uploadThumbnail() {
+  const body = {
+    product_id: document.getElementById('th_product').value,
+    file_path: document.getElementById('th_path').value.trim(),
+  };
+  if (!body.file_path) return toast('画像のパスを入力してください', true);
+  try { const r = await api('POST', '/api/products/thumbnail', body); toast('サムネ設定: ' + r.product_id + ' (' + r.bytes + ' bytes)'); document.getElementById('th_path').value = ''; loadProducts(); }
   catch (e) { toast(e.message, true); }
 }
 
