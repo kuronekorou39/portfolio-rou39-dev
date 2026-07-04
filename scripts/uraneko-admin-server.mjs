@@ -62,13 +62,28 @@ const routes = {
     } catch {
       throw new store.ValidationError(`ファイルが読めません: ${body.file_path}`);
     }
-    return store.ingest({
+    const r = await store.ingest({
       product_id: body.product_id,
       fileBytes,
       bits: body.bits || undefined,
       token_id: body.token_id || undefined,
     });
+    // 動画長を ffprobe で自動取得。商品の duration が未設定(0)なら埋める。
+    // 投入(S3+トークン)は既に確定しているので、ここはベストエフォート(失敗しても投入成功を返す)。
+    try {
+      const dur = store.probeDurationSec(body.file_path);
+      if (dur) {
+        r.duration_sec = dur;
+        const prod = await store.getProduct(body.product_id);
+        if (prod && !prod.duration_sec) await store.setDuration(body.product_id, dur);
+      }
+    } catch {
+      /* duration 自動セット失敗は投入本体に影響させない */
+    }
+    return r;
   },
+  'GET /api/fs': async (q) => store.listDir(q.get('dir') || ''),
+  'GET /api/preview-url': async (q) => ({ url: await store.previewUrl(q.get('key')) }),
   'POST /api/products/thumbnail': async (_q, body) => {
     if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の画像パス)が必要です');
     let fileBytes;
@@ -87,6 +102,14 @@ const routes = {
 };
 
 const server = createServer(async (req, res) => {
+  // DNS リバインディング対策: Host が 127.0.0.1/localhost:PORT 以外なら拒否。
+  // 127.0.0.1 バインドでも被害者ブラウザ経由の rebinding は防げないため Host を検証する。
+  const host = (req.headers.host || '').toLowerCase();
+  if (host !== `127.0.0.1:${PORT}` && host !== `localhost:${PORT}`) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    return res.end('forbidden host');
+  }
+
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
   const key = `${req.method} ${url.pathname}`;
 

@@ -6,8 +6,11 @@
  * バリデーション失敗は ValidationError を throw する(呼び出し側で 400 / die に変換)。
  */
 import { createRequire } from 'module';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { randomUUID, createHmac } from 'crypto';
+import { readdirSync, statSync } from 'fs';
+import { homedir } from 'os';
+import { join, dirname, resolve } from 'path';
 
 const require = createRequire(new URL('../../backend/', import.meta.url).href);
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
@@ -20,7 +23,8 @@ const {
   QueryCommand,
   ScanCommand,
 } = require('@aws-sdk/lib-dynamodb');
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
 export const REGION = 'ap-northeast-1';
@@ -431,4 +435,81 @@ export async function deleteToken(token_id) {
     await s3().send(new DeleteObjectCommand({ Bucket: assetsBucket(), Key: cur.s3_key }));
   }
   return { token_id, deleted: true, s3_key: cur.s3_key ?? null };
+}
+
+// --- ローカルファイル参照 / プレビュー / 動画長(GUI のファイルブラウザ・自動取得用) ---
+
+// ローカルのディレクトリを一覧する(パス手入力の代わりに GUI から参照させる)。
+// dir 省略時はホーム。ローカル専用サーバ前提なので FS 参照は許容する。
+export function listDir(dir) {
+  const target = dir && String(dir).trim() ? resolve(String(dir)) : homedir();
+  let entries;
+  try {
+    entries = readdirSync(target, { withFileTypes: true });
+  } catch {
+    invalid(`フォルダを読めません: ${target}`);
+  }
+  const dirs = [];
+  const files = [];
+  for (const e of entries) {
+    const full = join(target, e.name);
+    if (e.isDirectory()) {
+      dirs.push({ name: e.name, path: full });
+    } else if (e.isFile()) {
+      let size = 0;
+      try {
+        size = statSync(full).size;
+      } catch {
+        /* 権限等で stat できないファイルはサイズ 0 扱い */
+      }
+      files.push({ name: e.name, path: full, size });
+    }
+  }
+  dirs.sort((a, b) => a.name.localeCompare(b.name));
+  files.sort((a, b) => a.name.localeCompare(b.name));
+  const parent = dirname(target);
+  return { dir: target, parent: parent === target ? null : parent, dirs, files };
+}
+
+// thumbnails/ ・ samples/ のオブジェクトの presigned GET URL(管理画面のプレビュー用)。
+export async function previewUrl(key) {
+  const k = String(key ?? '');
+  if (!k) invalid('key required');
+  if (!(k.startsWith('thumbnails/') || k.startsWith('samples/'))) {
+    invalid('preview は thumbnails/ か samples/ のみ');
+  }
+  return getSignedUrl(s3(), new GetObjectCommand({ Bucket: assetsBucket(), Key: k }), {
+    expiresIn: 3600,
+  });
+}
+
+// ffprobe で動画の長さ(秒)を取得。無ければ / 失敗したら null(手入力にフォールバック)。
+// execFileSync でシェルを介さず引数配列で渡す(ファイル名経由のコマンドインジェクション回避)。
+export function probeDurationSec(filePath) {
+  try {
+    const out = execFileSync(
+      'ffprobe',
+      ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', String(filePath)],
+      { encoding: 'utf8' },
+    ).trim();
+    const sec = Math.round(Number(out));
+    return Number.isFinite(sec) && sec > 0 ? sec : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setDuration(product_id, duration_sec) {
+  const sec = Number(duration_sec);
+  if (!Number.isFinite(sec) || sec < 0) invalid('duration_sec は 0 以上の数値');
+  if (!(await getProduct(product_id))) invalid(`product not found: ${product_id}`);
+  await ddb.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { product_id },
+      UpdateExpression: 'SET duration_sec = :d',
+      ExpressionAttributeValues: { ':d': sec },
+    }),
+  );
+  return { product_id, duration_sec: sec };
 }
