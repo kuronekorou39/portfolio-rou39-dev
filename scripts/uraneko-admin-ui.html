@@ -3,136 +3,191 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>uraneko ローカル管理</title>
+<title>uraneko admin</title>
 <style>
-  :root { --bg:#140b0b; --panel:#1e1414; --line:#3a2a2a; --gold:#c9a961; --fg:#e8ddd0; --muted:#a08f80; --dim:#6b5c52; --danger:#e06a6a; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,"Hiragino Kaku Gothic ProN",sans-serif; font-size:14px; }
-  header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:16px; }
-  header h1 { font-size:16px; letter-spacing:3px; margin:0; color:var(--gold); font-weight:500; }
-  header .bucket { font-family:monospace; font-size:11px; color:var(--dim); }
-  header .warn { margin-left:auto; font-size:11px; color:var(--dim); }
-  main { max-width:1080px; margin:0 auto; padding:24px; }
-  section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 20px; margin-bottom:22px; }
-  section h2 { font-size:13px; letter-spacing:2px; margin:0 0 14px; color:var(--gold); font-weight:500; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
-  th { color:var(--muted); font-weight:500; font-size:11px; letter-spacing:1px; }
-  td.mono, .mono { font-family:monospace; }
+  /* uraneko コールド・アーカイブ調(サイト本体と同系: 近黒×灰・角形・mono・鈍赤アクセント) */
+  :root {
+    --bg:#0a0a0b; --panel:#111113; --deep:#060607; --line:#26262a; --line-soft:#1b1b1e;
+    --fg:#d8d6cf; --muted:#8f8d86; --dim:#5c5b56;
+    --ash:#7d7a72; --ash-bright:#b8b5ac; --accent:#a8433f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:"Noto Sans JP",system-ui,"Hiragino Kaku Gothic ProN",sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; }
+
+  header { padding:18px 28px 16px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:16px; background:var(--deep); }
+  header h1 { font-size:15px; letter-spacing:8px; margin:0; color:var(--fg); font-weight:300; }
+  header h1 span { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--ash); margin-left:10px; }
+  header .bucket { font-family:var(--mono); font-size:11px; color:var(--dim); letter-spacing:1px; }
+  header .warn { margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:2px; }
+
+  nav.tabs { display:flex; padding:0 22px; border-bottom:1px solid var(--line); background:var(--deep); }
+  nav.tabs .tab { background:transparent; border:none; border-bottom:2px solid transparent; color:var(--muted); padding:13px 20px; font-family:var(--mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; }
+  nav.tabs .tab:hover { color:var(--fg); }
+  nav.tabs .tab.active { color:var(--ash-bright); border-bottom-color:var(--ash-bright); }
+
+  main { max-width:1140px; margin:0 auto; padding:28px; }
+  .view[hidden] { display:none; }
+
+  section { background:var(--panel); border:1px solid var(--line); padding:20px 22px; margin-bottom:20px; }
+  section h2 { font-family:var(--mono); font-size:11px; letter-spacing:3px; margin:0 0 16px; color:var(--ash); font-weight:500; text-transform:uppercase; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th,td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--line-soft); vertical-align:middle; }
+  th { color:var(--dim); font-weight:500; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
+  tbody tr:hover { background:rgba(255,255,255,0.015); }
+  td.mono, .mono { font-family:var(--mono); }
+
   input,select,button { font:inherit; }
-  input,select { background:#0f0909; border:1px solid var(--line); color:var(--fg); padding:7px 9px; border-radius:5px; }
+  input,select { background:var(--deep); border:1px solid var(--line); color:var(--fg); padding:8px 10px; border-radius:0; outline:none; }
+  input:focus,select:focus { border-color:var(--ash); }
   input[type=number]{ width:110px; }
-  button { background:transparent; border:1px solid var(--gold); color:var(--gold); padding:7px 14px; border-radius:5px; cursor:pointer; letter-spacing:1px; }
-  button:hover { background:rgba(201,169,97,0.12); }
-  button.small { padding:4px 9px; font-size:12px; }
-  button.danger { border-color:var(--danger); color:var(--danger); }
-  button.danger:hover { background:rgba(224,106,106,0.12); }
-  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-top:6px; }
-  .field { display:flex; flex-direction:column; gap:4px; }
-  .field label { font-size:10px; letter-spacing:1px; color:var(--muted); }
-  .badge { font-size:10px; padding:2px 8px; border-radius:10px; border:1px solid var(--line); }
-  .badge.on { color:#8fd08f; border-color:#3a5a3a; }
+  input::placeholder { color:var(--dim); }
+
+  button { background:transparent; border:1px solid var(--ash); color:var(--ash-bright); padding:8px 16px; border-radius:0; cursor:pointer; letter-spacing:2px; font-size:11px; text-transform:uppercase; transition:background .12s,color .12s; }
+  button:hover { background:var(--ash-bright); color:var(--bg); }
+  button.small { padding:4px 10px; font-size:11px; letter-spacing:1px; text-transform:none; }
+  button.small:hover { background:rgba(184,181,172,0.12); color:var(--fg); }
+  button.danger { border-color:var(--accent); color:var(--accent); }
+  button.danger:hover { background:var(--accent); color:var(--bg); }
+  button.small.danger:hover { background:rgba(168,67,63,0.15); color:var(--accent); }
+
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-top:8px; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-family:var(--mono); font-size:10px; letter-spacing:1px; color:var(--muted); }
+  .sub { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--dim); text-transform:uppercase; margin:24px 0 4px; padding-top:18px; border-top:1px solid var(--line-soft); }
+
+  .badge { font-family:var(--mono); font-size:10px; padding:2px 8px; border:1px solid var(--line); letter-spacing:1px; }
+  .badge.on { color:var(--ash-bright); border-color:var(--ash); }
   .badge.off { color:var(--dim); }
-  .badge.sold { color:var(--danger); border-color:#5a3a3a; }
-  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#0f0909; border:1px solid var(--gold); color:var(--fg); padding:10px 18px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; max-width:80vw; }
-  #toast.show { opacity:1; }
-  #toast.err { border-color:var(--danger); color:var(--danger); }
+  .badge.sold { color:var(--accent); border-color:rgba(168,67,63,0.5); }
+
   .muted { color:var(--muted); font-size:12px; }
-  .hint { color:var(--dim); font-size:11px; margin-top:4px; }
+  .hint { color:var(--dim); font-size:11px; margin-top:8px; line-height:1.7; }
+  .err { color:var(--accent); }
+
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--deep); border:1px solid var(--ash); color:var(--fg); padding:11px 20px; border-radius:0; opacity:0; transition:opacity .2s; pointer-events:none; max-width:80vw; font-size:12px; letter-spacing:1px; }
+  #toast.show { opacity:1; }
+  #toast.err { border-color:var(--accent); color:var(--accent); }
 </style>
 </head>
 <body>
 <header>
-  <h1>uraneko 管理</h1>
+  <h1>uraneko <span>private archive · admin</span></h1>
   <span class="bucket" id="bucket">…</span>
-  <span class="warn">ローカル専用 · 127.0.0.1</span>
+  <span class="warn">LOCAL ONLY · 127.0.0.1</span>
 </header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="products" onclick="showTab('products')">商品</button>
+  <button class="tab" data-tab="orders" onclick="showTab('orders')">注文</button>
+  <button class="tab" data-tab="coupons" onclick="showTab('coupons')">クーポン</button>
+  <button class="tab" data-tab="maint" onclick="showTab('maint')">メンテナンス</button>
+</nav>
+
 <main>
-  <section>
-    <h2>商品 · PRODUCTS <button class="small" onclick="loadProducts()" style="margin-left:8px">更新</button>
-      <label class="muted" style="margin-left:12px"><input type="checkbox" id="showAll" onchange="loadProducts()"> 未公開も表示</label>
-    </h2>
-    <table>
-      <thead><tr><th>product_id</th><th>タイトル</th><th>価格(円)</th><th>サムネ</th><th>公開</th><th>在庫</th><th>販売済</th><th></th></tr></thead>
-      <tbody id="products"><tr><td colspan="8" class="muted">読み込み中…</td></tr></tbody>
-    </table>
+  <!-- ===== 商品 ===== -->
+  <div id="tab-products" class="view">
+    <section>
+      <h2>一覧 · PRODUCTS <button class="small" onclick="loadProducts()">更新</button>
+        <label class="muted" style="letter-spacing:0"><input type="checkbox" id="showAll" onchange="loadProducts()"> 未公開も表示</label>
+      </h2>
+      <table>
+        <thead><tr><th>product_id</th><th>タイトル</th><th>価格(円)</th><th>サムネ</th><th>公開</th><th>在庫</th><th>販売済</th><th></th></tr></thead>
+        <tbody id="products"><tr><td colspan="8" class="muted">読み込み中…</td></tr></tbody>
+      </table>
+      <div class="hint">「詳細」で在庫トークン(動画1本ごと)の一覧・削除。未割当のみ削除でき、販売済みは購入者のDL保護のため削除不可です。</div>
+    </section>
 
-    <h2 style="margin-top:22px">新規 / 上書き商品</h2>
-    <div class="row">
-      <div class="field"><label>product_id [a-z0-9-]</label><input id="p_id" placeholder="my-movie-1"></div>
-      <div class="field"><label>タイトル</label><input id="p_title" placeholder="作品名"></div>
-      <div class="field"><label>価格(円)</label><input id="p_price" type="number" min="0" value="5000"></div>
-      <div class="field"><label>長さ(秒)</label><input id="p_dur" type="number" min="0" value="0"></div>
-      <div class="field"><label><input type="checkbox" id="p_pub"> 公開する</label></div>
-      <button onclick="createProduct()">保存</button>
-    </div>
-    <div class="field" style="margin-top:10px"><label>説明</label><input id="p_desc" placeholder="任意" style="width:100%"></div>
-    <div class="hint">既定は非公開。在庫トークンを入れてから公開するのが安全です。</div>
-  </section>
+    <section>
+      <h2>新規 / 上書き · UPSERT</h2>
+      <div class="row">
+        <div class="field"><label>product_id [a-z0-9-]</label><input id="p_id" placeholder="my-movie-1"></div>
+        <div class="field"><label>タイトル</label><input id="p_title" placeholder="作品名"></div>
+        <div class="field"><label>価格(円)</label><input id="p_price" type="number" min="0" value="5000"></div>
+        <div class="field"><label>長さ(秒)</label><input id="p_dur" type="number" min="0" value="0"></div>
+        <div class="field"><label style="letter-spacing:0"><input type="checkbox" id="p_pub"> 公開する</label></div>
+        <button onclick="createProduct()">保存</button>
+      </div>
+      <div class="field" style="margin-top:10px"><label>説明</label><input id="p_desc" placeholder="任意" style="width:100%"></div>
+      <div class="hint">既定は非公開。在庫トークンを入れてから公開するのが安全です。既存商品の一部だけ更新した場合、未指定のタイトル・サムネ等は温存されます。</div>
 
-  <section>
-    <h2>在庫投入(動画) · INGEST</h2>
-    <div class="row">
-      <div class="field"><label>対象商品</label><select id="ing_product"></select></div>
-      <div class="field" style="flex:1; min-width:280px"><label>この PC 上の mp4 パス</label><input id="ing_path" placeholder="C:\\path\\to\\stego.mp4" style="width:100%"></div>
-      <button onclick="ingest()">投入(在庫+1)</button>
-    </div>
-    <div class="row">
-      <div class="field" style="flex:1; min-width:280px"><label>ghost code(bits・40桁の 0/1。動画に焼いた実コードを記録)</label><input id="ing_bits" placeholder="例: 0110…(空欄=自動生成。本番は実コードを入れる)" style="width:100%" class="mono"></div>
-    </div>
-    <div class="hint">S3 に動画を置き、未割当トークンを1件作成します(= 在庫+1)。<strong>ghost code は動画に埋め込んだ透かしと同じ 40bit を入れてください</strong>(流出時の追跡に使う)。空欄だと自動生成の乱数になり、動画の実コードと一致しなくなります。</div>
-  </section>
+      <div class="sub">在庫投入(動画) · INGEST</div>
+      <div class="row">
+        <div class="field"><label>対象商品</label><select id="ing_product"></select></div>
+        <div class="field" style="flex:1; min-width:280px"><label>この PC 上の mp4 パス</label><input id="ing_path" placeholder="C:\path\to\stego.mp4" style="width:100%"></div>
+        <button onclick="ingest()">投入(在庫+1)</button>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1; min-width:280px"><label>ghost code(bits・40桁の 0/1。動画に焼いた実コードを記録)</label><input id="ing_bits" placeholder="例: 0110…(空欄=自動生成。本番は実コードを入れる)" style="width:100%" class="mono"></div>
+      </div>
+      <div class="hint">S3 に動画を置き、未割当トークンを1件作成します(= 在庫+1)。<strong>ghost code は動画に埋め込んだ透かしと同じ 40bit を入れてください</strong>(流出時の追跡に使う)。空欄だと自動生成の乱数になり、動画の実コードと一致しなくなります。</div>
 
-  <section>
-    <h2>サムネ画像 · THUMBNAIL</h2>
-    <div class="row">
-      <div class="field"><label>対象商品</label><select id="th_product"></select></div>
-      <div class="field" style="flex:1; min-width:280px"><label>この PC 上の画像パス(jpg/png/webp)</label><input id="th_path" placeholder="C:\\path\\to\\cover.jpg" style="width:100%"></div>
-      <button onclick="uploadThumbnail()">アップロード</button>
-    </div>
-    <div class="hint">S3 に画像を置き商品に紐付けます。サイト一覧・商品ページに反映(縦長 4:5 推奨)。差し替えは同じ商品に再アップロードするだけです。</div>
-  </section>
+      <div class="sub">サムネ画像 · THUMBNAIL</div>
+      <div class="row">
+        <div class="field"><label>対象商品</label><select id="th_product"></select></div>
+        <div class="field" style="flex:1; min-width:280px"><label>この PC 上の画像パス(jpg/png/webp)</label><input id="th_path" placeholder="C:\path\to\cover.jpg" style="width:100%"></div>
+        <button onclick="uploadThumbnail()">アップロード</button>
+      </div>
+      <div class="hint">S3 に画像を置き商品に紐付けます。サイト一覧・商品ページに反映(縦長 4:5 推奨)。差し替えは同じ商品に再アップロードするだけです。</div>
+    </section>
+  </div>
 
-  <section>
-    <h2>クーポン · COUPONS <button class="small" onclick="loadCoupons()" style="margin-left:8px">更新</button></h2>
-    <table>
-      <thead><tr><th>コード</th><th>割引</th><th>対象商品</th><th>利用</th><th>期限</th><th></th></tr></thead>
-      <tbody id="coupons"><tr><td colspan="6" class="muted">読み込み中…</td></tr></tbody>
-    </table>
-    <h2 style="margin-top:22px">クーポン発行</h2>
-    <div class="row">
-      <div class="field"><label>対象商品</label><select id="c_product"></select></div>
-      <div class="field"><label>割引率(1-100%)</label><input id="c_percent" type="number" min="1" max="100" value="50"></div>
-      <div class="field"><label>利用上限</label><input id="c_max" type="number" min="1" value="100"></div>
-      <div class="field"><label>コード(空=自動生成)</label><input id="c_code" placeholder="任意"></div>
-      <div class="field"><label>有効期限(任意 ISO)</label><input id="c_expires" placeholder="2026-12-31T23:59:59Z"></div>
-      <button onclick="addCoupon()">発行</button>
-    </div>
-    <div class="hint">100%(無料)クーポンはコード16文字以上必須。空欄なら128bitで自動生成します。</div>
-  </section>
+  <!-- ===== 注文 ===== -->
+  <div id="tab-orders" class="view" hidden>
+    <section>
+      <h2>購入・発行 · ORDERS <button class="small" onclick="loadOrders()">更新</button></h2>
+      <table>
+        <thead><tr><th>注文ID</th><th>商品</th><th>状態</th><th>購入者メアド</th><th>動画トークン</th><th>クーポン</th><th>金額</th><th>日時</th><th>発行URL</th></tr></thead>
+        <tbody id="orders"><tr><td colspan="9" class="muted">読み込み中…</td></tr></tbody>
+      </table>
+      <div class="hint">1注文=1本のユニークな動画(トークン)。発行URLは購入者に送った署名付きDLリンクを再生成します(30日有効・メール紛失時の再発行に)。</div>
+    </section>
+  </div>
 
-  <section>
-    <h2>購入・発行 · ORDERS <button class="small" onclick="loadOrders()" style="margin-left:8px">更新</button></h2>
-    <table>
-      <thead><tr><th>注文ID</th><th>商品</th><th>状態</th><th>購入者メアド</th><th>動画トークン</th><th>クーポン</th><th>金額</th><th>日時</th><th>発行URL</th></tr></thead>
-      <tbody id="orders"><tr><td colspan="9" class="muted">読み込み中…</td></tr></tbody>
-    </table>
-    <div class="hint">1注文=1本のユニークな動画(トークン)。発行URLは購入者に送った署名付きDLリンクを再生成します(30日有効・メール紛失時の再発行に)。</div>
-  </section>
+  <!-- ===== クーポン ===== -->
+  <div id="tab-coupons" class="view" hidden>
+    <section>
+      <h2>一覧 · COUPONS <button class="small" onclick="loadCoupons()">更新</button></h2>
+      <table>
+        <thead><tr><th>コード</th><th>割引</th><th>対象商品</th><th>利用</th><th>期限</th><th></th></tr></thead>
+        <tbody id="coupons"><tr><td colspan="6" class="muted">読み込み中…</td></tr></tbody>
+      </table>
 
-  <section>
-    <h2>メンテナンス</h2>
-    <div class="row">
-      <button onclick="backfill(true)">トークン修復 dry-run</button>
-      <button onclick="backfill(false)">トークン修復 実行</button>
-    </div>
-    <div class="hint">status_created_at 欠落トークン(在庫として認識されない不整合)を修復します。</div>
-  </section>
+      <div class="sub">発行 · ISSUE</div>
+      <div class="row">
+        <div class="field"><label>対象商品</label><select id="c_product"></select></div>
+        <div class="field"><label>割引率(1-100%)</label><input id="c_percent" type="number" min="1" max="100" value="50"></div>
+        <div class="field"><label>利用上限</label><input id="c_max" type="number" min="1" value="100"></div>
+        <div class="field"><label>コード(空=自動生成)</label><input id="c_code" placeholder="任意"></div>
+        <div class="field"><label>有効期限(任意 ISO)</label><input id="c_expires" placeholder="2026-12-31T23:59:59Z"></div>
+        <button onclick="addCoupon()">発行</button>
+      </div>
+      <div class="hint">100%(無料)クーポンはコード16文字以上必須。空欄なら128bitで自動生成します。運用では利用上限を小さく・有効期限つきを推奨(流出時の被害を限定)。</div>
+    </section>
+  </div>
+
+  <!-- ===== メンテナンス ===== -->
+  <div id="tab-maint" class="view" hidden>
+    <section>
+      <h2>メンテナンス · MAINTENANCE</h2>
+      <div class="row">
+        <button onclick="backfill(true)">トークン修復 dry-run</button>
+        <button onclick="backfill(false)">トークン修復 実行</button>
+      </div>
+      <div class="hint">status_created_at 欠落トークン(在庫として認識されない不整合)を修復します。まず dry-run で対象を確認してから実行してください。</div>
+    </section>
+  </div>
 </main>
 <div id="toast"></div>
 
 <script>
 let productCache = [];
+
+function showTab(name) {
+  document.querySelectorAll('.view').forEach((v) => { v.hidden = v.id !== 'tab-' + name; });
+  document.querySelectorAll('nav.tabs .tab').forEach((t) => { t.classList.toggle('active', t.dataset.tab === name); });
+}
 
 function toast(msg, isErr) {
   const t = document.getElementById('toast');
@@ -187,7 +242,7 @@ async function loadProducts() {
           '<button class="small" onclick="togglePublish(\'' + pid + '\',' + (!p.published) + ')">' +
           (p.published ? '非公開に' : '公開に') + '</button></td>' +
         '</tr>' +
-        '<tr id="det_' + pid + '" style="display:none"><td colspan="8" style="background:#0f0909">' +
+        '<tr id="det_' + pid + '" style="display:none"><td colspan="8" style="background:var(--deep)">' +
           '<div id="detbody_' + pid + '" class="muted">…</div></td></tr>';
     }).join('');
   } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
@@ -247,7 +302,7 @@ async function toggleTokens(pid) {
   try {
     const items = await api('GET', '/api/tokens?all=1&product_id=' + encodeURIComponent(pid));
     if (!items.length) { body.innerHTML = '<span class="muted">トークンなし(在庫0)</span>'; return; }
-    body.innerHTML = '<table><thead><tr><th>token_id</th><th>状態</th><th>bits(透かし)</th><th>紐づく注文</th><th>作成</th><th></th></tr></thead><tbody>' +
+    body.innerHTML = '<table><thead><tr><th>token_id</th><th>状態</th><th>bits(ghost code)</th><th>紐づく注文</th><th>作成</th><th></th></tr></thead><tbody>' +
       items.map((t) => {
         const un = t.status === 'unassigned';
         const st = un ? '<span class="badge on">在庫</span>' : '<span class="badge sold">販売済</span>';
