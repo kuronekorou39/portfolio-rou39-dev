@@ -84,6 +84,7 @@ const routes = {
   },
   'GET /api/fs': async (q) => store.listDir(q.get('dir') || ''),
   'GET /api/preview-url': async (q) => ({ url: await store.previewUrl(q.get('key')) }),
+  'GET /api/works': async (q) => store.scanWorks(q.get('dir') || '', q.get('product_id') || ''),
   'POST /api/products/thumbnail': async (_q, body) => {
     if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の画像パス)が必要です');
     let fileBytes;

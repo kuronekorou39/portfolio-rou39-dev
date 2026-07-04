@@ -198,7 +198,22 @@
       <!-- 在庫データ -->
       <div id="sub-inventory" class="subview" hidden>
         <section>
-          <h2>投入 · INGEST</h2>
+          <h2>ghost-code から登録 · WORKS</h2>
+          <div class="row">
+            <div class="field" style="flex:1; min-width:280px"><label>works フォルダ(registry.json のある場所)</label>
+              <div class="row" style="margin-top:0">
+                <input id="d_works_dir" placeholder="C:\projects\ghost-code\works\<作品>" style="flex:1; min-width:220px" class="mono">
+                <button class="ghost" onclick="pickWorksDir()">参照…</button>
+                <button onclick="loadWorks()">読み込み</button>
+              </div>
+            </div>
+          </div>
+          <div class="hint">フォルダを指定 → registry.json を読んで copy 一覧・ghost code・登録状況を表示します。<strong>「登録」で動画をS3に上げ、registry の正しい ghost code でトークンを作成</strong>(手入力不要)。既に同じ ghost code のトークンがあれば「登録済」と表示します。</div>
+          <div id="d_works" style="margin-top:14px"></div>
+        </section>
+
+        <section>
+          <h2>手動投入 · INGEST(単発)</h2>
           <div class="field"><label>動画ファイル(mp4)</label>
             <div class="row" style="margin-top:0">
               <input id="d_ing_path" placeholder="「参照」で選択(手入力も可)" style="flex:1; min-width:240px">
@@ -207,7 +222,7 @@
             </div>
           </div>
           <div class="field" style="margin-top:12px"><label>ghost code(bits・40桁の 0/1)</label><input id="d_ing_bits" placeholder="動画に焼いた実コード(空欄=自動生成)" class="mono" style="width:100%; max-width:520px"></div>
-          <div class="hint">動画長は投入時に ffprobe で自動取得します。<strong>ghost code は動画に焼いた 40bit</strong> を入れてください(流出追跡用)。空欄だと自動生成の乱数になり、動画の実コードと一致しなくなります。</div>
+          <div class="hint">works フォルダを使わず1本だけ手で入れる場合用。動画長は投入時に自動取得。<strong>ghost code は動画に焼いた 40bit</strong> を入れてください(空欄=自動生成の乱数=実コードと不一致になるので非推奨)。</div>
         </section>
 
         <section>
@@ -270,6 +285,7 @@
   <div class="modal-box">
     <div class="modal-head">
       <span class="path" id="fp_dir"></span>
+      <button class="small" id="fp_choose" hidden onclick="fpChooseFolder()">この場所を選択</button>
       <button class="small ghost" onclick="closeFilePicker()">閉じる</button>
     </div>
     <div class="fp-manual"><input id="fp_manual" placeholder="パスを直接入力して Enter でも移動できます" style="width:100%"></div>
@@ -498,32 +514,82 @@ async function delToken(token_id) {
   catch (e) { toast(e.message, true); }
 }
 
-// ---- ファイル参照モーダル ----
-let fpExts = [], fpOnPick = null;
+// ---- ファイル参照モーダル(ファイル選択 / フォルダ選択の両対応) ----
+let fpExts = [], fpOnPick = null, fpFolderCb = null, fpCurrentDir = '';
 function openFilePicker(exts, onPick, startDir) {
-  fpExts = exts || []; fpOnPick = onPick;
+  fpExts = exts || []; fpOnPick = onPick; fpFolderCb = null;
+  document.getElementById('fp_choose').hidden = true;
   document.getElementById('fpick').hidden = false;
   fpLoad(startDir || '');
 }
-function closeFilePicker() { document.getElementById('fpick').hidden = true; fpOnPick = null; }
+function openFolderPicker(onPick, startDir) {
+  fpExts = []; fpOnPick = null; fpFolderCb = onPick;
+  document.getElementById('fp_choose').hidden = false;
+  document.getElementById('fpick').hidden = false;
+  fpLoad(startDir || '');
+}
+function closeFilePicker() { document.getElementById('fpick').hidden = true; fpOnPick = null; fpFolderCb = null; document.getElementById('fp_choose').hidden = true; }
+function fpChooseFolder() { const cb = fpFolderCb; const dir = fpCurrentDir; closeFilePicker(); if (cb) cb(dir); }
 async function fpLoad(dir) {
   try {
     const r = await api('GET', '/api/fs?dir=' + encodeURIComponent(dir || ''));
+    fpCurrentDir = r.dir;
     document.getElementById('fp_dir').textContent = r.dir;
     document.getElementById('fp_manual').value = r.dir;
     let html = '';
     if (r.parent) html += '<div class="fp-item dir" data-type="dir" data-path="' + esc(r.parent) + '">📁 ..</div>';
     for (const d of r.dirs) html += '<div class="fp-item dir" data-type="dir" data-path="' + esc(d.path) + '">📁 ' + esc(d.name) + '</div>';
-    for (const f of r.files) {
-      const ok = !fpExts.length || fpExts.some((e) => f.name.toLowerCase().endsWith(e));
-      if (!ok) continue;
-      html += '<div class="fp-item" data-type="file" data-path="' + esc(f.path) + '">📄 ' + esc(f.name) + '<span class="sz">' + fmtSize(f.size) + '</span></div>';
+    if (!fpFolderCb) { // フォルダ選択モードではファイルを出さない
+      for (const f of r.files) {
+        const ok = !fpExts.length || fpExts.some((e) => f.name.toLowerCase().endsWith(e));
+        if (!ok) continue;
+        html += '<div class="fp-item" data-type="file" data-path="' + esc(f.path) + '">📄 ' + esc(f.name) + '<span class="sz">' + fmtSize(f.size) + '</span></div>';
+      }
     }
-    document.getElementById('fp_list').innerHTML = html || '<div class="muted" style="padding:12px 16px">(該当ファイルなし)</div>';
+    document.getElementById('fp_list').innerHTML = html || '<div class="muted" style="padding:12px 16px">(該当なし)</div>';
   } catch (e) { toast(e.message, true); }
 }
 function pickThumb() { openFilePicker(['.jpg', '.jpeg', '.png', '.webp'], (p) => { document.getElementById('d_th_path').value = p; }); }
 function pickVideo() { openFilePicker(['.mp4'], (p) => { document.getElementById('d_ing_path').value = p; }); }
+function pickWorksDir() { openFolderPicker((d) => { document.getElementById('d_works_dir').value = d; loadWorks(); }, document.getElementById('d_works_dir').value.trim()); }
+
+// ---- ghost-code works 読み込み ----
+async function loadWorks() {
+  const dir = document.getElementById('d_works_dir').value.trim();
+  const el = document.getElementById('d_works');
+  if (!dir) return toast('works フォルダを選択してください', true);
+  el.textContent = '読み込み中…';
+  try {
+    const r = await api('GET', '/api/works?product_id=' + encodeURIComponent(currentPid) + '&dir=' + encodeURIComponent(dir));
+    if (!r.entries.length) { el.innerHTML = '<span class="muted">registry.json に copy がありません</span>'; return; }
+    el.innerHTML = '<table><thead><tr><th>id</th><th>label</th><th>ghost code(bits)</th><th>可視コード</th><th>サイズ</th><th>状態</th><th></th></tr></thead><tbody>' +
+      r.entries.map((e) => {
+        let status, action;
+        if (!e.exists) { status = '<span class="badge off">ファイル無</span>'; action = '<span class="muted">—</span>'; }
+        else if (e.registered) { status = '<span class="badge on">登録済</span>'; action = '<span class="muted">—</span>'; }
+        else { status = '<span class="badge sold">未登録</span>'; action = '<button class="small" data-fp="' + esc(e.file_path) + '" data-bits="' + esc(e.bits) + '" onclick="registerWork(this)">登録</button>'; }
+        return '<tr>' +
+          '<td class="mono">' + esc(e.id) + '</td>' +
+          '<td>' + esc(e.label || '-') + '</td>' +
+          '<td class="mono" style="font-size:11px">' + esc(e.bits) + '</td>' +
+          '<td class="mono">' + esc(e.visible_code || '-') + '</td>' +
+          '<td class="mono" style="font-size:11px">' + fmtSize(e.size) + '</td>' +
+          '<td>' + status + '</td>' +
+          '<td>' + action + '</td>' +
+          '</tr>';
+      }).join('') + '</tbody></table>';
+  } catch (e) { el.innerHTML = '<span class="err">' + esc(e.message) + '</span>'; toast(e.message, true); }
+}
+
+async function registerWork(btn) {
+  const file_path = btn.dataset.fp, bits = btn.dataset.bits;
+  btn.disabled = true; btn.textContent = '登録中…';
+  try {
+    const r = await api('POST', '/api/ingest', { product_id: currentPid, file_path, bits });
+    toast('登録: ' + r.token_id + (r.duration_sec ? ' / 長さ ' + fmtDur(r.duration_sec) : ''));
+    await loadProductsQuiet(); renderDetail(); loadDetailTokens(); loadWorks();
+  } catch (e) { toast(e.message, true); btn.disabled = false; btn.textContent = '登録'; }
+}
 
 // ---- 注文 ----
 async function loadOrders() {

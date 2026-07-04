@@ -8,9 +8,9 @@
 import { createRequire } from 'module';
 import { execSync, execFileSync } from 'child_process';
 import { randomUUID, createHmac } from 'crypto';
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, statSync, readFileSync } from 'fs';
 import { homedir } from 'os';
-import { join, dirname, resolve } from 'path';
+import { join, dirname, resolve, basename } from 'path';
 
 const require = createRequire(new URL('../../backend/', import.meta.url).href);
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
@@ -497,6 +497,52 @@ export function probeDurationSec(filePath) {
   } catch {
     return null;
   }
+}
+
+/**
+ * ghost-code の works フォルダ(registry.json のある場所)を読み、copy 一覧と
+ * 「その ghost code(bits)が既にこの商品に登録済みか」を返す。
+ * registry.json 形式: [{ id, label, bits(40桁), stego_path, visible_code, ... }]。
+ * stego ファイルは <worksDir>/stego/<id or basename(stego_path)>。
+ * 登録判定は bits 一致(投入時に registry の bits を記録する運用が前提)。
+ */
+export async function scanWorks(worksDir, product_id) {
+  const dir = resolve(String(worksDir || ''));
+  const regPath = join(dir, 'registry.json');
+  let reg;
+  try {
+    reg = JSON.parse(readFileSync(regPath, 'utf8'));
+  } catch {
+    invalid(`registry.json を読めません: ${regPath}`);
+  }
+  if (!Array.isArray(reg)) invalid('registry.json は配列である必要があります');
+
+  const tokens = product_id ? await listTokens(product_id, { all: true }) : [];
+  const registeredBits = new Set(tokens.map((t) => t.bits));
+
+  const entries = reg.map((e) => {
+    const file = join(dir, 'stego', basename(String(e.stego_path || `${e.id}.mp4`)));
+    let size = 0;
+    let exists = false;
+    try {
+      size = statSync(file).size;
+      exists = true;
+    } catch {
+      /* stego ファイルが無い(未生成/移動済み) */
+    }
+    const bits = String(e.bits || '');
+    return {
+      id: e.id,
+      label: e.label,
+      bits,
+      visible_code: e.visible_code,
+      file_path: file,
+      size,
+      exists,
+      registered: bits ? registeredBits.has(bits) : false,
+    };
+  });
+  return { dir, registryPath: regPath, entries };
 }
 
 export async function setDuration(product_id, duration_sec) {
