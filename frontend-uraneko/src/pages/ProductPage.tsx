@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { useIsNarrow } from '../lib/useIsNarrow';
-import Thumbnail from '../components/bar/Thumbnail';
+import Gallery from '../components/bar/Gallery';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
@@ -58,15 +58,14 @@ export default function ProductPage() {
           gap: isNarrow ? 40 : 56,
         }}
       >
-        {/* 左:プレビュー */}
+        {/* 左:プレビュー(サムネ + サンプル画像のギャラリー) */}
         <div>
-          <Thumbnail
-            ratio="16/10"
-            cover
+          <Gallery
             code={`№ ${product.product_id}`}
             title={product.title}
-            subtitle="preview"
-            image={product.thumbnail_url}
+            images={[product.thumbnail_url, ...(product.sample_urls ?? [])].filter(
+              (u): u is string => !!u,
+            )}
           />
 
           <Ornament style={{ margin: '40px 0' }} />

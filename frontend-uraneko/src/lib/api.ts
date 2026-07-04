@@ -22,6 +22,7 @@ export interface Product {
   price_jpy: number;
   duration_sec: number;
   thumbnail_url?: string | null; // サムネの presigned URL。未設定なら null
+  sample_urls?: string[]; // 追加プレビュー画像の presigned URL(表示順)。get-product のみ
   available?: boolean; // 在庫(未割当トークン)有無。未定義なら不明扱い
 }
 

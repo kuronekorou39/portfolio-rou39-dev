@@ -5,6 +5,7 @@ export interface VideoProduct {
   price_jpy: number;
   duration_sec: number;
   thumbnail_s3_key: string;
+  sample_s3_keys?: string[]; // 追加プレビュー画像(samples/<product_id>/<uuid>)。順序=表示順
   source_s3_key: string;
   pool_target: number;
   pool_threshold: number;

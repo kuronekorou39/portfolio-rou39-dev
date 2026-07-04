@@ -141,6 +141,7 @@ export async function putProduct(input) {
       ? Number(input.duration_sec)
       : existing?.duration_sec ?? 0,
     thumbnail_s3_key: input.thumbnail_s3_key ?? existing?.thumbnail_s3_key ?? '',
+    sample_s3_keys: input.sample_s3_keys ?? existing?.sample_s3_keys ?? [],
     source_s3_key: input.source_s3_key ?? existing?.source_s3_key ?? '',
     pool_target: Number.isFinite(Number(input.pool_target))
       ? Number(input.pool_target)
@@ -155,7 +156,7 @@ export async function putProduct(input) {
   return item;
 }
 
-// 対応するサムネ画像の拡張子 → Content-Type
+// 対応する画像の拡張子 → Content-Type(サムネ・サンプル共通)
 const THUMB_CONTENT_TYPES = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -311,6 +312,79 @@ export async function ingest({ product_id, fileBytes, bits, token_id }) {
     }),
   );
   return { token_id: tid, s3_key, bucket, bytes: fileBytes.length };
+}
+
+// --- サンプル画像(サムネとは別の複数プレビュー画像。順序=表示順) ---
+
+// サンプル画像を1枚 S3(samples/<product_id>/<uuid><ext>)に上げ、商品の
+// sample_s3_keys 末尾に追加する。S3 → DDB の順。
+export async function addSampleImage({ product_id, fileBytes, ext }) {
+  if (!PRODUCT_ID_RE.test(String(product_id ?? ''))) invalid('product_id は [a-z0-9-]+');
+  if (!fileBytes || !fileBytes.length) invalid('画像ファイルの内容が空です');
+  const e = String(ext ?? '').toLowerCase();
+  const contentType = THUMB_CONTENT_TYPES[e];
+  if (!contentType) invalid('画像は .jpg / .jpeg / .png / .webp のみ対応');
+  if (!(await getProduct(product_id))) invalid(`product not found: ${product_id}`);
+
+  const key = `samples/${product_id}/${randomUUID()}${e}`;
+  await s3().send(
+    new PutObjectCommand({ Bucket: assetsBucket(), Key: key, Body: fileBytes, ContentType: contentType }),
+  );
+  const res = await ddb.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { product_id },
+      UpdateExpression: 'SET sample_s3_keys = list_append(if_not_exists(sample_s3_keys, :empty), :new)',
+      ExpressionAttributeValues: { ':empty': [], ':new': [key] },
+      ReturnValues: 'ALL_NEW',
+    }),
+  );
+  return { product_id, key, sample_s3_keys: res.Attributes?.sample_s3_keys ?? [key] };
+}
+
+// サンプル画像を1枚削除(DDB の配列から除去 + S3 実体)。
+export async function removeSampleImage(product_id, key) {
+  if (!key) invalid('key required');
+  const product = await getProduct(product_id);
+  if (!product) invalid(`product not found: ${product_id}`);
+  const keys = Array.isArray(product.sample_s3_keys) ? product.sample_s3_keys : [];
+  if (!keys.includes(key)) invalid('その画像は登録されていません');
+  const next = keys.filter((k) => k !== key);
+  await ddb.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { product_id },
+      UpdateExpression: 'SET sample_s3_keys = :v',
+      ExpressionAttributeValues: { ':v': next },
+    }),
+  );
+  try {
+    await s3().send(new DeleteObjectCommand({ Bucket: assetsBucket(), Key: key }));
+  } catch (err) {
+    console.error('sample S3 delete failed (non-fatal):', err?.name);
+  }
+  return { product_id, sample_s3_keys: next };
+}
+
+// サンプル画像の表示順を1つ動かす(dir: 'up' | 'down')。
+export async function moveSampleImage(product_id, key, dir) {
+  const product = await getProduct(product_id);
+  if (!product) invalid(`product not found: ${product_id}`);
+  const keys = Array.isArray(product.sample_s3_keys) ? [...product.sample_s3_keys] : [];
+  const i = keys.indexOf(key);
+  if (i < 0) invalid('その画像は登録されていません');
+  const j = dir === 'up' ? i - 1 : i + 1;
+  if (j < 0 || j >= keys.length) return { product_id, sample_s3_keys: keys }; // 端で何もしない
+  [keys[i], keys[j]] = [keys[j], keys[i]];
+  await ddb.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { product_id },
+      UpdateExpression: 'SET sample_s3_keys = :v',
+      ExpressionAttributeValues: { ':v': keys },
+    }),
+  );
+  return { product_id, sample_s3_keys: keys };
 }
 
 // --- coupons(特定商品限定・総利用上限のみ) ---

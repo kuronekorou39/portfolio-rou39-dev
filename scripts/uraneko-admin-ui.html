@@ -85,6 +85,14 @@
   .adorn input { border:none; background:transparent; }
   .preview { width:150px; aspect-ratio:4/5; border:1px solid var(--line); background:var(--deep); display:grid; place-items:center; color:var(--dim); font-size:11px; overflow:hidden; flex:none; }
   .preview img { width:100%; height:100%; object-fit:cover; }
+  .samples { display:flex; gap:10px; flex-wrap:wrap; }
+  .samp { width:96px; border:1px solid var(--line); background:var(--deep); }
+  .samp .thumb { width:100%; aspect-ratio:4/5; overflow:hidden; display:grid; place-items:center; color:var(--dim); font-size:10px; }
+  .samp .thumb img { width:100%; height:100%; object-fit:cover; }
+  .samp .ctl { display:flex; justify-content:space-between; align-items:center; padding:3px 4px; border-top:1px solid var(--line); }
+  .samp .ctl button { border:none; background:transparent; color:var(--muted); padding:2px 5px; font-size:12px; letter-spacing:0; cursor:pointer; }
+  .samp .ctl button:hover { color:var(--fg); background:transparent; }
+  .samp .ctl button.x:hover { color:var(--accent); }
 
   /* ファイル参照モーダル */
   .modal { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:grid; place-items:center; z-index:100; }
@@ -188,10 +196,17 @@
                 </div>
               </div>
               <div class="hint">縦長 4:5 推奨。サイト一覧・商品ページに反映。差し替えは再アップロードするだけです。</div>
-              <div class="sub">サンプル画像 · SAMPLES</div>
-              <div class="hint">複数のプレビュー画像を商品ページに載せる機能は仕様確定後に追加予定です。</div>
             </div>
           </div>
+
+          <div class="sub">サンプル画像 · SAMPLES(商品ページで順に表示)</div>
+          <div id="d_samples" style="margin:8px 0 4px"></div>
+          <div class="row" style="margin-top:6px">
+            <input id="d_sample_path" placeholder="「参照」で画像を選択" style="flex:1; min-width:220px">
+            <button class="ghost" onclick="pickSample()">参照…</button>
+            <button onclick="addSample()">追加</button>
+          </div>
+          <div class="hint">サムネとは別に、商品ページでギャラリー表示する画像を複数登録できます(◀▶ で順序変更、× で削除)。1枚目から順に表示されます。</div>
         </section>
       </div>
 
@@ -432,7 +447,45 @@ function renderDetail() {
   document.getElementById('d_thumbstate').innerHTML = p.thumbnail_s3_key
     ? '<span class="badge on">設定済</span>' : '<span class="badge off">未設定</span>';
   loadThumbPreview(p);
+  renderSamples(p);
 }
+
+async function renderSamples(p) {
+  const box = document.getElementById('d_samples');
+  const keys = Array.isArray(p.sample_s3_keys) ? p.sample_s3_keys : [];
+  if (!keys.length) { box.innerHTML = '<span class="muted">サンプル画像なし</span>'; return; }
+  // 各キーの presigned URL を取得して並べる
+  const urls = await Promise.all(keys.map(async (k) => {
+    try { return (await api('GET', '/api/preview-url?key=' + encodeURIComponent(k))).url; } catch { return ''; }
+  }));
+  box.innerHTML = '<div class="samples">' + keys.map((k, i) =>
+    '<div class="samp">' +
+      '<div class="thumb">' + (urls[i] ? '<img src="' + esc(urls[i]) + '" onerror="this.parentNode.textContent=\'×\'">' : '取得失敗') + '</div>' +
+      '<div class="ctl">' +
+        '<button title="前へ" data-key="' + esc(k) + '" data-dir="up" onclick="moveSample(this)">◀</button>' +
+        '<span class="mono" style="color:var(--dim);font-size:10px">' + (i + 1) + '</span>' +
+        '<button title="後へ" data-key="' + esc(k) + '" data-dir="down" onclick="moveSample(this)">▶</button>' +
+        '<button class="x" title="削除" data-key="' + esc(k) + '" onclick="removeSample(this)">×</button>' +
+      '</div>' +
+    '</div>').join('') + '</div>';
+}
+
+async function addSample() {
+  const file_path = document.getElementById('d_sample_path').value.trim();
+  if (!file_path) return toast('画像のパスを選択してください', true);
+  try { await api('POST', '/api/products/sample', { product_id: currentPid, file_path }); toast('サンプル追加'); document.getElementById('d_sample_path').value = ''; await loadProductsQuiet(); renderDetail(); }
+  catch (e) { toast(e.message, true); }
+}
+async function removeSample(btn) {
+  if (!confirm('このサンプル画像を削除しますか?')) return;
+  try { await api('POST', '/api/products/sample/delete', { product_id: currentPid, key: btn.dataset.key }); toast('削除'); await loadProductsQuiet(); renderDetail(); }
+  catch (e) { toast(e.message, true); }
+}
+async function moveSample(btn) {
+  try { await api('POST', '/api/products/sample/move', { product_id: currentPid, key: btn.dataset.key, dir: btn.dataset.dir }); await loadProductsQuiet(); renderDetail(); }
+  catch (e) { toast(e.message, true); }
+}
+function pickSample() { openFilePicker(['.jpg', '.jpeg', '.png', '.webp'], (p) => { document.getElementById('d_sample_path').value = p; }); }
 
 async function loadThumbPreview(p) {
   const box = document.getElementById('d_thumb_preview');
