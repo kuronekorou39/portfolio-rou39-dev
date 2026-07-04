@@ -61,9 +61,15 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return serverError();
     }
 
+    // Content-Disposition: attachment を署名に含める。別オリジン(S3)への presigned URL では
+    // <a download> 属性が無視されインライン再生されてしまうため、S3 応答側で強制ダウンロードさせる。
     const downloadUrl = await getSignedUrl(
       s3,
-      new GetObjectCommand({ Bucket: ASSETS_BUCKET, Key: token.s3_key }),
+      new GetObjectCommand({
+        Bucket: ASSETS_BUCKET,
+        Key: token.s3_key,
+        ResponseContentDisposition: `attachment; filename="${order.product_id}.mp4"`,
+      }),
       { expiresIn: SIGNED_URL_TTL_SEC },
     );
 
