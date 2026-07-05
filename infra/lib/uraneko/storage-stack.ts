@@ -18,6 +18,7 @@ export class UranekoStorageStack extends cdk.Stack {
       tableName: 'uraneko-video-products',
       partitionKey: { name: 'product_id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true, // バックアップ(誤操作/バグからの復旧。実金を扱うため必須)
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
@@ -26,6 +27,7 @@ export class UranekoStorageStack extends cdk.Stack {
       tableName: 'uraneko-video-tokens',
       partitionKey: { name: 'token_id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true, // バックアップ(誤操作/バグからの復旧。実金を扱うため必須)
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
@@ -42,6 +44,7 @@ export class UranekoStorageStack extends cdk.Stack {
       tableName: 'uraneko-orders',
       partitionKey: { name: 'order_id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true, // バックアップ(誤操作/バグからの復旧。実金を扱うため必須)
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
@@ -57,6 +60,7 @@ export class UranekoStorageStack extends cdk.Stack {
       tableName: 'uraneko-coupons',
       partitionKey: { name: 'coupon_code', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true, // バックアップ(誤操作/バグからの復旧。実金を扱うため必須)
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 

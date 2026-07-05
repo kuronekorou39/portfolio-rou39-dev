@@ -42,6 +42,24 @@ export class UranekoFrontendStack extends cdk.Stack {
       functionName: 'uraneko-api-rewrite',
     });
 
+    // SPA ルーティング: 拡張子の無いパス(=React Router のルート)を index.html に書き換える。
+    // これにより distribution レベルの errorResponses(403/404→index.html)を使わずに済み、
+    // /api/* の 403/404(get-order 未認可・商品404・webhook 署名NG)が SPA HTML に化けなくなる。
+    const spaRewriteFn = new cloudfront.Function(this, 'UranekoSpaRewrite', {
+      code: cloudfront.FunctionCode.fromInline(`
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+          var last = uri.substring(uri.lastIndexOf('/') + 1);
+          if (uri !== '/' && last.indexOf('.') === -1) {
+            request.uri = '/index.html';
+          }
+          return request;
+        }
+      `),
+      functionName: 'uraneko-spa-rewrite',
+    });
+
     const securityHeaders = new cloudfront.ResponseHeadersPolicy(this, 'UranekoSecurityHeaders', {
       responseHeadersPolicyName: 'uraneko-security-headers',
       securityHeadersBehavior: {
@@ -66,6 +84,9 @@ export class UranekoFrontendStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: securityHeaders,
+        functionAssociations: [
+          { function: spaRewriteFn, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
+        ],
       },
       additionalBehaviors: {
         '/api/*': {
@@ -84,10 +105,8 @@ export class UranekoFrontendStack extends cdk.Stack {
       domainNames: [props.subdomain],
       certificate: props.certificate,
       defaultRootObject: 'index.html',
-      errorResponses: [
-        { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html' },
-        { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html' },
-      ],
+      // errorResponses は使わない(SPA ルーティングは spaRewriteFn が担当)。
+      // これにより /api/* の 403/404 が index.html(200)に化けず、正しく伝わる。
     });
 
     new route53.ARecord(this, 'UranekoARecord', {
