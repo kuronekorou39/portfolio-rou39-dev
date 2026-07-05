@@ -13,6 +13,8 @@ import {
   releaseRedemption,
 } from '../../lib/uraneko/coupon';
 import { fulfillPaidOrder } from '../../lib/uraneko/fulfill';
+import { verifyMember, authHeaderOf } from '../../lib/uraneko/member-auth';
+import { signOrderToken } from '../../lib/uraneko/order-token';
 import type { Order, VideoProduct } from '../../lib/uraneko/types';
 
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE!;
@@ -37,15 +39,16 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
     if (!product_id) return badRequest('product_id required');
 
-    const userSub = event.requestContext.authorizer?.claims?.sub as string | undefined;
-    const userEmailFromClaim = event.requestContext.authorizer?.claims?.email as string | undefined;
+    // /checkout はオーソライザー無し(ゲスト併用)なので、Authorization ヘッダーの
+    // Cognito IDトークンを Lambda 側で検証して会員か判定する。無効/無ければゲスト。
+    const member = await verifyMember(authHeaderOf(event));
 
     // ログインユーザー or ゲストの判定
     let user_id: string;
     let buyerEmail: string;
-    if (userSub) {
-      user_id = userSub;
-      buyerEmail = userEmailFromClaim ?? (email ?? '');
+    if (member) {
+      user_id = member.sub;
+      buyerEmail = member.email || email || '';
       if (!buyerEmail) return badRequest('email required');
     } else {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return badRequest('email_invalid');
@@ -131,6 +134,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         return conflict('amount_too_small');
       }
 
+      // 決済後の戻り先(完了ページ)に署名トークンを付ける。これが無いとゲストは
+      // 自分の注文を get-order できず(sub も token も無い)完了ページが 403 で行き止まりになる。
+      const accessToken = await signOrderToken(order_id);
+
       // 通常 / 割引あり(1..99%): NOWPayments invoice を作成
       const invoice = await createInvoice({
         price_amount: finalAmount,
@@ -139,7 +146,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         order_id,
         order_description: product.title,
         ipn_callback_url: `${API_BASE_URL}/webhooks/nowpayments`,
-        success_url: `${SITE_BASE_URL}/order/${order_id}/complete`,
+        success_url: `${SITE_BASE_URL}/order/${order_id}/complete?token=${accessToken}`,
         cancel_url: `${SITE_BASE_URL}/product/${product_id}`,
       });
 

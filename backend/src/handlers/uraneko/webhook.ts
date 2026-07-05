@@ -67,17 +67,24 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return ok({ ok: true, already_paid: true });
     }
 
-    // 支払い完了以外はステータスだけ更新
+    // 支払い完了以外はステータスだけ更新。ただし確定済み(paid)は絶対に降格させない
+    // (NOWPayments は IPN を再送・順不同配信し得る。paid 後に confirming 等が来ても無視)。
     if (newStatus !== 'paid') {
-      await docClient.send(
-        new UpdateCommand({
-          TableName: ORDERS_TABLE,
-          Key: { order_id },
-          UpdateExpression: 'SET #s = :s',
-          ExpressionAttributeNames: { '#s': 'status' },
-          ExpressionAttributeValues: { ':s': newStatus },
-        }),
-      );
+      try {
+        await docClient.send(
+          new UpdateCommand({
+            TableName: ORDERS_TABLE,
+            Key: { order_id },
+            UpdateExpression: 'SET #s = :s',
+            ConditionExpression: '#s <> :paid',
+            ExpressionAttributeNames: { '#s': 'status' },
+            ExpressionAttributeValues: { ':s': newStatus, ':paid': 'paid' },
+          }),
+        );
+      } catch (err: unknown) {
+        // 既に paid → 降格しない(冪等)。それ以外は再送させる
+        if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
+      }
       return ok({ ok: true, status: newStatus });
     }
 

@@ -13,6 +13,7 @@
     "@aws-sdk/client-ses": "^3.1035.0",
     "@aws-sdk/lib-dynamodb": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.750.0",
+    "aws-jwt-verify": "^5.2.1",
     "mailparser": "^3.9.8"
   },
   "devDependencies": {

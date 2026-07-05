@@ -16,6 +16,7 @@ interface UranekoApiStackProps extends cdk.StackProps {
   couponsTable: dynamodb.ITable;
   assetsBucket: s3.IBucket;
   userPool: cognito.IUserPool;
+  userPoolClientId: string; // 会員JWT検証用(checkout/get-order が Lambda 側で検証)
   nowpaymentsApiKey: secretsmanager.ISecret;
   nowpaymentsIpnSecret: secretsmanager.ISecret;
   siteUrl: string; // https://uraneko.rou39.com
@@ -58,6 +59,8 @@ export class UranekoApiStack extends cdk.Stack {
       NOWPAYMENTS_API_KEY_SECRET: props.nowpaymentsApiKey.secretName,
       NOWPAYMENTS_IPN_SECRET_SECRET: props.nowpaymentsIpnSecret.secretName,
       ORDER_ACCESS_SECRET_SECRET: props.orderAccessSecret.secretName,
+      URANEKO_USER_POOL_ID: props.userPool.userPoolId,
+      URANEKO_CLIENT_ID: props.userPoolClientId,
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };

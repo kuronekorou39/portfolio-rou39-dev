@@ -5,6 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, notFound, forbidden, serverError } from '../../lib/response';
 import { verifyOrderToken } from '../../lib/uraneko/order-token';
+import { verifyMember, authHeaderOf } from '../../lib/uraneko/member-auth';
 import type { Order, VideoToken } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
@@ -25,12 +26,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const order = orderRes.Item as Order | undefined;
     if (!order) return notFound();
 
-    // 認可: Cognito の sub が一致 OR メール経由の署名トークンが一致
-    const userSub = event.requestContext.authorizer?.claims?.sub as string | undefined;
+    // 認可: Cognito の sub が一致(会員)OR 署名トークンが一致(ゲスト/メールリンク)。
+    // /orders/{id} はオーソライザー無しなので Authorization ヘッダーを Lambda 側で検証。
+    const member = await verifyMember(authHeaderOf(event));
     const qToken = event.queryStringParameters?.token;
 
     let authorized = false;
-    if (userSub && userSub === order.user_id) authorized = true;
+    if (member && member.sub === order.user_id) authorized = true;
     if (!authorized && qToken) {
       const verified = await verifyOrderToken(qToken);
       if (verified === order_id) authorized = true;
