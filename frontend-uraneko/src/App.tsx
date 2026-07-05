@@ -12,6 +12,9 @@ const OrderCompletePage = lazy(() => import('./pages/OrderCompletePage'));
 const MyOrdersPage = lazy(() => import('./pages/MyOrdersPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const TokushohoPage = lazy(() => import('./pages/LegalPages').then((m) => ({ default: m.TokushohoPage })));
+const PrivacyPage = lazy(() => import('./pages/LegalPages').then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('./pages/LegalPages').then((m) => ({ default: m.TermsPage })));
 
 function PageLoader() {
   return (
@@ -35,6 +38,9 @@ export default function App() {
                 <Route path="/checkout/:id" element={<CheckoutPage />} />
                 <Route path="/order/:id/complete" element={<OrderCompletePage />} />
                 <Route path="/my/orders" element={<MyOrdersPage />} />
+                <Route path="/legal/tokushoho" element={<TokushohoPage />} />
+                <Route path="/legal/privacy" element={<PrivacyPage />} />
+                <Route path="/legal/terms" element={<TermsPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>

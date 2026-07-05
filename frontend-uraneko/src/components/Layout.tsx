@@ -209,6 +209,17 @@ export default function Layout() {
         }}
       >
         <span>uraneko — private archive</span>
+        <span style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <Link to="/legal/tokushoho" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
+            特定商取引法
+          </Link>
+          <Link to="/legal/privacy" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
+            プライバシー
+          </Link>
+          <Link to="/legal/terms" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
+            利用規約
+          </Link>
+        </span>
         <span style={{ color: 'var(--color-accent)' }}>18+ · rou39.com</span>
       </footer>
     </div>

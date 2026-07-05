@@ -781,6 +781,15 @@ export default function CheckoutPage() {
           >
             ※ カード決済は無い。
             <br />※ 支払い確認後、専用リンクをメールで送る。
+            <br />※ デジタル商品につき、購入完了後・ダウンロード後の返品/返金はできません。
+            <br />
+            <a href="/legal/tokushoho" target="_blank" rel="noopener" style={{ color: 'var(--muted)' }}>
+              特定商取引法に基づく表記
+            </a>
+            {' · '}
+            <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: 'var(--muted)' }}>
+              利用規約
+            </a>
           </p>
         </div>
 
