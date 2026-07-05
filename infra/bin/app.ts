@@ -179,4 +179,6 @@ new UranekoFrontendStack(app, 'UranekoFrontend', {
 new UranekoMonitoringStack(app, 'UranekoMonitoring', {
   env,
   alertEmail: process.env.ALERT_EMAIL || 'alert@example.com',
+  checkoutFn: uranekoApi.checkoutFn,
+  webhookFn: uranekoApi.webhookFn,
 });

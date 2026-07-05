@@ -26,6 +26,8 @@ interface UranekoApiStackProps extends cdk.StackProps {
 
 export class UranekoApiStack extends cdk.Stack {
   public readonly api: apigateway.RestApi;
+  public readonly checkoutFn: lambda.Function;
+  public readonly webhookFn: lambda.Function;
 
   constructor(scope: Construct, id: string, props: UranekoApiStackProps) {
     super(scope, id, props);
@@ -155,6 +157,10 @@ export class UranekoApiStack extends cdk.Stack {
         resources: [sesIdentityArn],
       }),
     );
+
+    // 監視スタックからアラームを張れるよう公開
+    this.checkoutFn = checkoutFn;
+    this.webhookFn = webhookFn;
 
     // --- get order (Cognito or signed token) ---
     const getOrderFn = new nodejs.NodejsFunction(this, 'GetOrderFn', {
