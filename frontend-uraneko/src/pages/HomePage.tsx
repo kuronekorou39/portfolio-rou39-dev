@@ -15,6 +15,9 @@ export default function HomePage() {
     api.listProducts().then(setProducts).catch((e) => setErr(e.message));
   }, []);
 
+  // 注目枠は先頭の商品(空プレースホルダの「New」をやめ、実データに紐づける)
+  const featured = products && products.length > 0 ? products[0] : null;
+
   return (
     <div>
       {/* ヒーロー */}
@@ -67,22 +70,33 @@ export default function HomePage() {
               maxWidth: 440,
             }}
           >
-            会員制の映像アーカイブ。
+            映像を1本ずつ販売しています。
             <br />
-            作品ごとに、購入者だけの複製を渡す。
+            購入後、専用のダウンロードリンクをメールでお送りします。
           </p>
         </div>
 
-        {/* ヒーロー右:注目サムネ placeholder */}
+        {/* ヒーロー右:注目作品(先頭の商品。無ければ準備中) */}
         <div style={{ position: 'relative' }}>
-          <Thumbnail
-            ratio="4/5"
-            cover
-            code="№ 0001"
-            title="——"
-            subtitle="featured"
-            badge="New"
-          />
+          {featured ? (
+            <Link
+              to={`/product/${featured.product_id}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <Thumbnail
+                ratio="4/5"
+                cover
+                code={`№ ${featured.product_id}`}
+                title={featured.title}
+                subtitle={`${Math.floor(featured.duration_sec / 60)} min`}
+                price={`¥ ${featured.price_jpy.toLocaleString()}`}
+                badge={featured.available === false ? '在庫切れ' : '注目'}
+                image={featured.thumbnail_url}
+              />
+            </Link>
+          ) : (
+            <Thumbnail ratio="4/5" cover code="№ ———" title="——" subtitle="準備中" />
+          )}
         </div>
       </section>
 
