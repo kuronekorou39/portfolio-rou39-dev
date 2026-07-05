@@ -22,3 +22,32 @@ export async function presignThumbnail(key: string | undefined | null): Promise<
     expiresIn: THUMB_URL_TTL_SEC,
   });
 }
+
+// 原画像 key → ぼかし版 key(store の blurKeyFor と一致させること)
+export function blurKey(origKey: string): string {
+  const dot = origKey.lastIndexOf('.');
+  const base = dot >= 0 ? origKey.slice(0, dot) : origKey;
+  return `${base}.blur.jpg`;
+}
+
+export interface GalleryImage {
+  url: string; // 表示用(ぼかし指定ならぼかし版)
+  zoom_url: string | null; // 拡大時に見せる原画。ぼかし&外さない画像は null(原画を配信しない)
+}
+
+/**
+ * 1画像の表示URLと拡大URLを返す。**外れない(blur!=none かつ reveal=false)なら
+ * 原画像の署名URLは一切生成せず zoom_url=null**(原画をブラウザに送らない)。
+ */
+export async function galleryImage(
+  origKey: string | undefined | null,
+  blur: string | undefined,
+  reveal: boolean | undefined,
+): Promise<GalleryImage | null> {
+  if (!origKey) return null;
+  const blurred = !!blur && blur !== 'none';
+  const url = await presignThumbnail(blurred ? blurKey(origKey) : origKey);
+  if (!url) return null;
+  const zoom_url = !blurred || reveal ? await presignThumbnail(origKey) : null;
+  return { url, zoom_url };
+}

@@ -63,9 +63,10 @@ export default function ProductPage() {
           <Gallery
             code={`№ ${product.product_id}`}
             title={product.title}
-            images={[product.thumbnail_url, ...(product.sample_urls ?? [])].filter(
-              (u): u is string => !!u,
-            )}
+            images={
+              product.gallery ??
+              (product.thumbnail_url ? [{ url: product.thumbnail_url, zoom_url: product.thumbnail_url }] : [])
+            }
           />
 
           <Ornament style={{ margin: '40px 0' }} />

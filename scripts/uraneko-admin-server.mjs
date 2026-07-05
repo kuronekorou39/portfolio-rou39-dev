@@ -87,30 +87,20 @@ const routes = {
   'GET /api/works': async (q) => store.scanWorks(q.get('dir') || '', q.get('product_id') || ''),
   'POST /api/products/thumbnail': async (_q, body) => {
     if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の画像パス)が必要です');
-    let fileBytes;
-    try {
-      fileBytes = readFileSync(body.file_path);
-    } catch {
-      throw new store.ValidationError(`ファイルが読めません: ${body.file_path}`);
-    }
     const dot = body.file_path.lastIndexOf('.');
     const ext = dot >= 0 ? body.file_path.slice(dot) : '';
-    return store.putThumbnail({ product_id: body.product_id, fileBytes, ext });
+    return store.putThumbnail({ product_id: body.product_id, file_path: body.file_path, ext, blur: body.blur, reveal: body.reveal });
   },
+  'POST /api/products/thumbnail/reveal': async (_q, body) => store.setThumbnailReveal(body.product_id, Boolean(body.reveal)),
   'POST /api/products/sample': async (_q, body) => {
     if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の画像パス)が必要です');
-    let fileBytes;
-    try {
-      fileBytes = readFileSync(body.file_path);
-    } catch {
-      throw new store.ValidationError(`ファイルが読めません: ${body.file_path}`);
-    }
     const dot = body.file_path.lastIndexOf('.');
     const ext = dot >= 0 ? body.file_path.slice(dot) : '';
-    return store.addSampleImage({ product_id: body.product_id, fileBytes, ext });
+    return store.addSampleImage({ product_id: body.product_id, file_path: body.file_path, ext, blur: body.blur, reveal: body.reveal });
   },
   'POST /api/products/sample/delete': async (_q, body) => store.removeSampleImage(body.product_id, body.key),
   'POST /api/products/sample/move': async (_q, body) => store.moveSampleImage(body.product_id, body.key, body.dir),
+  'POST /api/products/sample/reveal': async (_q, body) => store.setSampleReveal(body.product_id, body.key, Boolean(body.reveal)),
   'GET /api/coupons': async (q) => store.listCoupons({ product: q.get('product') || undefined }),
   'POST /api/coupons': async (_q, body) => store.addCoupon(body),
   'POST /api/coupons/delete': async (_q, body) => store.deleteCoupon(body.coupon_code),

@@ -21,8 +21,9 @@ export interface Product {
   description: string;
   price_jpy: number;
   duration_sec: number;
-  thumbnail_url?: string | null; // サムネの presigned URL。未設定なら null
-  sample_urls?: string[]; // 追加プレビュー画像の presigned URL(表示順)。get-product のみ
+  thumbnail_url?: string | null; // サムネの表示URL(ぼかし指定ならぼかし版)
+  // ギャラリー(サムネ+サンプル)。get-product のみ。zoom_url=null は拡大でも原画を出さない
+  gallery?: { url: string; zoom_url: string | null }[];
   available?: boolean; // 在庫(未割当トークン)有無。未定義なら不明扱い
 }
 

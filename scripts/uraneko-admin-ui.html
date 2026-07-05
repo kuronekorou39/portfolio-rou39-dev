@@ -190,23 +190,33 @@
             <div style="flex:1; min-width:280px">
               <div class="field"><label>画像ファイル(jpg / png / webp)</label>
                 <div class="row" style="margin-top:0">
-                  <input id="d_th_path" placeholder="「参照」で選択(手入力も可)" style="flex:1; min-width:220px">
+                  <input id="d_th_path" placeholder="「参照」で選択(手入力も可)" style="flex:1; min-width:200px">
                   <button class="ghost" onclick="pickThumb()">参照…</button>
-                  <button onclick="thumbForDetail()">アップロード</button>
                 </div>
               </div>
-              <div class="hint">縦長 4:5 推奨。サイト一覧・商品ページに反映。差し替えは再アップロードするだけです。</div>
+              <div class="row" style="margin-top:8px">
+                <div class="field"><label>ぼかし</label>
+                  <select id="d_th_blur"><option value="none">なし</option><option value="light">弱</option><option value="strong">強</option></select>
+                </div>
+                <div class="field"><label style="letter-spacing:0"><input type="checkbox" id="d_th_reveal" checked> 拡大で外す</label></div>
+                <button onclick="thumbForDetail()">アップロード</button>
+              </div>
+              <div class="hint">縦長 4:5 推奨。<strong>ぼかしはアップ時にサーバ側で焼き込み</strong>ます。「拡大で外す」オフの画像は原画をサイトに一切出しません(F12でも抜けない)。差し替えは再アップロードするだけ。</div>
             </div>
           </div>
 
           <div class="sub">サンプル画像 · SAMPLES(商品ページで順に表示)</div>
           <div id="d_samples" style="margin:8px 0 4px"></div>
           <div class="row" style="margin-top:6px">
-            <input id="d_sample_path" placeholder="「参照」で画像を選択" style="flex:1; min-width:220px">
+            <input id="d_sample_path" placeholder="「参照」で画像を選択" style="flex:1; min-width:200px">
             <button class="ghost" onclick="pickSample()">参照…</button>
+            <div class="field"><label>ぼかし</label>
+              <select id="d_sample_blur"><option value="none">なし</option><option value="light">弱</option><option value="strong">強</option></select>
+            </div>
+            <div class="field"><label style="letter-spacing:0"><input type="checkbox" id="d_sample_reveal" checked> 拡大で外す</label></div>
             <button onclick="addSample()">追加</button>
           </div>
-          <div class="hint">サムネとは別に、商品ページでギャラリー表示する画像を複数登録できます(◀▶ で順序変更、× で削除)。1枚目から順に表示されます。</div>
+          <div class="hint">サムネとは別に、商品ページでギャラリー表示する画像を複数登録(◀▶で順序、×で削除、🔓/🔒で拡大時に外すか切替)。ぼかしはアップ時にサーバ側で焼き込み、「外さない」画像は原画をサイトに出しません。</div>
         </section>
       </div>
 
@@ -444,36 +454,56 @@ function renderDetail() {
   document.getElementById('d_dur').value = fmtDur(p.duration_sec);
   document.getElementById('d_desc').value = p.description || '';
   document.getElementById('d_pub').checked = !!p.published;
-  document.getElementById('d_thumbstate').innerHTML = p.thumbnail_s3_key
-    ? '<span class="badge on">設定済</span>' : '<span class="badge off">未設定</span>';
+  const blurLabel = { none: 'ぼかしなし', light: 'ぼかし弱', strong: 'ぼかし強' };
+  let thState = p.thumbnail_s3_key ? '<span class="badge on">設定済</span>' : '<span class="badge off">未設定</span>';
+  if (p.thumbnail_s3_key && p.thumbnail_blur && p.thumbnail_blur !== 'none') {
+    thState += ' <span class="badge off">' + blurLabel[p.thumbnail_blur] + '</span>' +
+      ' <button class="small" onclick="toggleThumbReveal(' + (!p.thumbnail_reveal) + ')">' +
+      (p.thumbnail_reveal ? '拡大で外す: ON' : '拡大で外す: OFF') + '</button>';
+  }
+  document.getElementById('d_thumbstate').innerHTML = thState;
   loadThumbPreview(p);
   renderSamples(p);
 }
 
+async function toggleThumbReveal(next) {
+  try { await api('POST', '/api/products/thumbnail/reveal', { product_id: currentPid, reveal: next }); toast('サムネ 拡大で外す: ' + (next ? 'ON' : 'OFF')); await loadProductsQuiet(); renderDetail(); }
+  catch (e) { toast(e.message, true); }
+}
+
 async function renderSamples(p) {
   const box = document.getElementById('d_samples');
-  const keys = Array.isArray(p.sample_s3_keys) ? p.sample_s3_keys : [];
-  if (!keys.length) { box.innerHTML = '<span class="muted">サンプル画像なし</span>'; return; }
-  // 各キーの presigned URL を取得して並べる
-  const urls = await Promise.all(keys.map(async (k) => {
-    try { return (await api('GET', '/api/preview-url?key=' + encodeURIComponent(k))).url; } catch { return ''; }
+  const samples = Array.isArray(p.samples) ? p.samples : [];
+  if (!samples.length) { box.innerHTML = '<span class="muted">サンプル画像なし</span>'; return; }
+  const blurLabel = { none: '', light: '弱', strong: '強' };
+  // 各画像のプレビューURL(管理画面では原画を表示)
+  const urls = await Promise.all(samples.map(async (s) => {
+    try { return (await api('GET', '/api/preview-url?key=' + encodeURIComponent(s.key))).url; } catch { return ''; }
   }));
-  box.innerHTML = '<div class="samples">' + keys.map((k, i) =>
-    '<div class="samp">' +
+  box.innerHTML = '<div class="samples">' + samples.map((s, i) => {
+    const bl = blurLabel[s.blur] ? '<span class="badge off" style="font-size:9px">ぼかし' + blurLabel[s.blur] + '</span>' : '';
+    const rev = (s.blur && s.blur !== 'none')
+      ? '<button title="拡大で外すか" data-key="' + esc(s.key) + '" data-rev="' + (!s.reveal) + '" onclick="toggleSampleReveal(this)">' + (s.reveal ? '🔓' : '🔒') + '</button>'
+      : '';
+    return '<div class="samp">' +
       '<div class="thumb">' + (urls[i] ? '<img src="' + esc(urls[i]) + '" onerror="this.parentNode.textContent=\'×\'">' : '取得失敗') + '</div>' +
+      '<div style="text-align:center;padding:2px 0">' + bl + '</div>' +
       '<div class="ctl">' +
-        '<button title="前へ" data-key="' + esc(k) + '" data-dir="up" onclick="moveSample(this)">◀</button>' +
-        '<span class="mono" style="color:var(--dim);font-size:10px">' + (i + 1) + '</span>' +
-        '<button title="後へ" data-key="' + esc(k) + '" data-dir="down" onclick="moveSample(this)">▶</button>' +
-        '<button class="x" title="削除" data-key="' + esc(k) + '" onclick="removeSample(this)">×</button>' +
+        '<button title="前へ" data-key="' + esc(s.key) + '" data-dir="up" onclick="moveSample(this)">◀</button>' +
+        rev +
+        '<button title="後へ" data-key="' + esc(s.key) + '" data-dir="down" onclick="moveSample(this)">▶</button>' +
+        '<button class="x" title="削除" data-key="' + esc(s.key) + '" onclick="removeSample(this)">×</button>' +
       '</div>' +
-    '</div>').join('') + '</div>';
+    '</div>';
+  }).join('') + '</div>';
 }
 
 async function addSample() {
   const file_path = document.getElementById('d_sample_path').value.trim();
   if (!file_path) return toast('画像のパスを選択してください', true);
-  try { await api('POST', '/api/products/sample', { product_id: currentPid, file_path }); toast('サンプル追加'); document.getElementById('d_sample_path').value = ''; await loadProductsQuiet(); renderDetail(); }
+  const blur = document.getElementById('d_sample_blur').value;
+  const reveal = document.getElementById('d_sample_reveal').checked;
+  try { await api('POST', '/api/products/sample', { product_id: currentPid, file_path, blur, reveal }); toast('サンプル追加'); document.getElementById('d_sample_path').value = ''; await loadProductsQuiet(); renderDetail(); }
   catch (e) { toast(e.message, true); }
 }
 async function removeSample(btn) {
@@ -483,6 +513,10 @@ async function removeSample(btn) {
 }
 async function moveSample(btn) {
   try { await api('POST', '/api/products/sample/move', { product_id: currentPid, key: btn.dataset.key, dir: btn.dataset.dir }); await loadProductsQuiet(); renderDetail(); }
+  catch (e) { toast(e.message, true); }
+}
+async function toggleSampleReveal(btn) {
+  try { await api('POST', '/api/products/sample/reveal', { product_id: currentPid, key: btn.dataset.key, reveal: btn.dataset.rev === 'true' }); await loadProductsQuiet(); renderDetail(); }
   catch (e) { toast(e.message, true); }
 }
 function pickSample() { openFilePicker(['.jpg', '.jpeg', '.png', '.webp'], (p) => { document.getElementById('d_sample_path').value = p; }); }
@@ -519,7 +553,9 @@ async function loadProductsQuiet() {
 async function thumbForDetail() {
   const file_path = document.getElementById('d_th_path').value.trim();
   if (!file_path) return toast('画像のパスを選択してください', true);
-  try { const r = await api('POST', '/api/products/thumbnail', { product_id: currentPid, file_path }); toast('サムネ設定: ' + r.product_id + ' (' + fmtSize(r.bytes) + ')'); document.getElementById('d_th_path').value = ''; await loadProductsQuiet(); renderDetail(); }
+  const blur = document.getElementById('d_th_blur').value;
+  const reveal = document.getElementById('d_th_reveal').checked;
+  try { const r = await api('POST', '/api/products/thumbnail', { product_id: currentPid, file_path, blur, reveal }); toast('サムネ設定: ' + r.product_id + ' (' + fmtSize(r.bytes) + ')'); document.getElementById('d_th_path').value = ''; await loadProductsQuiet(); renderDetail(); }
   catch (e) { toast(e.message, true); }
 }
 

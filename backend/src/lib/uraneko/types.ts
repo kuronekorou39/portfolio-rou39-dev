@@ -5,7 +5,10 @@ export interface VideoProduct {
   price_jpy: number;
   duration_sec: number;
   thumbnail_s3_key: string;
-  sample_s3_keys?: string[]; // 追加プレビュー画像(samples/<product_id>/<uuid>)。順序=表示順
+  thumbnail_blur?: 'none' | 'light' | 'strong';
+  thumbnail_reveal?: boolean; // 拡大時に原画を見せるか(blur!=none のときのみ意味を持つ)
+  // 追加プレビュー画像(samples/<product_id>/<uuid>)。順序=表示順。各画像に blur/reveal
+  samples?: { key: string; blur: 'none' | 'light' | 'strong'; reveal: boolean }[];
   source_s3_key: string;
   pool_target: number;
   pool_threshold: number;
