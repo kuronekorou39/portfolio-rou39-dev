@@ -686,6 +686,90 @@ export default function CheckoutPage() {
             </BrassFrame>
           )}
 
+          {/* 今後の支払い方法(現状は準備中で選べない。今は暗号資産のみと伝える) */}
+          {!isFree && (
+            <div style={{ marginBottom: 20 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  color: 'var(--dim)',
+                  marginBottom: 10,
+                }}
+              >
+                — OTHER · その他の支払い方法
+              </div>
+              {[
+                { name: 'クレジットカード', sub: 'Visa / Mastercard / JCB' },
+                { name: 'PayPay', sub: 'ペイペイ' },
+                { name: 'コンビニ払い', sub: 'セブン / ローソン / ファミマ' },
+              ].map((m) => (
+                <div
+                  key={m.name}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '11px 14px',
+                    marginBottom: 8,
+                    border: '1px solid rgba(168,166,158,0.15)',
+                    background: 'rgba(255,255,255,0.01)',
+                    opacity: 0.55,
+                    cursor: 'not-allowed',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-serif-jp)',
+                        fontSize: 14,
+                        letterSpacing: 2,
+                        color: 'var(--muted)',
+                      }}
+                    >
+                      {m.name}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 9,
+                        letterSpacing: 1,
+                        color: 'var(--dim)',
+                      }}
+                    >
+                      {m.sub}
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      letterSpacing: 3,
+                      padding: '3px 9px',
+                      color: 'var(--dim)',
+                      border: '1px solid rgba(168,166,158,0.25)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    準備中
+                  </span>
+                </div>
+              ))}
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 11,
+                  lineHeight: 1.7,
+                  color: 'var(--dim)',
+                  fontWeight: 300,
+                }}
+              >
+                現在は暗号資産のみご利用いただけます。上記は今後の対応を検討中です。
+              </div>
+            </div>
+          )}
+
           <p
             style={{
               fontFamily: 'var(--font-mono)',
