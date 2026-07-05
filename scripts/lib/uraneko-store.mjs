@@ -595,27 +595,30 @@ export async function downloadUrlFor(order_id) {
  * 未割当トークンを1件削除する(DDB + S3 の動画本体)。テストトークンの入れ替え用。
  * 販売済み(assigned)は購入者のDLを壊すので削除不可。
  */
-export async function deleteToken(token_id) {
+export async function deleteToken(token_id, { force = false } = {}) {
   if (!token_id) invalid('token_id required');
   const cur = (await ddb.send(new GetCommand({ TableName: TOKENS_TABLE, Key: { token_id } }))).Item;
   if (!cur) invalid(`token not found: ${token_id}`);
-  if (cur.status !== 'unassigned') {
-    invalid('販売済み(assigned)のトークンは削除できません(購入者のダウンロードが壊れます)');
+  const assigned = cur.status !== 'unassigned';
+  if (assigned && !force) {
+    invalid('販売済み(assigned)のトークンは削除できません(購入者のDLが壊れます。テスト掃除は強制削除で)');
   }
-  // 先に DDB を条件付きで消してから S3。未割当のまま消せた場合のみ実体を消す。
+  // 未割当は条件付きで安全に。強制(テスト掃除)は無条件で削除。
   await ddb.send(
-    new DeleteCommand({
-      TableName: TOKENS_TABLE,
-      Key: { token_id },
-      ConditionExpression: '#s = :u',
-      ExpressionAttributeNames: { '#s': 'status' },
-      ExpressionAttributeValues: { ':u': 'unassigned' },
-    }),
+    force
+      ? new DeleteCommand({ TableName: TOKENS_TABLE, Key: { token_id } })
+      : new DeleteCommand({
+          TableName: TOKENS_TABLE,
+          Key: { token_id },
+          ConditionExpression: '#s = :u',
+          ExpressionAttributeNames: { '#s': 'status' },
+          ExpressionAttributeValues: { ':u': 'unassigned' },
+        }),
   );
   if (cur.s3_key) {
     await s3().send(new DeleteObjectCommand({ Bucket: assetsBucket(), Key: cur.s3_key }));
   }
-  return { token_id, deleted: true, s3_key: cur.s3_key ?? null };
+  return { token_id, deleted: true, forced: assigned && force, s3_key: cur.s3_key ?? null };
 }
 
 // --- ローカルファイル参照 / プレビュー / 動画長(GUI のファイルブラウザ・自動取得用) ---

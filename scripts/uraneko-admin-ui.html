@@ -583,8 +583,8 @@ async function loadDetailTokens() {
         const un = t.status === 'unassigned';
         const st = un ? '<span class="badge on">在庫</span>' : '<span class="badge sold">販売済</span>';
         const del = un
-          ? '<button class="small danger" onclick="delToken(\'' + esc(t.token_id) + '\')">削除</button>'
-          : '<span class="muted" title="購入者のDLが壊れるため削除不可">—</span>';
+          ? '<button class="small danger" onclick="delToken(\'' + esc(t.token_id) + '\',false)">削除</button>'
+          : '<button class="small danger" title="販売済み。購入者のDLが壊れます(テスト掃除用)" onclick="delToken(\'' + esc(t.token_id) + '\',true)">強制削除</button>';
         return '<tr>' +
           '<td class="mono">' + esc(t.token_id) + '</td>' +
           '<td>' + st + '</td>' +
@@ -597,9 +597,12 @@ async function loadDetailTokens() {
   } catch (e) { el.innerHTML = '<span class="err">' + esc(e.message) + '</span>'; toast(e.message, true); }
 }
 
-async function delToken(token_id) {
-  if (!confirm('トークン ' + token_id + ' と動画本体(S3)を削除します。よろしいですか?')) return;
-  try { await api('POST', '/api/tokens/delete', { token_id }); toast('削除: ' + token_id); await loadProductsQuiet(); renderDetail(); loadDetailTokens(); }
+async function delToken(token_id, force) {
+  const msg = force
+    ? '⚠️ これは販売済みトークンです。削除すると紐づく購入者のダウンロードが壊れます(テストデータの掃除用)。\n\n本当に削除しますか?'
+    : 'トークン ' + token_id + ' と動画本体(S3)を削除します。よろしいですか?';
+  if (!confirm(msg)) return;
+  try { await api('POST', '/api/tokens/delete', { token_id, force: !!force }); toast('削除: ' + token_id); await loadProductsQuiet(); renderDetail(); loadDetailTokens(); }
   catch (e) { toast(e.message, true); }
 }
 

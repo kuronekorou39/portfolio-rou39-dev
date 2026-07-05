@@ -159,11 +159,11 @@ async function tokensList(positional, flags) {
   console.log(`(${items.length} 件)`);
 }
 
-async function tokensDelete(positional) {
+async function tokensDelete(positional, flags) {
   const token_id = positional[0];
-  if (!token_id) die('usage: tokens delete <token_id>');
-  const r = await store.deleteToken(token_id);
-  console.log(`[OK] deleted token ${r.token_id}${r.s3_key ? ` (+ s3://.../${r.s3_key})` : ''}`);
+  if (!token_id) die('usage: tokens delete <token_id> [--force]');
+  const r = await store.deleteToken(token_id, { force: Boolean(flags.force) });
+  console.log(`[OK] deleted token ${r.token_id}${r.forced ? '(強制/販売済み)' : ''}${r.s3_key ? ` (+ s3://.../${r.s3_key})` : ''}`);
 }
 
 async function ordersList() {
@@ -267,7 +267,7 @@ async function main() {
       case 'tokens': {
         const { positional, flags } = parseArgs(argv.slice(2));
         if (sub === 'list') return await tokensList(positional, flags);
-        if (sub === 'delete') return await tokensDelete(positional);
+        if (sub === 'delete') return await tokensDelete(positional, flags);
         if (sub === 'backfill') return await tokensBackfill(flags);
         return die('tokens: unknown subcommand (list|delete|backfill)');
       }

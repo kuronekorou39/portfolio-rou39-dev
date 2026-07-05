@@ -51,7 +51,7 @@ const routes = {
   'POST /api/products/publish': async (_q, body) => store.setPublished(body.product_id, Boolean(body.published)),
   'GET /api/tokens': async (q) => store.listTokens(q.get('product_id'), { all: q.get('all') === '1' }),
   'POST /api/tokens/backfill': async (_q, body) => store.backfillTokens({ dryRun: Boolean(body.dryRun) }),
-  'POST /api/tokens/delete': async (_q, body) => store.deleteToken(body.token_id),
+  'POST /api/tokens/delete': async (_q, body) => store.deleteToken(body.token_id, { force: Boolean(body.force) }),
   'GET /api/orders': async () => store.listOrders(),
   'POST /api/orders/url': async (_q, body) => store.downloadUrlFor(body.order_id),
   'POST /api/ingest': async (_q, body) => {
