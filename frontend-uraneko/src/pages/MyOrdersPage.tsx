@@ -15,12 +15,13 @@ const STATUS_LABEL: Record<string, string> = {
   confirming: '確認中',
   failed: '失敗',
   expired: '期限切れ',
+  cancelled: 'キャンセル済',
 };
 
 function StatusBadge({ status }: { status: OrderSummary['status'] }) {
   const paid = status === 'paid';
   const waiting = status === 'pending' || status === 'confirming'; // 入金待ち(失敗ではない)
-  const failed = status === 'failed' || status === 'expired';
+  const failed = status === 'failed' || status === 'expired' || status === 'cancelled';
   return (
     <span
       style={{
@@ -52,6 +53,24 @@ export default function MyOrdersPage() {
   const { user, loading } = useAuth();
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  async function handleCancel(orderId: string) {
+    if (!window.confirm('この注文をキャンセルしますか?(確保していた在庫は開放されます)')) return;
+    setCancellingId(orderId);
+    try {
+      const idToken = await getIdToken();
+      if (!idToken) return;
+      const r = await api.cancelOrder(orderId, { idToken });
+      setOrders((prev) =>
+        prev ? prev.map((o) => (o.order_id === orderId ? { ...o, status: r.status } : o)) : prev,
+      );
+    } catch (e) {
+      alert('キャンセルに失敗しました: ' + (e as Error).message);
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -321,6 +340,25 @@ export default function MyOrdersPage() {
                   >
                     download
                   </Link>
+                ) : o.status === 'pending' ? (
+                  <button
+                    onClick={() => void handleCancel(o.order_id)}
+                    disabled={cancellingId === o.order_id}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(230,102,102,0.4)',
+                      color: '#e66',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      letterSpacing: 2,
+                      padding: '4px 10px',
+                      cursor: cancellingId === o.order_id ? 'default' : 'pointer',
+                      opacity: cancellingId === o.order_id ? 0.5 : 1,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {cancellingId === o.order_id ? '処理中…' : 'キャンセル'}
+                  </button>
                 ) : (
                   <span
                     style={{

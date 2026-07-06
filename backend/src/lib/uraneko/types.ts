@@ -30,7 +30,13 @@ export interface VideoToken {
   created_at: string;
 }
 
-export type OrderStatus = 'pending' | 'confirming' | 'paid' | 'failed' | 'expired';
+export type OrderStatus =
+  | 'pending'
+  | 'confirming'
+  | 'paid'
+  | 'failed'
+  | 'expired'
+  | 'cancelled'; // 購入者が未払い注文を明示的にキャンセル
 
 export interface Order {
   order_id: string;

@@ -47,7 +47,7 @@ export interface OrderSummary {
   product_id: string;
   price_jpy: number;
   currency: string;
-  status: 'pending' | 'confirming' | 'paid' | 'failed' | 'expired';
+  status: 'pending' | 'confirming' | 'paid' | 'failed' | 'expired' | 'cancelled';
   created_at: string;
   paid_at: string | null;
 }
@@ -90,5 +90,17 @@ export const api = {
   },
   myOrders(idToken: string) {
     return request<OrderSummary[]>('/my/orders', { headers: authHeaders(idToken) });
+  },
+  // 未払い(pending)注文のキャンセル。予約中の在庫を即開放する。会員は idToken、
+  // ゲストは署名済み注文トークン(token)で認可。
+  cancelOrder(orderId: string, opts: { idToken?: string | null; token?: string }) {
+    return request<{ order_id: string; status: OrderSummary['status']; cancelled: boolean }>(
+      `/orders/${orderId}/cancel`,
+      {
+        method: 'POST',
+        headers: authHeaders(opts.idToken),
+        body: JSON.stringify(opts.token ? { token: opts.token } : {}),
+      },
+    );
   },
 };

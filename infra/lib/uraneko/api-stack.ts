@@ -182,6 +182,18 @@ export class UranekoApiStack extends cdk.Stack {
     props.assetsBucket.grantRead(getOrderFn);
     props.orderAccessSecret.grantRead(getOrderFn);
 
+    // --- cancel order (会員 or 署名トークン。未払い注文の即キャンセル+予約解放) ---
+    const cancelOrderFn = new nodejs.NodejsFunction(this, 'CancelOrderFn', {
+      runtime,
+      entry: path.join(handlerDir, 'cancel-order.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+    });
+    props.ordersTable.grantReadWriteData(cancelOrderFn);
+    props.tokensTable.grantReadWriteData(cancelOrderFn); // releaseReservedToken(Get+条件付きUpdate)
+    props.orderAccessSecret.grantRead(cancelOrderFn); // 署名注文トークン検証
+
     // --- my orders (Cognito required) ---
     const myOrdersFn = new nodejs.NodejsFunction(this, 'MyOrdersFn', {
       runtime,
@@ -231,6 +243,10 @@ export class UranekoApiStack extends cdk.Stack {
     const orders = this.api.root.addResource('orders');
     const orderById = orders.addResource('{order_id}');
     orderById.addMethod('GET', new apigateway.LambdaIntegration(getOrderFn));
+    // 未払い注文のキャンセル(オーソライザー無し。Lambda 側で会員/署名トークンを検証)
+    orderById
+      .addResource('cancel')
+      .addMethod('POST', new apigateway.LambdaIntegration(cancelOrderFn));
 
     const myApi = this.api.root.addResource('my');
     const myOrders = myApi.addResource('orders');

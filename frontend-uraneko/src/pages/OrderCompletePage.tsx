@@ -23,7 +23,7 @@ export default function OrderCompletePage() {
     if (!id) return;
     const POLL_INTERVAL_MS = 8000;
     const POLL_MAX_MS = 30 * 60 * 1000; // これ以上は打ち切り(後でメールから開けばよい)
-    const TERMINAL = new Set(['paid', 'failed', 'expired']);
+    const TERMINAL = new Set(['paid', 'failed', 'expired', 'cancelled']);
     const startedAt = Date.now();
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -161,7 +161,7 @@ export default function OrderCompletePage() {
             </div>
           )}
 
-          {!paid && order.status !== 'failed' && order.status !== 'expired' && (
+          {!paid && order.status !== 'failed' && order.status !== 'expired' && order.status !== 'cancelled' && (
             <p
               style={{
                 fontFamily: 'var(--font-mono)',
