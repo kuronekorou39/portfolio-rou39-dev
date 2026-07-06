@@ -184,6 +184,17 @@ export default function CheckoutPage() {
     else if (!guestConfirmed) setStage('account');
   }, [user, guestConfirmed]);
 
+  // 別ドメインの決済ページへ遷移後にブラウザバックすると、bfcache(戻る/進むキャッシュ)が
+  // submitting=true のままページを復元し、ボタンが「処理中」で固まる。bfcache 復帰
+  // (persisted=true)を検知してボタン状態を戻す。
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setSubmitting(false);
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
+
   const originalPrice = product?.price_jpy ?? 0;
   const finalPrice = applied ? applied.finalPrice : originalPrice;
   const discount = originalPrice - finalPrice;

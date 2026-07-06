@@ -9,8 +9,17 @@ import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
 
+const STATUS_LABEL: Record<string, string> = {
+  paid: '受渡済',
+  pending: '支払い待ち',
+  confirming: '確認中',
+  failed: '失敗',
+  expired: '期限切れ',
+};
+
 function StatusBadge({ status }: { status: OrderSummary['status'] }) {
   const paid = status === 'paid';
+  const waiting = status === 'pending' || status === 'confirming'; // 入金待ち(失敗ではない)
   const failed = status === 'failed' || status === 'expired';
   return (
     <span
@@ -19,14 +28,21 @@ function StatusBadge({ status }: { status: OrderSummary['status'] }) {
         fontSize: 9,
         letterSpacing: 3,
         padding: '3px 9px',
+        whiteSpace: 'nowrap',
         color: paid ? '#0a0a0b' : failed ? '#e66' : 'var(--color-gold)',
         background: paid ? 'var(--color-gold)' : 'transparent',
         border: `1px solid ${
-          paid ? 'var(--color-gold)' : failed ? 'rgba(230,102,102,0.6)' : 'rgba(168,166,158,0.5)'
+          paid
+            ? 'var(--color-gold)'
+            : failed
+            ? 'rgba(230,102,102,0.6)'
+            : waiting
+            ? 'rgba(214,183,110,0.5)'
+            : 'rgba(168,166,158,0.5)'
         }`,
       }}
     >
-      {status.toUpperCase()}
+      {STATUS_LABEL[status] ?? status.toUpperCase()}
     </span>
   );
 }
@@ -320,6 +336,22 @@ export default function MyOrdersPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {orders.some((o) => o.status === 'pending' || o.status === 'confirming') && (
+        <p
+          style={{
+            marginTop: 16,
+            fontFamily: 'var(--font-serif-jp)',
+            fontSize: 11,
+            lineHeight: 1.8,
+            letterSpacing: 1,
+            color: 'var(--dim)',
+            fontWeight: 300,
+          }}
+        >
+          ※「支払い待ち」の注文は、入金が確認できないまま一定時間が過ぎると自動的にキャンセルされます(在庫は開放されます)。もう一度購入する場合は作品ページから進んでください。
+        </p>
       )}
     </div>
   );
