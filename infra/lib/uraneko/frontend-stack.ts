@@ -61,6 +61,25 @@ export class UranekoFrontendStack extends cdk.Stack {
       functionName: 'uraneko-spa-rewrite',
     });
 
+    // CSP。許可元はフロントの実依存から割り出した最小構成:
+    //  - script-src 'self': バンドルは同一オリジン。インライン script は無い。
+    //  - style-src 'unsafe-inline' + fonts.googleapis.com: React のインライン style と Google Fonts CSS。
+    //  - font-src fonts.gstatic.com: Google Fonts 本体。
+    //  - img-src https:: 商品サムネ/サンプルは S3 presigned URL(https)。
+    //  - connect-src: /api(self)+ Cognito トークン交換(auth.rou39.com)+ セッション更新(cognito-idp)。
+    const contentSecurityPolicy = [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "img-src 'self' data: https:",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "script-src 'self'",
+      "connect-src 'self' https://auth.rou39.com https://cognito-idp.ap-northeast-1.amazonaws.com",
+      "form-action 'self'",
+    ].join('; ');
+
     const securityHeaders = new cloudfront.ResponseHeadersPolicy(this, 'UranekoSecurityHeaders', {
       responseHeadersPolicyName: 'uraneko-security-headers',
       securityHeadersBehavior: {
@@ -76,6 +95,7 @@ export class UranekoFrontendStack extends cdk.Stack {
           override: true,
         },
         xssProtection: { protection: true, modeBlock: true, override: true },
+        contentSecurityPolicy: { contentSecurityPolicy, override: true },
       },
     });
 
