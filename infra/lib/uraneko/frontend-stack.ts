@@ -16,6 +16,7 @@ interface UranekoFrontendStackProps extends cdk.StackProps {
   certificate: acm.ICertificate;
   hostedZone: route53.IHostedZone;
   subdomain: string; // uraneko.rou39.com
+  webAclArn: string; // us-east-1 の WAFv2 WebACL ARN(決済悪用対策のレート制限)
 }
 
 export class UranekoFrontendStack extends cdk.Stack {
@@ -104,6 +105,7 @@ export class UranekoFrontendStack extends cdk.Stack {
       },
       domainNames: [props.subdomain],
       certificate: props.certificate,
+      webAclId: props.webAclArn, // WAFv2 は ARN を webAclId に渡す
       defaultRootObject: 'index.html',
       // errorResponses は使わない(SPA ルーティングは spaRewriteFn が担当)。
       // これにより /api/* の 403/404 が index.html(200)に化けず、正しく伝わる。

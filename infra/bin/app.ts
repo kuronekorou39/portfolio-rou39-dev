@@ -18,6 +18,7 @@ import { UranekoEmailStack } from '../lib/uraneko/email-stack';
 import { UranekoAuthClientStack } from '../lib/uraneko/auth-client-stack';
 import { UranekoIngestIamStack } from '../lib/uraneko/ingest-iam-stack';
 import { UranekoApiStack } from '../lib/uraneko/api-stack';
+import { UranekoWafStack } from '../lib/uraneko/waf-stack';
 import { UranekoFrontendStack } from '../lib/uraneko/frontend-stack';
 import { UranekoMonitoringStack } from '../lib/uraneko/monitoring-stack';
 
@@ -167,6 +168,12 @@ const uranekoApi = new UranekoApiStack(app, 'UranekoApi', {
   fromEmail: uranekoEmail.fromAddress,
 });
 
+// uraneko CloudFront 用 WAFv2 WebACL は us-east-1 必須
+const uranekoWaf = new UranekoWafStack(app, 'UranekoWaf', {
+  env: { account: env.account, region: 'us-east-1' },
+  crossRegionReferences: true,
+});
+
 new UranekoFrontendStack(app, 'UranekoFrontend', {
   env,
   crossRegionReferences: true,
@@ -174,6 +181,7 @@ new UranekoFrontendStack(app, 'UranekoFrontend', {
   certificate,
   hostedZone: uranekoHostedZone,
   subdomain: URANEKO_SUBDOMAIN,
+  webAclArn: uranekoWaf.webAclArn,
 });
 
 new UranekoMonitoringStack(app, 'UranekoMonitoring', {
