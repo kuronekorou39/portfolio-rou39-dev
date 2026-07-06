@@ -21,8 +21,9 @@ export interface VideoToken {
   product_id: string;
   s3_key: string;
   bits: string;
-  status: 'unassigned' | 'assigned';
-  status_created_at: string; // GSI SK: "unassigned#<iso>" or "assigned#<iso>"
+  status: 'unassigned' | 'reserved' | 'assigned';
+  status_created_at: string; // GSI SK: "unassigned#<iso>" / "reserved#<iso>" / "assigned#<iso>"
+  reserved_until?: string; // reserved の失効時刻(ISO)。期限切れは cleanup が在庫へ戻す
   assigned_to: string | null;
   assigned_at: string | null;
   order_id: string | null;

@@ -1,8 +1,10 @@
-import { QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, UpdateCommand, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../dynamo';
 import type { VideoToken } from './types';
 
 const TOKENS_TABLE = process.env.TOKENS_TABLE!;
+// 予約の有効期限(暗号決済の確定待ち想定)。過ぎたら期限切れ Lambda が在庫へ戻す。
+const RESERVATION_TTL_SEC = 60 * 60;
 
 /**
  * 指定 product に未割当(在庫)トークンが 1 件以上あるかを返す。
@@ -120,4 +122,143 @@ export async function releaseToken(
   } catch (err: unknown) {
     console.error('releaseToken failed (non-fatal):', (err as { name?: string })?.name);
   }
+}
+
+/**
+ * checkout 時点で在庫トークンを1件「予約(reserved)」する。オーバーセル防止の要。
+ * reserved は status_created_at が 'reserved#...' になり、以後の hasAvailableToken /
+ * reserveToken(unassigned# のみ検索)から見えなくなる=在庫が即座に確保される。
+ * 支払い確定で assignReservedToken、失敗/期限切れで releaseReservedToken に遷移する。
+ */
+export async function reserveToken(params: {
+  product_id: string;
+  order_id: string;
+}): Promise<VideoToken | null> {
+  const { product_id, order_id } = params;
+  const reservedUntil = new Date(Date.now() + RESERVATION_TTL_SEC * 1000).toISOString();
+  const q = await docClient.send(
+    new QueryCommand({
+      TableName: TOKENS_TABLE,
+      IndexName: 'by_product_status',
+      KeyConditionExpression: 'product_id = :pid AND begins_with(status_created_at, :prefix)',
+      ExpressionAttributeValues: { ':pid': product_id, ':prefix': 'unassigned#' },
+      Limit: 10,
+    }),
+  );
+  const candidates = (q.Items as VideoToken[] | undefined) ?? [];
+  for (const candidate of candidates) {
+    try {
+      const updated = await docClient.send(
+        new UpdateCommand({
+          TableName: TOKENS_TABLE,
+          Key: { token_id: candidate.token_id },
+          ConditionExpression: '#s = :unassigned',
+          UpdateExpression:
+            'SET #s = :reserved, status_created_at = :sca, order_id = :o, reserved_until = :ru',
+          ExpressionAttributeNames: { '#s': 'status' },
+          ExpressionAttributeValues: {
+            ':unassigned': 'unassigned',
+            ':reserved': 'reserved',
+            ':sca': `reserved#${candidate.created_at}`,
+            ':o': order_id,
+            ':ru': reservedUntil,
+          },
+          ReturnValues: 'ALL_NEW',
+        }),
+      );
+      return updated.Attributes as VideoToken;
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name === 'ConditionalCheckFailedException') continue;
+      throw err;
+    }
+  }
+  return null;
+}
+
+/**
+ * 予約トークンを assigned に確定する(reserved→assigned、当該注文の予約のみ)。
+ * 支払い確定時に fulfill から呼ぶ。予約が既に別状態(解放/期限切れ再割当)なら null。
+ */
+export async function assignReservedToken(
+  token_id: string,
+  order_id: string,
+  user_id: string,
+): Promise<VideoToken | null> {
+  const cur = (await docClient.send(new GetCommand({ TableName: TOKENS_TABLE, Key: { token_id } })))
+    .Item as VideoToken | undefined;
+  if (!cur || cur.status !== 'reserved' || cur.order_id !== order_id) return null;
+  const now = new Date().toISOString();
+  try {
+    const updated = await docClient.send(
+      new UpdateCommand({
+        TableName: TOKENS_TABLE,
+        Key: { token_id },
+        ConditionExpression: '#s = :reserved AND order_id = :o',
+        UpdateExpression:
+          'SET #s = :assigned, status_created_at = :sca, assigned_to = :u, assigned_at = :t REMOVE reserved_until',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: {
+          ':reserved': 'reserved',
+          ':assigned': 'assigned',
+          ':sca': `assigned#${cur.created_at}`,
+          ':u': user_id,
+          ':t': now,
+          ':o': order_id,
+        },
+        ReturnValues: 'ALL_NEW',
+      }),
+    );
+    return updated.Attributes as VideoToken;
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name === 'ConditionalCheckFailedException') return null;
+    throw err;
+  }
+}
+
+/** 予約トークンを在庫へ戻す(reserved→unassigned、当該注文の予約のみ)。決済失敗/期限切れ用。 */
+export async function releaseReservedToken(token_id: string, order_id: string): Promise<void> {
+  const cur = (await docClient.send(new GetCommand({ TableName: TOKENS_TABLE, Key: { token_id } })))
+    .Item as VideoToken | undefined;
+  if (!cur || cur.status !== 'reserved' || cur.order_id !== order_id) return;
+  try {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TOKENS_TABLE,
+        Key: { token_id },
+        ConditionExpression: '#s = :reserved AND order_id = :o',
+        UpdateExpression:
+          'SET #s = :unassigned, status_created_at = :sca, order_id = :null REMOVE reserved_until',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: {
+          ':reserved': 'reserved',
+          ':unassigned': 'unassigned',
+          ':sca': `unassigned#${cur.created_at}`,
+          ':o': order_id,
+          ':null': null,
+        },
+      }),
+    );
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
+  }
+}
+
+/** 期限切れの予約トークンを列挙(cleanup Lambda 用)。Scan で reserved かつ reserved_until 経過分。 */
+export async function listExpiredReservations(nowIso: string): Promise<VideoToken[]> {
+  const items: VideoToken[] = [];
+  let ExclusiveStartKey: Record<string, unknown> | undefined;
+  do {
+    const res = await docClient.send(
+      new ScanCommand({
+        TableName: TOKENS_TABLE,
+        FilterExpression: '#s = :reserved AND reserved_until < :now',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: { ':reserved': 'reserved', ':now': nowIso },
+        ExclusiveStartKey,
+      }),
+    );
+    items.push(...((res.Items as VideoToken[] | undefined) ?? []));
+    ExclusiveStartKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (ExclusiveStartKey);
+  return items;
 }

@@ -57,8 +57,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const newStatus = mapStatus(paymentStatus);
 
-    // Orderを取得
-    const res = await docClient.send(new GetCommand({ TableName: ORDERS_TABLE, Key: { order_id } }));
+    // Orderを取得(冪等判定に使うので強整合読み取り。並行/再送 IPN の読み逃しを減らす)
+    const res = await docClient.send(
+      new GetCommand({ TableName: ORDERS_TABLE, Key: { order_id }, ConsistentRead: true }),
+    );
     const order = res.Item as Order | undefined;
     if (!order) return badRequest('order not found');
 

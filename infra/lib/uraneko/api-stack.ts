@@ -6,6 +6,8 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import type { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -129,6 +131,9 @@ export class UranekoApiStack extends cdk.Stack {
     // 100%割引(無料購入)経路は checkout 内で直接フルフィルするため、
     // webhook と同等の権限(トークン割当・注文アクセス署名・SES送信)が必要。
     props.tokensTable.grantReadWriteData(checkoutFn);
+    // fulfill が order+token をアトミック確定するため TransactWriteItems を明示付与
+    props.tokensTable.grant(checkoutFn, 'dynamodb:TransactWriteItems');
+    props.ordersTable.grant(checkoutFn, 'dynamodb:TransactWriteItems');
     props.orderAccessSecret.grantRead(checkoutFn);
     checkoutFn.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -148,6 +153,8 @@ export class UranekoApiStack extends cdk.Stack {
     });
     props.ordersTable.grantReadWriteData(webhookFn);
     props.tokensTable.grantReadWriteData(webhookFn);
+    props.tokensTable.grant(webhookFn, 'dynamodb:TransactWriteItems');
+    props.ordersTable.grant(webhookFn, 'dynamodb:TransactWriteItems');
     props.productsTable.grantReadData(webhookFn);
     props.nowpaymentsIpnSecret.grantRead(webhookFn);
     props.orderAccessSecret.grantRead(webhookFn);
@@ -184,6 +191,22 @@ export class UranekoApiStack extends cdk.Stack {
       bundling,
     });
     props.ordersTable.grantReadData(myOrdersFn);
+
+    // --- 期限切れ予約の解放(EventBridge 定期実行。API には公開しない) ---
+    const releaseExpiredFn = new nodejs.NodejsFunction(this, 'ReleaseExpiredFn', {
+      runtime,
+      entry: path.join(handlerDir, 'release-expired.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+      timeout: cdk.Duration.seconds(60),
+    });
+    props.tokensTable.grantReadWriteData(releaseExpiredFn);
+    props.ordersTable.grantReadWriteData(releaseExpiredFn);
+    new events.Rule(this, 'ReleaseExpiredSchedule', {
+      schedule: events.Schedule.rate(cdk.Duration.minutes(10)),
+      targets: [new targets.LambdaFunction(releaseExpiredFn)],
+    });
 
     // ---- ルーティング ----
     const products = this.api.root.addResource('products');
