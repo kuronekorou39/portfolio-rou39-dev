@@ -87,7 +87,7 @@ export function TokushohoPage() {
         <TODO>【 電話番号(請求があれば遅滞なく開示)】</TODO>
       </Row>
       <Row k="メールアドレス">
-        <TODO>【 連絡先メールアドレス 】</TODO>
+        <a href="mailto:contact@rou39.com" style={{ color: 'var(--color-fg)' }}>contact@rou39.com</a>
       </Row>
       <Row k="販売価格">各商品ページに税込価格で表示します。</Row>
       <Row k="商品代金以外の必要料金">
@@ -138,10 +138,10 @@ export function PrivacyPage() {
       </p>
       <h2 style={h2}>6. お問い合わせ</h2>
       <p>
-        <TODO>【 連絡先メールアドレス 】</TODO>
+        <a href="mailto:contact@rou39.com" style={{ color: 'var(--color-fg)' }}>contact@rou39.com</a>
       </p>
       <p style={{ fontSize: 12, color: 'var(--dim)', marginTop: 24 }}>
-        制定日: <TODO>【 YYYY年MM月DD日 】</TODO>
+        制定日: 2026年7月6日
       </p>
     </LegalShell>
   );
@@ -172,7 +172,7 @@ export function TermsPage() {
       <h2 style={h2}>第7条(準拠法・管轄)</h2>
       <p>本規約は日本法に準拠し、紛争は<TODO>【 管轄裁判所 】</TODO>を第一審の専属的合意管轄裁判所とします。</p>
       <p style={{ fontSize: 12, color: 'var(--dim)', marginTop: 24 }}>
-        制定日: <TODO>【 YYYY年MM月DD日 】</TODO>
+        制定日: 2026年7月6日
       </p>
     </LegalShell>
   );
