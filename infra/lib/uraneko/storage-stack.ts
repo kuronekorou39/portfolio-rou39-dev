@@ -69,6 +69,19 @@ export class UranekoStorageStack extends cdk.Stack {
       bucketName: `uraneko-assets-${this.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
+      // 実金コンテンツ(再生成に GPU コストがかかる stego mp4)の誤上書き/削除からの復旧。
+      // 過去に本番サムネを上書きして復元不能になった前例があるため有効化。
+      versioned: true,
+      // aws:SecureTransport=false を Deny(平文アクセス拒否の多層防御)。
+      enforceSSL: true,
+      lifecycleRules: [
+        {
+          // 旧バージョンは 90 日で失効(復旧の猶予は確保しつつ、無制限な容量増を防ぐ)。
+          noncurrentVersionExpiration: cdk.Duration.days(90),
+          // 中断したマルチパートアップロードの残骸を 7 日で掃除。
+          abortIncompleteMultipartUploadAfter: cdk.Duration.days(7),
+        },
+      ],
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       cors: [
         {
