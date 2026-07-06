@@ -17,20 +17,36 @@ export default function OrderCompletePage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  // 暗号決済の確定は IPN 経由で非同期。pending/confirming の間は定期的に再取得し、
+  // paid になったら自動でダウンロードリンクを出す(ユーザーが手動更新しなくて済む)。
   useEffect(() => {
     if (!id) return;
-    (async () => {
+    const POLL_INTERVAL_MS = 8000;
+    const POLL_MAX_MS = 30 * 60 * 1000; // これ以上は打ち切り(後でメールから開けばよい)
+    const TERMINAL = new Set(['paid', 'failed', 'expired']);
+    const startedAt = Date.now();
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const poll = async () => {
       const idToken = await getIdToken();
       try {
-        const o = await api.getOrder(id, {
-          token: emailToken ?? undefined,
-          idToken,
-        });
+        const o = await api.getOrder(id, { token: emailToken ?? undefined, idToken });
+        if (stopped) return;
         setOrder(o);
+        if (!TERMINAL.has(o.status) && Date.now() - startedAt < POLL_MAX_MS) {
+          timer = setTimeout(poll, POLL_INTERVAL_MS);
+        }
       } catch (e) {
+        if (stopped) return;
         setErr((e as Error).message);
       }
-    })();
+    };
+    poll();
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [id, emailToken]);
 
   if (err)
@@ -143,6 +159,22 @@ export default function OrderCompletePage() {
               />
               STATUS · {order.status.toUpperCase()}
             </div>
+          )}
+
+          {!paid && order.status !== 'failed' && order.status !== 'expired' && (
+            <p
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                letterSpacing: 2,
+                color: 'var(--dim)',
+                marginTop: 14,
+                lineHeight: 1.8,
+              }}
+            >
+              ※ 送金確認後、この画面は自動で受け渡しに切り替わります(手動更新不要)。
+              <br />※ 確認完了時にはご登録のメールにも受け渡しリンクをお送りします。
+            </p>
           )}
 
           <style>{`@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }`}</style>
