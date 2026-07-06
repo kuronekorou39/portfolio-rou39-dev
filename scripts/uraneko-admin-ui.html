@@ -356,6 +356,8 @@ function yen(n) { return '¥' + Number(n || 0).toLocaleString(); }
 function fmtDur(sec) { sec = Number(sec) || 0; const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + String(s).padStart(2, '0'); }
 function parseDur(str) { const s = String(str || '').trim(); if (!s) return 0; if (s.includes(':')) { const p = s.split(':'); return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0); } return Number(s) || 0; }
 function fmtSize(b) { b = Number(b) || 0; if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB'; if (b >= 1024) return (b / 1024).toFixed(0) + ' KB'; return b + ' B'; }
+// ISO(UTC)を日本時間の日時表示に(保存はUTCのまま。表示だけJST)
+function jst(iso) { if (!iso) return '-'; const d = new Date(iso); if (isNaN(d.getTime())) return String(iso).slice(0, 19); return d.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); }
 function productById(pid) { return productCache.find((p) => p.product_id === pid) || null; }
 
 // ---- 一覧(マスター) ----
@@ -590,7 +592,7 @@ async function loadDetailTokens() {
           '<td>' + st + '</td>' +
           '<td class="mono" style="font-size:11px">' + esc(t.bits || '-') + '</td>' +
           '<td class="mono">' + esc(t.order_id || '-') + '</td>' +
-          '<td class="mono" style="font-size:11px">' + esc((t.created_at || '').slice(0, 19)) + '</td>' +
+          '<td class="mono" style="font-size:11px">' + esc(jst(t.created_at)) + '</td>' +
           '<td>' + del + '</td>' +
           '</tr>';
       }).join('') + '</tbody></table>';
@@ -709,7 +711,7 @@ async function loadOrders() {
         '<td class="mono" style="font-size:11px">' + esc(o.token_id || '-') + '</td>' +
         '<td>' + coupon + '</td>' +
         '<td style="white-space:nowrap">' + amount + '</td>' +
-        '<td class="mono" style="font-size:11px">' + esc((o.created_at || '').slice(0, 19)) + '</td>' +
+        '<td class="mono" style="font-size:11px">' + esc(jst(o.created_at)) + '</td>' +
         '<td>' + urlBtn + '</td>' +
         '</tr>';
     }).join('');

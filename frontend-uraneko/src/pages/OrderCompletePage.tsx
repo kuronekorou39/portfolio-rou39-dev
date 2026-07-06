@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { api, type OrderDetail } from '../lib/api';
+import { fmtJst } from '../lib/format';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { getIdToken } from '../lib/auth';
 import Ornament from '../components/bar/Ornament';
@@ -229,7 +230,7 @@ export default function OrderCompletePage() {
               }}
             >
               <div>№ {order.order_id.slice(0, 8).toUpperCase()}</div>
-              <div>DATE {new Date(order.created_at).toLocaleDateString('ja-JP')}</div>
+              <div>DATE {fmtJst(order.created_at)}</div>
               <div>
                 ITEM {order.product_id}
               </div>

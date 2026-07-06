@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type OrderSummary } from '../lib/api';
+import { fmtJst } from '../lib/format';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
 import { getIdToken, beginGoogleLogin } from '../lib/auth';
@@ -321,7 +322,7 @@ export default function MyOrdersPage() {
                   color: 'var(--muted)',
                 }}
               >
-                {new Date(o.created_at).toLocaleDateString('ja-JP')}
+                {fmtJst(o.created_at)}
               </div>
               <div>
                 <StatusBadge status={o.status} />
