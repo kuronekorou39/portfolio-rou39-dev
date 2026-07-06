@@ -4,6 +4,7 @@ import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, serverError, forbidden } from '../../lib/response';
 import { verifyIpnSignature } from '../../lib/uraneko/nowpayments';
 import { fulfillPaidOrder } from '../../lib/uraneko/fulfill';
+import { extendReservation, releaseReservedToken } from '../../lib/uraneko/token-claim';
 import type { Order, OrderStatus } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
@@ -86,6 +87,17 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       } catch (err: unknown) {
         // 既に paid → 降格しない(冪等)。それ以外は再送させる
         if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
+      }
+
+      // 予約トークンの寿命を決済状況に追従させる(在庫ロックの最小化)。
+      if (order.token_id) {
+        if (newStatus === 'confirming') {
+          // 入金検知(送金済み・ブロック確定待ち)→ 予約を延長し、確定前の失効を防ぐ。
+          await extendReservation(order.token_id, order_id);
+        } else if (newStatus === 'expired' || newStatus === 'failed') {
+          // 決済不成立が確定 → TTL/掃除ジョブを待たず即座に在庫へ戻す。
+          await releaseReservedToken(order.token_id, order_id);
+        }
       }
       return ok({ ok: true, status: newStatus });
     }

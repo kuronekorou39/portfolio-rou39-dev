@@ -204,7 +204,8 @@ export class UranekoApiStack extends cdk.Stack {
     props.tokensTable.grantReadWriteData(releaseExpiredFn);
     props.ordersTable.grantReadWriteData(releaseExpiredFn);
     new events.Rule(this, 'ReleaseExpiredSchedule', {
-      schedule: events.Schedule.rate(cdk.Duration.minutes(10)),
+      // 放置カートの予約を早めに在庫へ戻すため短めの間隔で実行(テーブルは小規模で Scan は軽量)。
+      schedule: events.Schedule.rate(cdk.Duration.minutes(3)),
       targets: [new targets.LambdaFunction(releaseExpiredFn)],
     });
 

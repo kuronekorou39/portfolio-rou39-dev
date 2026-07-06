@@ -3,8 +3,12 @@ import { docClient } from '../dynamo';
 import type { VideoToken } from './types';
 
 const TOKENS_TABLE = process.env.TOKENS_TABLE!;
-// 予約の有効期限(暗号決済の確定待ち想定)。過ぎたら期限切れ Lambda が在庫へ戻す。
-const RESERVATION_TTL_SEC = 60 * 60;
+// checkout 直後(入金前)の予約猶予。決済ページで送金を開始するまでの時間だけ確保する。
+// 放置(送金しないまま離脱)はこの時間で在庫へ戻す。短めにして在庫ロックを最小化。
+const RESERVATION_TTL_SEC = 20 * 60;
+// 入金が検知(confirming)されたら、この長さに延長する。送金済み=ブロック確定待ちを吸収し、
+// 確定前に失効して「支払ったのに売切」になるのを防ぐ。
+const RESERVATION_CONFIRMING_TTL_SEC = 60 * 60;
 
 /**
  * 指定 product に未割当(在庫)トークンが 1 件以上あるかを返す。
@@ -236,6 +240,28 @@ export async function releaseReservedToken(token_id: string, order_id: string): 
           ':o': order_id,
           ':null': null,
         },
+      }),
+    );
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
+  }
+}
+
+/**
+ * 入金進行中(confirming)の予約を延長する。送金済みで確定待ちのトークンが、
+ * 短い初期 TTL で失効するのを防ぐ。既に別状態(assigned/解放済/他注文)なら no-op。
+ */
+export async function extendReservation(token_id: string, order_id: string): Promise<void> {
+  const until = new Date(Date.now() + RESERVATION_CONFIRMING_TTL_SEC * 1000).toISOString();
+  try {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TOKENS_TABLE,
+        Key: { token_id },
+        ConditionExpression: '#s = :reserved AND order_id = :o',
+        UpdateExpression: 'SET reserved_until = :until',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: { ':reserved': 'reserved', ':o': order_id, ':until': until },
       }),
     );
   } catch (err: unknown) {
