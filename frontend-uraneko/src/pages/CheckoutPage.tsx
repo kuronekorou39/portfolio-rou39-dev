@@ -17,6 +17,15 @@ const CURRENCIES = [
   { value: 'btc', label: 'BTC オンチェーン · 手数料 高' },
 ];
 
+// 支払い方法。暗号資産のみ実装済み。他は選択できるが準備中(選ぶと「次へ」が非活性)。
+const PAY_METHODS = [
+  { id: 'crypto', name: '暗号資産', sub: 'BTC / USDT / USDC / LTC 等', available: true },
+  { id: 'card', name: 'クレジットカード', sub: 'Visa / Mastercard / JCB', available: false },
+  { id: 'paypay', name: 'PayPay', sub: 'ペイペイ', available: false },
+  { id: 'konbini', name: 'コンビニ払い', sub: 'セブン / ローソン / ファミマ', available: false },
+] as const;
+type PayMethodId = (typeof PAY_METHODS)[number]['id'];
+
 // サーバのエラーコード → 利用者向けの日本語メッセージ
 const ERROR_MESSAGES: Record<string, string> = {
   sold_out: '在庫なし。',
@@ -165,6 +174,7 @@ export default function CheckoutPage() {
   const [emailErr, setEmailErr] = useState<string | null>(null);
 
   const [currency, setCurrency] = useState('');
+  const [payMethod, setPayMethod] = useState<PayMethodId>('crypto');
   const [coupon, setCoupon] = useState('');
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
   const [couponErr, setCouponErr] = useState<string | null>(null);
@@ -200,6 +210,9 @@ export default function CheckoutPage() {
   const discount = originalPrice - finalPrice;
   const isFree = applied !== null && finalPrice === 0;
   const soldOut = product?.available === false;
+  const selMethod = PAY_METHODS.find((m) => m.id === payMethod)!;
+  // 未実装の支払い方法を選んでいる間は購入不可(無料購入は方法不問)
+  const methodBlocked = !isFree && payMethod !== 'crypto';
 
   function proceedAsGuest() {
     if (!EMAIL_RE.test(email)) {
@@ -249,6 +262,7 @@ export default function CheckoutPage() {
 
   async function submit() {
     if (!product) return;
+    if (methodBlocked) return; // 準備中の支払い方法では進めない
     setErr(null);
     // 未適用のまま入力されたコードは、適用して金額を確認してから購入してもらう
     if (coupon.trim() && !applied) {
@@ -546,7 +560,7 @@ export default function CheckoutPage() {
           </BrassFrame>
 
           {/* 支払い方法(無料なら不要) */}
-          <SectionLabel style={{ marginBottom: 14 }}>— PAYMENT · 支払い</SectionLabel>
+          <SectionLabel style={{ marginBottom: 14 }}>— PAYMENT · 支払い方法</SectionLabel>
           {isFree ? (
             <BrassFrame padding="24px 28px" style={{ marginBottom: 20 }}>
               <div
@@ -565,220 +579,225 @@ export default function CheckoutPage() {
               </div>
             </BrassFrame>
           ) : (
-            <BrassFrame padding="28px 32px" style={{ marginBottom: 20 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'space-between',
-                  marginBottom: 6,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'var(--font-serif-jp)',
-                    fontSize: 18,
-                    fontWeight: 300,
-                    letterSpacing: 3,
-                    color: 'var(--color-fg)',
-                  }}
-                >
-                  暗号資産 · Cryptocurrency
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 9,
-                    letterSpacing: 3,
-                    padding: '3px 9px',
-                    color: 'var(--color-gold-bright)',
-                    border: '1px solid rgba(168,166,158,0.6)',
-                  }}
-                >
-                  SELECTED
-                </div>
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  color: 'var(--muted)',
-                  marginBottom: 20,
-                }}
-              >
-                via nowpayments · btc / lightning / usdt / usdc / ltc
-              </div>
-
-              <div style={{ marginBottom: 4 }}>
-                <label style={labelStyle}>CURRENCY · 支払い通貨</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  style={{
-                    ...inputStyle,
-                    fontFamily: 'var(--font-serif-jp)',
-                    appearance: 'none',
-                  }}
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.value} value={c.value} style={{ background: 'var(--color-panel)' }}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 送金手数料の目安(初心者向けヘルプ) */}
-              <div
-                style={{
-                  marginTop: 18,
-                  padding: '14px 16px',
-                  border: '1px solid rgba(168,166,158,0.25)',
-                  background: 'rgba(168,166,158,0.05)',
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    color: 'var(--color-gold)',
-                    marginBottom: 10,
-                  }}
-                >
-                  — 送金手数料の目安 —
-                </div>
-                <div style={{ ...noteStyle, marginBottom: 10 }}>
-                  送金手数料は通貨で変わる。目安:
-                </div>
-
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
-                    lineHeight: 2,
-                    color: 'var(--color-fg)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>USDT (TRC20)</span>
-                    <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥150 ◎</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>USDC</span>
-                    <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥10 ◎</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>LTC</span>
-                    <span>約 ¥30</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e6a060' }}>
-                    <span>BTC オンチェーン</span>
-                    <span>約 ¥5,000 ⚠</span>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 12,
-                    fontFamily: 'var(--font-serif-jp)',
-                    fontSize: 11,
-                    lineHeight: 1.7,
-                    color: 'var(--dim)',
-                    fontWeight: 300,
-                  }}
-                >
-                  BTC は <strong style={{ color: 'var(--muted)' }}>GMOコイン / DMM Bitcoin / SBI VC</strong>
-                  からなら送金無料。<strong style={{ color: 'var(--muted)' }}>bitFlyer / Coincheck</strong>
-                  は約 ¥5,000 かかる。
-                </div>
-              </div>
-            </BrassFrame>
-          )}
-
-          {/* 今後の支払い方法(現状は準備中で選べない。今は暗号資産のみと伝える) */}
-          {!isFree && (
-            <div style={{ marginBottom: 20 }}>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 10,
-                  letterSpacing: 3,
-                  color: 'var(--dim)',
-                  marginBottom: 10,
-                }}
-              >
-                — OTHER · その他の支払い方法
-              </div>
-              {[
-                { name: 'クレジットカード', sub: 'Visa / Mastercard / JCB' },
-                { name: 'PayPay', sub: 'ペイペイ' },
-                { name: 'コンビニ払い', sub: 'セブン / ローソン / ファミマ' },
-              ].map((m) => (
-                <div
-                  key={m.name}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '11px 14px',
-                    marginBottom: 8,
-                    border: '1px solid rgba(168,166,158,0.15)',
-                    background: 'rgba(255,255,255,0.01)',
-                    opacity: 0.55,
-                    cursor: 'not-allowed',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span
+            <>
+              {/* 支払い方法の選択。暗号資産がデフォルト。他も選べるが準備中で購入不可。 */}
+              <div role="radiogroup" aria-label="支払い方法" style={{ marginBottom: 16 }}>
+                {PAY_METHODS.map((m) => {
+                  const selected = payMethod === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setPayMethod(m.id)}
                       style={{
-                        fontFamily: 'var(--font-serif-jp)',
-                        fontSize: 14,
-                        letterSpacing: 2,
-                        color: 'var(--muted)',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        padding: '14px 16px',
+                        marginBottom: 8,
+                        background: selected ? 'rgba(184,181,172,0.06)' : 'transparent',
+                        border: `1px solid ${
+                          selected ? 'var(--color-gold)' : 'rgba(168,166,158,0.2)'
+                        }`,
+                        cursor: 'pointer',
+                        textAlign: 'left',
                       }}
                     >
-                      {m.name}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 9,
-                        letterSpacing: 1,
-                        color: 'var(--dim)',
-                      }}
-                    >
-                      {m.sub}
-                    </span>
-                  </div>
-                  <span
+                      <span
+                        style={{
+                          width: 15,
+                          height: 15,
+                          flexShrink: 0,
+                          borderRadius: '50%',
+                          border: `1px solid ${
+                            selected ? 'var(--color-gold-bright)' : 'rgba(168,166,158,0.5)'
+                          }`,
+                          display: 'grid',
+                          placeItems: 'center',
+                        }}
+                      >
+                        {selected && (
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              background: 'var(--color-gold-bright)',
+                            }}
+                          />
+                        )}
+                      </span>
+                      <span
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 3,
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-serif-jp)',
+                            fontSize: 15,
+                            letterSpacing: 2,
+                            color: m.available ? 'var(--color-fg)' : 'var(--muted)',
+                          }}
+                        >
+                          {m.name}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 9,
+                            letterSpacing: 1,
+                            color: 'var(--dim)',
+                          }}
+                        >
+                          {m.sub}
+                        </span>
+                      </span>
+                      {!m.available && (
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 9,
+                            letterSpacing: 3,
+                            padding: '3px 9px',
+                            color: 'var(--dim)',
+                            border: '1px solid rgba(168,166,158,0.25)',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          準備中
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 選択中の方法の詳細 */}
+              {payMethod === 'crypto' ? (
+                <BrassFrame padding="28px 32px" style={{ marginBottom: 20 }}>
+                  <div
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: 9,
-                      letterSpacing: 3,
-                      padding: '3px 9px',
-                      color: 'var(--dim)',
-                      border: '1px solid rgba(168,166,158,0.25)',
-                      whiteSpace: 'nowrap',
+                      fontSize: 10,
+                      letterSpacing: 2,
+                      color: 'var(--muted)',
+                      marginBottom: 20,
                     }}
                   >
-                    準備中
-                  </span>
-                </div>
-              ))}
-              <div
-                style={{
-                  fontFamily: 'var(--font-serif-jp)',
-                  fontSize: 11,
-                  lineHeight: 1.7,
-                  color: 'var(--dim)',
-                  fontWeight: 300,
-                }}
-              >
-                現在は暗号資産のみご利用いただけます。上記は今後の対応を検討中です。
-              </div>
-            </div>
+                    via nowpayments · btc / lightning / usdt / usdc / ltc
+                  </div>
+
+                  <div style={{ marginBottom: 4 }}>
+                    <label style={labelStyle}>CURRENCY · 支払い通貨</label>
+                    <select
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                      style={{ ...inputStyle, fontFamily: 'var(--font-serif-jp)', appearance: 'none' }}
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c.value} value={c.value} style={{ background: 'var(--color-panel)' }}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 送金手数料の目安(初心者向けヘルプ) */}
+                  <div
+                    style={{
+                      marginTop: 18,
+                      padding: '14px 16px',
+                      border: '1px solid rgba(168,166,158,0.25)',
+                      background: 'rgba(168,166,158,0.05)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 10,
+                        letterSpacing: 3,
+                        color: 'var(--color-gold)',
+                        marginBottom: 10,
+                      }}
+                    >
+                      — 送金手数料の目安 —
+                    </div>
+                    <div style={{ ...noteStyle, marginBottom: 10 }}>送金手数料は通貨で変わる。目安:</div>
+
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11,
+                        lineHeight: 2,
+                        color: 'var(--color-fg)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>USDT (TRC20)</span>
+                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥150 ◎</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>USDC</span>
+                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥10 ◎</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>LTC</span>
+                        <span>約 ¥30</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e6a060' }}>
+                        <span>BTC オンチェーン</span>
+                        <span>約 ¥5,000 ⚠</span>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 12,
+                        fontFamily: 'var(--font-serif-jp)',
+                        fontSize: 11,
+                        lineHeight: 1.7,
+                        color: 'var(--dim)',
+                        fontWeight: 300,
+                      }}
+                    >
+                      BTC は <strong style={{ color: 'var(--muted)' }}>GMOコイン / DMM Bitcoin / SBI VC</strong>
+                      からなら送金無料。<strong style={{ color: 'var(--muted)' }}>bitFlyer / Coincheck</strong>
+                      は約 ¥5,000 かかる。
+                    </div>
+                  </div>
+                </BrassFrame>
+              ) : (
+                <BrassFrame padding="24px 28px" style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-serif-jp)',
+                      fontSize: 14,
+                      fontWeight: 300,
+                      letterSpacing: 1.5,
+                      lineHeight: 1.9,
+                      color: 'var(--color-fg)',
+                    }}
+                  >
+                    「{selMethod.name}」は準備中です。
+                    <br />
+                    <span style={{ color: 'var(--muted)', fontSize: 13 }}>
+                      現在ご購入いただけるのは
+                      <strong style={{ color: 'var(--color-gold-bright)' }}>暗号資産</strong>
+                      のみです。上の「暗号資産」を選んでお進みください。
+                    </span>
+                  </div>
+                </BrassFrame>
+              )}
+            </>
           )}
 
           <p
@@ -790,7 +809,7 @@ export default function CheckoutPage() {
               lineHeight: 1.8,
             }}
           >
-            ※ カード決済は無い。
+            ※ 現在ご利用いただけるのは暗号資産のみ(他は準備中)。
             <br />※ 支払い確認後、専用リンクをメールで送る。
             <br />※ デジタル商品につき、購入完了後・ダウンロード後の返品/返金はできません。
             <br />
@@ -956,17 +975,19 @@ export default function CheckoutPage() {
             <div style={{ marginTop: 24 }}>
               <BarButton
                 onClick={submit}
-                disabled={submitting || soldOut}
+                disabled={submitting || soldOut || methodBlocked}
                 size="lg"
                 style={{
                   width: '100%',
-                  opacity: submitting || soldOut ? 0.5 : 1,
+                  opacity: submitting || soldOut || methodBlocked ? 0.5 : 1,
                 }}
               >
                 {submitting
                   ? '処理中……'
                   : isFree
                   ? 'COMPLETE · 取引を完了する'
+                  : methodBlocked
+                  ? '準備中 · 選べません'
                   : 'PROCEED · 送金へ進む'}
               </BarButton>
             </div>
