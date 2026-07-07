@@ -21,8 +21,8 @@ const CURRENCIES = [
 const PAY_METHODS = [
   { id: 'crypto', name: '暗号資産', sub: 'BTC / USDT / USDC / LTC 等', available: true },
   { id: 'card', name: 'クレジットカード', sub: 'Visa / Mastercard / JCB', available: false },
-  { id: 'paypay', name: 'PayPay', sub: 'ペイペイ', available: false },
-  { id: 'konbini', name: 'コンビニ払い', sub: 'セブン / ローソン / ファミマ', available: false },
+  { id: 'paypay', name: 'PayPay', sub: 'ぼくに直接連絡してね！！！！！！', available: false },
+  { id: 'konbini', name: 'コンビニ払い', sub: 'ムリです！！！！！！！！！！', available: false },
 ] as const;
 type PayMethodId = (typeof PAY_METHODS)[number]['id'];
 
@@ -487,7 +487,6 @@ export default function CheckoutPage() {
           {/* クーポン */}
           <SectionLabel style={{ marginBottom: 14 }}>— COUPON · コード</SectionLabel>
           <BrassFrame padding="22px 24px" style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>CODE · 所持者のみ</label>
             <div style={{ display: 'flex', gap: 10 }}>
               <input
                 type="text"
