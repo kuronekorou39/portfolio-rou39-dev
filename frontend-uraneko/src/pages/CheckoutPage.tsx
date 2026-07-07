@@ -10,11 +10,11 @@ import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
 
 const CURRENCIES = [
-  { value: '', label: '決済画面で選ぶ(推奨)' },
-  { value: 'usdttrc20', label: 'USDT (TRC20) · 手数料 低' },
+  { value: 'ltc', label: 'LTC · オススメ · 手数料 安' },
   { value: 'usdc', label: 'USDC · 手数料 低' },
-  { value: 'ltc', label: 'LTC · 手数料 低' },
+  { value: 'usdttrc20', label: 'USDT (TRC20) · 手数料 低' },
   { value: 'btc', label: 'BTC オンチェーン · 手数料 高' },
+  { value: '', label: '決済画面で選ぶ' },
 ];
 
 // 支払い方法。暗号資産のみ実装済み。他は選択できるが準備中(選ぶと「次へ」が非活性)。
@@ -173,7 +173,8 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('');
   const [emailErr, setEmailErr] = useState<string | null>(null);
 
-  const [currency, setCurrency] = useState('');
+  // LTC をデフォルト(手数料が安く単一ネットワークで送金事故が少ないため初心者に安全)
+  const [currency, setCurrency] = useState('ltc');
   const [payMethod, setPayMethod] = useState<PayMethodId>('crypto');
   const [coupon, setCoupon] = useState('');
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
@@ -742,18 +743,18 @@ export default function CheckoutPage() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>USDT (TRC20)</span>
-                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥150 ◎</span>
+                        <span>LTC</span>
+                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥30 ◎</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>USDC</span>
                         <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥10 ◎</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>LTC</span>
-                        <span>約 ¥30</span>
+                        <span>USDT (TRC20)</span>
+                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥150 ◎</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e6a060' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>BTC オンチェーン</span>
                         <span>約 ¥5,000 ⚠</span>
                       </div>
@@ -769,9 +770,8 @@ export default function CheckoutPage() {
                         fontWeight: 300,
                       }}
                     >
-                      BTC は <strong style={{ color: 'var(--muted)' }}>GMOコイン / DMM Bitcoin / SBI VC</strong>
-                      からなら送金無料。<strong style={{ color: 'var(--muted)' }}>bitFlyer / Coincheck</strong>
-                      は約 ¥5,000 かかる。
+                      おすすめウォレットは <strong style={{ color: 'var(--muted)' }}>Trust Wallet</strong>(スマホ用・無料)。
+                      決済ページのQRを送金画面で読み取ると、送金先と金額が自動で入ります。
                     </div>
                   </div>
                 </BrassFrame>
@@ -809,9 +809,7 @@ export default function CheckoutPage() {
               lineHeight: 1.8,
             }}
           >
-            ※ 現在ご利用いただけるのは暗号資産のみ(他は準備中)。
-            <br />※ 支払い確認後、専用リンクをメールで送る。
-            <br />※ デジタル商品につき、購入完了後・ダウンロード後の返品/返金はできません。
+            ※ デジタル商品につき、購入完了後・ダウンロード後の返品/返金はできません。
             <br />
             <a href="/legal/tokushoho" target="_blank" rel="noopener" style={{ color: 'var(--muted)' }}>
               特定商取引法に基づく表記
