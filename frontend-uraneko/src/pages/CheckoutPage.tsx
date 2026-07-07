@@ -19,10 +19,28 @@ const CURRENCIES = [
 
 // 支払い方法。暗号資産のみ実装済み。他は選択できるが準備中(選ぶと「次へ」が非活性)。
 const PAY_METHODS = [
-  { id: 'crypto', name: '暗号資産', sub: 'BTC / USDT / USDC / LTC 等', available: true },
-  { id: 'card', name: 'クレジットカード', sub: 'Visa / Mastercard / JCB', available: false },
-  { id: 'paypay', name: 'PayPay', sub: 'ぼくに直接連絡してね！！！！！！', available: false },
-  { id: 'konbini', name: 'コンビニ払い', sub: 'ムリです！！！！！！！！！！', available: false },
+  { id: 'crypto', name: '暗号資産', sub: 'BTC / USDT / USDC / LTC 等', available: true, notice: '' },
+  {
+    id: 'card',
+    name: 'クレジットカード',
+    sub: 'Visa / Mastercard / JCB',
+    available: false,
+    notice: '現在ご購入いただけるのは暗号資産のみです。上の「暗号資産」を選んでお進みください。',
+  },
+  {
+    id: 'paypay',
+    name: 'PayPay',
+    sub: 'ペイペイ',
+    available: false,
+    notice: 'ぼくに直接連絡してね！！！！！！',
+  },
+  {
+    id: 'konbini',
+    name: 'コンビニ払い',
+    sub: 'セブン / ローソン / ファミマ',
+    available: false,
+    notice: 'ムリです！！！！！！！！！！',
+  },
 ] as const;
 type PayMethodId = (typeof PAY_METHODS)[number]['id'];
 
@@ -788,11 +806,7 @@ export default function CheckoutPage() {
                   >
                     「{selMethod.name}」は準備中です。
                     <br />
-                    <span style={{ color: 'var(--muted)', fontSize: 13 }}>
-                      現在ご購入いただけるのは
-                      <strong style={{ color: 'var(--color-gold-bright)' }}>暗号資産</strong>
-                      のみです。上の「暗号資産」を選んでお進みください。
-                    </span>
+                    <span style={{ color: 'var(--muted)', fontSize: 13 }}>{selMethod.notice}</span>
                   </div>
                 </BrassFrame>
               )}
