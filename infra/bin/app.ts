@@ -7,6 +7,7 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import { StorageStack } from '../lib/storage-stack';
 import { PortfolioSecretsStack } from '../lib/secrets-stack';
+import { GithubOidcStack } from '../lib/github-oidc-stack';
 import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
@@ -40,6 +41,9 @@ const env = {
 
 const storage = new StorageStack(app, 'PortfolioStorage', { env });
 const portfolioSecrets = new PortfolioSecretsStack(app, 'PortfolioSecrets', { env });
+
+// CI(GitHub Actions)用の OIDC 連携(長期アクセスキー廃止)
+new GithubOidcStack(app, 'GithubOidc', { env });
 
 // ACM certificate must be in us-east-1 for CloudFront and Cognito custom domain
 const certStack = new cdk.Stack(app, 'PortfolioCert', {

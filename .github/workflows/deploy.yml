@@ -7,6 +7,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # OIDC で AWS の短命クレデンシャルを取得するために必要
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -30,8 +34,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # GitHub OIDC で AssumeRole(GithubOidcStack が作成。長期キー不使用)
+          role-to-assume: arn:aws:iam::234080517105:role/github-actions-deploy
           aws-region: ap-northeast-1
 
       - name: Deploy CDK
@@ -50,20 +54,15 @@ jobs:
 #
 # 1. GitHubリポジトリのページを開く
 # 2. Settings → Secrets and variables → Actions に移動
-# 3. "New repository secret" をクリックして、以下の3つを登録する
-#
-# ■ AWS_ACCESS_KEY_ID
-#   - IAMユーザー portfolio-deployer のアクセスキーID
-#   - 例: AKIA...
-#
-# ■ AWS_SECRET_ACCESS_KEY
-#   - IAMユーザー portfolio-deployer のシークレットアクセスキー
-#   - 例: wJalrX...
+# 3. "New repository secret" をクリックして、以下を登録する
 #
 # ■ ALERT_EMAIL
 #   - AWS予算アラートの通知先メールアドレス
 #   - 例: your-email@example.com
 #
+# ※ AWS 認証は GitHub OIDC(role-to-assume)。長期アクセスキーは使わない。
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY は OIDC 移行後の CI が green に
+#   なったのを確認してから GitHub Secrets と IAM(portfolio-deployer)の両方で削除する。
 # ※ Google OAuth / GitHub PAT は GitHub Secrets ではなく AWS Secrets Manager で管理する
 #   (portfolio/google-oauth-client-secret, portfolio/github-token)。
 #   クライアントID等の公開値は infra のソースに直書き。
