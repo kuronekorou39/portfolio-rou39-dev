@@ -1,14 +1,16 @@
 // E2E テスト用: NOWPayments webhook を自前で署名して送信
-// 使い方: node scripts/fake-nowpayments-webhook.mjs <order_id> [endpoint]
+// 使い方: node scripts/uraneko/fake-nowpayments-webhook.mjs <order_id> <endpoint>
 import { createHmac } from 'node:crypto';
 import { execSync } from 'node:child_process';
 
 const orderId = process.argv[2];
-const endpoint =
-  process.argv[3] || 'https://uraneko.rou39.com/api/webhooks/nowpayments';
+// 誤爆防止のため endpoint は必須(以前は本番 URL が既定値で、引数1つで
+// 本番注文を支払い完了にできてしまった)
+const endpoint = process.argv[3];
 
-if (!orderId) {
-  console.error('usage: node fake-nowpayments-webhook.mjs <order_id> [endpoint]');
+if (!orderId || !endpoint) {
+  console.error('usage: node scripts/uraneko/fake-nowpayments-webhook.mjs <order_id> <endpoint>');
+  console.error('  endpoint 例(本番、意図的に指定する場合): https://uraneko.rou39.com/api/webhooks/nowpayments');
   process.exit(1);
 }
 

@@ -5,14 +5,14 @@ import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { resolve } from 'node:path';
 
+// 生データはリポジトリ外(RELATIONS_SRC_DIR で上書き可)
+const SRC_DIR = resolve(process.env.RELATIONS_SRC_DIR || 'C:/projects/ff-display-data');
 const FILES = [
-  'FF display/kuronekorou39_following_20260429_104940_part01.jsonl',
-  'FF display/kuronekorou39_following_20260429_104940_part02.jsonl',
-  'FF display/kuronekorou39_following_20260429_104940_part03.jsonl',
-  'FF display/kuronekorou39_following_20260429_104940_part04.jsonl',
+  'kuronekorou39_following_20260429_104940_part01.jsonl',
+  'kuronekorou39_following_20260429_104940_part02.jsonl',
+  'kuronekorou39_following_20260429_104940_part03.jsonl',
+  'kuronekorou39_following_20260429_104940_part04.jsonl',
 ];
-
-const ROOT = resolve(import.meta.dirname, '..');
 
 let total = 0;
 let parseErr = 0;
@@ -25,7 +25,7 @@ function bump(map, key) {
 }
 
 async function processFile(path) {
-  const stream = createReadStream(resolve(ROOT, path), { encoding: 'utf8' });
+  const stream = createReadStream(resolve(SRC_DIR, path), { encoding: 'utf8' });
   const rl = createInterface({ input: stream, crlfDelay: Infinity });
   let n = 0;
   for await (const line of rl) {

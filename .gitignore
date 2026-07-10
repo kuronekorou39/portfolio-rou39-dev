@@ -24,21 +24,15 @@ Thumbs.db
 .claude/
 Snapshot_16.PNG
 
-# Relations 元データ + デザイン資料 (JSONL だけで 2.4GB 超、design_handoff も外部資料)
-FF display/
+# Relations 生成データ置き場 (GitHub 100MB 制限超。
+# scripts/relations/normalize-relations.mjs --threshold=N で再生成可能、
+# 本番へは aws s3 cp で直接アップロード)
+relations-data/
 
-# Relations 生データの全バリアント (GitHub 100MB 制限超)
-# scripts/normalize-relations.mjs --threshold=N で再生成可能。
-# t500 (79MB) / depth2.json=t100 (169MB) / t10 (329MB) / t1 (693MB)
+# ローカル dev 用に relations-data/ から一時コピーした場合の置き場
 frontend/public/relations-app/data/depth2*.json
 
-# scripts/normalize-relations.mjs を --output で誤指定して
+# scripts/relations/normalize-relations.mjs を --output で誤指定して
 # プロジェクトルートに書かれた生成物 (cwd 起点で出る場合あり)
 /depth2.json
 /depth2-*.json
-
-# relations-app 移動作業の一時退避先 (depth2*.json 計 1.3GB を含むため誤コミット厳禁)
-relations-app-temp/
-
-# 別案件のデザインハンドオフ資料 (Git 管理対象外)
-AVbuySite/

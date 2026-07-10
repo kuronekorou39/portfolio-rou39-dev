@@ -42,7 +42,7 @@ jobs:
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
 
       - name: Seed projects data
-        run: node scripts/seed-projects.mjs
+        run: node scripts/seed/seed-projects.mjs
 
 # ============================================================
 # GitHub Secrets の設定手順

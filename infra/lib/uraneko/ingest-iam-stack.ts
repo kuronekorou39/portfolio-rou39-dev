@@ -14,7 +14,7 @@ interface UranekoIngestIamStackProps extends cdk.StackProps {
  * uraneko-video-tokens DDB にのみ書き込める IAM User。
  *
  * AccessKey の発行は IAM コンソールで手動で行うこと(CFN Output に平文を出さないため)。
- * 仕様詳細は data/uraneko-ingest-contract.md を参照。
+ * 仕様詳細は docs/uraneko-ingest-contract.md を参照。
  */
 export class UranekoIngestIamStack extends cdk.Stack {
   public readonly ingestUser: iam.User;

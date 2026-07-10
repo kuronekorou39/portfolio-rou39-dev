@@ -1,7 +1,7 @@
 /**
  * DynamoDB にプロジェクトデータを投入するシードスクリプト
  *
- * Usage: node scripts/seed-projects.mjs
+ * Usage: node scripts/seed/seed-projects.mjs
  *
  * 前提:
  *   - テーブル `portfolio-projects` が ap-northeast-1 に作成済み
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const require = createRequire(
-  new URL('../backend/', import.meta.url).href
+  new URL('../../backend/', import.meta.url).href
 );
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
@@ -26,7 +26,7 @@ const REGION = 'ap-northeast-1';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projects = JSON.parse(
-  readFileSync(join(__dirname, '../data/projects.json'), 'utf-8')
+  readFileSync(join(__dirname, '../../data/projects.json'), 'utf-8')
 );
 
 async function main() {

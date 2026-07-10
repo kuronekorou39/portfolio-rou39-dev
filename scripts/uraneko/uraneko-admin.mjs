@@ -3,10 +3,10 @@
  *
  * 方針: uraneko には Web 管理画面を作らない(公開管理画面は攻撃面になるため)。
  *       運用はこの CLI か、ローカル専用GUI(uraneko-admin-server.mjs)から行う。
- *       実処理は scripts/lib/uraneko-store.mjs に集約(CLI/GUI 共通)。
+ *       実処理は scripts/uraneko/lib/uraneko-store.mjs に集約(CLI/GUI 共通)。
  *
  * Usage:
- *   node scripts/uraneko-admin.mjs <command> [args]
+ *   node scripts/uraneko/uraneko-admin.mjs <command> [args]
  *
  * 前提: AWS CLI / 環境変数で ap-northeast-1 に認証済み。backend/ に @aws-sdk/* あり。
  *       assets バケットは URANEKO_ASSETS_BUCKET 環境変数、無ければ STS からアカウントIDを引く。
@@ -15,7 +15,7 @@ import { readFileSync } from 'fs';
 import * as store from './lib/uraneko-store.mjs';
 
 const USAGE = `uraneko 管理 CLI
-  node scripts/uraneko-admin.mjs <command> [args]
+  node scripts/uraneko/uraneko-admin.mjs <command> [args]
 
   products list [--all]                          商品一覧(--all で未公開含む)+ 在庫件数
   products get <product_id>                      商品1件を表示
@@ -41,7 +41,7 @@ const USAGE = `uraneko 管理 CLI
   coupons get <coupon_code>                       クーポン1件を表示
   coupons delete <coupon_code>                    クーポン削除
 
-  ヒント: GUI で操作したい場合は  node scripts/uraneko-admin-server.mjs`;
+  ヒント: GUI で操作したい場合は  node scripts/uraneko/uraneko-admin-server.mjs`;
 
 function parseArgs(argv) {
   const positional = [];

@@ -3,11 +3,11 @@
  *
  * 公開 Web 管理画面は作らない方針のため、これは 127.0.0.1 のみにバインドする
  * ローカル専用ツール(ネットワークには一切晒さない)。CLI と同じ AWS 認証で
- * DynamoDB / S3 を直接操作し、実処理は scripts/lib/uraneko-store.mjs を共用する。
+ * DynamoDB / S3 を直接操作し、実処理は scripts/uraneko/lib/uraneko-store.mjs を共用する。
  *
  * 使い方:
- *   node scripts/uraneko-admin-server.mjs        # http://127.0.0.1:4173 を開く
- *   URANEKO_ADMIN_PORT=5000 node scripts/uraneko-admin-server.mjs
+ *   node scripts/uraneko/uraneko-admin-server.mjs        # http://127.0.0.1:4173 を開く
+ *   URANEKO_ADMIN_PORT=5000 node scripts/uraneko/uraneko-admin-server.mjs
  *
  * 前提: AWS CLI / 環境変数で ap-northeast-1 に認証済み。
  */

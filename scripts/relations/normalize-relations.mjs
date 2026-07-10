@@ -1,5 +1,7 @@
-// FF display/ 配下のフォロー/フォロワーデータを軽量化して
-// frontend/public/relations-app/data/depth2.json に出力する。
+// フォロー/フォロワー生データ(リポジトリ外の ff-display-data、RELATIONS_SRC_DIR で
+// 上書き可)を軽量化して relations-data/depth2.json に出力する。
+// 本番反映は aws s3 cp で S3 の relations-app/data/ へ直接アップロードする。
+// ローカル dev で見たい場合は frontend/public/relations-app/data/ に一時コピーする(ignore 済み)。
 //
 // 入力:
 //   - kuronekorou39_following_*.jsonl (4ファイル合計 2.4GB)
@@ -20,18 +22,19 @@
 //   avatarUrl は1ノードにつき1度だけ含める(同じノードへの重複レコードでは省く)
 //   不要削除: id/jobId/restId/description/verified/protected/location/statusesCount/capturedAt
 //
-// CLI: node scripts/normalize-relations.mjs --threshold=50
+// CLI: node scripts/relations/normalize-relations.mjs --threshold=50
 
 import { createReadStream, createWriteStream } from 'node:fs';
 import { writeFile, mkdir, stat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { dirname, resolve } from 'node:path';
 
-const ROOT = resolve(import.meta.dirname, '..');
-const SRC_DIR = resolve(ROOT, 'FF display');
+const ROOT = resolve(import.meta.dirname, '../..');
+// 生データ(2.4GB JSONL)はリポジトリ外に退避済み
+const SRC_DIR = resolve(process.env.RELATIONS_SRC_DIR || 'C:/projects/ff-display-data');
 // 出力先は --output で上書き可能(デフォルト depth2.json)
-// 例: --output=depth2-local.json (frontend/public/relations-app/data/ 配下に書き出す)
-const DATA_DIR = resolve(ROOT, 'frontend/public/relations-app/data/');
+// 例: --output=depth2-local.json (relations-data/ 配下に書き出す)
+const DATA_DIR = resolve(ROOT, 'relations-data');
 const ROOT_HANDLE = 'kuronekorou39';
 
 const SRC_FILES = [
