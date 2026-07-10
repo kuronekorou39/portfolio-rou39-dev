@@ -120,13 +120,6 @@ export class AuthStack extends cdk.Stack {
     });
     this.userPoolClient.node.addDependency(googleProvider);
 
-    // 【一時措置 / uraneko プール分離の移行用】
-    // 旧 UranekoAuthClient / 旧 UranekoApi(デプロイ済み CFN)がこのプール ID の
-    // cross-stack export を import しているため、参照を外した状態で deploy --all すると
-    // 「使用中 export の削除」で PortfolioAuth の更新が拒否される。exportValue で
-    // 同名 export を延命し、旧 UranekoAuthClient スタックを削除した後にこの行を消すこと。
-    this.exportValue(this.userPool.userPoolId);
-
     new cdk.CfnOutput(this, 'UserPoolId', { value: this.userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: this.userPoolClient.userPoolClientId });
     new cdk.CfnOutput(this, 'CognitoDomainUrl', {
