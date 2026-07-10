@@ -243,6 +243,7 @@ export class ApiStack extends cdk.Stack {
     clipByCode.addMethod('GET', new apigateway.LambdaIntegration(clipFn));
 
     // --- Contact API (inquiry form, no auth) ---
+    const contactFromEmail = 'noreply@rou39.com';
     const contactFn = new nodejs.NodejsFunction(this, 'ContactFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, '../../backend/src/handlers/contact.ts'),
@@ -250,15 +251,19 @@ export class ApiStack extends cdk.Stack {
       environment: {
         CONTACTS_TABLE: props.contactsTable.tableName,
         NOTIFY_EMAIL: 'kuronekorou39@gmail.com',
-        FROM_EMAIL: 'noreply@rou39.com',
+        FROM_EMAIL: contactFromEmail,
       },
       bundling: bundlingOptions,
     });
     props.contactsTable.grantReadWriteData(contactFn);
+    // SES 送信は送信元ドメインの identity に限定する('*' だと uraneko 含む
+    // アカウント内の全 identity から送信できてしまう)。uraneko/api-stack.ts と同方式。
     contactFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['ses:SendEmail'],
-        resources: ['*'],
+        resources: [
+          `arn:aws:ses:${this.region}:${this.account}:identity/${contactFromEmail.split('@')[1]}`,
+        ],
       }),
     );
 

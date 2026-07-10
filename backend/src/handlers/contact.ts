@@ -17,11 +17,14 @@ const MIN_SUBMIT_TIME_MS = 3000; // 3 seconds minimum
 const VALID_CATEGORIES = ['work', 'feedback', 'other'];
 
 function getClientIp(event: APIGatewayProxyEvent): string {
-  return (
-    event.headers['X-Forwarded-For']?.split(',')[0]?.trim() ||
-    event.requestContext.identity?.sourceIp ||
-    'unknown'
-  );
+  // CloudFront 経由の X-Forwarded-For は「クライアント自称値..., 実クライアントIP,
+  // CloudFrontエッジIP」の形で届く。先頭要素はクライアントが任意に注入できるため
+  // レート制限キーには使わず、末尾から2番目(CloudFront が観測した実IP)を採る。
+  // 直叩き(XFF 1要素以下)は API Gateway の sourceIp がそのまま実IP。
+  const xff = event.headers['X-Forwarded-For'] ?? event.headers['x-forwarded-for'] ?? '';
+  const parts = xff.split(',').map((s) => s.trim()).filter(Boolean);
+  if (parts.length >= 2) return parts[parts.length - 2];
+  return event.requestContext.identity?.sourceIp || 'unknown';
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {

@@ -77,9 +77,12 @@ export class MailStack extends cdk.Stack {
       },
     });
     archive.grantRead(forwarder);
+    // 送信は rou39.com identity に限定。identity は ap-northeast-1 で検証済みで、
+    // mail-forward.ts の SES Client も ap-northeast-1 を明示している(このスタックの
+    // us-east-1 ではない)ため、ARN のリージョンも ap-northeast-1 に固定する。
     forwarder.addToRolePolicy(new iam.PolicyStatement({
       actions: ['ses:SendRawEmail', 'ses:SendEmail'],
-      resources: ['*'],
+      resources: [`arn:aws:ses:ap-northeast-1:${this.account}:identity/${props.domainName}`],
     }));
 
     // 3. SES Receipt Rule Set + catch-all rule
