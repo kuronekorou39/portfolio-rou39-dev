@@ -3,13 +3,16 @@
   "private": true,
   "workspaces": [
     "frontend",
+    "frontend-uraneko",
     "backend",
     "infra",
     "shared"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
+    "dev:uraneko": "npm run dev --workspace=frontend-uraneko",
     "build": "npm run build --workspace=frontend",
+    "build:uraneko": "npm run build --workspace=frontend-uraneko",
     "deploy:infra": "npm run deploy --workspace=infra"
   }
 }
