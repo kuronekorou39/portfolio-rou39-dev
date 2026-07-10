@@ -55,6 +55,11 @@ npm run deploy:infra
 
 ## データ登録
 
+作品データは `data/projects.json` が正で、CI(deploy.yml)が push のたびに反映する。
+
 ```bash
-npx tsx scripts/seed-project.ts
+# data/projects.json を DynamoDB に反映(CI と同じもの)
+node scripts/seed-projects.mjs
 ```
+
+`data/projects.json` の編集には `tools/project-editor.html` をブラウザで開いて使う。
