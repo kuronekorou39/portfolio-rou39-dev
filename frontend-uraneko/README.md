@@ -17,27 +17,10 @@ UserPool ID / App Client ID は `src/lib/auth.ts` の `USER_POOL_ID` / `CLIENT_I
 CfnOutput `UranekoUserPoolId` / `UranekoUserPoolClientId` の値を
 `src/lib/auth.ts` の `USER_POOL_ID` / `CLIENT_ID` に反映する。
 
-### プール分離の移行手順(2026-07、完了したらこの節は削除)
-
-本家プール共有 → 専用プールへの切替は次の順で行う(順序を崩すとログイン不能期間が延びる):
-
-1. Google Cloud Console で uraneko 用 OAuth クライアントを作成
-   (承認済みリダイレクト URI: `https://uraneko-auth.rou39.com/oauth2/idpresponse`)。
-   同意画面の表示名は GCP プロジェクト単位なので、uraneko 名義にしたい場合は別プロジェクトで作る
-2. `infra/lib/uraneko/auth-stack.ts` の `GOOGLE_CLIENT_ID` を実値に更新
-3. `cd infra && npx cdk deploy UranekoSecrets` →
-   `aws secretsmanager put-secret-value --secret-id uraneko/google-oauth-client-secret --secret-string '<クライアントシークレット>'`
-4. `npx cdk deploy UranekoAuth UranekoApi`(シークレット設定より後にデプロイすること。
-   カスタムドメイン作成に15分程度かかる)
-5. CfnOutput の `UranekoUserPoolId` / `UranekoUserPoolClientId` を `src/lib/auth.ts` に転記し、
-   ビルドして `npx cdk deploy UranekoFrontend`(CSP の切替も一緒に反映される)
-6. 動作確認(メール登録・Googleログイン・購入履歴)後、旧クライアントを削除:
-   `aws cloudformation delete-stack --stack-name UranekoAuthClient`
-7. `infra/lib/auth-stack.ts` の「一時措置」`exportValue` 行を削除してデプロイ
-8. 旧プールの sub を持つテスト注文(`uraneko-orders` の `user_id` が `guest:` 以外)を掃除
-
-手順 4 完了〜手順 5 完了の間、配信中の旧フロントはログインしても API に 401 で弾かれる
-(fail-closed。ゲスト購入は影響なし)。ローンチ前のため許容。
+注意: API Gateway(REST)はオーソライザーの設定変更(参照プールの変更等)だけでは
+稼働中のステージに反映されない。CDK デプロイ後に
+`aws apigateway create-deployment --rest-api-id <id> --stage-name prod` で
+ステージを再デプロイすること(エッジ最適化型のため反映まで数分かかる)。
 
 ## 本番デプロイ
 
