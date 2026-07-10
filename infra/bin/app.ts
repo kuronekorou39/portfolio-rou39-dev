@@ -15,7 +15,7 @@ import { MonitoringStack } from '../lib/monitoring-stack';
 import { UranekoStorageStack } from '../lib/uraneko/storage-stack';
 import { UranekoSecretsStack } from '../lib/uraneko/secrets-stack';
 import { UranekoEmailStack } from '../lib/uraneko/email-stack';
-import { UranekoAuthClientStack } from '../lib/uraneko/auth-client-stack';
+import { UranekoAuthStack } from '../lib/uraneko/auth-stack';
 import { UranekoIngestIamStack } from '../lib/uraneko/ingest-iam-stack';
 import { UranekoApiStack } from '../lib/uraneko/api-stack';
 import { UranekoWafStack } from '../lib/uraneko/waf-stack';
@@ -27,6 +27,9 @@ const app = new cdk.App();
 const DOMAIN_NAME = 'rou39.com';
 const AUTH_DOMAIN = `auth.${DOMAIN_NAME}`;
 const URANEKO_SUBDOMAIN = `uraneko.${DOMAIN_NAME}`;
+// uraneko 専用の Cognito 認証ドメイン。auth.uraneko.rou39.com は
+// *.rou39.com ワイルドカード証明書の対象外(2階層)なので1階層に置く。
+const URANEKO_AUTH_DOMAIN = `uraneko-auth.${DOMAIN_NAME}`;
 const HOSTED_ZONE_ID = 'Z064847133X63Y56L8D3W';
 
 const env = {
@@ -139,12 +142,19 @@ const uranekoEmail = new UranekoEmailStack(app, 'UranekoEmail', {
   subdomain: URANEKO_SUBDOMAIN,
 });
 
-const uranekoAuthClient = new UranekoAuthClientStack(app, 'UranekoAuthClient', {
+// uraneko 専用 UserPool。本家 portfolio-users とは会員基盤を分離する。
+const uranekoAuth = new UranekoAuthStack(app, 'UranekoAuth', {
   env,
-  userPool: auth.userPool,
+  crossRegionReferences: true,
+  certificate,
+  hostedZone: uranekoHostedZone,
+  authDomain: URANEKO_AUTH_DOMAIN,
   subdomain: URANEKO_SUBDOMAIN,
+  fromEmail: uranekoEmail.fromAddress,
+  googleClientSecret: uranekoSecrets.googleOAuthClientSecret,
 });
-void uranekoAuthClient;
+// UserPool の SES 送信設定は作成時に identity の検証状態を確認するため、Email スタックを先に
+uranekoAuth.addDependency(uranekoEmail);
 
 new UranekoIngestIamStack(app, 'UranekoIngest', {
   env,
@@ -159,8 +169,8 @@ const uranekoApi = new UranekoApiStack(app, 'UranekoApi', {
   ordersTable: uranekoStorage.ordersTable,
   couponsTable: uranekoStorage.couponsTable,
   assetsBucket: uranekoStorage.assetsBucket,
-  userPool: auth.userPool,
-  userPoolClientId: uranekoAuthClient.userPoolClient.userPoolClientId,
+  userPool: uranekoAuth.userPool,
+  userPoolClientId: uranekoAuth.userPoolClient.userPoolClientId,
   nowpaymentsApiKey: uranekoSecrets.nowpaymentsApiKey,
   nowpaymentsIpnSecret: uranekoSecrets.nowpaymentsIpnSecret,
   orderAccessSecret: uranekoSecrets.orderAccessSecret,

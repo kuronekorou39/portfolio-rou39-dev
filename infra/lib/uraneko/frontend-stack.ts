@@ -66,7 +66,7 @@ export class UranekoFrontendStack extends cdk.Stack {
     //  - style-src 'unsafe-inline' + fonts.googleapis.com: React のインライン style と Google Fonts CSS。
     //  - font-src fonts.gstatic.com: Google Fonts 本体。
     //  - img-src https:: 商品サムネ/サンプルは S3 presigned URL(https)。
-    //  - connect-src: /api(self)+ Cognito トークン交換(auth.rou39.com)+ セッション更新(cognito-idp)。
+    //  - connect-src: /api(self)+ Cognito トークン交換(uraneko-auth.rou39.com)+ セッション更新(cognito-idp)。
     const contentSecurityPolicy = [
       "default-src 'self'",
       "base-uri 'self'",
@@ -76,7 +76,7 @@ export class UranekoFrontendStack extends cdk.Stack {
       "font-src 'self' data: https://fonts.gstatic.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "script-src 'self'",
-      "connect-src 'self' https://auth.rou39.com https://cognito-idp.ap-northeast-1.amazonaws.com",
+      "connect-src 'self' https://uraneko-auth.rou39.com https://cognito-idp.ap-northeast-1.amazonaws.com",
       "form-action 'self'",
     ].join('; ');
 
