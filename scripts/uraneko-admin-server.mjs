@@ -115,6 +115,15 @@ const server = createServer(async (req, res) => {
     return res.end('forbidden host');
   }
 
+  // CSRF 対策: 悪意サイトからの fetch は宛先が 127.0.0.1 でも Origin にそのサイトが
+  // 乗る(Host 検証では防げない)。Origin 無し(curl / 同一オリジン GET ナビゲーション)
+  // または自分自身のオリジンのみ許可し、それ以外(sandboxed iframe の "null" 含む)は拒否。
+  const origin = (req.headers.origin || '').toLowerCase();
+  if (origin && origin !== `http://127.0.0.1:${PORT}` && origin !== `http://localhost:${PORT}`) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    return res.end('forbidden origin');
+  }
+
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
   const key = `${req.method} ${url.pathname}`;
 
