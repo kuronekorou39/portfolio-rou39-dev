@@ -17,8 +17,7 @@ import * as path from 'path';
 //   https://uraneko-auth.rou39.com/oauth2/idpresponse
 // を登録すること。クライアントシークレットは Secrets Manager
 // (uraneko/google-oauth-client-secret)側で管理する。
-// TODO: Google Cloud Console でクライアント作成後、UranekoAuth デプロイ前に実値へ更新
-const GOOGLE_CLIENT_ID = 'PLACEHOLDER';
+const GOOGLE_CLIENT_ID = '84401600693-ubfslome5tarbuhokbk0017v9v29o4tj.apps.googleusercontent.com';
 
 interface UranekoAuthStackProps extends cdk.StackProps {
   certificate: acm.ICertificate; // us-east-1 の rou39.com + *.rou39.com 証明書
