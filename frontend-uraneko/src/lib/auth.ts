@@ -9,17 +9,13 @@ import {
 
 // uraneko 専用 UserPool(UranekoAuthStack が作成 / CfnOutput UranekoUserPoolId)。
 // 本家 rou39.com の portfolio-users とは会員基盤を分離している。
-// このプレースホルダは意図的に CognitoUserPool の UserPoolId 形式チェックを通らない値に
-// してあり、未設定のままビルドすると起動時に即例外になる(静かに壊れるのを防ぐ)。
-// TODO: UranekoAuth デプロイ後、CfnOutput の実値へ更新すること(README「本番デプロイ」参照)
-const USER_POOL_ID = 'SET-AFTER-URANEKO-AUTH-DEPLOY';
+const USER_POOL_ID = 'ap-northeast-1_XDPheYwV7';
 
 // uraneko 用 App Client ID(UranekoAuthStack が作成 / CfnOutput UranekoUserPoolClientId)。
 // Cognito の SPA 用 App Client ID はブラウザバンドルに露出する公開値(秘密ではない)なので、
 // 本家 frontend/ と同様にソースへ直書きする。これによりクリーンビルドでも再現性を保つ。
-// UranekoAuth スタックを作り直して ClientId が変わった場合のみ、この値を更新すること。
-// TODO: UranekoAuth デプロイ後、CfnOutput の実値へ更新すること(README「本番デプロイ」参照)
-const CLIENT_ID = 'SET-AFTER-URANEKO-AUTH-DEPLOY';
+// UranekoAuth スタックを作り直して ID が変わった場合のみ、この値を更新すること。
+const CLIENT_ID = '5kknvr0s6ojhm6uks9v44v1g50';
 
 const COGNITO_DOMAIN = 'https://uraneko-auth.rou39.com';
 
