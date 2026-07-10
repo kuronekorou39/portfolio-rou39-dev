@@ -6,6 +6,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import { StorageStack } from '../lib/storage-stack';
+import { PortfolioSecretsStack } from '../lib/secrets-stack';
 import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
@@ -38,6 +39,7 @@ const env = {
 };
 
 const storage = new StorageStack(app, 'PortfolioStorage', { env });
+const portfolioSecrets = new PortfolioSecretsStack(app, 'PortfolioSecrets', { env });
 
 // ACM certificate must be in us-east-1 for CloudFront and Cognito custom domain
 const certStack = new cdk.Stack(app, 'PortfolioCert', {
@@ -67,6 +69,7 @@ const auth = new AuthStack(app, 'PortfolioAuth', {
   certificate,
   hostedZone: authHostedZone,
   authDomain: AUTH_DOMAIN,
+  googleClientSecret: portfolioSecrets.googleOAuthClientSecret,
 });
 
 const api = new ApiStack(app, 'PortfolioApi', {
@@ -83,6 +86,7 @@ const api = new ApiStack(app, 'PortfolioApi', {
   cacheTable: storage.cacheTable,
   assetsBucket: storage.assetsBucket,
   userPool: auth.userPool,
+  githubTokenSecret: portfolioSecrets.githubToken,
 });
 
 // Frontend with custom domain

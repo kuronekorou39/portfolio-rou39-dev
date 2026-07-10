@@ -1,11 +1,26 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { docClient } from '../lib/dynamo';
 import { ok, serverError } from '../lib/response';
 
 const CACHE_TABLE = process.env.CACHE_TABLE!;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
+// PAT は env に平文で置かず、シークレット名だけを受けて実行時に取得する
+// (lib/uraneko/nowpayments.ts と同方式)。モジュールスコープにキャッシュして使い回す。
+const GITHUB_TOKEN_SECRET = process.env.GITHUB_TOKEN_SECRET!;
 const GITHUB_USER = process.env.GITHUB_USER || 'kuronekorou39';
+
+const secretsClient = new SecretsManagerClient({});
+let cachedGithubToken: string | undefined;
+async function getGithubToken(): Promise<string> {
+  if (!cachedGithubToken) {
+    const res = await secretsClient.send(
+      new GetSecretValueCommand({ SecretId: GITHUB_TOKEN_SECRET }),
+    );
+    cachedGithubToken = res.SecretString ?? '';
+  }
+  return cachedGithubToken;
+}
 const CACHE_KEY = { pk: 'CACHE#contributions', sk: GITHUB_USER };
 const CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours
 
@@ -39,17 +54,20 @@ interface CalendarData {
 }
 
 async function fetchFromGitHub(): Promise<CalendarData> {
+  const githubToken = await getGithubToken();
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
-      Authorization: `bearer ${GITHUB_TOKEN}`,
+      Authorization: `bearer ${githubToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ query: QUERY, variables: { login: GITHUB_USER } }),
   });
 
   if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
-  const json = await res.json();
+  const json = (await res.json()) as {
+    data: { user: { contributionsCollection: { contributionCalendar: CalendarData } } };
+  };
   return json.data.user.contributionsCollection.contributionCalendar;
 }
 

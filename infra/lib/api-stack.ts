@@ -6,6 +6,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -22,6 +23,7 @@ interface ApiStackProps extends cdk.StackProps {
   cacheTable: dynamodb.Table;
   assetsBucket: s3.Bucket;
   userPool: cognito.UserPool;
+  githubTokenSecret: secretsmanager.ISecret;
 }
 
 export class ApiStack extends cdk.Stack {
@@ -270,13 +272,17 @@ export class ApiStack extends cdk.Stack {
       handler: 'handler',
       environment: {
         CACHE_TABLE: props.cacheTable.tableName,
-        GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+        // トークン本体は渡さず、シークレット名だけを渡して実行時に取得する
+        // (env 平文だと CFN テンプレートに露出し、CI デプロイ時に .env が無く
+        // 空文字で上書きされる事故もあった。uraneko の NOWPayments と同方式)
+        GITHUB_TOKEN_SECRET: props.githubTokenSecret.secretName,
         GITHUB_USER: 'kuronekorou39',
       },
       bundling: bundlingOptions,
       timeout: cdk.Duration.seconds(10),
     });
     props.cacheTable.grantReadWriteData(contributionsFn);
+    props.githubTokenSecret.grantRead(contributionsFn);
 
     const contributions = this.api.root.addResource('contributions');
     contributions.addMethod('GET', new apigateway.LambdaIntegration(contributionsFn));

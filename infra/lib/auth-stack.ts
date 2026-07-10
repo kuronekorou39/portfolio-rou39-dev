@@ -6,13 +6,20 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+
+// 本家用 Google OAuth クライアント ID。ブラウザの認可リクエストに露出する公開値なので
+// 直書きする(.env 経由だと CI に .env が無く PLACEHOLDER 上書き事故の温床になるため。
+// uraneko の auth-stack.ts と同方式)。シークレットは Secrets Manager 側。
+const GOOGLE_CLIENT_ID = '878830721610-q3tdbqrtg180j3au0gm9i2ree6do2f09.apps.googleusercontent.com';
 
 interface AuthStackProps extends cdk.StackProps {
   certificate: acm.ICertificate;
   hostedZone: route53.IHostedZone;
   authDomain: string;
+  googleClientSecret: secretsmanager.ISecret;
 }
 
 export class AuthStack extends cdk.Stack {
@@ -80,13 +87,14 @@ export class AuthStack extends cdk.Stack {
       target: route53.RecordTarget.fromAlias(new route53targets.UserPoolDomainTarget(domain)),
     });
 
-    // Google Identity Provider
+    // Google Identity Provider。
+    // シークレットは Secrets Manager の動的参照で渡し、CloudFormation テンプレートに
+    // 平文を残さない。動的参照は「この IdP リソースにテンプレート差分が出る更新」の時に
+    // しか再解決されない点に注意(uraneko/auth-stack.ts と同じ)。
     const googleProvider = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleProvider', {
       userPool: this.userPool,
-      clientId: process.env.GOOGLE_CLIENT_ID || 'PLACEHOLDER',
-      clientSecretValue: cdk.SecretValue.unsafePlainText(
-        process.env.GOOGLE_CLIENT_SECRET || 'PLACEHOLDER',
-      ),
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecretValue: props.googleClientSecret.secretValue,
       scopes: ['openid', 'email', 'profile'],
       attributeMapping: {
         email: cognito.ProviderAttribute.GOOGLE_EMAIL,

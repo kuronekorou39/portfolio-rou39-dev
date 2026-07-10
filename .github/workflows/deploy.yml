@@ -32,8 +32,8 @@ jobs:
       - name: Deploy CDK
         run: cd infra && npx cdk deploy --all --require-approval never
         env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # Google OAuth のクライアントID はソース直書き、シークレットは Secrets Manager
+          # (portfolio/google-oauth-client-secret)管理のため CI には渡さない
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
 
       - name: Seed projects data
@@ -45,7 +45,7 @@ jobs:
 #
 # 1. GitHubリポジトリのページを開く
 # 2. Settings → Secrets and variables → Actions に移動
-# 3. "New repository secret" をクリックして、以下の5つを登録する
+# 3. "New repository secret" をクリックして、以下の3つを登録する
 #
 # ■ AWS_ACCESS_KEY_ID
 #   - IAMユーザー portfolio-deployer のアクセスキーID
@@ -55,16 +55,12 @@ jobs:
 #   - IAMユーザー portfolio-deployer のシークレットアクセスキー
 #   - 例: wJalrX...
 #
-# ■ GOOGLE_CLIENT_ID
-#   - Google Cloud Console で発行した OAuth 2.0 クライアントID
-#   - 例: 123456789-xxxx.apps.googleusercontent.com
-#
-# ■ GOOGLE_CLIENT_SECRET
-#   - Google Cloud Console で発行した OAuth 2.0 クライアントシークレット
-#   - 例: GOCSPX-xxxx
-#
 # ■ ALERT_EMAIL
 #   - AWS予算アラートの通知先メールアドレス
 #   - 例: your-email@example.com
+#
+# ※ Google OAuth / GitHub PAT は GitHub Secrets ではなく AWS Secrets Manager で管理する
+#   (portfolio/google-oauth-client-secret, portfolio/github-token)。
+#   クライアントID等の公開値は infra のソースに直書き。
 #
 # ============================================================
