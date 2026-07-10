@@ -99,6 +99,20 @@ export class UranekoFrontendStack extends cdk.Stack {
       },
     });
 
+    // /api/* 用キャッシュポリシー。CloudFront は GET/HEAD の Authorization ヘッダーを
+    // 「キャッシュキーに含めた場合」しか origin に転送しない(POST 等は転送される)。
+    // CACHING_DISABLED のままだと会員の GET /my/orders 等がトークン無しで届き 401 になる。
+    // TTL 0/0/1秒 + Authorization をキーに含めることで、実質キャッシュ無効のまま転送する。
+    const apiCachePolicy = new cloudfront.CachePolicy(this, 'UranekoApiCachePolicy', {
+      cachePolicyName: 'uraneko-api-auth-forward',
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Authorization'),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      minTtl: cdk.Duration.seconds(0),
+      defaultTtl: cdk.Duration.seconds(0),
+      maxTtl: cdk.Duration.seconds(1),
+    });
+
     const distribution = new cloudfront.Distribution(this, 'UranekoDistribution', {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
@@ -113,7 +127,7 @@ export class UranekoFrontendStack extends cdk.Stack {
         '/api/*': {
           origin: new origins.RestApiOrigin(props.api),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          cachePolicy: apiCachePolicy,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           // x-nowpayments-sig などのカスタムヘッダーを origin に forward する。
           // Host ヘッダーは API Gateway 側で execute-api ドメインを期待するので除外。
