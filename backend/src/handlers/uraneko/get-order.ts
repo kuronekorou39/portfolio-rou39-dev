@@ -39,8 +39,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
     if (!authorized) return forbidden('not_authorized');
 
-    // 未払の場合は署名URLは返さない
-    if (order.status !== 'paid' || !order.token_id) {
+    // 受け渡し可能なのは「先行受け渡し(confirming)」または「確定(paid)」で、かつトークン割当済みのとき。
+    // それ以外(pending / underpaid / failed / expired / cancelled)は署名 URL を返さない。
+    const deliverable = order.status === 'confirming' || order.status === 'paid';
+    if (!deliverable || !order.token_id) {
       return ok({
         order_id: order.order_id,
         status: order.status,

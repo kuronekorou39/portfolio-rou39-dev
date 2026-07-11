@@ -60,6 +60,45 @@ export default function OrderCompletePage() {
     );
 
   const paid = order.status === 'paid';
+  const confirming = order.status === 'confirming';
+  // 入金検知(confirming)または確定(paid)で受け渡し可能。confirming はまだ最終確認前。
+  const deliverable = (paid || confirming) && !!order.download_url;
+  const underpaid = order.status === 'underpaid';
+  const failed =
+    order.status === 'failed' || order.status === 'expired' || order.status === 'cancelled';
+
+  // 見出し・サブラベルを状態別に
+  const label = paid
+    ? 'DELIVERED'
+    : confirming
+    ? 'DELIVERED · CONFIRMING'
+    : underpaid
+    ? 'UNDERPAID'
+    : failed
+    ? order.status.toUpperCase()
+    : 'AWAITING PAYMENT';
+  const heading = paid
+    ? '受け渡し完了。'
+    : confirming
+    ? '受け渡し可能。'
+    : underpaid
+    ? '支払額の不足。'
+    : order.status === 'cancelled'
+    ? '取消済み。'
+    : order.status === 'expired'
+    ? '期限切れ。'
+    : order.status === 'failed'
+    ? '決済に失敗。'
+    : '送金待ち。';
+  const subline = paid
+    ? 'your copy is ready.'
+    : confirming
+    ? 'payment detected — download now.'
+    : underpaid
+    ? 'amount received is insufficient.'
+    : failed
+    ? 'this order did not complete.'
+    : 'waiting for your payment.';
 
   return (
     <div>
@@ -72,9 +111,7 @@ export default function OrderCompletePage() {
       >
         {/* 左 */}
         <div>
-          <SectionLabel style={{ marginBottom: 18 }}>
-            — {paid ? 'DELIVERED' : 'AWAITING CONFIRMATION'}
-          </SectionLabel>
+          <SectionLabel style={{ marginBottom: 18 }}>— {label}</SectionLabel>
           <h1
             style={{
               fontFamily: 'var(--font-serif-jp)',
@@ -86,11 +123,7 @@ export default function OrderCompletePage() {
               color: 'var(--color-fg)',
             }}
           >
-            {paid ? (
-              <>受け渡し完了。</>
-            ) : (
-              <>送金待ち。</>
-            )}
+            {heading}
           </h1>
           <div
             style={{
@@ -102,12 +135,12 @@ export default function OrderCompletePage() {
               fontWeight: 300,
             }}
           >
-            {paid ? 'your copy is ready.' : 'waiting for confirmations.'}
+            {subline}
           </div>
 
           <Ornament style={{ margin: '36px 0', maxWidth: 320 }} />
 
-          {paid && order.download_url && (
+          {deliverable && order.download_url && (
             <>
               <SectionLabel style={{ marginBottom: 14 }}>— FILE · 受け渡し</SectionLabel>
               <a
@@ -132,10 +165,27 @@ export default function OrderCompletePage() {
                   <br />※ 有効期限 {Math.floor(order.download_url_expires_in / 60)} 分。
                 </p>
               )}
+              {confirming && (
+                <p
+                  style={{
+                    fontFamily: 'var(--font-serif-jp)',
+                    fontSize: 12,
+                    letterSpacing: 1,
+                    color: 'var(--color-gold)',
+                    marginTop: 18,
+                    lineHeight: 1.9,
+                    fontWeight: 300,
+                  }}
+                >
+                  入金を確認しました。いますぐダウンロードいただけます。
+                  <br />
+                  ブロックチェーン上の最終確認が完了すると、ご登録のメールに控えの受け渡しリンクをお送りします(この画面を閉じても大丈夫です)。
+                </p>
+              )}
             </>
           )}
 
-          {!paid && (
+          {!deliverable && (
             <div
               style={{
                 display: 'flex',
@@ -162,21 +212,42 @@ export default function OrderCompletePage() {
             </div>
           )}
 
-          {!paid && order.status !== 'failed' && order.status !== 'expired' && order.status !== 'cancelled' && (
+          {!deliverable && underpaid && (
             <p
               style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                letterSpacing: 2,
-                color: 'var(--dim)',
+                fontFamily: 'var(--font-serif-jp)',
+                fontSize: 12,
+                letterSpacing: 1,
+                color: 'var(--color-accent)',
                 marginTop: 14,
-                lineHeight: 1.8,
+                lineHeight: 1.9,
+                fontWeight: 300,
               }}
             >
-              ※ 送金確認後、この画面は自動で受け渡しに切り替わります(手動更新不要)。
-              <br />※ 確認完了時にはご登録のメールにも受け渡しリンクをお送りします。
+              お支払いいただいた額が不足しています。恐れ入りますが、こちらで確認のうえ個別にご連絡いたします。
+              ご不明な点は注文番号を添えてお問い合わせください。
             </p>
           )}
+
+          {!deliverable &&
+            order.status !== 'failed' &&
+            order.status !== 'expired' &&
+            order.status !== 'cancelled' &&
+            !underpaid && (
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: 'var(--dim)',
+                  marginTop: 14,
+                  lineHeight: 1.8,
+                }}
+              >
+                ※ 送金が検知されると、この画面は自動で受け渡しに切り替わります(手動更新不要・NOWPayments の画面で待つ必要はありません)。
+                <br />※ 最終確認の完了時にはご登録のメールにも受け渡しリンクをお送りします。
+              </p>
+            )}
 
           <style>{`@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }`}</style>
 
@@ -197,14 +268,14 @@ export default function OrderCompletePage() {
                 top: 18,
                 right: 18,
                 padding: '5px 10px',
-                border: `1px solid ${paid ? 'var(--color-gold-bright)' : 'rgba(168,166,158,0.35)'}`,
+                border: `1px solid ${deliverable ? 'var(--color-gold-bright)' : 'rgba(168,166,158,0.35)'}`,
                 fontFamily: 'var(--font-mono)',
                 fontSize: 9,
                 letterSpacing: 3,
-                color: paid ? 'var(--color-gold-bright)' : 'var(--dim)',
+                color: deliverable ? 'var(--color-gold-bright)' : 'var(--dim)',
               }}
             >
-              {paid ? 'PAID' : 'PENDING'}
+              {paid ? 'PAID' : confirming ? 'CONFIRMING' : 'PENDING'}
             </div>
 
             <div
@@ -255,7 +326,7 @@ export default function OrderCompletePage() {
                   color: 'var(--color-gold)',
                 }}
               >
-                {paid ? 'PAID' : 'DUE'}
+                {paid ? 'PAID' : confirming ? 'RECEIVED' : 'DUE'}
               </span>
               <span
                 style={{

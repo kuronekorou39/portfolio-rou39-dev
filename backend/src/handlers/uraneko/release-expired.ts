@@ -26,17 +26,23 @@ export async function handler(): Promise<{ released: number }> {
     // ここで解放しないと reserved# のまま永久に在庫から消える。必ず解放する。
     await releaseReservedToken(t.token_id, t.order_id);
 
-    // 未確定の注文は expired にする(paid は絶対に降格させない)。
+    // 未確定の注文だけ expired にする。pending/underpaid のみを対象にし、
+    // confirming(先行受け渡し済み)/ paid は絶対に降格させない
+    // (confirming の late-payment 復活と release-expired が競合しても壊れないように)。
     if (order) {
       await docClient
         .send(
           new UpdateCommand({
             TableName: ORDERS_TABLE,
             Key: { order_id: t.order_id },
-            ConditionExpression: '#s <> :paid',
+            ConditionExpression: '#s IN (:pending, :underpaid)',
             UpdateExpression: 'SET #s = :expired',
             ExpressionAttributeNames: { '#s': 'status' },
-            ExpressionAttributeValues: { ':expired': 'expired', ':paid': 'paid' },
+            ExpressionAttributeValues: {
+              ':expired': 'expired',
+              ':pending': 'pending',
+              ':underpaid': 'underpaid',
+            },
           }),
         )
         .catch(() => undefined);

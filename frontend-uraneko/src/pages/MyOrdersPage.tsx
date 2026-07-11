@@ -13,15 +13,22 @@ import BrassFrame from '../components/bar/BrassFrame';
 const STATUS_LABEL: Record<string, string> = {
   paid: '受渡済',
   pending: '支払い待ち',
-  confirming: '確認中',
+  confirming: '確認中(受渡可)',
+  underpaid: '支払額不足',
   failed: '失敗',
   expired: '期限切れ',
   cancelled: 'キャンセル済',
 };
 
+// confirming は「先行受け渡し済み(DL可)・最終確認待ち」なのでダウンロード可能扱い。
+function isDeliverable(status: OrderSummary['status']): boolean {
+  return status === 'paid' || status === 'confirming';
+}
+
 function StatusBadge({ status }: { status: OrderSummary['status'] }) {
   const paid = status === 'paid';
-  const waiting = status === 'pending' || status === 'confirming'; // 入金待ち(失敗ではない)
+  const deliverable = isDeliverable(status); // paid or confirming(受渡可)
+  const waiting = status === 'pending' || status === 'underpaid'; // 入金待ち/対応待ち(失敗ではない)
   const failed = status === 'failed' || status === 'expired' || status === 'cancelled';
   return (
     <span
@@ -38,7 +45,7 @@ function StatusBadge({ status }: { status: OrderSummary['status'] }) {
             ? 'var(--color-gold)'
             : failed
             ? 'rgba(230,102,102,0.6)'
-            : waiting
+            : deliverable || waiting
             ? 'rgba(214,183,110,0.5)'
             : 'rgba(168,166,158,0.5)'
         }`,
@@ -132,10 +139,10 @@ export default function MyOrdersPage() {
       </p>
     );
 
-  const paidCount = orders.filter((o) => o.status === 'paid').length;
-  const totalPaid = orders
-    .filter((o) => o.status === 'paid')
-    .reduce((sum, o) => sum + o.price_jpy, 0);
+  // 受け渡し済み(paid)+ 先行受け渡し済み(confirming)を実績として集計する。
+  const deliveredOrders = orders.filter((o) => isDeliverable(o.status));
+  const paidCount = deliveredOrders.length;
+  const totalPaid = deliveredOrders.reduce((sum, o) => sum + o.price_jpy, 0);
 
   return (
     <div>
@@ -328,7 +335,7 @@ export default function MyOrdersPage() {
                 <StatusBadge status={o.status} />
               </div>
               <div style={{ textAlign: 'right' }}>
-                {o.status === 'paid' ? (
+                {isDeliverable(o.status) ? (
                   <Link
                     to={`/order/${o.order_id}/complete`}
                     style={{
@@ -377,10 +384,26 @@ export default function MyOrdersPage() {
         </ul>
       )}
 
-      {orders.some((o) => o.status === 'pending' || o.status === 'confirming') && (
+      {orders.some((o) => o.status === 'confirming') && (
         <p
           style={{
             marginTop: 16,
+            fontFamily: 'var(--font-serif-jp)',
+            fontSize: 11,
+            lineHeight: 1.8,
+            letterSpacing: 1,
+            color: 'var(--color-gold)',
+            fontWeight: 300,
+          }}
+        >
+          ※「確認中(受渡可)」は入金を検知しダウンロード可能な状態です。ブロックチェーン上の最終確認が完了すると「受渡済」になり、控えのメールをお送りします。
+        </p>
+      )}
+
+      {orders.some((o) => o.status === 'pending' || o.status === 'underpaid') && (
+        <p
+          style={{
+            marginTop: 12,
             fontFamily: 'var(--font-serif-jp)',
             fontSize: 11,
             lineHeight: 1.8,
@@ -389,7 +412,7 @@ export default function MyOrdersPage() {
             fontWeight: 300,
           }}
         >
-          ※「支払い待ち」の注文は、入金が確認できないまま一定時間が過ぎると自動的にキャンセルされます(在庫は開放されます)。もう一度購入する場合は作品ページから進んでください。
+          ※「支払い待ち」の注文は、入金が確認できないまま一定時間が過ぎると自動的にキャンセルされます(在庫は開放されます)。「支払額不足」は個別にご連絡します。
         </p>
       )}
     </div>

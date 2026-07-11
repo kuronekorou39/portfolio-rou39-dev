@@ -52,6 +52,29 @@ export class UranekoMonitoringStack extends cdk.Stack {
     });
     fulfillAlarm.addAlarmAction(action);
 
+    // 決済アノマリー: 支払額不足(underpaid)/ 先行受け渡し後の失敗・期限切れ。
+    // いずれも自動処理せず管理者が購入者と個別対応するケース(webhook が
+    // console.error('PAYMENT ANOMALY ...') を出す)。
+    const paymentAnomaly = new logs.MetricFilter(this, 'PaymentAnomalyFilter', {
+      logGroup: props.webhookFn.logGroup,
+      metricNamespace: 'uraneko',
+      metricName: 'PaymentAnomaly',
+      filterPattern: logs.FilterPattern.literal('"PAYMENT ANOMALY"'),
+      metricValue: '1',
+      defaultValue: 0,
+    });
+    const paymentAnomalyAlarm = new cloudwatch.Alarm(this, 'PaymentAnomalyAlarm', {
+      alarmName: 'uraneko-payment-anomaly',
+      alarmDescription:
+        '支払額不足、または先行受け渡し後の決済失敗/期限切れ。購入者との個別対応が必要。',
+      metric: paymentAnomaly.metric({ statistic: 'Sum', period: cdk.Duration.minutes(5) }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    paymentAnomalyAlarm.addAlarmAction(action);
+
     // checkout / webhook の Lambda エラー(500 等)
     for (const [name, fn] of [
       ['Checkout', props.checkoutFn],

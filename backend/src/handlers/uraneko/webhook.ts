@@ -3,28 +3,63 @@ import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, serverError, forbidden } from '../../lib/response';
 import { verifyIpnSignature } from '../../lib/uraneko/nowpayments';
-import { fulfillPaidOrder } from '../../lib/uraneko/fulfill';
+import { deliverOrder, finalizeOrder } from '../../lib/uraneko/fulfill';
 import { extendReservation, releaseReservedToken } from '../../lib/uraneko/token-claim';
 import type { Order, OrderStatus } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
 
-// NOWPayments payment_status → 自分のOrderStatus
-function mapStatus(paymentStatus: string): OrderStatus {
+// NOWPayments の payment_status を、こちら側の処理アクションに写像する。
+//   deliver   : 入金検知(0-conf)。先行受け渡し(DL可・メールは後で)
+//   finalize  : 最終確認完了。paid 確定 + 控えメール
+//   underpaid : 支払額不足。自動受け渡しせず管理者対応
+//   fail/expire: 失敗・期限切れ
+//   ignore    : waiting 等、状態を進めない
+type Action = 'deliver' | 'finalize' | 'underpaid' | 'fail' | 'expire' | 'ignore';
+
+function classify(paymentStatus: string): Action {
   switch (paymentStatus) {
     case 'finished':
     case 'confirmed':
-      return 'paid';
-    case 'confirming':
     case 'sending':
+      return 'finalize';
+    case 'confirming':
+      return 'deliver';
     case 'partially_paid':
-      return 'confirming';
+      return 'underpaid';
     case 'failed':
-      return 'failed';
+    case 'refunded':
+      return 'fail';
     case 'expired':
-      return 'expired';
+      return 'expire';
     default:
-      return 'pending';
+      return 'ignore';
+  }
+}
+
+// 注文ステータスを条件付きで前進させる(降格・終端からの復活を防ぐ)。
+async function setOrderStatus(
+  order_id: string,
+  target: OrderStatus,
+  allowedFrom: OrderStatus[],
+): Promise<void> {
+  const values: Record<string, unknown> = { ':t': target };
+  allowedFrom.forEach((s, i) => {
+    values[`:a${i}`] = s;
+  });
+  try {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: ORDERS_TABLE,
+        Key: { order_id },
+        ConditionExpression: `#s IN (${allowedFrom.map((_, i) => `:a${i}`).join(', ')})`,
+        UpdateExpression: 'SET #s = :t',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: values,
+      }),
+    );
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
   }
 }
 
@@ -47,78 +82,116 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       payment_id?: number | string;
       payment_status?: string;
       order_id?: string;
-      pay_amount?: number;
-      pay_currency?: string;
-      price_amount?: number;
     };
 
     const order_id = payload.order_id;
     const paymentStatus = payload.payment_status;
     if (!order_id || !paymentStatus) return badRequest('malformed payload');
 
-    const newStatus = mapStatus(paymentStatus);
+    const action = classify(paymentStatus);
 
-    // Orderを取得(冪等判定に使うので強整合読み取り。並行/再送 IPN の読み逃しを減らす)
+    // Order を取得(冪等判定に使うので強整合読み取り。並行/再送 IPN の読み逃しを減らす)
     const res = await docClient.send(
       new GetCommand({ TableName: ORDERS_TABLE, Key: { order_id }, ConsistentRead: true }),
     );
     const order = res.Item as Order | undefined;
     if (!order) return badRequest('order not found');
 
-    // 既に paid 済みなら何もしない(webhook 冪等性)
+    // paid は終端。以降の再送/順不同 IPN は無視(降格させない)。
     if (order.status === 'paid' && order.token_id) {
       return ok({ ok: true, already_paid: true });
     }
 
-    // 支払い完了以外はステータスだけ更新。ただし確定済み(paid)は絶対に降格させない
-    // (NOWPayments は IPN を再送・順不同配信し得る。paid 後に confirming 等が来ても無視)。
-    if (newStatus !== 'paid') {
-      try {
-        await docClient.send(
-          new UpdateCommand({
-            TableName: ORDERS_TABLE,
-            Key: { order_id },
-            UpdateExpression: 'SET #s = :s',
-            ConditionExpression: '#s <> :paid',
-            ExpressionAttributeNames: { '#s': 'status' },
-            ExpressionAttributeValues: { ':s': newStatus, ':paid': 'paid' },
-          }),
-        );
-      } catch (err: unknown) {
-        // 既に paid → 降格しない(冪等)。それ以外は再送させる
-        if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
-      }
-
-      // 予約トークンの寿命を決済状況に追従させる(在庫ロックの最小化)。
-      if (order.token_id) {
-        if (newStatus === 'confirming') {
-          // 入金検知(送金済み・ブロック確定待ち)→ 予約を延長し、確定前の失効を防ぐ。
-          await extendReservation(order.token_id, order_id);
-        } else if (newStatus === 'expired' || newStatus === 'failed') {
-          // 決済不成立が確定 → TTL/掃除ジョブを待たず即座に在庫へ戻す。
-          await releaseReservedToken(order.token_id, order_id);
-        }
-      }
-      return ok({ ok: true, status: newStatus });
-    }
-
-    // 支払い完了: 共通フルフィル(トークン割当 → orders 更新 → DLメール送信)
-    const result = await fulfillPaidOrder(order);
-    if (!result.ok) {
-      // トークン枯渇は在庫補充が必要な恒久失敗。500 で NOWPayments に無限再送させず、
-      // 200 で受領して再送を止め、ログで手動対応(在庫補充/返金)を促す。
+    // 終端(expired/failed/cancelled)後に入金系 IPN が届いた = late payment。
+    // 「支払われたのに無言で何も起きない」を避けるため必ずアラートする。
+    // cancelled(購入者の明示的取消)は自動受け渡しせず管理者対応(返金等)。
+    // expired/failed は下の deliver/finalize で受け渡しを試みる(FORWARD_FROM が許可)。
+    const payingAction = action === 'deliver' || action === 'finalize';
+    if (
+      payingAction &&
+      (order.status === 'expired' || order.status === 'failed' || order.status === 'cancelled')
+    ) {
       console.error(
-        'FULFILL FAILED (manual action needed):',
-        result.reason,
-        'product',
-        order.product_id,
-        'order',
-        order_id,
+        `PAYMENT ANOMALY [paid-after-${order.status}] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email}`,
       );
-      return ok({ ok: false, status: 'failed', reason: result.reason });
+      if (order.status === 'cancelled') {
+        return ok({ ok: true, status: 'cancelled', note: 'paid_after_cancel' });
+      }
     }
 
-    return ok({ ok: true, status: 'paid' });
+    switch (action) {
+      case 'deliver': {
+        // 先行受け渡し: トークン割当のみ(控えメールは finalize で送る)
+        const r = await deliverOrder(order);
+        if (!r.ok) {
+          console.error(
+            'FULFILL FAILED (manual action needed):',
+            r.reason,
+            'order',
+            order_id,
+            'product',
+            order.product_id,
+          );
+          return ok({ ok: false, status: 'failed', reason: r.reason });
+        }
+        return ok({ ok: true, status: 'confirming' });
+      }
+
+      case 'finalize': {
+        // 最終確定: paid 昇格 + 控えメール(1回)
+        const r = await finalizeOrder(order);
+        if (!r.ok) {
+          console.error(
+            'FULFILL FAILED (manual action needed):',
+            r.reason,
+            'order',
+            order_id,
+            'product',
+            order.product_id,
+          );
+          return ok({ ok: false, status: 'failed', reason: r.reason });
+        }
+        return ok({ ok: true, status: 'paid' });
+      }
+
+      case 'underpaid': {
+        // 支払額不足 → 自動受け渡ししない。pending の注文のみ underpaid にする
+        // (confirming で配信済み等には反応しない)。配信前の注文にだけアラート/予約延長する。
+        if (order.status !== 'pending') {
+          return ok({ ok: true, status: order.status });
+        }
+        await setOrderStatus(order_id, 'underpaid', ['pending']);
+        // 追加送金(top-up)で finished になる余地を残すため、予約は延長しておく。
+        if (order.token_id) await extendReservation(order.token_id, order_id);
+        console.error(
+          `PAYMENT ANOMALY [underpaid] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email}`,
+        );
+        return ok({ ok: true, status: 'underpaid' });
+      }
+
+      case 'fail':
+      case 'expire': {
+        const target: OrderStatus = action === 'fail' ? 'failed' : 'expired';
+        if (order.status === 'confirming') {
+          // 先行受け渡し済み(DLリンク発行済み)で決済が失敗/期限切れ。受け渡しは取り消せない
+          // ため、在庫は戻さず管理者アラートで手動対応する(残高不足・二重支払い等)。
+          await setOrderStatus(order_id, target, ['confirming']);
+          console.error(
+            `PAYMENT ANOMALY [${target}-after-delivery] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email}`,
+          );
+        } else {
+          // 未配信 → 予約トークンを在庫へ戻し、注文を終端化(paid は絶対に降格させない)。
+          await setOrderStatus(order_id, target, ['pending', 'underpaid']);
+          if (order.token_id) await releaseReservedToken(order.token_id, order_id);
+        }
+        return ok({ ok: true, status: target });
+      }
+
+      case 'ignore':
+      default:
+        // waiting 等: 状態を進めない
+        return ok({ ok: true, status: order.status });
+    }
   } catch (err) {
     console.error('webhook error:', err);
     return serverError();

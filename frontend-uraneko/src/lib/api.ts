@@ -47,7 +47,7 @@ export interface OrderSummary {
   product_id: string;
   price_jpy: number;
   currency: string;
-  status: 'pending' | 'confirming' | 'paid' | 'failed' | 'expired' | 'cancelled';
+  status: 'pending' | 'confirming' | 'paid' | 'underpaid' | 'failed' | 'expired' | 'cancelled';
   created_at: string;
   paid_at: string | null;
 }

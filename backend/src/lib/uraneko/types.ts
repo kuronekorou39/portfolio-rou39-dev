@@ -31,9 +31,10 @@ export interface VideoToken {
 }
 
 export type OrderStatus =
-  | 'pending'
-  | 'confirming'
-  | 'paid'
+  | 'pending' // 注文作成済み・入金未検知
+  | 'confirming' // 入金検知(0-conf)。ダウンロード可能。最終確認待ち(控えメール未送)
+  | 'paid' // 最終確認完了。受け渡し確定 + 控えメール送信済み
+  | 'underpaid' // 支払額不足。自動受け渡しはせず管理者が対応する
   | 'failed'
   | 'expired'
   | 'cancelled'; // 購入者が未払い注文を明示的にキャンセル
