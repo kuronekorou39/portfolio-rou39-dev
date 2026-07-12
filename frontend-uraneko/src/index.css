@@ -83,3 +83,180 @@ body {
     );
   mix-blend-mode: overlay;
 }
+
+/* ============================================================
+   モーション — コールド・アーカイブ調(抑制的・無機質)。
+   記録が静かに立ち上がる/検索される、を基調にする。
+   ============================================================ */
+
+/* 立ち上がり(フェード + わずかに上へ) */
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 状態遷移のクロスフェード */
+@keyframes softIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 待機ドットの明滅(既存 pulse を共通化) */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 待機ドットの外周リングが静かに広がって消える(スキャンの余韻) */
+@keyframes ringOut {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* 走査線(送金待ち = ブロックチェーンを走査している印象) */
+@keyframes scan {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+/* 受け渡し可能になった瞬間の淡い発光(1回) */
+@keyframes glowIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+    box-shadow: 0 0 0 rgba(184, 181, 172, 0);
+  }
+  60% {
+    box-shadow: 0 0 26px rgba(184, 181, 172, 0.28);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    box-shadow: 0 0 0 rgba(184, 181, 172, 0);
+  }
+}
+
+/* 印章(領収印)の据わり */
+@keyframes stampIn {
+  0% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.anim-reveal {
+  animation: revealUp 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.anim-soft {
+  animation: softIn 0.5s ease both;
+}
+.anim-glow {
+  animation: glowIn 1.1s ease-out both;
+}
+.anim-stamp {
+  animation: stampIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.anim-delay-1 {
+  animation-delay: 0.08s;
+}
+.anim-delay-2 {
+  animation-delay: 0.16s;
+}
+.anim-delay-3 {
+  animation-delay: 0.26s;
+}
+
+/* 待機ドット(明滅 + 外周リング) */
+.wait-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  box-shadow: 0 0 12px var(--color-gold);
+  animation: pulse 2s ease-in-out infinite;
+}
+.wait-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-gold);
+  animation: ringOut 2.4s ease-out infinite;
+}
+
+/* 走査線バー */
+.scan-track {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  max-width: 260px;
+  overflow: hidden;
+  background: rgba(184, 181, 172, 0.14);
+}
+.scan-track::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(184, 181, 172, 0.75),
+    transparent
+  );
+  animation: scan 1.9s ease-in-out infinite;
+}
+
+/* モーション過敏の利用者には動きを無効化 */
+@media (prefers-reduced-motion: reduce) {
+  .anim-reveal,
+  .anim-soft,
+  .anim-glow,
+  .anim-stamp,
+  .wait-dot,
+  .wait-dot::after,
+  .scan-track::before {
+    animation: none !important;
+  }
+  .anim-reveal,
+  .anim-glow {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

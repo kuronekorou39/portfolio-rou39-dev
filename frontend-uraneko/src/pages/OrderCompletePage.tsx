@@ -113,6 +113,8 @@ export default function OrderCompletePage() {
   // 支払い待ち + 送金情報あり → 自前決済 UI(QR/送金先)を表示。
   const pay = order.pay ?? null;
   const awaitingPayment = !deliverable && !failed && !!pay?.address;
+  // 状態が変わったときだけ左パネルをクロスフェードで入れ替える(ポーリング毎には再生しない)。
+  const phase = deliverable ? 'delivered' : awaitingPayment ? 'pay' : failed ? 'failed' : 'wait';
 
   // 見出し・サブラベルを状態別に
   const label = paid
@@ -156,8 +158,8 @@ export default function OrderCompletePage() {
           gap: isNarrow ? 40 : 56,
         }}
       >
-        {/* 左 */}
-        <div>
+        {/* 左(状態が変わるとクロスフェードで入れ替わる) */}
+        <div key={phase} className="anim-soft">
           <SectionLabel style={{ marginBottom: 18 }}>— {label}</SectionLabel>
           <h1
             style={{
@@ -193,7 +195,8 @@ export default function OrderCompletePage() {
               <a
                 href={order.download_url}
                 download
-                style={{ textDecoration: 'none' }}
+                className="anim-glow"
+                style={{ textDecoration: 'none', display: 'inline-block', borderRadius: 2 }}
               >
                 <BarButton size="lg">↓ DOWNLOAD · 取得</BarButton>
               </a>
@@ -349,7 +352,7 @@ export default function OrderCompletePage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 12,
+                  gap: 14,
                   marginTop: 22,
                   fontFamily: 'var(--font-mono)',
                   fontSize: 11,
@@ -357,18 +360,10 @@ export default function OrderCompletePage() {
                   color: 'var(--muted)',
                 }}
               >
-                <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    background: 'var(--color-gold)',
-                    boxShadow: '0 0 12px var(--color-gold)',
-                    animation: 'pulse 2s ease-in-out infinite',
-                  }}
-                />
+                <span className="wait-dot" />
                 送金を待っています…
               </div>
+              <div className="scan-track" style={{ marginTop: 12 }} />
               <p
                 style={{
                   fontFamily: 'var(--font-serif-jp)',
@@ -400,17 +395,7 @@ export default function OrderCompletePage() {
                 color: 'var(--muted)',
               }}
             >
-              <span
-                className="pulse-dot"
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: 'var(--color-gold)',
-                  boxShadow: '0 0 12px var(--color-gold)',
-                  animation: 'pulse 2s ease-in-out infinite',
-                }}
-              />
+              <span className="wait-dot" />
               STATUS · {order.status.toUpperCase()}
             </div>
           )}
@@ -453,8 +438,6 @@ export default function OrderCompletePage() {
               </p>
             )}
 
-          <style>{`@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }`}</style>
-
           <div style={{ marginTop: 48, display: 'flex', gap: 14 }}>
             <Link to="/" style={{ textDecoration: 'none' }}>
               <BarButton variant="outline">← INDEX に戻る</BarButton>
@@ -463,10 +446,12 @@ export default function OrderCompletePage() {
         </div>
 
         {/* 右:受領証カード */}
-        <div>
+        <div className="anim-reveal anim-delay-2">
           <BrassFrame padding="36px 32px" background="var(--color-panel)">
-            {/* 「領収 / PAID」印鑑 */}
+            {/* 「領収 / PAID」印鑑(状態が変わると据わり直す) */}
             <div
+              key={order.status}
+              className="anim-stamp"
               style={{
                 position: 'absolute',
                 top: 18,
