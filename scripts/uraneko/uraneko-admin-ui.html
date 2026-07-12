@@ -55,6 +55,13 @@
   button.danger { border-color:var(--accent); color:var(--accent); }
   button.danger:hover { background:var(--accent); color:var(--bg); }
   button.small.danger:hover { background:rgba(168,67,63,0.15); color:var(--accent); }
+  button.primary { border-color:var(--ash-bright); color:var(--fg); }
+  /* 注目トグルの ON 状態(選択中は塗りつぶしで一目でわかる) */
+  button.toggle.on { background:var(--ash-bright); color:var(--deep); border-color:var(--ash-bright); }
+  button.toggle.on:hover { background:var(--fg); color:var(--deep); }
+
+  /* 入力群と操作を分けるアクションバー */
+  .actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:18px; padding-top:16px; border-top:1px solid var(--line-soft); }
 
   .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-top:8px; }
   .field { display:flex; flex-direction:column; gap:5px; }
@@ -176,15 +183,14 @@
           <div class="row">
             <div class="field"><label>価格</label><div class="adorn"><span>¥</span><input id="d_price" type="number" min="0"></div></div>
             <div class="field"><label>長さ(mm:ss・動画投入で自動)</label><input id="d_dur" placeholder="0:00" style="width:120px" class="mono"></div>
-            <div class="field"><label style="letter-spacing:0"><input type="checkbox" id="d_pub"> 公開する</label></div>
-            <button onclick="saveProduct()">保存</button>
-          </div>
-          <div class="row" style="margin-top:10px; align-items:center">
-            <span id="d_feat_state" class="mono"></span>
-            <button id="d_feat_btn" class="small" onclick="toggleFeatured()">トップの注目に設定</button>
+            <div class="field"><label>公開状態</label><label style="letter-spacing:0; height:33px; display:flex; align-items:center; gap:6px"><input type="checkbox" id="d_pub"> 公開する</label></div>
           </div>
           <div class="field" style="margin-top:14px"><label>説明</label><textarea id="d_desc" rows="3" style="width:100%; max-width:720px"></textarea></div>
-          <div class="hint">価格・公開はここで保存(サーバが読み直すので次回チェックアウトから即反映)。長さは動画投入時に自動取得されますが、手動で mm:ss 上書きも可能です。<br>「注目」はトップページのヒーロー枠に出す1件(公開商品のみ表示)。設定すると他の商品の注目は自動で外れます。どれも注目にしなければトップには何も出ません。</div>
+          <div class="actions">
+            <button class="primary" onclick="saveProduct()">保存</button>
+            <button id="d_feat_btn" class="toggle" onclick="toggleFeatured()">☆ トップの注目に設定</button>
+          </div>
+          <div class="hint">価格・公開・説明は「保存」で反映(サーバが読み直すので次回チェックアウトから即時)。長さは動画投入時に自動取得(手動 mm:ss 上書きも可)。<br>「注目」はトップのヒーロー枠に出す公開商品1件。設定すると他の注目は自動で外れ、どれも設定しなければトップには何も出ません。</div>
         </section>
 
         <section>
@@ -468,10 +474,9 @@ function renderDetail() {
   document.getElementById('d_dur').value = fmtDur(p.duration_sec);
   document.getElementById('d_desc').value = p.description || '';
   document.getElementById('d_pub').checked = !!p.published;
-  document.getElementById('d_feat_state').innerHTML = p.featured
-    ? '<span class="badge on">注目中</span>'
-    : '<span class="badge off">注目でない</span>';
-  document.getElementById('d_feat_btn').textContent = p.featured ? '注目を解除' : 'トップの注目に設定';
+  const featBtn = document.getElementById('d_feat_btn');
+  featBtn.textContent = p.featured ? '★ 注目中 — 解除する' : '☆ トップの注目に設定';
+  featBtn.classList.toggle('on', !!p.featured);
   const blurLabel = { none: 'ぼかしなし', light: 'ぼかし弱', strong: 'ぼかし強' };
   let thState = p.thumbnail_s3_key ? '<span class="badge on">設定済</span>' : '<span class="badge off">未設定</span>';
   if (p.thumbnail_s3_key && p.thumbnail_blur && p.thumbnail_blur !== 'none') {
