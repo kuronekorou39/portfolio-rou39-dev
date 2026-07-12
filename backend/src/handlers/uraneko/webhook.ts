@@ -37,6 +37,18 @@ function classify(paymentStatus: string): Action {
   }
 }
 
+// 受領額が要求額に対して不足しているか。手数料/端数の誤差を 2% 許容する。
+// 先行受け渡し(0-conf の confirming)で金額を検証するために使う。
+// これ未満の額(ウォレットで極小額を手入力された等)では受け渡さない。
+const PAY_TOLERANCE = 0.98;
+function isAmountShort(p: { actually_paid?: number | string; pay_amount?: number | string }): boolean {
+  const paid = Number(p.actually_paid);
+  const expected = Number(p.pay_amount);
+  // 判定に必要な数値が無いときは「不足」と断定しない(finished 等は別途 NOWPayments が満額確定済み)。
+  if (!Number.isFinite(paid) || !Number.isFinite(expected) || expected <= 0) return false;
+  return paid < expected * PAY_TOLERANCE;
+}
+
 // 注文ステータスを条件付きで前進させる(降格・終端からの復活を防ぐ)。
 async function setOrderStatus(
   order_id: string,
@@ -82,13 +94,23 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       payment_id?: number | string;
       payment_status?: string;
       order_id?: string;
+      actually_paid?: number | string; // 実際に受領した数量
+      pay_amount?: number | string; // 要求した数量
     };
 
     const order_id = payload.order_id;
     const paymentStatus = payload.payment_status;
     if (!order_id || !paymentStatus) return badRequest('malformed payload');
 
-    const action = classify(paymentStatus);
+    let action = classify(paymentStatus);
+
+    // 先行受け渡し(0-conf の confirming)の金額検証:
+    // confirming は最終確認前で NOWPayments が満額を保証しないため、受領額が不足していれば
+    // 配信せず underpaid 扱いにする(ウォレットで金額を小さく手入力された等を防ぐ)。
+    // finished/confirmed/sending は NOWPayments が満額確定済みなので信頼する。
+    if (action === 'deliver' && isAmountShort(payload)) {
+      action = 'underpaid';
+    }
 
     // Order を取得(冪等判定に使うので強整合読み取り。並行/再送 IPN の読み逃しを減らす)
     const res = await docClient.send(
@@ -164,7 +186,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         // 追加送金(top-up)で finished になる余地を残すため、予約は延長しておく。
         if (order.token_id) await extendReservation(order.token_id, order_id);
         console.error(
-          `PAYMENT ANOMALY [underpaid] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email}`,
+          `PAYMENT ANOMALY [underpaid] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email} paid=${payload.actually_paid ?? '?'} expected=${payload.pay_amount ?? '?'}`,
         );
         return ok({ ok: true, status: 'underpaid' });
       }
