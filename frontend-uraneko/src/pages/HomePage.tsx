@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { useIsNarrow } from '../lib/useIsNarrow';
+import { useInView } from '../lib/useInView';
 import Thumbnail from '../components/bar/Thumbnail';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
@@ -10,6 +11,8 @@ export default function HomePage() {
   const isNarrow = useIsNarrow();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // 収蔵グリッドは画面に入った時にカードを立ち上げる(ファーストビュー外でも動きが見える)
+  const [gridRef, gridInView] = useInView();
 
   useEffect(() => {
     api.listProducts().then(setProducts).catch((e) => setErr(e.message));
@@ -165,6 +168,7 @@ export default function HomePage() {
 
         {products && products.length > 0 && (
           <div
+            ref={gridRef}
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
@@ -175,12 +179,13 @@ export default function HomePage() {
               <Link
                 key={p.product_id}
                 to={`/product/${p.product_id}`}
-                className="anim-reveal"
+                className={gridInView ? 'anim-reveal' : undefined}
                 style={{
                   textDecoration: 'none',
                   color: 'inherit',
-                  // カードを少しずつ遅らせて立ち上げる(多くても頭打ち)
-                  animationDelay: `${Math.min(i, 10) * 0.05}s`,
+                  // 画面に入るまでは隠し、入ったら少しずつ遅らせて立ち上げる
+                  opacity: gridInView ? undefined : 0,
+                  animationDelay: `${Math.min(i, 10) * 0.06}s`,
                 }}
               >
                 <Thumbnail
