@@ -190,7 +190,7 @@ export default function ProductPage() {
                 marginTop: 6,
               }}
             >
-              crypto only · btc / usdt / usdc / ltc
+              crypto only · ltc / btc
             </div>
           </BrassFrame>
 

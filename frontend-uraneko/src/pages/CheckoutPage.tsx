@@ -9,17 +9,15 @@ import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
 
+// 対応通貨は LTC / BTC のみ(USDC/USDT 等ステーブルコインは未対応)。
 const CURRENCIES = [
   { value: 'ltc', label: 'LTC · オススメ · 手数料 安' },
-  { value: 'usdc', label: 'USDC · 手数料 低' },
-  { value: 'usdttrc20', label: 'USDT (TRC20) · 手数料 低' },
   { value: 'btc', label: 'BTC オンチェーン · 手数料 高' },
-  { value: '', label: '決済画面で選ぶ' },
 ];
 
 // 支払い方法。暗号資産のみ実装済み。他は選択できるが準備中(選ぶと「次へ」が非活性)。
 const PAY_METHODS = [
-  { id: 'crypto', name: '暗号資産', sub: 'BTC / USDT / USDC / LTC 等', available: true, notice: '' },
+  { id: 'crypto', name: '暗号資産', sub: 'LTC / BTC', available: true, notice: '' },
   {
     id: 'card',
     name: 'クレジットカード',
@@ -711,7 +709,7 @@ export default function CheckoutPage() {
                       marginBottom: 20,
                     }}
                   >
-                    via nowpayments · btc / lightning / usdt / usdc / ltc
+                    via nowpayments · ltc / btc
                   </div>
 
                   <div style={{ marginBottom: 4 }}>
@@ -764,17 +762,24 @@ export default function CheckoutPage() {
                         <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥30 ◎</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>USDC</span>
-                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥10 ◎</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>USDT (TRC20)</span>
-                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥150 ◎</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>BTC オンチェーン</span>
                         <span>約 ¥5,000 ⚠</span>
                       </div>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 10,
+                        paddingTop: 10,
+                        borderTop: '1px solid rgba(168,166,158,0.15)',
+                        fontFamily: 'var(--font-serif-jp)',
+                        fontSize: 11,
+                        lineHeight: 1.7,
+                        color: 'var(--dim)',
+                        fontWeight: 300,
+                      }}
+                    >
+                      ※ USDC / USDT などのステーブルコインは現在未対応です。
                     </div>
 
                     <div
