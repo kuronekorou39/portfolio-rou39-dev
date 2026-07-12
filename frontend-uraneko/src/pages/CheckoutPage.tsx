@@ -700,18 +700,6 @@ export default function CheckoutPage() {
               {/* 選択中の方法の詳細 */}
               {payMethod === 'crypto' ? (
                 <BrassFrame padding="28px 32px" style={{ marginBottom: 20 }}>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 10,
-                      letterSpacing: 2,
-                      color: 'var(--muted)',
-                      marginBottom: 20,
-                    }}
-                  >
-                    via nowpayments · ltc / btc
-                  </div>
-
                   <div style={{ marginBottom: 4 }}>
                     <label style={labelStyle}>CURRENCY · 支払い通貨</label>
                     <select
@@ -1006,19 +994,6 @@ export default function CheckoutPage() {
                   ? '準備中 · 選べません'
                   : 'PROCEED · 送金へ進む'}
               </BarButton>
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                textAlign: 'center',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 9,
-                letterSpacing: 3,
-                color: 'var(--dim)',
-              }}
-            >
-              SSL · TLS 1.3 · SECURE
             </div>
           </BrassFrame>
         </div>
