@@ -72,6 +72,59 @@ export async function createInvoice(params: CreatePaymentParams): Promise<Create
   return res.json() as Promise<CreatePaymentResponse>;
 }
 
+export interface CreateDirectPaymentParams {
+  price_amount: number;
+  price_currency: string; // "jpy"
+  pay_currency: string; // "ltc" | "btc"(自前決済ページなので必須)
+  order_id: string;
+  order_description: string;
+  ipn_callback_url: string;
+}
+
+export interface DirectPayment {
+  payment_id: string;
+  payment_status: string;
+  pay_address: string;
+  pay_amount: number; // 送金すべき暗号資産の数量
+  pay_currency: string; // "ltc" | "btc"
+  network?: string;
+  payin_extra_id?: string | null; // 一部通貨のメモ/タグ(LTC/BTC では null)
+  valid_until?: string | null; // 送金先の有効期限(ISO)。無い実装もある
+}
+
+/**
+ * NOWPayments の「直接決済」を作成する(/v1/payment)。
+ * ホスト画面(invoice)ではなく、送金先アドレス・数量・QR を uraneko 側で表示するため、
+ * pay_currency を指定して pay_address / pay_amount を受け取る。
+ * IPN の payment_status ライフサイクルは invoice と同一なので webhook はそのまま使える。
+ */
+export async function createPayment(params: CreateDirectPaymentParams): Promise<DirectPayment> {
+  const apiKey = await getApiKey();
+  const res = await fetch(`${BASE_URL}/payment`, {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`NOWPayments createPayment failed: ${res.status} ${text}`);
+  }
+  const j = (await res.json()) as Record<string, unknown>;
+  return {
+    payment_id: String(j.payment_id),
+    payment_status: String(j.payment_status ?? 'waiting'),
+    pay_address: String(j.pay_address),
+    pay_amount: Number(j.pay_amount),
+    pay_currency: String(j.pay_currency ?? params.pay_currency),
+    network: j.network != null ? String(j.network) : undefined,
+    payin_extra_id: (j.payin_extra_id as string | null) ?? null,
+    valid_until: (j.valid_until as string | null) ?? (j.expiration_estimate_date as string | null) ?? null,
+  };
+}
+
 /**
  * IPN(webhook)の HMAC SHA-512 署名を検証する。
  * 参考: https://documenter.getpostman.com/view/7907941/S1a32n38

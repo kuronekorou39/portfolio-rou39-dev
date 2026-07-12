@@ -43,6 +43,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     // それ以外(pending / underpaid / failed / expired / cancelled)は署名 URL を返さない。
     const deliverable = order.status === 'confirming' || order.status === 'paid';
     if (!deliverable || !order.token_id) {
+      // 未受け渡しで支払い待ち(pending/underpaid)なら、自前決済ページ用の送金情報を返す。
+      const awaitingPayment = order.status === 'pending' || order.status === 'underpaid';
       return ok({
         order_id: order.order_id,
         status: order.status,
@@ -52,6 +54,16 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         created_at: order.created_at,
         paid_at: order.paid_at,
         download_url: null,
+        pay:
+          awaitingPayment && order.pay_address
+            ? {
+                address: order.pay_address,
+                amount: order.pay_amount,
+                currency: order.pay_currency,
+                network: order.pay_network,
+                valid_until: order.pay_valid_until ?? null,
+              }
+            : null,
       });
     }
 

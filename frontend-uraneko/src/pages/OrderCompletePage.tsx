@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { api, type OrderDetail } from '../lib/api';
+import QRCode from 'qrcode';
+import { api, type OrderDetail, type PaymentInfo } from '../lib/api';
 import { fmtJst } from '../lib/format';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { getIdToken } from '../lib/auth';
@@ -8,6 +9,13 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
+
+// ウォレットが送金先と金額を自動で読み取れるよう BIP21 URI を組み立てる。
+function paymentUri(pay: PaymentInfo): string {
+  const scheme = pay.currency === 'ltc' ? 'litecoin' : pay.currency === 'btc' ? 'bitcoin' : '';
+  if (!scheme) return pay.address;
+  return `${scheme}:${pay.address}?amount=${pay.amount}`;
+}
 
 export default function OrderCompletePage() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +25,42 @@ export default function OrderCompletePage() {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // 送金先が来たら QR(BIP21)を生成。data URL なので外部リクエストは発生しない(CSP 準拠)。
+  const payAddress = order?.pay?.address;
+  useEffect(() => {
+    const pay = order?.pay;
+    if (!pay?.address) {
+      setQrDataUrl(null);
+      return;
+    }
+    let alive = true;
+    QRCode.toDataURL(paymentUri(pay), { margin: 1, width: 220 })
+      .then((url) => {
+        if (alive) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (alive) setQrDataUrl(null);
+      });
+    return () => {
+      alive = false;
+    };
+    // アドレスが変わったときだけ作り直す
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payAddress]);
+
+  async function copyAddress() {
+    if (!order?.pay?.address) return;
+    try {
+      await navigator.clipboard.writeText(order.pay.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard 不可環境は無視(手動選択でコピー可) */
+    }
+  }
 
   // 暗号決済の確定は IPN 経由で非同期。pending/confirming の間は定期的に再取得し、
   // paid になったら自動でダウンロードリンクを出す(ユーザーが手動更新しなくて済む)。
@@ -66,6 +110,9 @@ export default function OrderCompletePage() {
   const underpaid = order.status === 'underpaid';
   const failed =
     order.status === 'failed' || order.status === 'expired' || order.status === 'cancelled';
+  // 支払い待ち + 送金情報あり → 自前決済 UI(QR/送金先)を表示。
+  const pay = order.pay ?? null;
+  const awaitingPayment = !deliverable && !failed && !!pay?.address;
 
   // 見出し・サブラベルを状態別に
   const label = paid
@@ -185,7 +232,163 @@ export default function OrderCompletePage() {
             </>
           )}
 
-          {!deliverable && (
+          {/* 自前決済 UI: 送金先アドレス・数量・QR。送金を検知すると上の受け渡し表示へ自動で切替わる */}
+          {awaitingPayment && pay && (
+            <>
+              {underpaid && (
+                <p
+                  style={{
+                    fontFamily: 'var(--font-serif-jp)',
+                    fontSize: 12,
+                    letterSpacing: 1,
+                    color: 'var(--color-accent)',
+                    marginBottom: 18,
+                    lineHeight: 1.9,
+                    fontWeight: 300,
+                  }}
+                >
+                  お支払い額が不足しています。同じアドレスに不足分を送金いただくか、
+                  こちらで確認のうえ個別にご連絡します。
+                </p>
+              )}
+              <SectionLabel style={{ marginBottom: 14 }}>— PAYMENT · 送金</SectionLabel>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 15,
+                  fontWeight: 300,
+                  letterSpacing: 1,
+                  color: 'var(--color-fg)',
+                  marginBottom: 4,
+                }}
+              >
+                {pay.currency.toUpperCase()} で ¥{order.price_jpy.toLocaleString()} を送金
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 22,
+                  fontWeight: 300,
+                  letterSpacing: 1,
+                  color: 'var(--color-gold-bright)',
+                  marginBottom: 18,
+                }}
+              >
+                {pay.amount} {pay.currency.toUpperCase()}
+              </div>
+
+              {qrDataUrl && (
+                <img
+                  src={qrDataUrl}
+                  alt="送金先 QR"
+                  width={200}
+                  height={200}
+                  style={{
+                    display: 'block',
+                    background: '#fff',
+                    padding: 10,
+                    borderRadius: 4,
+                    marginBottom: 16,
+                  }}
+                />
+              )}
+
+              <label
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 9,
+                  letterSpacing: 3,
+                  color: 'var(--color-gold)',
+                }}
+              >
+                送金先アドレス（{(pay.network ?? pay.currency).toUpperCase()} ネットワーク）
+              </label>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'stretch',
+                  marginTop: 8,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <code
+                  style={{
+                    flex: '1 1 240px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 12,
+                    color: 'var(--color-fg)',
+                    background: 'rgba(168,166,158,0.08)',
+                    border: '1px solid rgba(168,166,158,0.25)',
+                    padding: '10px 12px',
+                    wordBreak: 'break-all',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {pay.address}
+                </code>
+                <button
+                  onClick={() => void copyAddress()}
+                  style={{
+                    flex: '0 0 auto',
+                    background: 'transparent',
+                    border: '1px solid rgba(214,183,110,0.5)',
+                    color: 'var(--color-gold)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    letterSpacing: 2,
+                    padding: '0 16px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {copied ? 'COPIED' : 'コピー'}
+                </button>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  marginTop: 22,
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  letterSpacing: 3,
+                  color: 'var(--muted)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: 'var(--color-gold)',
+                    boxShadow: '0 0 12px var(--color-gold)',
+                    animation: 'pulse 2s ease-in-out infinite',
+                  }}
+                />
+                送金を待っています…
+              </div>
+              <p
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 11,
+                  letterSpacing: 1,
+                  color: 'var(--dim)',
+                  marginTop: 12,
+                  lineHeight: 1.9,
+                  fontWeight: 300,
+                }}
+              >
+                ※ 上記アドレスに正確な数量を、必ず {(pay.network ?? pay.currency).toUpperCase()}{' '}
+                ネットワークで送金してください。
+                <br />※ 送金が検知されると、この画面のまま自動でダウンロードに切り替わります(NOWPayments
+                の画面で待つ必要はありません)。
+              </p>
+            </>
+          )}
+
+          {!deliverable && !awaitingPayment && (
             <div
               style={{
                 display: 'flex',
@@ -212,7 +415,7 @@ export default function OrderCompletePage() {
             </div>
           )}
 
-          {!deliverable && underpaid && (
+          {!deliverable && !awaitingPayment && underpaid && (
             <p
               style={{
                 fontFamily: 'var(--font-serif-jp)',
@@ -230,6 +433,7 @@ export default function OrderCompletePage() {
           )}
 
           {!deliverable &&
+            !awaitingPayment &&
             order.status !== 'failed' &&
             order.status !== 'expired' &&
             order.status !== 'cancelled' &&

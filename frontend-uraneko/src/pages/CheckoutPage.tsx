@@ -309,13 +309,12 @@ export default function CheckoutPage() {
         },
         idToken,
       );
-      if (res.free && res.complete_url) {
-        // 100%割引: 決済不要。受領ページ(署名トークン付き)へ直接遷移
+      if (res.complete_url) {
+        // 有料も無料も uraneko の決済(=完了)ページへ遷移。
+        // 有料は送金先QR+ポーリング、無料はそのまま受け渡し表示になる。
         window.location.href = res.complete_url;
-      } else if (res.invoice_url) {
-        window.location.href = res.invoice_url;
       } else {
-        setErr('決済URLの取得に失敗。時間をおいて再試行。');
+        setErr('決済ページの取得に失敗。時間をおいて再試行。');
         setSubmitting(false);
       }
     } catch (e) {

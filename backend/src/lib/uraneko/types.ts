@@ -52,6 +52,12 @@ export interface Order {
   price_crypto: string;
   currency: string;
   nowpayments_payment_id: string; // 無料購入(100%割引)の場合は "free"
+  // 自前決済ページ用の送金情報(NOWPayments /v1/payment 由来)。無料購入では未設定。
+  pay_address?: string;
+  pay_amount?: number; // 送金すべき暗号資産の数量
+  pay_currency?: string; // "ltc" | "btc"
+  pay_network?: string;
+  pay_valid_until?: string | null; // 送金先の有効期限(ISO)
   status: OrderStatus;
   created_at: string;
   paid_at: string | null;

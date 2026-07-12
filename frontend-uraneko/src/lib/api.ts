@@ -37,9 +37,8 @@ export interface CouponValidationResult {
 
 export interface CheckoutResult {
   order_id: string;
-  invoice_url?: string; // 通常/割引あり: NOWPayments 決済ページ
   free?: boolean; // 100%割引(無料)購入
-  complete_url?: string; // 無料購入時の受領ページ(署名トークン付き)
+  complete_url?: string; // 決済(=完了)ページ。署名トークン付き。有料も無料もここへ遷移
 }
 
 export interface OrderSummary {
@@ -52,9 +51,18 @@ export interface OrderSummary {
   paid_at: string | null;
 }
 
+export interface PaymentInfo {
+  address: string;
+  amount: number; // 送金すべき暗号資産の数量
+  currency: string; // "ltc" | "btc"
+  network?: string;
+  valid_until?: string | null;
+}
+
 export interface OrderDetail extends OrderSummary {
   download_url: string | null;
   download_url_expires_in?: number;
+  pay?: PaymentInfo | null; // 支払い待ち(pending/underpaid)のときの送金情報
 }
 
 export const api = {

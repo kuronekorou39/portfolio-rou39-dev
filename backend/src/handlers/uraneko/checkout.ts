@@ -3,7 +3,7 @@ import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { createHash, randomUUID } from 'crypto';
 import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, notFound, conflict, serverError } from '../../lib/response';
-import { createInvoice, MIN_INVOICE_JPY } from '../../lib/uraneko/nowpayments';
+import { createPayment, MIN_INVOICE_JPY } from '../../lib/uraneko/nowpayments';
 import { hasAvailableToken, reserveToken, releaseReservedToken } from '../../lib/uraneko/token-claim';
 import {
   getCoupon,
@@ -139,31 +139,35 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       const reserved = await reserveToken({ product_id, order_id });
       if (!reserved) return conflict('sold_out'); // 直前に売り切れた
 
+      // 自前決済ページを使うので支払い通貨は必須(NOWPayments /v1/payment が要求)。
+      // フロントのプルダウンは ltc/btc のみ。念のためサーバ側でも検証する。
+      const payCur = (pay_currency || '').toLowerCase();
+      if (payCur !== 'ltc' && payCur !== 'btc') return badRequest('unsupported_currency');
+
       try {
-        // 注文を先に(pending・予約トークン付きで)書く。invoice 発行前に注文を永続化して
-        // 「支払える invoice はあるのに注文レコードが無い」状態を避ける。
+        // 注文を先に(pending・予約トークン付きで)書く。決済作成前に注文を永続化して
+        // 「支払える送金先はあるのに注文レコードが無い」状態を避ける。
         const pendingOrder: Order = {
           ...baseOrder,
           token_id: reserved.token_id,
           price_crypto: '',
-          currency: pay_currency ?? '',
+          currency: payCur,
           nowpayments_payment_id: '',
           status: 'pending',
         };
         await docClient.send(new PutCommand({ TableName: ORDERS_TABLE, Item: pendingOrder }));
 
-        // 完了ページ用の署名トークン(ゲストが自注文を get-order できるように)
+        // 完了(=決済)ページ用の署名トークン(ゲストが自注文を get-order できるように)
         const accessToken = await signOrderToken(order_id);
 
-        const invoice = await createInvoice({
+        // NOWPayments 直接決済を作成(送金先アドレス・数量を受け取り uraneko 上で表示)
+        const payment = await createPayment({
           price_amount: finalAmount,
           price_currency: 'jpy',
-          pay_currency,
+          pay_currency: payCur,
           order_id,
           order_description: product.title,
           ipn_callback_url: `${API_BASE_URL}/webhooks/nowpayments`,
-          success_url: `${SITE_BASE_URL}/order/${order_id}/complete?token=${accessToken}`,
-          cancel_url: `${SITE_BASE_URL}/product/${product_id}`,
         });
 
         await docClient.send(
@@ -171,21 +175,25 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             TableName: ORDERS_TABLE,
             Key: { order_id },
             UpdateExpression:
-              'SET nowpayments_payment_id = :pid, price_crypto = :pc, currency = :cur',
+              'SET nowpayments_payment_id = :pid, price_crypto = :pc, currency = :cur, ' +
+              'pay_address = :addr, pay_amount = :amt, pay_currency = :pcur, pay_network = :net, pay_valid_until = :vu',
             ExpressionAttributeValues: {
-              ':pid': invoice.id,
-              ':pc':
-                invoice.pay_amount != null
-                  ? `${invoice.pay_amount} ${invoice.pay_currency ?? ''}`.trim()
-                  : '',
-              ':cur': invoice.pay_currency ?? pay_currency ?? '',
+              ':pid': payment.payment_id,
+              ':pc': `${payment.pay_amount} ${payment.pay_currency}`.trim(),
+              ':cur': payment.pay_currency,
+              ':addr': payment.pay_address,
+              ':amt': payment.pay_amount,
+              ':pcur': payment.pay_currency,
+              ':net': payment.network ?? payment.pay_currency,
+              ':vu': payment.valid_until ?? null,
             },
           }),
         );
         redemptionCommitted = true;
-        return ok({ order_id, invoice_url: invoice.invoice_url });
+        // 決済ページ(=完了ページ)へ遷移させる。送金情報は get-order から取得する。
+        return ok({ order_id, complete_url: `${SITE_BASE_URL}/order/${order_id}/complete?token=${accessToken}` });
       } catch (e) {
-        // invoice 発行等に失敗 → 予約トークンを在庫へ戻す(オーバーセル防止の予約を確実に解放)
+        // 決済作成等に失敗 → 予約トークンを在庫へ戻す(オーバーセル防止の予約を確実に解放)
         await releaseReservedToken(reserved.token_id, order_id);
         throw e;
       }
