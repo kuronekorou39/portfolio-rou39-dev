@@ -24,15 +24,23 @@ CfnOutput `UranekoUserPoolId` / `UranekoUserPoolClientId` の値を
 
 ## 本番デプロイ
 
-CI(`.github/workflows/deploy.yml`)は本家 frontend のみビルドし、frontend-uraneko は
-ビルドしない(`UranekoFrontendStack` は `dist` 不在時は既存を温存)。
-フロント変更を本番反映するには、ローカルでビルドしてから uraneko フロントを個別デプロイする:
+CI(`.github/workflows/deploy.yml`)が main への push で本家 frontend と一緒に
+frontend-uraneko もビルド・デプロイする(2026-07 に workspaces 統合 + CI 化)。
+通常はフロント変更を push すれば本番反映される。
+
+緊急・手動で反映したい場合(リポジトリルートから):
 
 ```
 npm install
-npm run build          # dist/ を生成(CLIENT_ID は直書きなので env 不要)
-cd ../infra && npx cdk deploy UranekoFrontend
+npm run build:uraneko                      # frontend-uraneko/dist を生成
+cd infra && npx cdk deploy UranekoFrontend --exclusively
 ```
+
+## 商品・在庫の管理
+
+管理オペレーション(商品追加・在庫投入・価格・クーポン等)は
+[`docs/uraneko-admin.md`](../docs/uraneko-admin.md) を参照。
+ローカル管理 GUI: `node scripts/uraneko/uraneko-admin-server.mjs` → http://127.0.0.1:4173
 
 ## ローカル開発
 
