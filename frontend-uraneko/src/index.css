@@ -243,6 +243,37 @@ body {
   animation: scan 1.9s ease-in-out infinite;
 }
 
+/* ローディング表示の点滅ドット(読み込み中 • • •) */
+@keyframes loadDot {
+  0%,
+  70%,
+  100% {
+    opacity: 0.2;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+.load-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+.load-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.2;
+  animation: loadDot 1.2s ease-in-out infinite;
+}
+.load-dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.load-dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
 /* モーション過敏の利用者には動きを無効化 */
 @media (prefers-reduced-motion: reduce) {
   .anim-reveal,
@@ -251,12 +282,16 @@ body {
   .anim-stamp,
   .wait-dot,
   .wait-dot::after,
-  .scan-track::before {
+  .scan-track::before,
+  .load-dots i {
     animation: none !important;
   }
   .anim-reveal,
   .anim-glow {
     opacity: 1 !important;
     transform: none !important;
+  }
+  .load-dots i {
+    opacity: 0.6 !important;
   }
 }

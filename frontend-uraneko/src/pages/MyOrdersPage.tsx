@@ -9,6 +9,7 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
+import Loading from '../components/bar/Loading';
 
 const STATUS_LABEL: Record<string, string> = {
   paid: '受渡済',
@@ -95,9 +96,7 @@ export default function MyOrdersPage() {
 
   if (loading)
     return (
-      <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
-        読み込み中...
-      </p>
+      <Loading />
     );
 
   if (!user)
@@ -134,9 +133,7 @@ export default function MyOrdersPage() {
   if (err) return <p style={{ color: '#e66' }}>{err}</p>;
   if (!orders)
     return (
-      <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
-        読み込み中...
-      </p>
+      <Loading />
     );
 
   // 受け渡し済み(paid)+ 先行受け渡し済み(confirming)を実績として集計する。

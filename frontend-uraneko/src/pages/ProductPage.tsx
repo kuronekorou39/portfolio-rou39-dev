@@ -7,6 +7,7 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
+import Loading from '../components/bar/Loading';
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,12 +26,7 @@ export default function ProductPage() {
         エラー: {err}
       </p>
     );
-  if (!product)
-    return (
-      <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
-        読み込み中...
-      </p>
-    );
+  if (!product) return <Loading />;
 
   return (
     <div>

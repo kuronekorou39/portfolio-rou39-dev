@@ -8,6 +8,7 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
+import Loading from '../components/bar/Loading';
 
 // 対応通貨は LTC / BTC のみ(USDC/USDT 等ステーブルコインは未対応)。
 const CURRENCIES = [
@@ -327,12 +328,7 @@ export default function CheckoutPage() {
     return (
       <p style={{ color: '#e66', fontFamily: 'var(--font-serif-jp)' }}>エラー: {loadErr}</p>
     );
-  if (!product || authLoading)
-    return (
-      <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
-        読み込み中...
-      </p>
-    );
+  if (!product || authLoading) return <Loading />;
 
   // ---- 01 会員選択 ----
   if (stage === 'account') {

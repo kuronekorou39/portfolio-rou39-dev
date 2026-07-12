@@ -9,6 +9,7 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
 import BrassFrame from '../components/bar/BrassFrame';
+import Loading from '../components/bar/Loading';
 
 // ウォレットが送金先と金額を自動で読み取れるよう BIP21 URI を組み立てる。
 function paymentUri(pay: PaymentInfo): string {
@@ -96,12 +97,7 @@ export default function OrderCompletePage() {
 
   if (err)
     return <p style={{ color: '#e66', fontFamily: 'var(--font-serif-jp)' }}>エラー: {err}</p>;
-  if (!order)
-    return (
-      <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
-        読み込み中...
-      </p>
-    );
+  if (!order) return <Loading />;
 
   const paid = order.status === 'paid';
   const confirming = order.status === 'confirming';

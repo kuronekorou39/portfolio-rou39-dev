@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AgeGateProvider } from './contexts/AgeGateContext';
 import AgeGateModal from './components/AgeGateModal';
 import Layout from './components/Layout';
+import Loading from './components/bar/Loading';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
@@ -17,11 +18,7 @@ const PrivacyPage = lazy(() => import('./pages/LegalPages').then((m) => ({ defau
 const TermsPage = lazy(() => import('./pages/LegalPages').then((m) => ({ default: m.TermsPage })));
 
 function PageLoader() {
-  return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-white/50" />
-    </div>
-  );
+  return <Loading pad="120px 0" />;
 }
 
 export default function App() {

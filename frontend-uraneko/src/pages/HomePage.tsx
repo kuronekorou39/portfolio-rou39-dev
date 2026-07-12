@@ -6,6 +6,7 @@ import { useInView } from '../lib/useInView';
 import Thumbnail from '../components/bar/Thumbnail';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
+import Loading from '../components/bar/Loading';
 
 export default function HomePage() {
   const isNarrow = useIsNarrow();
@@ -147,11 +148,7 @@ export default function HomePage() {
             読み込みエラー: {err}
           </p>
         )}
-        {!products && !err && (
-          <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-serif-jp)' }}>
-            読み込み中...
-          </p>
-        )}
+        {!products && !err && <Loading pad="40px 0" />}
         {products && products.length === 0 && (
           <p
             style={{
