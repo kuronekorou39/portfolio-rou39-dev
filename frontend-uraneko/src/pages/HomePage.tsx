@@ -15,16 +15,16 @@ export default function HomePage() {
     api.listProducts().then(setProducts).catch((e) => setErr(e.message));
   }, []);
 
-  // 注目枠は先頭の商品(空プレースホルダの「New」をやめ、実データに紐づける)
-  const featured = products && products.length > 0 ? products[0] : null;
+  // 注目枠は管理画面で指定された1件のみ(未指定なら何も出さない)。
+  const featured = products?.find((p) => p.featured) ?? null;
 
   return (
     <div>
-      {/* ヒーロー */}
+      {/* ヒーロー(注目作品が無ければテキストのみの1カラム) */}
       <section
         style={{
           display: 'grid',
-          gridTemplateColumns: isNarrow ? '1fr' : '1fr 420px',
+          gridTemplateColumns: isNarrow || !featured ? '1fr' : '1fr 420px',
           gap: isNarrow ? 40 : 56,
           alignItems: 'center',
           marginBottom: isNarrow ? 56 : 80,
@@ -76,9 +76,9 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* ヒーロー右:注目作品(先頭の商品。無ければ準備中) */}
-        <div className="anim-reveal anim-delay-2" style={{ position: 'relative' }}>
-          {featured ? (
+        {/* ヒーロー右:注目作品(管理画面で指定。未指定なら枠ごと出さない) */}
+        {featured && (
+          <div className="anim-reveal anim-delay-2" style={{ position: 'relative' }}>
             <Link
               to={`/product/${featured.product_id}`}
               style={{ textDecoration: 'none', color: 'inherit' }}
@@ -94,10 +94,8 @@ export default function HomePage() {
                 image={featured.thumbnail_url}
               />
             </Link>
-          ) : (
-            <Thumbnail ratio="4/5" cover code="№ ———" title="——" subtitle="準備中" />
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* 収蔵一覧セクション */}

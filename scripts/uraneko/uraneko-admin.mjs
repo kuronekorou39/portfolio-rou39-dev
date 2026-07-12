@@ -25,6 +25,7 @@ const USAGE = `uraneko 管理 CLI
                [--pool-target <n>] [--pool-threshold <n>] [--published]
   products set-price <product_id> <price_jpy>    価格を更新
   products publish <product_id> <true|false>     公開フラグを切替
+  products featured <product_id> <true|false>    トップの注目枠に出す1件を設定(true で他は自動解除)
   inventory [<product_id>]                        在庫(未割当/割当)を表示
   tokens list <product_id> [--all]               トークン一覧(既定は未割当のみ)
   tokens delete <token_id>                        未割当トークンを削除(DDB+S3、テスト入替用)
@@ -138,6 +139,15 @@ async function productsPublish(positional) {
   }
   const r = await store.setPublished(product_id, valStr === 'true');
   console.log(`[OK] ${r.product_id} published -> ${r.published}`);
+}
+
+async function productsFeatured(positional) {
+  const [product_id, valStr] = positional;
+  if (!product_id || (valStr !== 'true' && valStr !== 'false')) {
+    die('usage: products featured <product_id> <true|false>');
+  }
+  const r = await store.setFeatured(product_id, valStr === 'true');
+  console.log(`[OK] ${r.product_id} featured -> ${r.featured}(true にすると他は自動で解除)`);
 }
 
 async function inventoryCmd(positional) {
@@ -258,7 +268,8 @@ async function main() {
         if (sub === 'thumbnail') return await productsThumbnail(flags);
         if (sub === 'set-price') return await productsSetPrice(positional);
         if (sub === 'publish') return await productsPublish(positional);
-        return die('products: unknown subcommand (list|get|put|thumbnail|set-price|publish)');
+        if (sub === 'featured') return await productsFeatured(positional);
+        return die('products: unknown subcommand (list|get|put|thumbnail|set-price|publish|featured)');
       }
       case 'inventory': {
         const { positional } = parseArgs(argv.slice(1));

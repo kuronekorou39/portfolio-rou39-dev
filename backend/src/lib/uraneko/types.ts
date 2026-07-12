@@ -13,6 +13,7 @@ export interface VideoProduct {
   pool_target: number;
   pool_threshold: number;
   published: boolean;
+  featured?: boolean; // トップの「注目」枠に出す商品(管理画面で1件だけ指定)
   created_at: string;
 }
 

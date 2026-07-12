@@ -25,6 +25,7 @@ export interface Product {
   // ギャラリー(サムネ+サンプル)。get-product のみ。zoom_url=null は拡大でも原画を出さない
   gallery?: { url: string; zoom_url: string | null }[];
   available?: boolean; // 在庫(未割当トークン)有無。未定義なら不明扱い
+  featured?: boolean; // トップの注目枠に出す商品(管理画面で指定)
 }
 
 export interface CouponValidationResult {

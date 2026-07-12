@@ -179,8 +179,12 @@
             <div class="field"><label style="letter-spacing:0"><input type="checkbox" id="d_pub"> 公開する</label></div>
             <button onclick="saveProduct()">保存</button>
           </div>
+          <div class="row" style="margin-top:10px; align-items:center">
+            <span id="d_feat_state" class="mono"></span>
+            <button id="d_feat_btn" class="small" onclick="toggleFeatured()">トップの注目に設定</button>
+          </div>
           <div class="field" style="margin-top:14px"><label>説明</label><textarea id="d_desc" rows="3" style="width:100%; max-width:720px"></textarea></div>
-          <div class="hint">価格・公開はここで保存(サーバが読み直すので次回チェックアウトから即反映)。長さは動画投入時に自動取得されますが、手動で mm:ss 上書きも可能です。</div>
+          <div class="hint">価格・公開はここで保存(サーバが読み直すので次回チェックアウトから即反映)。長さは動画投入時に自動取得されますが、手動で mm:ss 上書きも可能です。<br>「注目」はトップページのヒーロー枠に出す1件(公開商品のみ表示)。設定すると他の商品の注目は自動で外れます。どれも注目にしなければトップには何も出ません。</div>
         </section>
 
         <section>
@@ -404,6 +408,14 @@ async function togglePublish(id, next) {
   catch (e) { toast(e.message, true); }
 }
 
+async function toggleFeatured() {
+  if (!currentPid) return;
+  const p = productCache.find((x) => x.product_id === currentPid);
+  const next = !(p && p.featured);
+  try { await api('POST', '/api/products/featured', { product_id: currentPid, featured: next }); toast(currentPid + (next ? ' をトップの注目に設定' : ' の注目を解除')); await loadProductsQuiet(); renderDetail(); }
+  catch (e) { toast(e.message, true); }
+}
+
 async function createProduct() {
   const body = {
     product_id: document.getElementById('p_id').value.trim(),
@@ -456,6 +468,10 @@ function renderDetail() {
   document.getElementById('d_dur').value = fmtDur(p.duration_sec);
   document.getElementById('d_desc').value = p.description || '';
   document.getElementById('d_pub').checked = !!p.published;
+  document.getElementById('d_feat_state').innerHTML = p.featured
+    ? '<span class="badge on">注目中</span>'
+    : '<span class="badge off">注目でない</span>';
+  document.getElementById('d_feat_btn').textContent = p.featured ? '注目を解除' : 'トップの注目に設定';
   const blurLabel = { none: 'ぼかしなし', light: 'ぼかし弱', strong: 'ぼかし強' };
   let thState = p.thumbnail_s3_key ? '<span class="badge on">設定済</span>' : '<span class="badge off">未設定</span>';
   if (p.thumbnail_s3_key && p.thumbnail_blur && p.thumbnail_blur !== 'none') {

@@ -17,6 +17,7 @@ function toPublicProduct(p: VideoProduct) {
     description: p.description,
     price_jpy: p.price_jpy,
     duration_sec: p.duration_sec,
+    featured: p.featured === true, // トップの注目枠に出すか(管理画面で指定)
   };
 }
 

@@ -156,6 +156,7 @@ export async function putProduct(input) {
       ? Number(input.pool_threshold)
       : existing?.pool_threshold ?? 0,
     published: input.published !== undefined ? Boolean(input.published) : existing?.published ?? false,
+    featured: input.featured !== undefined ? Boolean(input.featured) : existing?.featured ?? false,
     created_at: existing?.created_at ?? new Date().toISOString(),
   };
   await ddb.send(new PutCommand({ TableName: PRODUCTS_TABLE, Item: item }));
@@ -309,6 +310,40 @@ export async function setPublished(product_id, published) {
     }),
   );
   return { product_id, published };
+}
+
+/**
+ * トップの「注目」枠に出す商品を設定する(1件だけ)。
+ * featured=true にすると他の全商品の featured を false に落とす(単一に強制)。
+ * featured=false は当該商品の注目を外すだけ(注目なし=トップに何も出さない)。
+ */
+export async function setFeatured(product_id, featured) {
+  if (typeof featured !== 'boolean') invalid('featured は boolean');
+  if (!(await getProduct(product_id))) invalid(`product not found: ${product_id}`);
+  if (featured) {
+    // 既存の注目商品をすべて解除(自分以外)
+    const all = await ddb.send(new ScanCommand({ TableName: PRODUCTS_TABLE }));
+    const others = (all.Items ?? []).filter((p) => p.featured === true && p.product_id !== product_id);
+    for (const o of others) {
+      await ddb.send(
+        new UpdateCommand({
+          TableName: PRODUCTS_TABLE,
+          Key: { product_id: o.product_id },
+          UpdateExpression: 'SET featured = :f',
+          ExpressionAttributeValues: { ':f': false },
+        }),
+      );
+    }
+  }
+  await ddb.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { product_id },
+      UpdateExpression: 'SET featured = :v',
+      ExpressionAttributeValues: { ':v': featured },
+    }),
+  );
+  return { product_id, featured };
 }
 
 export async function listTokens(product_id, { all = false } = {}) {

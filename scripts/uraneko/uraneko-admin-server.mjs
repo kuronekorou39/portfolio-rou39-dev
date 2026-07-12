@@ -49,6 +49,7 @@ const routes = {
   'POST /api/products': async (_q, body) => store.putProduct(body),
   'POST /api/products/price': async (_q, body) => store.setPrice(body.product_id, Number(body.price_jpy)),
   'POST /api/products/publish': async (_q, body) => store.setPublished(body.product_id, Boolean(body.published)),
+  'POST /api/products/featured': async (_q, body) => store.setFeatured(body.product_id, Boolean(body.featured)),
   'GET /api/tokens': async (q) => store.listTokens(q.get('product_id'), { all: q.get('all') === '1' }),
   'POST /api/tokens/backfill': async (_q, body) => store.backfillTokens({ dryRun: Boolean(body.dryRun) }),
   'POST /api/tokens/delete': async (_q, body) => store.deleteToken(body.token_id, { force: Boolean(body.force) }),
