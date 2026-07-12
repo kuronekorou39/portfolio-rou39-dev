@@ -9,14 +9,17 @@ export default function BrassFrame({
   padding = '40px',
   style,
   background = 'rgba(10,10,11,0.4)',
+  className,
 }: {
   children: ReactNode;
   padding?: string;
   style?: CSSProperties;
   background?: string;
+  className?: string;
 }) {
   return (
     <div
+      className={className}
       style={{
         position: 'relative',
         padding,

@@ -30,7 +30,7 @@ export default function HomePage() {
           marginBottom: isNarrow ? 56 : 80,
         }}
       >
-        <div>
+        <div className="anim-reveal">
           <SectionLabel style={{ marginBottom: 18 }}>
             — ARCHIVE 001
           </SectionLabel>
@@ -77,7 +77,7 @@ export default function HomePage() {
         </div>
 
         {/* ヒーロー右:注目作品(先頭の商品。無ければ準備中) */}
-        <div style={{ position: 'relative' }}>
+        <div className="anim-reveal anim-delay-2" style={{ position: 'relative' }}>
           {featured ? (
             <Link
               to={`/product/${featured.product_id}`}
@@ -177,7 +177,13 @@ export default function HomePage() {
               <Link
                 key={p.product_id}
                 to={`/product/${p.product_id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                className="anim-reveal"
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  // カードを少しずつ遅らせて立ち上げる(多くても頭打ち)
+                  animationDelay: `${Math.min(i, 10) * 0.05}s`,
+                }}
               >
                 <Thumbnail
                   ratio="4/5"

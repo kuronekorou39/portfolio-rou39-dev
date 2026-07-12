@@ -339,7 +339,7 @@ export default function CheckoutPage() {
     return (
       <div>
         <Stepper active={1} />
-        <div style={{ maxWidth: 880, margin: '0 auto' }}>
+        <div className="anim-reveal" style={{ maxWidth: 880, margin: '0 auto' }}>
           <div
             style={{
               textAlign: 'center',
@@ -442,6 +442,7 @@ export default function CheckoutPage() {
       <Stepper active={2} />
 
       <div
+        className="anim-reveal"
         style={{
           display: 'grid',
           gridTemplateColumns: isNarrow ? '1fr' : '1fr 420px',

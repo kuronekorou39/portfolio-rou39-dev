@@ -148,6 +148,7 @@ export default function MyOrdersPage() {
     <div>
       {/* 会員マストヘッド */}
       <BrassFrame
+        className="anim-reveal"
         padding="clamp(22px, 5vw, 36px) clamp(20px, 5vw, 40px)"
         background="var(--color-panel)"
         style={{ marginBottom: 48 }}
@@ -227,6 +228,7 @@ export default function MyOrdersPage() {
 
       {/* 購入履歴 */}
       <div
+        className="anim-reveal anim-delay-2"
         style={{
           display: 'flex',
           alignItems: 'baseline',

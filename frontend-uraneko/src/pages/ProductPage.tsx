@@ -36,6 +36,7 @@ export default function ProductPage() {
     <div>
       {/* パンくず */}
       <div
+        className="anim-reveal"
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
@@ -59,7 +60,7 @@ export default function ProductPage() {
         }}
       >
         {/* 左:プレビュー(サムネ + サンプル画像のギャラリー) */}
-        <div>
+        <div className="anim-reveal anim-delay-1">
           <Gallery
             code={`№ ${product.product_id}`}
             title={product.title}
@@ -88,7 +89,7 @@ export default function ProductPage() {
         </div>
 
         {/* 右:メタ + 購入 */}
-        <div>
+        <div className="anim-reveal anim-delay-2">
           <div
             style={{
               fontFamily: 'var(--font-mono)',
