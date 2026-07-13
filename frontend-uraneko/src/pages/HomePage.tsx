@@ -8,16 +8,45 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import Loading from '../components/bar/Loading';
 
+// ヒーロー見出しのネタ文(一定間隔でランダムに切替)。hi がハイライト語。
+const HERO_PHRASES: { pre: string; hi: string; post: string }[] = [
+  { pre: 'ケモナーの', hi: '闇', post: '。' },
+  { pre: '表に出せない', hi: '趣味', post: '。' },
+  { pre: '', hi: '獣性', post: 'の記録。' },
+  { pre: '未公開の', hi: '標本', post: '。' },
+  { pre: '陽の当たらない', hi: '収蔵', post: '。' },
+  { pre: '声にしない', hi: '欲', post: '。' },
+  { pre: '毛皮の', hi: '裏側', post: '。' },
+];
+const HERO_ROTATE_MS = 7000;
+
 export default function HomePage() {
   const isNarrow = useIsNarrow();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   // 収蔵グリッドは画面に入った時にカードを立ち上げる(ファーストビュー外でも動きが見える)
   const [gridRef, gridInView] = useInView();
+  // ヒーロー見出しは一定間隔で別のネタ文へランダムに切り替える
+  const [phraseIdx, setPhraseIdx] = useState(() => Math.floor(Math.random() * HERO_PHRASES.length));
 
   useEffect(() => {
     api.listProducts().then(setProducts).catch((e) => setErr(e.message));
   }, []);
+
+  useEffect(() => {
+    if (HERO_PHRASES.length < 2) return;
+    const id = setInterval(() => {
+      setPhraseIdx((prev) => {
+        // 直前と同じにならないよう別のものを選ぶ
+        let n = prev;
+        while (n === prev) n = Math.floor(Math.random() * HERO_PHRASES.length);
+        return n;
+      });
+    }, HERO_ROTATE_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  const phrase = HERO_PHRASES[phraseIdx];
 
   // 注目枠は管理画面で指定された1件のみ(未指定なら何も出さない)。
   const featured = products?.find((p) => p.featured) ?? null;
@@ -47,9 +76,15 @@ export default function HomePage() {
               lineHeight: 1.2,
               margin: 0,
               color: 'var(--color-fg)',
+              minHeight: '1.2em', // 切替で高さがブレないように
             }}
           >
-            ケモナーの<span style={{ color: 'var(--color-gold-bright)' }}>闇</span>。
+            {/* key で文が変わるたびにクロスフェード再生 */}
+            <span key={phraseIdx} className="anim-soft" style={{ display: 'inline-block' }}>
+              {phrase.pre}
+              <span style={{ color: 'var(--color-gold-bright)' }}>{phrase.hi}</span>
+              {phrase.post}
+            </span>
           </h1>
           <div
             style={{
