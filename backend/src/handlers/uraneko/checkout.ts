@@ -4,7 +4,12 @@ import { createHash, randomUUID } from 'crypto';
 import { docClient } from '../../lib/dynamo';
 import { ok, badRequest, notFound, conflict, serverError } from '../../lib/response';
 import { createPayment, MIN_INVOICE_JPY } from '../../lib/uraneko/nowpayments';
-import { hasAvailableToken, reserveToken, releaseReservedToken } from '../../lib/uraneko/token-claim';
+import {
+  hasAvailableToken,
+  reserveToken,
+  releaseReservedToken,
+  initialReservationTtlSec,
+} from '../../lib/uraneko/token-claim';
 import {
   getCoupon,
   validateCoupon,
@@ -134,15 +139,20 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         return conflict('amount_too_small');
       }
 
-      // オーバーセル防止: 決済前に在庫トークンを1本「予約」して確保する。
-      // これ以降の checkout からこの1本は見えなくなる。決済失敗/期限切れで解放される。
-      const reserved = await reserveToken({ product_id, order_id });
-      if (!reserved) return conflict('sold_out'); // 直前に売り切れた
-
       // 自前決済ページを使うので支払い通貨は必須(NOWPayments /v1/payment が要求)。
       // フロントのプルダウンは ltc/btc のみ。念のためサーバ側でも検証する。
       const payCur = (pay_currency || '').toLowerCase();
       if (payCur !== 'ltc' && payCur !== 'btc') return badRequest('unsupported_currency');
+
+      // オーバーセル防止: 決済前に在庫トークンを1本「予約」して確保する。
+      // これ以降の checkout からこの1本は見えなくなる。決済失敗/期限切れで解放される。
+      // 予約猶予は通貨で変える(BTC は確認が遅いので長め)。
+      const reserved = await reserveToken({
+        product_id,
+        order_id,
+        ttlSec: initialReservationTtlSec(payCur),
+      });
+      if (!reserved) return conflict('sold_out'); // 直前に売り切れた
 
       try {
         // 注文を先に(pending・予約トークン付きで)書く。決済作成前に注文を永続化して

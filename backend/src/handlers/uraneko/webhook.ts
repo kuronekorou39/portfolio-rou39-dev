@@ -128,22 +128,21 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return ok({ ok: true, already_paid: true });
     }
 
-    // 終端(expired/failed/cancelled)後に入金系 IPN が届いた = late payment。
-    // 「支払われたのに無言で何も起きない」を避けるため必ずアラートする。
-    // cancelled(購入者の明示的取消)は自動受け渡しせず管理者対応(返金等)。
-    // expired/failed は下の deliver/finalize で受け渡しを試みる(FORWARD_FROM が許可)。
+    // 終端後に入金系 IPN が届いた = late payment。
+    // - cancelled(購入者の明示的取消)は自動受け渡ししない。支払われているので管理者対応
+    //   (返金等)が要る → アラートして終了。
+    // - expired/failed は下の deliver/finalize で受け渡しを試みる(FORWARD_FROM が許可)。
+    //   自動復旧できれば通知不要、失敗時のみ FULFILL FAILED として通知する(下で処理)。
     const payingAction = action === 'deliver' || action === 'finalize';
-    if (
-      payingAction &&
-      (order.status === 'expired' || order.status === 'failed' || order.status === 'cancelled')
-    ) {
+    if (payingAction && order.status === 'cancelled') {
       console.error(
-        `PAYMENT ANOMALY [paid-after-${order.status}] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email}`,
+        `PAYMENT ANOMALY [paid-after-cancelled] (manual action needed) order=${order_id} product=${order.product_id} email=${order.email}`,
       );
-      if (order.status === 'cancelled') {
-        return ok({ ok: true, status: 'cancelled', note: 'paid_after_cancel' });
-      }
+      return ok({ ok: true, status: 'cancelled', note: 'paid_after_cancel' });
     }
+    // expired/failed からの遅延入金か(復旧成功時に記録だけ残すために覚えておく)
+    const lateFromTerminal =
+      payingAction && (order.status === 'expired' || order.status === 'failed');
 
     switch (action) {
       case 'deliver': {
@@ -159,6 +158,12 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             order.product_id,
           );
           return ok({ ok: false, status: 'failed', reason: r.reason });
+        }
+        // 期限切れ/失敗からの遅延入金を自動復旧できた場合は記録のみ(アラームは鳴らさない)。
+        if (lateFromTerminal) {
+          console.log(
+            `late-payment recovered [confirming] order=${order_id} product=${order.product_id} (was ${order.status})`,
+          );
         }
         return ok({ ok: true, status: 'confirming' });
       }
@@ -176,6 +181,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             order.product_id,
           );
           return ok({ ok: false, status: 'failed', reason: r.reason });
+        }
+        if (lateFromTerminal) {
+          console.log(
+            `late-payment recovered [paid] order=${order_id} product=${order.product_id} (was ${order.status})`,
+          );
         }
         return ok({ ok: true, status: 'paid' });
       }

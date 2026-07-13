@@ -3,12 +3,19 @@ import { docClient } from '../dynamo';
 import type { VideoToken } from './types';
 
 const TOKENS_TABLE = process.env.TOKENS_TABLE!;
-// checkout 直後(入金前)の予約猶予。決済ページで送金を開始するまでの時間だけ確保する。
-// 放置(送金しないまま離脱)はこの時間で在庫へ戻す。短めにして在庫ロックを最小化。
-const RESERVATION_TTL_SEC = 20 * 60;
+// checkout 直後(入金前)の予約猶予。決済ページで送金を開始し、最初の検知が来るまでの時間。
+// 放置(送金しないまま離脱)はこの時間で在庫へ戻す。通貨で確認速度が違うので通貨別にする。
+// LTC 等は速い(2.5分/ブロック)が、BTC は遅く(~10分/ブロック)送金開始も遅れがちなので長め。
+const RESERVATION_TTL_SEC_DEFAULT = 30 * 60;
+const RESERVATION_TTL_SEC_BTC = 60 * 60;
+export function initialReservationTtlSec(currency?: string): number {
+  return (currency || '').toLowerCase() === 'btc'
+    ? RESERVATION_TTL_SEC_BTC
+    : RESERVATION_TTL_SEC_DEFAULT;
+}
 // 入金が検知(confirming)されたら、この長さに延長する。送金済み=ブロック確定待ちを吸収し、
 // 確定前に失効して「支払ったのに売切」になるのを防ぐ。
-const RESERVATION_CONFIRMING_TTL_SEC = 60 * 60;
+const RESERVATION_CONFIRMING_TTL_SEC = 90 * 60;
 
 /**
  * 指定 product に未割当(在庫)トークンが 1 件以上あるかを返す。
@@ -137,9 +144,11 @@ export async function releaseToken(
 export async function reserveToken(params: {
   product_id: string;
   order_id: string;
+  ttlSec?: number; // 初期予約の猶予秒。未指定は既定(30分)
 }): Promise<VideoToken | null> {
   const { product_id, order_id } = params;
-  const reservedUntil = new Date(Date.now() + RESERVATION_TTL_SEC * 1000).toISOString();
+  const ttlSec = params.ttlSec ?? RESERVATION_TTL_SEC_DEFAULT;
+  const reservedUntil = new Date(Date.now() + ttlSec * 1000).toISOString();
   const q = await docClient.send(
     new QueryCommand({
       TableName: TOKENS_TABLE,
