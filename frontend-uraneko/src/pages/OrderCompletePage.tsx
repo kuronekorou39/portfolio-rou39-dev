@@ -63,35 +63,57 @@ export default function OrderCompletePage() {
     }
   }
 
-  // 暗号決済の確定は IPN 経由で非同期。pending/confirming の間は定期的に再取得し、
-  // paid になったら自動でダウンロードリンクを出す(ユーザーが手動更新しなくて済む)。
+  // 暗号決済の確定は IPN 経由で非同期。決済が進むまで定期的に再取得し、受け渡し可能に
+  // なったら自動でダウンロードを出す(手動更新不要)。
+  // - BTC は反映が遅い(30分超もある)ので打ち切りは長め(90分)。
+  // - expired/failed も「遅延入金で自動復旧」しうるので回し続ける(paid/cancelled のみ停止)。
+  // - スマホでウォレットへ切替→戻った時に素早く反映するよう、可視化時に即再取得する。
   useEffect(() => {
     if (!id) return;
     const POLL_INTERVAL_MS = 8000;
-    const POLL_MAX_MS = 30 * 60 * 1000; // これ以上は打ち切り(後でメールから開けばよい)
-    const TERMINAL = new Set(['paid', 'failed', 'expired', 'cancelled']);
+    const POLL_MAX_MS = 90 * 60 * 1000;
+    const STOP = new Set(['paid', 'cancelled']); // これ以外は遅延入金で変わりうるので回し続ける
     const startedAt = Date.now();
     let stopped = false;
+    let got = false; // 一度でも取得成功したか(初回失敗のみエラー表示)
+    let lastStatus = '';
     let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const schedule = () => {
+      if (stopped || STOP.has(lastStatus) || Date.now() - startedAt >= POLL_MAX_MS) return;
+      timer = setTimeout(poll, POLL_INTERVAL_MS);
+    };
 
     const poll = async () => {
       const idToken = await getIdToken();
       try {
         const o = await api.getOrder(id, { token: emailToken ?? undefined, idToken });
         if (stopped) return;
+        got = true;
+        lastStatus = o.status;
         setOrder(o);
-        if (!TERMINAL.has(o.status) && Date.now() - startedAt < POLL_MAX_MS) {
-          timer = setTimeout(poll, POLL_INTERVAL_MS);
-        }
+        schedule();
       } catch (e) {
         if (stopped) return;
-        setErr((e as Error).message);
+        if (!got) setErr((e as Error).message); // 初回だけエラー画面。以降の一時断は黙って再試行
+        schedule();
       }
     };
-    poll();
+
+    // タブ復帰(ウォレットから戻る等)で即座に再取得
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible' || stopped) return;
+      if (STOP.has(lastStatus) || Date.now() - startedAt >= POLL_MAX_MS) return;
+      if (timer) clearTimeout(timer);
+      void poll();
+    };
+
+    void poll();
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [id, emailToken]);
 
@@ -375,6 +397,12 @@ export default function OrderCompletePage() {
                 ネットワークで送金してください。
                 <br />※ 送金が検知されると、この画面のまま自動でダウンロードに切り替わります(NOWPayments
                 の画面で待つ必要はありません)。
+                {pay.currency === 'btc' && (
+                  <>
+                    <br />※ BTC はネットワークの都合で反映まで数分〜30分程度かかることがあります。
+                    この画面を閉じても、確定後にご登録のメールへ受け渡しリンクをお送りします。
+                  </>
+                )}
               </p>
             </>
           )}
