@@ -243,6 +243,128 @@ body {
   animation: scan 1.9s ease-in-out infinite;
 }
 
+/* ============================================================
+   ライトボックス(画像の全体表示ポップアップ)
+   ============================================================ */
+.lb-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(6, 6, 7, 0.94);
+  display: grid;
+  place-items: center;
+  padding: clamp(8px, 3vw, 32px);
+  animation: softIn 0.2s ease both;
+}
+.lb-panel {
+  position: relative;
+  width: min(1100px, 96vw);
+  height: min(880px, 92vh);
+  max-width: 96vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-panel);
+  border: 1px solid rgba(168, 166, 158, 0.4);
+}
+.lb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(168, 166, 158, 0.2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.lb-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lb-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(168, 166, 158, 0.4);
+  background: rgba(10, 10, 11, 0.5);
+  color: var(--color-fg);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 0;
+  transition: background 0.12s, color 0.12s;
+}
+.lb-icon:hover {
+  background: var(--color-gold-bright);
+  color: var(--color-deep);
+}
+.lb-icon:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.lb-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #060607;
+  touch-action: none;
+}
+.lb-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  display: block;
+}
+.lb-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(168, 166, 158, 0.4);
+  background: rgba(10, 10, 11, 0.6);
+  color: var(--color-fg);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+}
+.lb-nav.prev {
+  left: 10px;
+}
+.lb-nav.next {
+  right: 10px;
+}
+.lb-nav:hover {
+  background: rgba(10, 10, 11, 0.85);
+}
+@media (max-width: 560px) {
+  .lb-nav {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+  .lb-head {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+}
+
 /* ローディング表示の点滅ドット(読み込み中 • • •) */
 @keyframes loadDot {
   0%,
