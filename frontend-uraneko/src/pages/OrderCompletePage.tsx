@@ -123,18 +123,18 @@ export default function OrderCompletePage() {
     ? order.status.toUpperCase()
     : 'AWAITING PAYMENT';
   const heading = paid
-    ? '受け渡し完了。'
+    ? '受け渡し完了'
     : confirming
-    ? '受け渡し可能。'
+    ? '受け渡し可能'
     : underpaid
-    ? '支払額の不足。'
+    ? '支払額の不足'
     : order.status === 'cancelled'
-    ? '取消済み。'
+    ? '取消済み'
     : order.status === 'expired'
-    ? '期限切れ。'
+    ? '期限切れ'
     : order.status === 'failed'
-    ? '決済に失敗。'
-    : '送金待ち。';
+    ? '決済に失敗'
+    : '送金待ち';
   const subline = paid
     ? 'your copy is ready.'
     : confirming
