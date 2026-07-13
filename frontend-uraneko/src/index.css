@@ -313,14 +313,16 @@ body {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  display: grid;
-  place-items: center;
   background: #060607;
   touch-action: none;
 }
 .lb-img {
-  max-width: 100%;
-  max-height: 100%;
+  /* 枠いっぱいに絶対配置して object-fit:contain。これで枠の高さに確実に収まる
+     (grid + height:100% は行が auto になり効かず、実寸ではみ出していた)。 */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;

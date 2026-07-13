@@ -30,13 +30,8 @@ export default function Gallery({
   // ライトボックス内の拡大率とパン(ドラッグ移動)
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
-  const drag = useRef<{ active: boolean; sx: number; sy: number; ox: number; oy: number }>({
-    active: false,
-    sx: 0,
-    sy: 0,
-    ox: 0,
-    oy: 0,
-  });
+  const stageRef = useRef<HTMLDivElement>(null);
+  const drag = useRef({ active: false, sx: 0, sy: 0, ox: 0, oy: 0, moved: false });
 
   const key = images.map((i) => i.url).join('|');
   useEffect(() => {
@@ -62,13 +57,41 @@ export default function Gallery({
     resetView();
   }, [resetView]);
 
-  const zoomBy = useCallback((delta: number) => {
-    setScale((s) => {
-      const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, +(s + delta).toFixed(2)));
-      if (next <= 1) setPos({ x: 0, y: 0 });
-      return next;
-    });
-  }, []);
+  // (clientX, clientY) を固定点として next 倍率へズームする(カーソル/クリック位置に寄せる)。
+  // イベントハンドラから呼ぶので、現在の scale/pos(クロージャ)を基準に計算する。
+  const zoomAt = useCallback(
+    (clientX: number, clientY: number, nextRaw: number) => {
+      const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, +nextRaw.toFixed(2)));
+      if (next <= 1) {
+        setScale(1);
+        setPos({ x: 0, y: 0 });
+        return;
+      }
+      const r = stageRef.current?.getBoundingClientRect();
+      if (!r) {
+        setScale(next);
+        return;
+      }
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const ratio = next / scale; // transform-origin 中央基準
+      setPos({
+        x: (clientX - cx) * (1 - ratio) + ratio * pos.x,
+        y: (clientY - cy) * (1 - ratio) + ratio * pos.y,
+      });
+      setScale(next);
+    },
+    [scale, pos],
+  );
+
+  // ボタン用: 表示領域の中央を基準にズーム
+  const zoomBy = useCallback(
+    (delta: number) => {
+      const r = stageRef.current?.getBoundingClientRect();
+      zoomAt(r ? r.left + r.width / 2 : 0, r ? r.top + r.height / 2 : 0, scale + delta);
+    },
+    [zoomAt, scale],
+  );
 
   // ライトボックス表示中: 背景スクロールを止める
   useEffect(() => {
@@ -106,25 +129,29 @@ export default function Gallery({
     setZoom(true);
   };
 
-  // ドラッグでパン(拡大中のみ)
+  // ポインタ操作: 移動が小さければ「クリック=ズーム切替」、大きければ「ドラッグ=パン(拡大中)」
+  const CLICK_SLOP = 6;
   const onPointerDown = (e: React.PointerEvent) => {
-    if (scale <= 1) return;
-    drag.current = { active: true, sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    drag.current = { active: true, sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y, moved: false };
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag.current.active) return;
-    setPos({ x: drag.current.ox + (e.clientX - drag.current.sx), y: drag.current.oy + (e.clientY - drag.current.sy) });
+    const dx = e.clientX - drag.current.sx;
+    const dy = e.clientY - drag.current.sy;
+    if (Math.abs(dx) + Math.abs(dy) > CLICK_SLOP) drag.current.moved = true;
+    if (scale > 1) setPos({ x: drag.current.ox + dx, y: drag.current.oy + dy });
   };
-  const onPointerUp = () => {
+  const onPointerUp = (e: React.PointerEvent) => {
+    const wasClick = drag.current.active && !drag.current.moved;
     drag.current.active = false;
+    if (!wasClick) return;
+    // クリック: 100% ならクリック位置へ 2 倍拡大、拡大中なら等倍へ戻す
+    if (scale > 1) resetView();
+    else zoomAt(e.clientX, e.clientY, 2);
   };
   const onWheel = (e: React.WheelEvent) => {
-    zoomBy(e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
-  };
-  const toggleDoubleZoom = () => {
-    if (scale > 1) resetView();
-    else setScale(2);
+    zoomAt(e.clientX, e.clientY, scale + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP));
   };
 
   return (
@@ -232,14 +259,14 @@ export default function Gallery({
 
             {/* 画像表示エリア(この枠内に必ず収まる。拡大時はドラッグで移動) */}
             <div
+              ref={stageRef}
               className="lb-stage"
-              style={{ cursor: scale > 1 ? (drag.current.active ? 'grabbing' : 'grab') : 'zoom-in' }}
+              style={{ cursor: scale > 1 ? 'grab' : 'zoom-in' }}
               onWheel={onWheel}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
-              onDoubleClick={toggleDoubleZoom}
             >
               <img
                 className="lb-img"
@@ -256,6 +283,7 @@ export default function Gallery({
                   <button
                     className="lb-nav prev"
                     aria-label="前へ"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => go(-1)}
                   >
                     ‹
@@ -263,6 +291,7 @@ export default function Gallery({
                   <button
                     className="lb-nav next"
                     aria-label="次へ"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => go(1)}
                   >
                     ›
