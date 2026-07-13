@@ -8,25 +8,38 @@ import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import Loading from '../components/bar/Loading';
 
-// ヒーロー見出しのネタ文(一定間隔でランダムに切替)。hi がハイライト語。
-const HERO_PHRASES: { pre: string; hi: string; post: string }[] = [
-  { pre: 'ケモナーの', hi: '闇', post: '' },
-  { pre: '公衆', hi: 'トイレ', post: '' },
-  { pre: '', hi: 'ＡＶ', post: '（アニマルビデオ）' },
-  { pre: '肉', hi: '便器', post: '' },
-  { pre: 'ケモナーの', hi: '種壺', post: '' },
-  { pre: 'ベアバック', hi: 'ラブ', post: '' },
-  { pre: 'ロワ汁', hi: 'タンク', post: '' },
-  { pre: 'オフパコ', hi: 'せんにん', post: '' },
+// ヒーロー見出しのネタ文(アクセスごとに重み付きランダムで1つ選ぶ)。hi がハイライト語。
+// weight = 出やすさの相対値。確率 = weight ÷ 全 weight 合計。
+// 現状の合計は 99(= 14×7 + 1)なので、ロワ汁タンク(weight 1)は約 1%、他は各 約14%。
+const HERO_PHRASES: { pre: string; hi: string; post: string; weight: number }[] = [
+  { pre: 'ケモナーの', hi: '闇', post: '', weight: 14 },
+  { pre: '公衆', hi: 'トイレ', post: '', weight: 14 },
+  { pre: '', hi: 'ＡＶ', post: '（アニマルビデオ）', weight: 14 },
+  { pre: '肉', hi: '便器', post: '', weight: 14 },
+  { pre: 'ケモナーの', hi: '種壺', post: '', weight: 14 },
+  { pre: 'ベアバック', hi: 'ラブ', post: '', weight: 14 },
+  { pre: 'ロワ汁', hi: 'タンク', post: '', weight: 1 }, // ≈ 1%(レア)
+  { pre: 'オフパコ', hi: 'せんにん', post: '', weight: 14 },
 ];
+
+// weight に比例してインデックスを1つ選ぶ
+function pickWeightedPhrase(): number {
+  const total = HERO_PHRASES.reduce((s, p) => s + p.weight, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < HERO_PHRASES.length; i++) {
+    r -= HERO_PHRASES[i].weight;
+    if (r < 0) return i;
+  }
+  return HERO_PHRASES.length - 1;
+}
 export default function HomePage() {
   const isNarrow = useIsNarrow();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   // 収蔵グリッドは画面に入った時にカードを立ち上げる(ファーストビュー外でも動きが見える)
   const [gridRef, gridInView] = useInView();
-  // ヒーロー見出しはアクセス(読み込み)ごとにランダムで1つ選ぶ
-  const [phraseIdx] = useState(() => Math.floor(Math.random() * HERO_PHRASES.length));
+  // ヒーロー見出しはアクセス(読み込み)ごとに重み付きランダムで1つ選ぶ
+  const [phraseIdx] = useState(pickWeightedPhrase);
 
   useEffect(() => {
     api.listProducts().then(setProducts).catch((e) => setErr(e.message));
