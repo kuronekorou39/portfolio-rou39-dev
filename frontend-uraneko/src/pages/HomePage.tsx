@@ -19,32 +19,17 @@ const HERO_PHRASES: { pre: string; hi: string; post: string }[] = [
   { pre: 'ロワ汁', hi: 'タンク', post: '' },
   { pre: 'オフパコ', hi: 'せんにん', post: '' },
 ];
-const HERO_ROTATE_MS = 7000;
-
 export default function HomePage() {
   const isNarrow = useIsNarrow();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   // 収蔵グリッドは画面に入った時にカードを立ち上げる(ファーストビュー外でも動きが見える)
   const [gridRef, gridInView] = useInView();
-  // ヒーロー見出しは一定間隔で別のネタ文へランダムに切り替える
-  const [phraseIdx, setPhraseIdx] = useState(() => Math.floor(Math.random() * HERO_PHRASES.length));
+  // ヒーロー見出しはアクセス(読み込み)ごとにランダムで1つ選ぶ
+  const [phraseIdx] = useState(() => Math.floor(Math.random() * HERO_PHRASES.length));
 
   useEffect(() => {
     api.listProducts().then(setProducts).catch((e) => setErr(e.message));
-  }, []);
-
-  useEffect(() => {
-    if (HERO_PHRASES.length < 2) return;
-    const id = setInterval(() => {
-      setPhraseIdx((prev) => {
-        // 直前と同じにならないよう別のものを選ぶ
-        let n = prev;
-        while (n === prev) n = Math.floor(Math.random() * HERO_PHRASES.length);
-        return n;
-      });
-    }, HERO_ROTATE_MS);
-    return () => clearInterval(id);
   }, []);
 
   const phrase = HERO_PHRASES[phraseIdx];
@@ -80,8 +65,8 @@ export default function HomePage() {
               minHeight: '1.2em', // 切替で高さがブレないように
             }}
           >
-            {/* key で文が変わるたびにクロスフェード再生 */}
-            <span key={phraseIdx} className="anim-soft" style={{ display: 'inline-block' }}>
+            {/* 読み込み時にフェードインで立ち上げる */}
+            <span className="anim-soft" style={{ display: 'inline-block' }}>
               {phrase.pre}
               <span style={{ color: 'var(--color-gold-bright)' }}>{phrase.hi}</span>
               {phrase.post}
