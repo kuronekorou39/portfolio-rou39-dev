@@ -1,6 +1,7 @@
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
 import { listExpiredReservations, releaseReservedToken } from '../../lib/uraneko/token-claim';
+import { releaseRedemption } from '../../lib/uraneko/coupon';
 import type { Order } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
@@ -30,8 +31,9 @@ export async function handler(): Promise<{ released: number }> {
     // confirming(先行受け渡し済み)/ paid は絶対に降格させない
     // (confirming の late-payment 復活と release-expired が競合しても壊れないように)。
     if (order) {
-      await docClient
-        .send(
+      let transitioned = false;
+      try {
+        await docClient.send(
           new UpdateCommand({
             TableName: ORDERS_TABLE,
             Key: { order_id: t.order_id },
@@ -44,8 +46,13 @@ export async function handler(): Promise<{ released: number }> {
               ':underpaid': 'underpaid',
             },
           }),
-        )
-        .catch(() => undefined);
+        );
+        transitioned = true;
+      } catch (err: unknown) {
+        if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
+      }
+      // 未確定のまま失効 → 消費したクーポン枠を返却する(この遷移で1回だけ実行される)。
+      if (transitioned && order.coupon_code) await releaseRedemption(order.coupon_code);
     }
     released++;
   }

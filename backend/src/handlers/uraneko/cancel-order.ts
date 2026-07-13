@@ -5,6 +5,7 @@ import { ok, badRequest, notFound, forbidden, conflict, serverError } from '../.
 import { verifyOrderToken } from '../../lib/uraneko/order-token';
 import { verifyMember, authHeaderOf } from '../../lib/uraneko/member-auth';
 import { releaseReservedToken } from '../../lib/uraneko/token-claim';
+import { releaseRedemption } from '../../lib/uraneko/coupon';
 import type { Order } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
@@ -78,6 +79,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // キャンセル確定後に予約トークンを在庫へ戻す(reserved かつ当該注文のみ。assigned なら no-op)
     if (order.token_id) await releaseReservedToken(order.token_id, order_id);
+    // 消費したクーポン枠も返却する(pending→cancelled が成立したこの経路で1回だけ)
+    if (order.coupon_code) await releaseRedemption(order.coupon_code);
 
     return ok({ order_id, status: 'cancelled', cancelled: true });
   } catch (err) {

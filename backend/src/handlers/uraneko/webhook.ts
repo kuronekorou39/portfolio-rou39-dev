@@ -5,6 +5,7 @@ import { ok, badRequest, serverError, forbidden } from '../../lib/response';
 import { verifyIpnSignature } from '../../lib/uraneko/nowpayments';
 import { deliverOrder, finalizeOrder } from '../../lib/uraneko/fulfill';
 import { extendReservation, releaseReservedToken } from '../../lib/uraneko/token-claim';
+import { releaseRedemption } from '../../lib/uraneko/coupon';
 import type { Order, OrderStatus } from '../../lib/uraneko/types';
 
 const ORDERS_TABLE = process.env.ORDERS_TABLE!;
@@ -50,11 +51,12 @@ function isAmountShort(p: { actually_paid?: number | string; pay_amount?: number
 }
 
 // 注文ステータスを条件付きで前進させる(降格・終端からの復活を防ぐ)。
+// 戻り値: この呼び出しが実際に遷移させたら true、条件不成立なら false。
 async function setOrderStatus(
   order_id: string,
   target: OrderStatus,
   allowedFrom: OrderStatus[],
-): Promise<void> {
+): Promise<boolean> {
   const values: Record<string, unknown> = { ':t': target };
   allowedFrom.forEach((s, i) => {
     values[`:a${i}`] = s;
@@ -70,8 +72,10 @@ async function setOrderStatus(
         ExpressionAttributeValues: values,
       }),
     );
+    return true;
   } catch (err: unknown) {
     if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
+    return false;
   }
 }
 
@@ -203,8 +207,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
           );
         } else {
           // 未配信 → 予約トークンを在庫へ戻し、注文を終端化(paid は絶対に降格させない)。
-          await setOrderStatus(order_id, target, ['pending', 'underpaid']);
+          const transitioned = await setOrderStatus(order_id, target, ['pending', 'underpaid']);
           if (order.token_id) await releaseReservedToken(order.token_id, order_id);
+          // 未配信のまま失敗/失効 → 消費したクーポン枠を返却(この遷移で1回だけ)。
+          if (transitioned && order.coupon_code) await releaseRedemption(order.coupon_code);
         }
         return ok({ ok: true, status: target });
       }

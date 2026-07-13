@@ -153,6 +153,7 @@ export class UranekoApiStack extends cdk.Stack {
     });
     props.ordersTable.grantReadWriteData(webhookFn);
     props.tokensTable.grantReadWriteData(webhookFn);
+    props.couponsTable.grantReadWriteData(webhookFn); // 未配信で失敗/失効時のクーポン枠返却
     props.tokensTable.grant(webhookFn, 'dynamodb:TransactWriteItems');
     props.ordersTable.grant(webhookFn, 'dynamodb:TransactWriteItems');
     props.productsTable.grantReadData(webhookFn);
@@ -192,6 +193,7 @@ export class UranekoApiStack extends cdk.Stack {
     });
     props.ordersTable.grantReadWriteData(cancelOrderFn);
     props.tokensTable.grantReadWriteData(cancelOrderFn); // releaseReservedToken(Get+条件付きUpdate)
+    props.couponsTable.grantReadWriteData(cancelOrderFn); // キャンセル時のクーポン枠返却
     props.orderAccessSecret.grantRead(cancelOrderFn); // 署名注文トークン検証
 
     // --- my orders (Cognito required) ---
@@ -215,6 +217,7 @@ export class UranekoApiStack extends cdk.Stack {
     });
     props.tokensTable.grantReadWriteData(releaseExpiredFn);
     props.ordersTable.grantReadWriteData(releaseExpiredFn);
+    props.couponsTable.grantReadWriteData(releaseExpiredFn); // 失効時のクーポン枠返却
     new events.Rule(this, 'ReleaseExpiredSchedule', {
       // 放置カートの予約を早めに在庫へ戻すため短めの間隔で実行(テーブルは小規模で Scan は軽量)。
       schedule: events.Schedule.rate(cdk.Duration.minutes(3)),
