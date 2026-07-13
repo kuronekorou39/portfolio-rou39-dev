@@ -9,17 +9,16 @@ import SectionLabel from '../components/bar/SectionLabel';
 import Loading from '../components/bar/Loading';
 
 // ヒーロー見出しのネタ文(アクセスごとに重み付きランダムで1つ選ぶ)。hi がハイライト語。
-// weight = 出やすさの相対値。確率 = weight ÷ 全 weight 合計。
-// 現状の合計は 99(= 14×7 + 1)なので、ロワ汁タンク(weight 1)は約 1%、他は各 約14%。
+// weight = 出やすさ。合計を 100 にしてあるので weight がそのまま % になる。
 const HERO_PHRASES: { pre: string; hi: string; post: string; weight: number }[] = [
-  { pre: 'ケモナーの', hi: '闇', post: '', weight: 14 },
-  { pre: '公衆', hi: 'トイレ', post: '', weight: 14 },
-  { pre: '', hi: 'ＡＶ', post: '（アニマルビデオ）', weight: 14 },
-  { pre: '肉', hi: '便器', post: '', weight: 14 },
-  { pre: 'ケモナーの', hi: '種壺', post: '', weight: 14 },
-  { pre: 'ベアバック', hi: 'ラブ', post: '', weight: 14 },
-  { pre: 'ロワ汁', hi: 'タンク', post: '', weight: 1 }, // ≈ 1%(レア)
-  { pre: 'オフパコ', hi: 'せんにん', post: '', weight: 14 },
+  { pre: 'ケモナーの', hi: '闇', post: '', weight: 40 },
+  { pre: '公衆', hi: 'トイレ', post: '', weight: 15 },
+  { pre: '', hi: 'ＡＶ', post: '（アニマルビデオ）', weight: 5 },
+  { pre: '肉', hi: '便器', post: '', weight: 15 },
+  { pre: 'ケモナーの', hi: '種壺', post: '', weight: 15 },
+  { pre: 'ベアバック', hi: 'ラブ', post: '', weight: 5 },
+  { pre: 'ロワ汁', hi: 'タンク', post: '', weight: 1 }, // レア
+  { pre: 'オフパコ', hi: 'せんにん', post: '', weight: 4 },
 ];
 
 // weight に比例してインデックスを1つ選ぶ
