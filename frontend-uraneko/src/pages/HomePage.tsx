@@ -11,12 +11,13 @@ import Loading from '../components/bar/Loading';
 // ヒーロー見出しのネタ文(一定間隔でランダムに切替)。hi がハイライト語。
 const HERO_PHRASES: { pre: string; hi: string; post: string }[] = [
   { pre: 'ケモナーの', hi: '闇', post: '' },
-  { pre: '表に出せない', hi: '趣味', post: '' },
-  { pre: '', hi: '獣性', post: 'の記録' },
-  { pre: '未公開の', hi: '標本', post: '' },
-  { pre: '陽の当たらない', hi: '収蔵', post: '' },
-  { pre: '声にしない', hi: '欲', post: '' },
-  { pre: '毛皮の', hi: '裏側', post: '' },
+  { pre: '公衆', hi: 'トイレ', post: '' },
+  { pre: '', hi: 'ＡＶ', post: '（アニマルビデオ）' },
+  { pre: '肉', hi: '便器', post: '' },
+  { pre: 'ケモナーの', hi: '種壺', post: '' },
+  { pre: 'ベアバック', hi: 'ラブ', post: '' },
+  { pre: 'ロワ汁', hi: 'タンク', post: '' },
+  { pre: 'オフパコ', hi: 'せんにん', post: '' },
 ];
 const HERO_ROTATE_MS = 7000;
 
