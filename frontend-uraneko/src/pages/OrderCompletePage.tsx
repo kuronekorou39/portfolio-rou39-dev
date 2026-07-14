@@ -134,6 +134,15 @@ export default function OrderCompletePage() {
   // 状態が変わったときだけ左パネルをクロスフェードで入れ替える(ポーリング毎には再生しない)。
   const phase = deliverable ? 'delivered' : awaitingPayment ? 'pay' : failed ? 'failed' : 'wait';
 
+  // 困ったとき用の問い合わせメール(注文番号・通貨をあらかじめ差し込む)。
+  const helpMailto =
+    'mailto:contact@rou39.com?subject=' +
+    encodeURIComponent('uraneko 支払いについて') +
+    '&body=' +
+    encodeURIComponent(
+      `注文番号: ${order.order_id}\n通貨: ${(pay?.currency ?? order.currency ?? '').toUpperCase()}\n\n(状況をお書きください。取引所の「送金済み」記録=txid があれば貼っていただけると早いです)`,
+    );
+
   // 見出し・サブラベルを状態別に
   const label = paid
     ? 'DELIVERED'
@@ -461,6 +470,78 @@ export default function OrderCompletePage() {
                 <br />※ 最終確認の完了時にはご登録のメールにも受け渡しリンクをお送りします。
               </p>
             )}
+
+          {/* 困ったとき用の案内(受け渡し前の全状態=送金待ち/QR/期限切れ/失敗 等で表示) */}
+          {!deliverable && (
+            <div
+              style={{
+                marginTop: 32,
+                padding: '18px 20px',
+                border: '1px solid rgba(214,183,110,0.35)',
+                background: 'rgba(214,183,110,0.05)',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 14,
+                  fontWeight: 300,
+                  letterSpacing: 1,
+                  color: 'var(--color-gold-bright)',
+                  marginBottom: 8,
+                }}
+              >
+                こまったら、気軽に連絡してね
+              </div>
+              <p
+                style={{
+                  fontFamily: 'var(--font-serif-jp)',
+                  fontSize: 12,
+                  lineHeight: 2,
+                  letterSpacing: 1,
+                  color: 'var(--muted)',
+                  fontWeight: 300,
+                  margin: 0,
+                }}
+              >
+                「<b style={{ color: 'var(--color-fg)' }}>送金したのに反映されない</b>」「やり方がわからない」「入金できたか不安」——
+                どんなことでも大丈夫です。はじめての暗号資産でも、こちらで一緒に確認します。下のメールに
+                <b style={{ color: 'var(--color-fg)' }}>注文番号を書き添えて</b>ご連絡ください。
+              </p>
+              <div
+                style={{
+                  marginTop: 12,
+                  display: 'flex',
+                  gap: 16,
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                }}
+              >
+                <a
+                  href={helpMailto}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 13,
+                    letterSpacing: 1,
+                    color: 'var(--color-gold-bright)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  contact@rou39.com
+                </a>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    letterSpacing: 1,
+                    color: 'var(--dim)',
+                  }}
+                >
+                  注文番号: {order.order_id.slice(0, 8).toUpperCase()}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div style={{ marginTop: 48, display: 'flex', gap: 14 }}>
             <Link to="/" style={{ textDecoration: 'none' }}>
