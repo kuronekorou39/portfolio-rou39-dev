@@ -4,7 +4,8 @@ import { api, type OrderSummary } from '../lib/api';
 import { fmtJst } from '../lib/format';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
-import { getIdToken, beginGoogleLogin } from '../lib/auth';
+import { getIdToken } from '../lib/auth';
+import AuthModal from '../components/AuthModal';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
@@ -62,6 +63,7 @@ export default function MyOrdersPage() {
   const { user, loading } = useAuth();
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   async function handleCancel(orderId: string) {
@@ -121,12 +123,13 @@ export default function MyOrdersPage() {
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            void beginGoogleLogin();
+            setAuthOpen(true);
           }}
           style={{ textDecoration: 'none' }}
         >
           <BarButton size="lg">SIGN IN · ログイン</BarButton>
         </a>
+        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} googleReturnTo="/my/orders" />
       </div>
     );
 

@@ -1,8 +1,8 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { createHash, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { docClient } from '../../lib/dynamo';
-import { ok, badRequest, notFound, conflict, serverError } from '../../lib/response';
+import { ok, badRequest, notFound, conflict, forbidden, serverError } from '../../lib/response';
 import { createPayment, MIN_INVOICE_JPY } from '../../lib/uraneko/nowpayments';
 import {
   hasAvailableToken,
@@ -27,39 +27,25 @@ const ORDERS_TABLE = process.env.ORDERS_TABLE!;
 const SITE_BASE_URL = process.env.URANEKO_SITE_URL!; // https://uraneko.rou39.com
 const API_BASE_URL = process.env.URANEKO_API_URL!; // https://uraneko.rou39.com/api
 
-function emailHash(email: string): string {
-  return createHash('sha256').update(email.trim().toLowerCase()).digest('hex').slice(0, 16);
-}
-
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     if (event.httpMethod !== 'POST') return badRequest('Unsupported method');
 
     const body = JSON.parse(event.body || '{}');
-    const { product_id, email, pay_currency, coupon_code } = body as {
+    const { product_id, pay_currency, coupon_code } = body as {
       product_id?: string;
-      email?: string;
       pay_currency?: string;
       coupon_code?: string;
     };
     if (!product_id) return badRequest('product_id required');
 
-    // /checkout はオーソライザー無し(ゲスト併用)なので、Authorization ヘッダーの
-    // Cognito IDトークンを Lambda 側で検証して会員か判定する。無効/無ければゲスト。
+    // 購入はログイン必須(ゲスト=任意メアドでの受け渡し=なりすまし/嫌がらせ経路を廃止)。
+    // /checkout はオーソライザー無しなので Authorization の Cognito IDトークンを Lambda 側で検証。
     const member = await verifyMember(authHeaderOf(event));
-
-    // ログインユーザー or ゲストの判定
-    let user_id: string;
-    let buyerEmail: string;
-    if (member) {
-      user_id = member.sub;
-      buyerEmail = member.email || email || '';
-      if (!buyerEmail) return badRequest('email required');
-    } else {
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return badRequest('email_invalid');
-      user_id = `guest:${emailHash(email)}`;
-      buyerEmail = email;
-    }
+    if (!member) return forbidden('login_required');
+    const user_id = member.sub;
+    const buyerEmail = member.email || '';
+    if (!buyerEmail) return badRequest('email required'); // 認証済みだが email クレーム欠落(通常起きない)
 
     // 商品取得
     const prodRes = await docClient.send(

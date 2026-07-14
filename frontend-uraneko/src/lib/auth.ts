@@ -1,6 +1,8 @@
 import {
   CognitoUserPool,
   CognitoUser,
+  CognitoUserAttribute,
+  AuthenticationDetails,
   CognitoUserSession,
   CognitoIdToken,
   CognitoAccessToken,
@@ -61,6 +63,78 @@ export function getIdToken(): Promise<string | null> {
 
 export function signOut(): void {
   userPool.getCurrentUser()?.signOut();
+}
+
+// ===== メール + パスワード認証(Google と併用)=====
+// uraneko-users プールは email 属性のみ(portfolio の nickname/picture は持たない)。
+
+/** 新規登録。成功後にメールへ確認コードが送られる(confirmSignUp で確定)。 */
+export function signUp(email: string, password: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const attributes = [new CognitoUserAttribute({ Name: 'email', Value: email })];
+    userPool.signUp(email, password, attributes, [], (err) => {
+      if (err) return reject(new Error(err.message));
+      resolve();
+    });
+  });
+}
+
+/** 登録の確認コード検証。 */
+export function confirmSignUp(email: string, code: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    new CognitoUser({ Username: email, Pool: userPool }).confirmRegistration(code, true, (err) => {
+      if (err) return reject(new Error(err.message));
+      resolve();
+    });
+  });
+}
+
+/** 確認コードの再送。 */
+export function resendConfirmationCode(email: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    new CognitoUser({ Username: email, Pool: userPool }).resendConfirmationCode((err) => {
+      if (err) return reject(new Error(err.message));
+      resolve();
+    });
+  });
+}
+
+/** メール + パスワードでサインイン。 */
+export function signIn(email: string, password: string): Promise<AuthUser> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+    cognitoUser.authenticateUser(
+      new AuthenticationDetails({ Username: email, Password: password }),
+      {
+        onSuccess: (session) => resolve(sessionToUser(session)),
+        onFailure: (err) => reject(new Error(err.message)),
+      },
+    );
+  });
+}
+
+/** パスワード再設定の開始(確認コードをメールへ送る)。 */
+export function forgotPassword(email: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    new CognitoUser({ Username: email, Pool: userPool }).forgotPassword({
+      onSuccess: () => resolve(),
+      onFailure: (err) => reject(new Error(err.message)),
+    });
+  });
+}
+
+/** パスワード再設定の確定(コード + 新パスワード)。 */
+export function confirmForgotPassword(
+  email: string,
+  code: string,
+  newPassword: string,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    new CognitoUser({ Username: email, Pool: userPool }).confirmPassword(code, newPassword, {
+      onSuccess: () => resolve(),
+      onFailure: (err) => reject(new Error(err.message)),
+    });
+  });
 }
 
 // --- PKCE (RFC 7636) + state による OAuth 認可コードフローの保護 ---

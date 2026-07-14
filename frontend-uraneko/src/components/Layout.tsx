@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { beginGoogleLogin } from '../lib/auth';
+import AuthModal from './AuthModal';
 
 const NAV_ITEMS: { to: string; label: string }[] = [
   { to: '/', label: 'INDEX' },
@@ -10,6 +11,7 @@ const NAV_ITEMS: { to: string; label: string }[] = [
 export default function Layout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <div
@@ -167,7 +169,7 @@ export default function Layout() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                void beginGoogleLogin();
+                setAuthOpen(true);
               }}
               style={{
                 color: 'var(--color-gold)',
@@ -180,6 +182,12 @@ export default function Layout() {
           )}
         </div>
       </header>
+
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        googleReturnTo={location.pathname}
+      />
 
       {/* 本文 */}
       <main

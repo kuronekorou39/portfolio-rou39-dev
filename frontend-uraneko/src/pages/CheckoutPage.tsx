@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
-import { getIdToken, beginGoogleLogin } from '../lib/auth';
+import { getIdToken } from '../lib/auth';
+import AuthModal from '../components/AuthModal';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
 import BarButton from '../components/bar/BarButton';
@@ -59,7 +60,6 @@ function friendlyError(msg: string): string {
   return ERROR_MESSAGES[msg] ?? msg;
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // フォーム共通スタイル
 const labelStyle: CSSProperties = {
@@ -184,11 +184,9 @@ export default function CheckoutPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
-  // ステージ: 01 アカウント → 02 支払い
+  // ステージ: 01 アカウント(ログイン)→ 02 支払い
   const [stage, setStage] = useState<'account' | 'payment'>('account');
-  const [guestConfirmed, setGuestConfirmed] = useState(false);
-  const [email, setEmail] = useState('');
-  const [emailErr, setEmailErr] = useState<string | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
 
   // LTC をデフォルト(手数料が安く単一ネットワークで送金事故が少ないため初心者に安全)
   const [currency, setCurrency] = useState('ltc');
@@ -206,11 +204,10 @@ export default function CheckoutPage() {
     api.getProduct(id).then(setProduct).catch((e) => setLoadErr(e.message));
   }, [id]);
 
-  // ログイン済みなら会員選択を飛ばす。途中でサインアウトしたら会員選択に戻す。
+  // 購入はログイン必須。ログイン済みなら支払いへ、未ログインならログイン要求ステージへ。
   useEffect(() => {
-    if (user) setStage('payment');
-    else if (!guestConfirmed) setStage('account');
-  }, [user, guestConfirmed]);
+    setStage(user ? 'payment' : 'account');
+  }, [user]);
 
   // 別ドメインの決済ページへ遷移後にブラウザバックすると、bfcache(戻る/進むキャッシュ)が
   // submitting=true のままページを復元し、ボタンが「処理中」で固まる。bfcache 復帰
@@ -231,21 +228,6 @@ export default function CheckoutPage() {
   const selMethod = PAY_METHODS.find((m) => m.id === payMethod)!;
   // 未実装の支払い方法を選んでいる間は購入不可(無料購入は方法不問)
   const methodBlocked = !isFree && payMethod !== 'crypto';
-
-  function proceedAsGuest() {
-    if (!EMAIL_RE.test(email)) {
-      setEmailErr('メールアドレスの形式が不正。');
-      return;
-    }
-    setEmailErr(null);
-    setGuestConfirmed(true);
-    setStage('payment');
-  }
-
-  function backToAccount() {
-    setGuestConfirmed(false);
-    setStage('account');
-  }
 
   async function applyCoupon() {
     if (!product) return;
@@ -289,22 +271,17 @@ export default function CheckoutPage() {
     }
     setSubmitting(true);
     try {
-      let idToken: string | null = null;
-      let buyerEmail: string | undefined;
-      if (user) {
-        idToken = await getIdToken();
-        if (!idToken) {
-          setErr('セッション切れ。ログインし直してください。');
-          setSubmitting(false);
-          return;
-        }
-      } else {
-        buyerEmail = email;
+      // 購入はログイン必須。受け渡し先は認証済みの本人メールに固定(サーバ側で決定)。
+      const idToken = await getIdToken();
+      if (!idToken) {
+        setErr('ログインが必要です。ログインし直してください。');
+        setSubmitting(false);
+        setStage('account');
+        return;
       }
       const res = await api.checkout(
         {
           product_id: product.product_id,
-          email: buyerEmail,
           pay_currency: isFree ? undefined : currency || undefined,
           coupon_code: applied?.code,
         },
@@ -350,15 +327,9 @@ export default function CheckoutPage() {
             {product.title} — ¥ {product.price_jpy.toLocaleString()}
           </div>
 
-          <SectionLabel style={{ marginBottom: 14 }}>— ACCOUNT · 購入方法</SectionLabel>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
-              gap: 24,
-            }}
-          >
-            <BrassFrame padding="28px 28px">
+          <SectionLabel style={{ marginBottom: 14 }}>— ACCOUNT · ログイン</SectionLabel>
+          <div style={{ maxWidth: 420, margin: '0 auto' }}>
+            <BrassFrame padding="30px 30px">
               <div
                 style={{
                   fontFamily: 'var(--font-serif-jp)',
@@ -369,65 +340,24 @@ export default function CheckoutPage() {
                   marginBottom: 10,
                 }}
               >
-                ログインして購入
+                購入にはログインが必要です
               </div>
-              <div style={{ ...noteStyle, marginBottom: 20 }}>
-                Google アカウントでログイン。
+              <div style={{ ...noteStyle, marginBottom: 22 }}>
+                Google、またはメールアドレスで登録・ログインできます。
                 <br />
-                購入記録が残り、リンクをいつでも再取得できる。
+                受け渡しは登録メールに固定され、購入記録(LIBRARY)からいつでも再取得できます。
               </div>
-              <BarButton
-                onClick={() => void beginGoogleLogin(`/checkout/${id}`)}
-                style={{ width: '100%' }}
-              >
-                SIGN IN · Google でログイン
-              </BarButton>
-            </BrassFrame>
-
-            <BrassFrame padding="28px 28px">
-              <div
-                style={{
-                  fontFamily: 'var(--font-serif-jp)',
-                  fontSize: 16,
-                  fontWeight: 300,
-                  letterSpacing: 3,
-                  color: 'var(--color-fg)',
-                  marginBottom: 10,
-                }}
-              >
-                ログインせずに購入
-              </div>
-              <div style={{ ...noteStyle, marginBottom: 20 }}>
-                記録は残らない。
-                <br />
-                リンクは入力したアドレスに送る。
-              </div>
-              <label style={labelStyle}>EMAIL · 送信先</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                style={inputStyle}
-              />
-              {emailErr && (
-                <p
-                  style={{
-                    marginTop: 8,
-                    fontFamily: 'var(--font-serif-jp)',
-                    fontSize: 12,
-                    color: '#e66',
-                  }}
-                >
-                  {emailErr}
-                </p>
-              )}
-              <BarButton onClick={proceedAsGuest} style={{ width: '100%', marginTop: 16 }}>
-                このアドレスで進む
+              <BarButton onClick={() => setAuthOpen(true)} style={{ width: '100%' }}>
+                SIGN IN · ログイン / 新規登録
               </BarButton>
             </BrassFrame>
           </div>
         </div>
+        <AuthModal
+          isOpen={authOpen}
+          onClose={() => setAuthOpen(false)}
+          googleReturnTo={`/checkout/${id}`}
+        />
       </div>
     );
   }
@@ -469,7 +399,7 @@ export default function CheckoutPage() {
                 overflowWrap: 'anywhere',
               }}
             >
-              {user ? user.email : email}
+              {user?.email}
             </span>
             <span
               style={{
@@ -480,19 +410,7 @@ export default function CheckoutPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {user ? '会員 · 記録あり' : 'ゲスト · 記録なし'}
-              {!user && (
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    backToAccount();
-                  }}
-                  style={{ marginLeft: 10, color: 'var(--color-gold)', textDecoration: 'underline' }}
-                >
-                  変更
-                </a>
-              )}
+              会員 · 記録あり
             </span>
           </div>
 
