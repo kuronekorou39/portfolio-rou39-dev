@@ -123,6 +123,22 @@ export function forgotPassword(email: string): Promise<void> {
   });
 }
 
+/** 退会(自分のアカウントを削除)。有効なセッションが必要。 */
+export function deleteAccount(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = userPool.getCurrentUser();
+    if (!cognitoUser) return reject(new Error('Not signed in'));
+    cognitoUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
+      if (err || !session?.isValid()) return reject(new Error('Session invalid'));
+      cognitoUser.deleteUser((delErr) => {
+        if (delErr) return reject(new Error(delErr.message));
+        cognitoUser.signOut();
+        resolve();
+      });
+    });
+  });
+}
+
 /** パスワード再設定の確定(コード + 新パスワード)。 */
 export function confirmForgotPassword(
   email: string,

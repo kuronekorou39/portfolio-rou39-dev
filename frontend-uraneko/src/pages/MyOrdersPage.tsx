@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, type OrderSummary } from '../lib/api';
 import { fmtJst } from '../lib/format';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
-import { getIdToken } from '../lib/auth';
+import { getIdToken, deleteAccount } from '../lib/auth';
 import AuthModal from '../components/AuthModal';
 import Ornament from '../components/bar/Ornament';
 import SectionLabel from '../components/bar/SectionLabel';
@@ -60,11 +60,28 @@ function StatusBadge({ status }: { status: OrderSummary['status'] }) {
 
 export default function MyOrdersPage() {
   const isNarrow = useIsNarrow();
-  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { user, loading, refresh } = useAuth();
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    setDeleteErr(null);
+    try {
+      await deleteAccount();
+      await refresh();
+      navigate('/', { replace: true });
+    } catch (e) {
+      setDeleteErr('退会処理に失敗しました: ' + (e as Error).message);
+      setDeleting(false);
+    }
+  }
 
   async function handleCancel(orderId: string) {
     if (!window.confirm('この注文をキャンセルしますか?(確保していた在庫は開放されます)')) return;
@@ -417,6 +434,111 @@ export default function MyOrdersPage() {
           ※「支払い待ち」の注文は、入金が確認できないまま一定時間が過ぎると自動的にキャンセルされます(在庫は開放されます)。「支払額不足」は個別にご連絡します。
         </p>
       )}
+
+      {/* 退会 */}
+      <Ornament style={{ margin: '56px 0 24px' }} />
+      <div style={{ textAlign: 'center' }}>
+        <SectionLabel style={{ marginBottom: 14 }}>— MEMBERSHIP</SectionLabel>
+        {!confirmDelete ? (
+          <button
+            onClick={() => {
+              setConfirmDelete(true);
+              setDeleteErr(null);
+            }}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(168,166,158,0.35)',
+              color: 'var(--muted)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              letterSpacing: 3,
+              padding: '9px 20px',
+              cursor: 'pointer',
+            }}
+          >
+            退会(アカウント削除)
+          </button>
+        ) : (
+          <div style={{ maxWidth: 460, margin: '0 auto' }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-serif-jp)',
+                fontSize: 13,
+                fontWeight: 300,
+                lineHeight: 1.9,
+                letterSpacing: 1,
+                color: 'var(--color-fg)',
+                marginBottom: 6,
+              }}
+            >
+              本当に退会しますか?
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-serif-jp)',
+                fontSize: 11,
+                fontWeight: 300,
+                lineHeight: 1.9,
+                letterSpacing: 1,
+                color: 'var(--muted)',
+                marginBottom: 20,
+              }}
+            >
+              アカウントは即時削除され、再ログインはできなくなります。購入済みの記録(LIBRARY)へのアクセスも失われます。この操作は取り消せません。
+              <br />
+              ※ 購入時にお送りした受け渡しメールのリンクは引き続きご利用いただけます。
+            </p>
+            {deleteErr && (
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 1,
+                  color: '#e66',
+                  marginBottom: 16,
+                }}
+              >
+                {deleteErr}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => void handleDeleteAccount()}
+                disabled={deleting}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(230,102,102,0.6)',
+                  color: '#e66',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  padding: '10px 22px',
+                  cursor: deleting ? 'default' : 'pointer',
+                  opacity: deleting ? 0.5 : 1,
+                }}
+              >
+                {deleting ? '処理中…' : '退会を確定する'}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(168,166,158,0.35)',
+                  color: 'var(--muted)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  letterSpacing: 3,
+                  padding: '10px 22px',
+                  cursor: deleting ? 'default' : 'pointer',
+                }}
+              >
+                やめる
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
