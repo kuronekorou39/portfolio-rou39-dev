@@ -79,6 +79,39 @@ async function setOrderStatus(
   }
 }
 
+// 決済確定時の実受領額を注文レコードに記録する(会計/税務用)。
+// 遷移(status/paid_at)は fulfill が所有するので、ここは金額メタのみを best-effort で書く。
+// 失敗しても受け渡し本体には影響させない(catch して return)。
+async function recordSettlement(
+  order_id: string,
+  p: { actually_paid?: number | string; outcome_amount?: number | string; outcome_currency?: string },
+): Promise<void> {
+  const num = (v: unknown): number | undefined => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  };
+  const sets: string[] = [];
+  const values: Record<string, unknown> = {};
+  const ap = num(p.actually_paid);
+  const oa = num(p.outcome_amount);
+  if (ap !== undefined) (sets.push('actually_paid = :ap'), (values[':ap'] = ap));
+  if (oa !== undefined) (sets.push('outcome_amount = :oa'), (values[':oa'] = oa));
+  if (p.outcome_currency) (sets.push('outcome_currency = :oc'), (values[':oc'] = String(p.outcome_currency).toLowerCase()));
+  if (!sets.length) return; // 記録できる数値が何もない(free 購入や欠落 IPN)
+  try {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: ORDERS_TABLE,
+        Key: { order_id },
+        UpdateExpression: 'SET ' + sets.join(', '),
+        ExpressionAttributeValues: values,
+      }),
+    );
+  } catch (err) {
+    console.error('recordSettlement failed (non-fatal):', order_id, err);
+  }
+}
+
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     if (event.httpMethod !== 'POST') return badRequest('Unsupported method');
@@ -100,6 +133,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       order_id?: string;
       actually_paid?: number | string; // 実際に受領した数量
       pay_amount?: number | string; // 要求した数量
+      outcome_amount?: number | string; // 手数料控除後に当方が受領する数量
+      outcome_currency?: string; // outcome_amount の通貨
     };
 
     const order_id = payload.order_id;
@@ -165,6 +200,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             `late-payment recovered [confirming] order=${order_id} product=${order.product_id} (was ${order.status})`,
           );
         }
+        await recordSettlement(order_id, payload); // 会計用の実受領額を記録
         return ok({ ok: true, status: 'confirming' });
       }
 
@@ -187,6 +223,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             `late-payment recovered [paid] order=${order_id} product=${order.product_id} (was ${order.status})`,
           );
         }
+        await recordSettlement(order_id, payload); // 会計用の実受領額を記録(最終確定値)
         return ok({ ok: true, status: 'paid' });
       }
 

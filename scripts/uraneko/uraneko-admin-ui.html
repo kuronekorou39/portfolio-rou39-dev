@@ -130,6 +130,7 @@
   <button class="tab active" data-tab="products" onclick="showTab('products')">商品</button>
   <button class="tab" data-tab="orders" onclick="showTab('orders')">注文</button>
   <button class="tab" data-tab="coupons" onclick="showTab('coupons')">クーポン</button>
+  <button class="tab" data-tab="account" onclick="showTab('account')">会計</button>
   <button class="tab" data-tab="maint" onclick="showTab('maint')">メンテナンス</button>
 </nav>
 
@@ -299,6 +300,40 @@
         <button onclick="addCoupon()">発行</button>
       </div>
       <div class="hint">100%(無料)クーポンはコード16文字以上必須。空欄なら128bitで自動生成します。運用では利用上限を小さく・有効期限つきを推奨(流出時の被害を限定)。</div>
+    </section>
+  </div>
+
+  <!-- ===== 会計 ===== -->
+  <div id="tab-account" class="view" hidden>
+    <section>
+      <h2>集計 · ACCOUNTING
+        <button class="small" onclick="loadAccounting()">更新</button>
+        <button class="small" onclick="downloadAccCsv('year')">この年の明細CSV</button>
+        <button class="small" onclick="downloadAccCsv('all')">全期間の明細CSV</button>
+      </h2>
+      <div id="acc_cards" style="display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 18px"></div>
+
+      <div class="sub">年次サマリ · BY YEAR</div>
+      <table>
+        <thead><tr><th>年</th><th style="text-align:right">確定件数</th><th style="text-align:right">売上高(確定)</th><th style="text-align:right">割引総額</th><th style="text-align:right">未確定(参考)</th></tr></thead>
+        <tbody id="acc_years"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
+      </table>
+
+      <div class="sub" style="margin-top:20px">月次内訳 · MONTHLY
+        <select id="acc_year" onchange="renderAccounting()" style="margin-left:8px"></select>
+      </div>
+      <table>
+        <thead><tr><th>月</th><th style="text-align:right">確定件数</th><th style="text-align:right">売上高(確定)</th><th>通貨別内訳(円)</th></tr></thead>
+        <tbody id="acc_months"><tr><td colspan="4" class="muted">—</td></tr></tbody>
+      </table>
+
+      <div class="hint">
+        税務用の集計です。<b>確定売上=status が paid の注文</b>を、円建ての請求額(price_jpy)で計上します
+        (暗号資産で受け取っていても、日本では販売時の円価値で売上計上するため)。計上日は受渡確定日(paid_at)。<br>
+        「未確定(参考)」は confirming(入金検知済み・最終確認待ち)で、まだ確定していない分です。<br>
+        CSV には実受領数量・手数料控除後の受領数量(2026-07-14 以降の注文のみ記録)も含みます。<b>NOWPayments の決済手数料</b>は経費ですが、
+        過去分は注文に保存されていないため、正確な手数料は NOWPayments 側の明細で突合してください。
+      </div>
     </section>
   </div>
 
@@ -747,6 +782,143 @@ async function showUrl(order_id) {
   } catch (e) { toast(e.message, true); }
 }
 
+// ---- 会計 · ACCOUNTING ----
+let accOrders = [];
+// 計上日を JST の YYYY-MM-DD で返す(paid_at 優先、無ければ created_at)。
+// UTC の ISO を素朴に slice すると深夜の注文が前日/前年にずれるため JST 変換する。
+function accDate(o) {
+  const iso = o.paid_at || o.created_at;
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); // YYYY-MM-DD
+}
+function accAgg(list) {
+  const a = { n: 0, jpy: 0, discount: 0, cur: {} };
+  list.forEach((o) => {
+    a.n++;
+    a.jpy += Number(o.price_jpy || 0);
+    a.discount += Number(o.discount_jpy || 0);
+    const c = (o.currency || o.pay_currency || '-').toUpperCase();
+    a.cur[c] = (a.cur[c] || 0) + Number(o.price_jpy || 0);
+  });
+  return a;
+}
+function curBreakdown(cur) {
+  // 金額0の通貨(無料クーポン注文など)は内訳のノイズになるので省く。
+  const ks = Object.keys(cur).filter((k) => Number(cur[k]) > 0).sort();
+  return ks.length ? ks.map((k) => esc(k) + ' ' + yen(cur[k])).join(' / ') : '<span class="muted">—</span>';
+}
+
+async function loadAccounting() {
+  try {
+    accOrders = await api('GET', '/api/orders');
+    const sel = document.getElementById('acc_year');
+    const years = [...new Set(accOrders.map(accDate).map((d) => d.slice(0, 4)).filter(Boolean))].sort().reverse();
+    const cur = accDate({ created_at: new Date().toISOString() }).slice(0, 4);
+    if (cur && !years.includes(cur)) years.unshift(cur);
+    const prev = sel.value;
+    sel.innerHTML = years.map((y) => '<option value="' + y + '">' + y + '年</option>').join('');
+    if (years.includes(prev)) sel.value = prev;
+    renderAccounting();
+  } catch (e) {
+    toast(e.message, true);
+    document.getElementById('acc_years').innerHTML = '<tr><td colspan="5" class="err">' + esc(e.message) + '</td></tr>';
+  }
+}
+
+function renderAccounting() {
+  const year = document.getElementById('acc_year').value;
+  const paidAll = accOrders.filter((o) => o.status === 'paid');
+  const confAll = accOrders.filter((o) => o.status === 'confirming');
+
+  // 年次サマリ(全年)
+  const years = [...new Set(paidAll.concat(confAll).map(accDate).map((d) => d.slice(0, 4)).filter(Boolean))].sort().reverse();
+  const yt = document.getElementById('acc_years');
+  yt.innerHTML = years.length
+    ? years.map((y) => {
+        const p = accAgg(paidAll.filter((o) => accDate(o).slice(0, 4) === y));
+        const cy = confAll.filter((o) => accDate(o).slice(0, 4) === y);
+        const cJpy = cy.reduce((s, o) => s + Number(o.price_jpy || 0), 0);
+        return '<tr>' +
+          '<td class="mono">' + esc(y) + '</td>' +
+          '<td style="text-align:right">' + p.n + '</td>' +
+          '<td style="text-align:right">' + yen(p.jpy) + '</td>' +
+          '<td style="text-align:right" class="muted">' + yen(p.discount) + '</td>' +
+          '<td style="text-align:right" class="muted">' + (cy.length ? cy.length + '件 ' + yen(cJpy) : '—') + '</td>' +
+          '</tr>';
+      }).join('')
+    : '<tr><td colspan="5" class="muted">確定売上なし</td></tr>';
+
+  // カード(選択年)
+  const yp = accAgg(paidAll.filter((o) => accDate(o).slice(0, 4) === year));
+  const confY = confAll.filter((o) => accDate(o).slice(0, 4) === year);
+  const confJpy = confY.reduce((s, o) => s + Number(o.price_jpy || 0), 0);
+  const card = (label, val, sub) =>
+    '<div style="flex:1;min-width:150px;border:1px solid var(--line);padding:12px 14px">' +
+    '<div class="muted" style="font-size:11px;letter-spacing:1px">' + esc(label) + '</div>' +
+    '<div style="font-size:22px;margin-top:4px">' + val + '</div>' +
+    (sub ? '<div class="muted" style="font-size:11px;margin-top:2px">' + esc(sub) + '</div>' : '') +
+    '</div>';
+  document.getElementById('acc_cards').innerHTML =
+    card(year + '年 確定売上高', yen(yp.jpy), yp.n + ' 件') +
+    card('割引総額', yen(yp.discount), '') +
+    card('通貨別内訳', '<span style="font-size:14px">' + curBreakdown(yp.cur) + '</span>', '') +
+    card('未確定(参考)', yen(confJpy), confY.length + ' 件 confirming');
+
+  // 月次内訳(選択年)
+  const rows = [];
+  for (let m = 1; m <= 12; m++) {
+    const mm = String(m).padStart(2, '0');
+    const list = paidAll.filter((o) => { const d = accDate(o); return d.slice(0, 4) === year && d.slice(5, 7) === mm; });
+    if (!list.length) continue;
+    const a = accAgg(list);
+    rows.push('<tr><td class="mono">' + year + '-' + mm + '</td><td style="text-align:right">' + a.n +
+      '</td><td style="text-align:right">' + yen(a.jpy) + '</td><td>' + curBreakdown(a.cur) + '</td></tr>');
+  }
+  document.getElementById('acc_months').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" class="muted">この年の確定売上なし</td></tr>';
+}
+
+function csvCell(v) {
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function downloadAccCsv(scope) {
+  const year = document.getElementById('acc_year').value;
+  const rows = accOrders
+    .filter((o) => o.status === 'paid')
+    .filter((o) => (scope === 'all' ? true : accDate(o).slice(0, 4) === year))
+    .sort((a, b) => accDate(a).localeCompare(accDate(b)));
+  if (!rows.length) { toast('対象の確定売上がありません', true); return; }
+  const header = ['計上日', '注文ID', '商品ID', '状態', '通貨', '請求額_円', '元価格_円', '割引_円', 'クーポン', '実受領数量', '受領数量_手数料控除後', '受領通貨', '決済ID'];
+  const lines = [header.join(',')];
+  rows.forEach((o) => {
+    lines.push([
+      accDate(o), o.order_id, o.product_id, o.status,
+      (o.currency || o.pay_currency || '').toUpperCase(),
+      Number(o.price_jpy || 0),
+      o.original_price_jpy != null ? Number(o.original_price_jpy) : '',
+      o.discount_jpy != null ? Number(o.discount_jpy) : '',
+      o.coupon_code || '',
+      o.actually_paid != null ? o.actually_paid : '',
+      o.outcome_amount != null ? o.outcome_amount : '',
+      (o.outcome_currency || '').toUpperCase(),
+      o.nowpayments_payment_id || '',
+    ].map(csvCell).join(','));
+  });
+  // Excel での文字化け回避に UTF-8 BOM を付与。改行は CRLF。
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'uraneko-sales-' + (scope === 'all' ? 'all' : year) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('CSV をダウンロード(' + rows.length + '件)');
+}
+
 // ---- クーポン ----
 async function loadCoupons() {
   const tbody = document.getElementById('coupons');
@@ -802,6 +974,7 @@ async function init() {
   await loadProducts();
   await loadCoupons();
   await loadOrders();
+  await loadAccounting();
 }
 init();
 </script>

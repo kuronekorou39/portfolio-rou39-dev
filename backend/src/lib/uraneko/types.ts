@@ -59,6 +59,10 @@ export interface Order {
   pay_currency?: string; // "ltc" | "btc"
   pay_network?: string;
   pay_valid_until?: string | null; // 送金先の有効期限(ISO)
+  // 決済確定時の実受領情報(NOWPayments IPN 由来・会計/税務用)。無料購入や旧注文では未設定。
+  actually_paid?: number; // 購入者が実際に送金した暗号資産の数量
+  outcome_amount?: number; // NOWPayments 手数料控除後に当方が受領する数量
+  outcome_currency?: string; // outcome_amount の通貨(例: "ltc")
   status: OrderStatus;
   created_at: string;
   paid_at: string | null;
