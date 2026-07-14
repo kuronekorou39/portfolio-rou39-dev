@@ -162,7 +162,7 @@ export default function OrderCompletePage() {
     : order.status === 'cancelled'
     ? '取消済み'
     : order.status === 'expired'
-    ? '期限切れ'
+    ? '受付時間の経過'
     : order.status === 'failed'
     ? '決済に失敗'
     : '送金待ち';
@@ -172,6 +172,8 @@ export default function OrderCompletePage() {
     ? 'payment detected — download now.'
     : underpaid
     ? 'amount received is insufficient.'
+    : order.status === 'expired' || order.status === 'failed'
+    ? "we'll deliver once your payment lands."
     : failed
     ? 'this order did not complete.'
     : 'waiting for your payment.';
@@ -406,10 +408,11 @@ export default function OrderCompletePage() {
                 ネットワークで送金してください。
                 <br />※ 送金が検知されると、この画面のまま自動でダウンロードに切り替わります(NOWPayments
                 の画面で待つ必要はありません)。
+                <br />※ 初めて取引所から送金する場合、出金がセキュリティ審査で保留されることがあります(数分〜数時間)。
+                送金後はこの画面を閉じていただいて構いません。着金し次第そのまま自動でお渡しし、ご登録のメールにも受け渡しリンクをお送りします。
                 {pay.currency === 'btc' && (
                   <>
                     <br />※ BTC はネットワークの都合で反映まで数分〜30分程度かかることがあります。
-                    この画面を閉じても、確定後にご登録のメールへ受け渡しリンクをお送りします。
                   </>
                 )}
               </p>
@@ -447,6 +450,27 @@ export default function OrderCompletePage() {
             >
               お支払いいただいた額が不足しています。恐れ入りますが、こちらで確認のうえ個別にご連絡いたします。
               ご不明な点は注文番号を添えてお問い合わせください。
+            </p>
+          )}
+
+          {/* expired/failed は遅延着金で自動復帰しうる。まだ間に合うことを前向きに伝える(取消は除く) */}
+          {(order.status === 'expired' || order.status === 'failed') && (
+            <p
+              style={{
+                fontFamily: 'var(--font-serif-jp)',
+                fontSize: 12.5,
+                letterSpacing: 1,
+                color: 'var(--color-gold)',
+                marginTop: 14,
+                lineHeight: 2,
+                fontWeight: 300,
+              }}
+            >
+              受付の確保時間を過ぎましたが、<b style={{ color: 'var(--color-fg)' }}>まだ間に合います</b>。
+              すでに送金がお済みか、これから着金する場合、<b style={{ color: 'var(--color-fg)' }}>入金を検知し次第そのまま自動でお渡しし、ご登録のメールにも受け渡しリンクをお送りします</b>。
+              取引所の出金保留などで反映が遅れても大丈夫です。この画面は閉じていただいて構いません。
+              <br />
+              ※ 万一うまくいかない場合や、送金したのに数時間たっても届かない場合は、下記より注文番号を添えてご連絡ください。
             </p>
           )}
 

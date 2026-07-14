@@ -4,10 +4,13 @@ import type { VideoToken } from './types';
 
 const TOKENS_TABLE = process.env.TOKENS_TABLE!;
 // checkout 直後(入金前)の予約猶予。決済ページで送金を開始し、最初の検知が来るまでの時間。
-// 放置(送金しないまま離脱)はこの時間で在庫へ戻す。通貨で確認速度が違うので通貨別にする。
-// LTC 等は速い(2.5分/ブロック)が、BTC は遅く(~10分/ブロック)送金開始も遅れがちなので長め。
-const RESERVATION_TTL_SEC_DEFAULT = 30 * 60;
-const RESERVATION_TTL_SEC_BTC = 60 * 60;
+// 放置(送金しないまま離脱)はこの時間で在庫へ戻す。
+// 24時間に設定: 初心者は取引所の初回出金がセキュリティ審査で数時間〜翌日まで保留される
+// ことが多く、短い猶予だと保留中に「期限切れ」表示になって不安を与える。長めに確保することで
+// その間は在庫を押さえ続け、着金時にそのまま受け渡せる(表示上の失効を避ける)。
+// なお失効後の遅延着金も webhook が expired/failed から復帰させる(fulfill の FORWARD_FROM)。
+const RESERVATION_TTL_SEC_DEFAULT = 24 * 60 * 60;
+const RESERVATION_TTL_SEC_BTC = 24 * 60 * 60;
 export function initialReservationTtlSec(currency?: string): number {
   return (currency || '').toLowerCase() === 'btc'
     ? RESERVATION_TTL_SEC_BTC
