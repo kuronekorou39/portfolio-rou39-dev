@@ -5,14 +5,39 @@ import Ornament from '../components/bar/Ornament';
 import { useIsNarrow } from '../lib/useIsNarrow';
 
 /**
- * はじめての送金ガイド。図・表・カードを中心に、文章は最小限にする。
+ * はじめての送金ガイド。図・表・カード中心。文章は最小限。
  * 「初心者が、使っているアプリから何をどうすればいいか」わかることを目標にする。
- * 個人情報はページに一切書かない(第三者登録が要る人は contact 経由で個別対応=案B)。
- * 手数料など変動する具体値は断定せず「取引所しだい/要確認」で扱う。
+ * ステップ番号は最上部の概要(1買う/2送る/3受け取る)と説明アコーディオンを一致させる。
+ * コインアイコンはインライン SVG(外部リクエストなし=CSP 準拠)。
+ * 個人情報はページに書かない(第三者登録が要る人は contact 経由=案B)。手数料等の変動値は断定しない。
  */
 
 const CONTACT = 'contact@rou39.com';
 const CONTACT_MAILTO = 'mailto:' + CONTACT + '?subject=' + encodeURIComponent('uraneko 送金について');
+
+// ---------- コインアイコン(インライン SVG) ----------
+function CoinIcon({ coin, size = 30 }: { coin: 'btc' | 'ltc'; size?: number }) {
+  const isBtc = coin === 'btc';
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" role="img" aria-label={isBtc ? 'Bitcoin' : 'Litecoin'}>
+      <circle cx="16" cy="16" r="16" fill={isBtc ? '#F7931A' : '#345D9D'} />
+      <g transform={isBtc ? 'rotate(-8 16 16)' : ''}>
+        <text
+          x="16"
+          y="16"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontWeight="700"
+          fontSize="19"
+          fill="#fff"
+        >
+          {isBtc ? '₿' : 'Ł'}
+        </text>
+      </g>
+    </svg>
+  );
+}
 
 // ---------- 小物 ----------
 function Term({ label, children }: { label: string; children: ReactNode }) {
@@ -56,8 +81,18 @@ function Term({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Accordion({ title, children }: { title: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+function Accordion({
+  n,
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  n?: string;
+  title: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderTop: '1px solid var(--faint)' }}>
       <button
@@ -76,13 +111,26 @@ function Accordion({ title, children }: { title: string; children: ReactNode }) 
           textAlign: 'left',
         }}
       >
+        {n && (
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              letterSpacing: 2,
+              color: 'var(--color-gold)',
+              minWidth: 48,
+            }}
+          >
+            {n}
+          </span>
+        )}
         <span
           style={{
             flex: 1,
             fontFamily: 'var(--font-serif-jp)',
-            fontSize: 14,
+            fontSize: n ? 16 : 14,
             fontWeight: 300,
-            letterSpacing: 1,
+            letterSpacing: n ? 3 : 1,
             color: 'var(--color-fg)',
           }}
         >
@@ -103,7 +151,7 @@ function Accordion({ title, children }: { title: string; children: ReactNode }) 
         <div
           className="anim-soft"
           style={{
-            padding: '0 4px 20px',
+            padding: '0 4px 22px',
             fontFamily: 'var(--font-serif-jp)',
             fontSize: 13.5,
             lineHeight: 2,
@@ -114,6 +162,22 @@ function Accordion({ title, children }: { title: string; children: ReactNode }) 
           {children}
         </div>
       )}
+    </div>
+  );
+}
+
+function Sub({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        fontFamily: 'var(--font-serif-jp)',
+        fontSize: 13.5,
+        letterSpacing: 1,
+        color: 'var(--color-fg)',
+        margin: '16px 0 6px',
+      }}
+    >
+      ■ {children}
     </div>
   );
 }
@@ -136,7 +200,6 @@ function Warn({ children }: { children: ReactNode }) {
   );
 }
 
-// セクション見出し
 function Head({ label, title }: { label: string; title: string }) {
   return (
     <div style={{ marginTop: 44, marginBottom: 14 }}>
@@ -157,19 +220,13 @@ function Head({ label, title }: { label: string; title: string }) {
   );
 }
 
-// ○ / △ マーク
 function Mk({ good, children }: { good?: boolean; children: ReactNode }) {
   return <span style={{ color: good ? 'var(--color-gold-bright)' : 'var(--dim)' }}>{children}</span>;
 }
 
-// ---------- テーブル用スタイル ----------
+// テーブル
 const tWrap: CSSProperties = { overflowX: 'auto', margin: '6px 0' };
-const tbl: CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  minWidth: 460,
-  fontFamily: 'var(--font-serif-jp)',
-};
+const tbl: CSSProperties = { width: '100%', borderCollapse: 'collapse', minWidth: 460, fontFamily: 'var(--font-serif-jp)' };
 const th: CSSProperties = {
   textAlign: 'left',
   fontFamily: 'var(--font-mono)',
@@ -191,7 +248,6 @@ const td: CSSProperties = {
 };
 const tdName: CSSProperties = { ...td, color: 'var(--color-fg)', whiteSpace: 'nowrap' };
 
-// カード
 function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div
@@ -209,15 +265,14 @@ function Card({ children, style }: { children: ReactNode; style?: CSSProperties 
   );
 }
 
-// コイン札(記号 + 名前 + 一言 + ○/△)
 function CoinCard({
-  sym,
+  coin,
   name,
   tag,
   pros,
   cons,
 }: {
-  sym: string;
+  coin: 'btc' | 'ltc';
   name: string;
   tag: string;
   pros: string[];
@@ -225,40 +280,13 @@ function CoinCard({
 }) {
   return (
     <Card>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 26,
-            fontWeight: 300,
-            color: 'var(--color-gold-bright)',
-            lineHeight: 1,
-          }}
-        >
-          {sym}
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--font-serif-jp)',
-            fontSize: 16,
-            fontWeight: 300,
-            letterSpacing: 2,
-            color: 'var(--color-fg)',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <CoinIcon coin={coin} size={30} />
+        <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 16, fontWeight: 300, letterSpacing: 2, color: 'var(--color-fg)' }}>
           {name}
         </span>
       </div>
-      <div
-        style={{
-          fontFamily: 'var(--font-serif-jp)',
-          fontSize: 12,
-          color: 'var(--muted)',
-          fontWeight: 300,
-          marginBottom: 12,
-          lineHeight: 1.7,
-        }}
-      >
+      <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, color: 'var(--muted)', fontWeight: 300, marginBottom: 12, lineHeight: 1.7 }}>
         {tag}
       </div>
       <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, lineHeight: 1.9, fontWeight: 300 }}>
@@ -277,59 +305,21 @@ function CoinCard({
   );
 }
 
-// 流れの1ステップ(番号 + 見出し + タグ)
-function Flow({
-  n,
-  title,
-  tag,
-}: {
-  n: string;
-  title: string;
-  tag?: string;
-}) {
+// Yes/No 判定の分岐カード
+function Branch({ label, accent, steps }: { label: string; accent: string; steps: string[] }) {
   return (
-    <div
-      style={{
-        flex: 1,
-        minWidth: 150,
-        border: '1px solid var(--faint)',
-        background: 'var(--color-panel)',
-        padding: '16px 14px',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)' }}>
-        {n}
+    <div style={{ flex: 1, minWidth: 220 }}>
+      <div style={{ textAlign: 'center', marginBottom: 8 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: 3, color: accent }}>{label}</span>
+        <div aria-hidden style={{ color: 'var(--color-gold)', fontSize: 14, lineHeight: 1 }}>↓</div>
       </div>
-      <div
-        style={{
-          fontFamily: 'var(--font-serif-jp)',
-          fontSize: 14,
-          fontWeight: 300,
-          letterSpacing: 1,
-          color: 'var(--color-fg)',
-          margin: '6px 0',
-          lineHeight: 1.5,
-        }}
-      >
-        {title}
+      <div style={{ border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '16px 18px' }}>
+        {steps.map((s, i) => (
+          <div key={i} style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 2 }}>
+            {s}
+          </div>
+        ))}
       </div>
-      {tag && (
-        <div
-          style={{
-            display: 'inline-block',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 9.5,
-            letterSpacing: 1,
-            color: 'var(--color-gold-bright)',
-            border: '1px solid rgba(214,183,110,0.3)',
-            padding: '2px 7px',
-            marginTop: 2,
-          }}
-        >
-          {tag}
-        </div>
-      )}
     </div>
   );
 }
@@ -339,16 +329,9 @@ export default function GuidePage() {
   const arrow = isNarrow ? '↓' : '→';
 
   const steps = [
-    { n: '1', t: '買う', d: '取引所で BTC / LTC を用意' },
-    { n: '2', t: '送る', d: '表示のアドレスへ送金' },
-    { n: '3', t: '受け取る', d: '自動でダウンロード＋メール' },
-  ];
-
-  const flow = [
-    { n: 'STEP 1', title: '取引所で BTC / LTC を買う', tag: '' },
-    { n: 'STEP 2', title: '送付先に uraneko のアドレスを登録', tag: 'プライベート/本人' },
-    { n: 'STEP 3', title: 'QR で表示どおりの数量を送る', tag: '正確な数量' },
-    { n: 'STEP 4', title: 'uraneko で自動受け取り', tag: 'DL＋メール' },
+    { n: '1', t: '買う', d: '取引所で BTC / LTC を用意', coins: true },
+    { n: '2', t: '送る', d: '表示のアドレスへ送金', coins: false },
+    { n: '3', t: '受け取る', d: '自動でダウンロード＋メール', coins: false },
   ];
 
   const exchanges = [
@@ -374,37 +357,17 @@ export default function GuidePage() {
       >
         はじめての送金ガイド
       </h1>
-      <p
-        style={{
-          fontFamily: 'var(--font-serif-jp)',
-          fontSize: 14,
-          lineHeight: 2,
-          fontWeight: 300,
-          color: 'var(--muted)',
-          margin: '0 0 28px',
-        }}
-      >
+      <p style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 14, lineHeight: 2, fontWeight: 300, color: 'var(--muted)', margin: '0 0 28px' }}>
         暗号資産(BTC / LTC)での支払いを、はじめての方にもわかるように。基本は
         <b style={{ color: 'var(--color-fg)' }}>3ステップ</b>。
         <span style={{ color: 'var(--color-gold-bright)' }}>下線の用語</span>や項目はタップで開きます。
       </p>
 
-      {/* 3ステップ図解 */}
-      <div
-        className="anim-reveal"
-        style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', alignItems: 'stretch' }}
-      >
+      {/* 3ステップ概要 */}
+      <div className="anim-reveal" style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', alignItems: 'stretch' }}>
         {steps.map((s, i) => (
           <Fragment key={s.n}>
-            <div
-              style={{
-                flex: 1,
-                border: '1px solid var(--faint)',
-                background: 'var(--color-panel)',
-                padding: '22px 16px',
-                textAlign: 'center',
-              }}
-            >
+            <div style={{ flex: 1, border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '20px 16px', textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 3, color: 'var(--color-gold)', marginBottom: 8 }}>
                 STEP {s.n}
               </div>
@@ -414,6 +377,12 @@ export default function GuidePage() {
               <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.7 }}>
                 {s.d}
               </div>
+              {s.coins && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 10 }}>
+                  <CoinIcon coin="btc" size={22} />
+                  <CoinIcon coin="ltc" size={22} />
+                </div>
+              )}
             </div>
             {i < steps.length - 1 && (
               <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-gold)', fontSize: 18, padding: isNarrow ? '6px 0' : '0 12px' }}>
@@ -424,210 +393,226 @@ export default function GuidePage() {
         ))}
       </div>
 
-      {/* ===== 通貨えらび ===== */}
-      <Head label="STEP 1 · COIN" title="通貨をえらぶ" />
-      <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14 }}>
-        <CoinCard
-          sym="₿"
-          name="BTC ビットコイン"
-          tag="最も普及した主要通貨。持っている人が多い。"
-          pros={['最も広く対応している', '知名度が高く安心']}
-          cons={['確認が遅め(約10分/ブロック)', '混雑時は手数料が上がることも']}
-        />
-        <CoinCard
-          sym="Ł"
-          name="LTC ライトコイン"
-          tag="ビットコインの軽量版。送金に向く。"
-          pros={['確認が速い(約2.5分/ブロック)', '手数料が安定して低め']}
-          cons={['BTC より知名度は低い']}
-        />
-      </div>
-      <div style={tWrap}>
-        <table style={tbl}>
-          <thead>
-            <tr>
-              <th style={th}></th>
-              <th style={th}>₿ BTC</th>
-              <th style={th}>Ł LTC</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={tdName}>確認の速さ</td>
-              <td style={td}>ふつう(約10分)</td>
-              <td style={td}>速い(約2.5分)</td>
-            </tr>
-            <tr>
-              <td style={tdName}>手数料の傾向</td>
-              <td style={td}>混雑で上下する</td>
-              <td style={td}>安定して低め</td>
-            </tr>
-            <tr>
-              <td style={tdName}>uraneko で使える</td>
-              <td style={td}><Mk good>◎</Mk> 使える</td>
-              <td style={td}><Mk good>◎</Mk> 使える</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, color: 'var(--dim)', fontWeight: 300, lineHeight: 1.8, margin: '4px 0 0' }}>
-        どちらでも購入できます。使い慣れている方・お持ちの方で選んで大丈夫。
-        ETH / USDT などのステーブルコイン等は<b style={{ color: 'var(--muted)' }}>現在未対応</b>です。
-      </p>
-      <Warn>
-        送るときは、必ず選んだ通貨の{' '}
-        <Term label="そのままのネットワーク">
-          BTC は Bitcoin ネットワーク、LTC は Litecoin ネットワーク。名前が同じ通貨でも
-          「BEP-20」など<b style={{ color: 'var(--color-fg)' }}>別ネットワークは別物</b>で、そちらで送ると
-          届かず戻らないことがあります。
-        </Term>
-        {' '}で送ってください(通常は QR を読めば自動で正しく選ばれます)。
-      </Warn>
+      {/* 手順を詳しく(概要と同じ 1買う / 2送る / 3受け取る) */}
+      <SectionLabel style={{ marginTop: 40, marginBottom: 2 }}>— 手順を詳しく</SectionLabel>
+      <div>
+        {/* STEP 1 買う */}
+        <Accordion n="STEP 1" title="買う" defaultOpen>
+          <Sub>どの通貨を使う?</Sub>
+          <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14 }}>
+            <CoinCard
+              coin="btc"
+              name="BTC ビットコイン"
+              tag="最も普及した主要通貨。持っている人が多い。"
+              pros={['最も広く対応している', '知名度が高く安心']}
+              cons={['確認が遅め(約10分)', '混雑時は手数料が上がることも']}
+            />
+            <CoinCard
+              coin="ltc"
+              name="LTC ライトコイン"
+              tag="ビットコインの軽量版。送金に向く。"
+              pros={['確認が速い(約2.5分)', '手数料が安定して低め']}
+              cons={['BTC より知名度は低い']}
+            />
+          </div>
+          <div style={tWrap}>
+            <table style={tbl}>
+              <thead>
+                <tr>
+                  <th style={th}></th>
+                  <th style={th}>BTC</th>
+                  <th style={th}>LTC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={tdName}>確認の速さ</td>
+                  <td style={td}>ふつう(約10分)</td>
+                  <td style={td}>速い(約2.5分)</td>
+                </tr>
+                <tr>
+                  <td style={tdName}>手数料の傾向</td>
+                  <td style={td}>混雑で上下する</td>
+                  <td style={td}>安定して低め</td>
+                </tr>
+                <tr>
+                  <td style={tdName}>uraneko で使える</td>
+                  <td style={td}>
+                    <Mk good>◎</Mk> 使える
+                  </td>
+                  <td style={td}>
+                    <Mk good>◎</Mk> 使える
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8 }}>
+            どちらでも購入できます。使い慣れている方・お持ちの方で。ETH / USDT などのステーブルコイン等は
+            <b style={{ color: 'var(--muted)' }}>現在未対応</b>です。
+          </div>
 
-      {/* ===== 買う場所と持ち方 ===== */}
-      <Head label="STEP 2 · WHERE" title="買う場所と、持ち方" />
-      <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14, marginBottom: 8 }}>
-        <Card>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 15, fontWeight: 300, letterSpacing: 1, color: 'var(--color-fg)', marginBottom: 6 }}>
-            取引所(交換所)
-          </div>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 1.8 }}>
-            円で暗号資産を<b style={{ color: 'var(--color-fg)' }}>買う</b>お店。まずここで BTC / LTC を用意します。
-            <br />例:GMOコイン / Coincheck / bitFlyer / bitbank
-          </div>
-        </Card>
-        <Card>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 15, fontWeight: 300, letterSpacing: 1, color: 'var(--color-fg)', marginBottom: 6 }}>
-            ウォレット(財布)
-          </div>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 1.8 }}>
-            自分で暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>アプリ。使うと送金がスムーズ(任意)。
-            <br />例:Trust Wallet(スマホ・無料)
-          </div>
-        </Card>
-      </div>
-
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)', margin: '18px 0 2px' }}>
-        取引所くらべ
-      </div>
-      <div style={tWrap}>
-        <table style={tbl}>
-          <thead>
-            <tr>
-              <th style={th}>取引所</th>
-              <th style={th}>特徴</th>
-              <th style={th}>初心者</th>
-              <th style={th}>BTC/LTC</th>
-            </tr>
-          </thead>
-          <tbody>
-            {exchanges.map((e) => (
-              <tr key={e.name}>
-                <td style={tdName}>{e.name}</td>
-                <td style={td}>{e.feat}</td>
-                <td style={td}><Mk good>{e.bg}</Mk></td>
-                <td style={td}><Mk good>○</Mk></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, color: 'var(--dim)', fontWeight: 300, lineHeight: 1.8, margin: '4px 0 0' }}>
-        ◎ とても向く / ○ 向く。どこも BTC・LTC を購入でき、
-        <b style={{ color: 'var(--muted)' }}>初回の送金には審査(〜30分)</b>があります(国内共通のルール)。
-        手数料・条件は変わるので、最終的には各取引所の公式でご確認ください。
-      </p>
-      <p style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 1.9, margin: '10px 0 0' }}>
-        ◇ もっとスムーズにしたい人へ:取引所 →{' '}
-        <Term label="自分のウォレット">
-          Trust Wallet などの自己管理ウォレット。自分だけが管理する財布で、取引所を介さない送金は
-          氏名入力や送金審査が無く速いです。○ スムーズ・自分で管理 / △ 秘密鍵の管理は自己責任
-          (無くすと復元できません)。
-        </Term>
-        {' '}→ uraneko、の順にすると、氏名入力も審査も避けやすくなります。
-      </p>
-
-      {/* ===== 送金の流れ ===== */}
-      <Head label="STEP 3 · SEND" title="送金の流れ" />
-      <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', alignItems: 'stretch' }}>
-        {flow.map((f, i) => (
-          <Fragment key={f.n}>
-            <Flow n={f.n} title={f.title} tag={f.tag} />
-            {i < flow.length - 1 && (
-              <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-gold)', fontSize: 16, padding: isNarrow ? '5px 0' : '0 8px' }}>
-                {arrow}
+          <Sub>どこで買う?</Sub>
+          <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14, marginBottom: 4 }}>
+            <Card>
+              <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>取引所(交換所)</div>
+              <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
+                円で暗号資産を<b style={{ color: 'var(--color-fg)' }}>買う</b>お店。ここで BTC / LTC を用意します。
               </div>
-            )}
-          </Fragment>
-        ))}
+            </Card>
+            <Card>
+              <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>ウォレット(財布)</div>
+              <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
+                自分で暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>アプリ(任意)。例:Trust Wallet
+              </div>
+            </Card>
+          </div>
+          <div style={tWrap}>
+            <table style={tbl}>
+              <thead>
+                <tr>
+                  <th style={th}>取引所</th>
+                  <th style={th}>特徴</th>
+                  <th style={th}>初心者</th>
+                  <th style={th}>BTC/LTC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exchanges.map((e) => (
+                  <tr key={e.name}>
+                    <td style={tdName}>{e.name}</td>
+                    <td style={td}>{e.feat}</td>
+                    <td style={td}>
+                      <Mk good>{e.bg}</Mk>
+                    </td>
+                    <td style={td}>
+                      <Mk good>○</Mk>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8 }}>
+            ◎ とても向く / ○ 向く。どこも BTC・LTC を購入でき、
+            <b style={{ color: 'var(--muted)' }}>初回の送金には審査(〜30分)</b>があります(国内共通)。
+            手数料・条件は変わるので各公式で確認を。
+            <br />◇ もっとスムーズにしたい人は 取引所 →{' '}
+            <Term label="自分のウォレット">
+              Trust Wallet などの自己管理ウォレット。取引所を介さない送金は氏名入力や審査が無く速い。
+              ○ スムーズ・自分で管理 / △ 秘密鍵の管理は自己責任(無くすと復元不可)。
+            </Term>
+            {' '}→ uraneko、の順にすると氏名入力も審査も避けやすいです。
+          </div>
+        </Accordion>
+
+        {/* STEP 2 送る */}
+        <Accordion n="STEP 2" title="送る">
+          <Sub>送付先を登録する</Sub>
+          <div>
+            取引所で送金先を登録するとき、{' '}
+            <Term label="プライベートウォレット / 本人">
+              取引所ではない送金先は「プライベートウォレット」を選びます。保有者は
+              <b style={{ color: 'var(--color-fg)' }}>「ご本人さま(自分)」</b>を選ぶと、受取人の氏名入力は不要です。
+              架空の名前は入れないでください(凍結の原因になります)。
+            </Term>
+            {' '}を選ぶのがポイントです。
+          </div>
+          <Sub>送る</Sub>
+          <div>
+            決済ページの{' '}
+            <Term label="QR を読み取る">
+              QR には送金先アドレスと送るべき数量が入っています。読み取れば手入力のミス(桁・アドレス
+              間違い)を防げます。表示どおりの数量を送ってください。
+            </Term>
+            {' '}と、送金先と金額が自動で入ります。あとは送るだけ。
+          </div>
+          <Warn>
+            必ず選んだ通貨の{' '}
+            <Term label="そのままのネットワーク">
+              BTC は Bitcoin、LTC は Litecoin ネットワーク。「BEP-20」など
+              <b style={{ color: 'var(--color-fg)' }}>別ネットワークは別物</b>で、そちらで送ると届かず戻らないことが
+              あります(QR を読めば通常は自動で正しく選ばれます)。
+            </Term>
+            {' '}で送ってください。
+          </Warn>
+          <div
+            style={{
+              marginTop: 4,
+              padding: '12px 14px',
+              border: '1px solid rgba(214,183,110,0.3)',
+              background: 'rgba(184,181,172,0.05)',
+              fontSize: 12.5,
+              lineHeight: 1.9,
+              color: 'var(--muted)',
+            }}
+          >
+            ◇ 取引所で「受取人(第三者)情報」の登録が必要な場合は、
+            <a href={CONTACT_MAILTO} style={{ color: 'var(--color-gold-bright)' }}>
+              {' '}
+              {CONTACT}
+            </a>{' '}
+            までご連絡ください。登録に必要な情報を個別にお渡しします
+            <span style={{ color: 'var(--dim)' }}>(過去にやり取りのある方もどうぞ)</span>。
+          </div>
+        </Accordion>
+
+        {/* STEP 3 受け取る */}
+        <Accordion n="STEP 3" title="受け取る">
+          <div>
+            送金が検知されると<b style={{ color: 'var(--color-fg)' }}>すぐダウンロード可能</b>になります
+            (最終確認を待つ必要はありません)。ご登録のメールにもリンクが届くので、
+            <b style={{ color: 'var(--color-fg)' }}>画面は閉じてしまって大丈夫</b>です。
+          </div>
+        </Accordion>
       </div>
-      <div style={{ marginTop: 14 }}>
-        <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 13, color: 'var(--muted)', fontWeight: 300, lineHeight: 2 }}>
-          STEP2 の送付先登録では{' '}
-          <Term label="プライベートウォレット / 本人">
-            取引所ではない送金先は「プライベートウォレット」を選びます。保有者は
-            <b style={{ color: 'var(--color-fg)' }}>「ご本人さま(自分)」</b>を選ぶと、受取人の氏名入力は不要です。
-            架空の名前は入れないでください(凍結の原因になります)。
-          </Term>
-          {' '}を選ぶのがポイント。QR を読めば{' '}
-          <Term label="宛先と数量">
-            決済ページのQRには送金先アドレスと送るべき数量が入っています。読み取れば手入力の
-            ミス(桁・アドレス間違い)を防げます。表示どおりの数量を送ってください。
-          </Term>
-          {' '}が自動で入ります。
-        </div>
-      </div>
+
+      {/* いま、何をすればいい?(Yes/No 判定フロー) */}
+      <Head label="START HERE" title="いま、何をすればいい?" />
       <div
         style={{
-          marginTop: 14,
-          padding: '12px 14px',
-          border: '1px solid rgba(214,183,110,0.3)',
-          background: 'rgba(184,181,172,0.05)',
+          maxWidth: 440,
+          margin: '0 auto',
+          textAlign: 'center',
+          border: '1px solid rgba(214,183,110,0.4)',
+          background: 'rgba(214,183,110,0.06)',
+          padding: '14px 18px',
           fontFamily: 'var(--font-serif-jp)',
-          fontSize: 12.5,
-          lineHeight: 1.9,
-          color: 'var(--muted)',
+          fontSize: 15,
+          color: 'var(--color-fg)',
           fontWeight: 300,
+          letterSpacing: 1,
         }}
       >
-        ◇ お使いの取引所で「受取人(第三者)情報」の登録が必要な場合は、
-        <a href={CONTACT_MAILTO} style={{ color: 'var(--color-gold-bright)' }}>
-          {' '}
-          {CONTACT}
-        </a>{' '}
-        までご連絡ください。登録に必要な情報を個別にお渡しします
-        <span style={{ color: 'var(--dim)' }}>(過去にやり取りのある方もどうぞ)</span>。
+        取引所アプリ(GMO / Coincheck 等)を持っている?
+      </div>
+      <div aria-hidden style={{ textAlign: 'center', color: 'var(--color-gold)', fontSize: 16, margin: '4px 0' }}>
+        ↓
+      </div>
+      <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 16 }}>
+        <Branch
+          label="はい"
+          accent="var(--color-gold-bright)"
+          steps={[
+            '① BTC か LTC を買う',
+            '② uraneko のアドレスを登録(本人)',
+            '③ QR で表示どおりの数量を送る',
+            '→ 自動で受け取り(メールも届く)',
+          ]}
+        />
+        <Branch
+          label="いいえ"
+          accent="var(--muted)"
+          steps={[
+            '① 取引所アプリを入れて口座開設',
+            '(GMOコイン / Coincheck が分かりやすい)',
+            '② BTC か LTC を買う',
+            '③「はい」と同じ手順で送る',
+          ]}
+        />
       </div>
 
-      {/* ===== アプリから何をする? ===== */}
-      <Head label="START HERE" title="いま、何をすればいい?" />
-      <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14 }}>
-        <Card>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 14, fontWeight: 300, color: 'var(--color-gold-bright)', marginBottom: 8 }}>
-            取引所アプリを持っている
-          </div>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 2 }}>
-            ① BTC か LTC を買う<br />
-            ② 送付先に uraneko のアドレスを登録(プライベート/本人)<br />
-            ③ QR で表示どおりの数量を送る<br />
-            → あとは自動で受け取り(メールも届きます)
-          </div>
-        </Card>
-        <Card>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 14, fontWeight: 300, color: 'var(--color-gold-bright)', marginBottom: 8 }}>
-            まだ持っていない
-          </div>
-          <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 2 }}>
-            ① 取引所アプリを入れて口座開設<br />
-            <span style={{ color: 'var(--dim)' }}>(初心者は GMOコイン / Coincheck が分かりやすい)</span>
-            <br />
-            ② BTC か LTC を買う<br />
-            ③ 左の②③と同じ手順で送る
-          </div>
-        </Card>
-      </div>
-
-      {/* ===== FAQ ===== */}
+      {/* FAQ */}
       <Head label="FAQ" title="よくある質問" />
       <div>
         <Accordion title="送金待ちが「時間切れ」になった">
