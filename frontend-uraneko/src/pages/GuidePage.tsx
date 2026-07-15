@@ -330,9 +330,10 @@ export default function GuidePage() {
   ];
 
   const wallets = [
-    { name: 'Trust Wallet', type: 'スマホアプリ', feat: '無料・多通貨対応・初心者向け' },
-    { name: 'Exodus', type: 'スマホ / PC', feat: '見やすい UI・多通貨対応' },
-    { name: 'Ledger', type: 'ハードウェア(端末)', feat: '最も安全・有料(中〜上級者向け)' },
+    { name: 'Trust Wallet', type: 'スマホアプリ', coins: 'BTC・LTC', feat: '無料・多通貨・初心者向け' },
+    { name: 'Exodus', type: 'スマホ / PC', coins: 'BTC・LTC', feat: '見やすい UI・多通貨' },
+    { name: 'MetaMask', type: 'スマホ / 拡張', coins: 'BTCのみ', feat: 'ETH中心。LTC は非対応' },
+    { name: 'Ledger', type: 'ハードウェア', coins: 'BTC・LTC', feat: '最も安全・有料' },
   ];
 
   return (
@@ -419,16 +420,14 @@ export default function GuidePage() {
             <Card>
               <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>取引所(交換所)</div>
               <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
-                円で暗号資産を<b style={{ color: 'var(--color-fg)' }}>買う・売る(換金)</b>お店。
-                BTC / LTC を用意するのも、円に戻すのもここ。
+                円で BTC / LTC を<b style={{ color: 'var(--color-fg)' }}>買える</b>。
+                <b style={{ color: 'var(--color-fg)' }}>円への換金(売却)は取引所だけ。</b>
               </div>
             </Card>
             <Card>
               <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>ウォレット(財布)</div>
               <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
-                暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>アプリ(任意)。
-                <b style={{ color: 'var(--color-fg)' }}>日本円への換金はできません</b>
-                (円に戻すときは取引所へ送り返す。コイン同士の交換=スワップができるものはあります)。
+                暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>。換金は取引所経由。
               </div>
             </Card>
           </div>
@@ -461,14 +460,14 @@ export default function GuidePage() {
             </table>
           </div>
 
-          <div style={cmpLabel}>ウォレットくらべ(持つ・送る / 任意)</div>
+          <div style={cmpLabel}>ウォレットくらべ(持つ・送る)</div>
           <div style={tWrap}>
             <table style={tbl}>
               <thead>
                 <tr>
                   <th style={th}>ウォレット</th>
                   <th style={th}>タイプ</th>
-                  <th style={th}>BTC/LTC</th>
+                  <th style={th}>対応</th>
                   <th style={th}>特徴</th>
                 </tr>
               </thead>
@@ -478,7 +477,11 @@ export default function GuidePage() {
                     <td style={tdName}>{w.name}</td>
                     <td style={td}>{w.type}</td>
                     <td style={td}>
-                      <Mk good>○</Mk>
+                      {w.coins === 'BTC・LTC' ? (
+                        <Mk good>{w.coins}</Mk>
+                      ) : (
+                        <span style={{ color: 'var(--color-accent)' }}>{w.coins}</span>
+                      )}
                     </td>
                     <td style={td}>{w.feat}</td>
                   </tr>
@@ -488,11 +491,7 @@ export default function GuidePage() {
           </div>
 
           <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8 }}>
-            ◎ とても向く / ○ 向く。取引所はどこも BTC・LTC を購入でき、
-            <b style={{ color: 'var(--muted)' }}>初回の送金には審査(〜30分)</b>があります(国内共通)。
-            手数料・条件・対応コインは変わるので各公式で確認を。ウォレットの秘密鍵は自己責任です。
-            <br />◇ もっとスムーズにしたい人は 取引所 → 自分のウォレット → uraneko の順にすると、
-            氏名入力も審査も避けやすくなります。
+            ※ 手数料・対応コインは変わるので、各公式で確認を。
           </div>
         </Accordion>
 
