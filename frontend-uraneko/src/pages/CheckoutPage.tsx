@@ -646,8 +646,13 @@ export default function CheckoutPage() {
 
                   {/* 詳細は送金ガイドに集約 */}
                   <div style={{ ...noteStyle, marginTop: 14, fontSize: 12.5 }}>
-                    <Link to="/guide" style={{ color: 'var(--color-gold-bright)' }}>
-                      暗号資産の送金ガイドはこちら →
+                    <Link
+                      to="/guide"
+                      target="_blank"
+                      rel="noopener"
+                      style={{ color: 'var(--color-gold-bright)' }}
+                    >
+                      暗号資産の送金ガイドはこちら ↗
                     </Link>
                   </div>
                 </BrassFrame>

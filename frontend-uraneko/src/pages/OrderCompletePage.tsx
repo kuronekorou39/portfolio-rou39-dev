@@ -555,6 +555,8 @@ export default function OrderCompletePage() {
                 </a>
                 <Link
                   to="/guide"
+                  target="_blank"
+                  rel="noopener"
                   style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: 11,
@@ -563,7 +565,7 @@ export default function OrderCompletePage() {
                     textDecoration: 'underline',
                   }}
                 >
-                  ▸ はじめての方へ・送金ガイド
+                  はじめての方へ・送金ガイド ↗
                 </Link>
                 <span
                   style={{

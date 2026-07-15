@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AgeGateProvider } from './contexts/AgeGateContext';
 import AgeGateModal from './components/AgeGateModal';
 import Layout from './components/Layout';
+import ScrollToTop from './components/ScrollToTop';
 import Loading from './components/bar/Loading';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -27,6 +28,7 @@ export default function App() {
     <AgeGateProvider>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AgeGateModal />
           <Suspense fallback={<PageLoader />}>
             <Routes>
