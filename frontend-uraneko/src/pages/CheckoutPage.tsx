@@ -12,14 +12,15 @@ import BrassFrame from '../components/bar/BrassFrame';
 import Loading from '../components/bar/Loading';
 
 // 対応通貨は LTC / BTC のみ(USDC/USDT 等ステーブルコインは未対応)。
+// BTC / LTC は同列(主要通貨の BTC を先に置く)。どちらでも購入できる。
 const CURRENCIES = [
-  { value: 'ltc', label: 'LTC · オススメ · 手数料 安' },
-  { value: 'btc', label: 'BTC オンチェーン · 手数料 高' },
+  { value: 'btc', label: 'BTC · 主要通貨・広く対応' },
+  { value: 'ltc', label: 'LTC · 確認が速い・手数料 安定' },
 ];
 
 // 支払い方法。暗号資産のみ実装済み。他は選択できるが準備中(選ぶと「次へ」が非活性)。
 const PAY_METHODS = [
-  { id: 'crypto', name: '暗号資産', sub: 'LTC / BTC', available: true, notice: '' },
+  { id: 'crypto', name: '暗号資産', sub: 'BTC / LTC', available: true, notice: '' },
   {
     id: 'card',
     name: 'クレジットカード',
@@ -188,8 +189,8 @@ export default function CheckoutPage() {
   const [stage, setStage] = useState<'account' | 'payment'>('account');
   const [authOpen, setAuthOpen] = useState(false);
 
-  // LTC をデフォルト(手数料が安く単一ネットワークで送金事故が少ないため初心者に安全)
-  const [currency, setCurrency] = useState('ltc');
+  // BTC / LTC は同列。主要通貨の BTC を既定にする(リストの先頭と一致)。
+  const [currency, setCurrency] = useState('btc');
   const [payMethod, setPayMethod] = useState<PayMethodId>('crypto');
   const [coupon, setCoupon] = useState('');
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
@@ -647,26 +648,16 @@ export default function CheckoutPage() {
                         marginBottom: 10,
                       }}
                     >
-                      — 送金手数料の目安 —
+                      — 送金手数料について —
                     </div>
-                    <div style={{ ...noteStyle, marginBottom: 10 }}>送金手数料は通貨で変わる。目安:</div>
-
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 11,
-                        lineHeight: 2,
-                        color: 'var(--color-fg)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>LTC</span>
-                        <span style={{ color: 'var(--color-gold-bright)' }}>約 ¥30 ◎</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>BTC オンチェーン</span>
-                        <span>約 ¥5,000 ⚠</span>
-                      </div>
+                    <div style={{ ...noteStyle, marginBottom: 10 }}>
+                      送金手数料は主に<b style={{ color: 'var(--color-fg)' }}>取引所の「出金手数料」</b>で決まります。
+                      同じ取引所なら LTC と BTC で大きく変わらないことも多いです。
+                    </div>
+                    <div style={{ ...noteStyle, marginBottom: 0 }}>
+                      取引所によって<b style={{ color: 'var(--color-fg)' }}>無料〜数千円</b>と幅があります
+                      (BTC の出金手数料を高めに設定している取引所もあるので、送る前にご確認を)。
+                      BTC / LTC どちらでも購入できます(BTC は主要通貨で広く対応、LTC は確認が数分と速め)。
                     </div>
 
                     <div

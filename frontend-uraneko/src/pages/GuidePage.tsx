@@ -199,7 +199,7 @@ function Tip({ children }: { children: ReactNode }) {
 export default function GuidePage() {
   const isNarrow = useIsNarrow();
   const steps = [
-    { n: '1', t: '買う', d: '取引所で LTC を用意する' },
+    { n: '1', t: '買う', d: '取引所で BTC / LTC を用意' },
     { n: '2', t: '送る', d: '表示されたアドレスへ送金' },
     { n: '3', t: '受け取る', d: '自動でダウンロード＋メール' },
   ];
@@ -230,7 +230,7 @@ export default function GuidePage() {
           margin: '0 0 32px',
         }}
       >
-        暗号資産(LTC / BTC)での支払いを、はじめての方にもわかるように。基本は
+        暗号資産(BTC / LTC)での支払いを、はじめての方にもわかるように。基本は
         <b style={{ color: 'var(--color-fg)' }}>3ステップ</b>だけ。詳しく知りたい所は、
         <span style={{ color: 'var(--color-gold-bright)' }}>下線の用語</span>や項目をタップすると開きます。
       </p>
@@ -314,10 +314,19 @@ export default function GuidePage() {
       {/* 詳しく(アコーディオン) */}
       <SectionLabel style={{ marginBottom: 4 }}>— 手順を詳しく</SectionLabel>
       <div style={{ marginBottom: 40 }}>
-        <Accordion n="1" title="通貨をえらぶ" sub="LTC がおすすめ" defaultOpen>
+        <Accordion n="1" title="通貨をえらぶ" sub="BTC / LTC が使えます" defaultOpen>
           <div>
-            迷ったら <b style={{ color: 'var(--color-fg)' }}>LTC(ライトコイン)</b>。手数料が安く、
-            送金の事故が少なめで初心者に安全です。BTC も使えます。
+            <b style={{ color: 'var(--color-fg)' }}>BTC(ビットコイン)</b>と{' '}
+            <b style={{ color: 'var(--color-fg)' }}>LTC(ライトコイン)</b>、どちらでも購入できます。
+            BTC は最も広く使われている主要通貨、LTC は確認が数分と速く手数料も安定しています。
+            使い慣れている方・お持ちの方で選んで大丈夫です。
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <Term label="手数料は取引所しだい">
+              送金手数料は主に取引所の「出金手数料」で決まり、通貨よりも取引所ごとの差が大きいです。無料の
+              取引所なら BTC / LTC ともほぼ無料。ただし BTC の出金手数料を高めに設定している取引所もあるので、
+              送る前に確認しておくと安心です。
+            </Term>
           </div>
           <Warn>
             送るときは、必ず選んだ通貨の{' '}
@@ -330,9 +339,9 @@ export default function GuidePage() {
           </Warn>
         </Accordion>
 
-        <Accordion n="2" title="買う(取引所)" sub="国内取引所で LTC を購入">
+        <Accordion n="2" title="買う(取引所)" sub="国内取引所で BTC / LTC を購入">
           <div>
-            国内の取引所(GMOコイン / bitFlyer / Coincheck / bitbank など)で LTC を買います。
+            国内の取引所(GMOコイン / bitFlyer / Coincheck / bitbank など)で BTC または LTC を買います。
             どこでも大丈夫ですが、送金まわりの手軽さには差があります。
           </div>
           <Warn>
