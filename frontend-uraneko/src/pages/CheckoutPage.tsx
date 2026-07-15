@@ -644,12 +644,10 @@ export default function CheckoutPage() {
                     </select>
                   </div>
 
-                  {/* 短い補足(詳細はガイドへ) */}
-                  <div style={{ ...noteStyle, marginTop: 14, fontSize: 11.5, color: 'var(--dim)' }}>
-                    ※ 送金手数料は取引所しだい(無料〜数千円)。スマホは{' '}
-                    <strong style={{ color: 'var(--muted)' }}>Trust Wallet</strong> 等で QR を読むと宛先・金額が自動で入ります。{' '}
-                    <Link to="/guide" style={{ color: 'var(--color-gold)', whiteSpace: 'nowrap' }}>
-                      送金ガイド →
+                  {/* 詳細は送金ガイドに集約 */}
+                  <div style={{ ...noteStyle, marginTop: 14, fontSize: 12.5 }}>
+                    <Link to="/guide" style={{ color: 'var(--color-gold-bright)' }}>
+                      暗号資産の送金ガイドはこちら →
                     </Link>
                   </div>
                 </BrassFrame>
@@ -684,14 +682,6 @@ export default function CheckoutPage() {
             }}
           >
             ※ デジタル商品につき、購入完了後・ダウンロード後の返品/返金はできません。
-            <br />
-            <a href="/legal/tokushoho" target="_blank" rel="noopener" style={{ color: 'var(--muted)' }}>
-              特定商取引法に基づく表記
-            </a>
-            {' · '}
-            <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: 'var(--muted)' }}>
-              利用規約
-            </a>
           </p>
         </div>
 
