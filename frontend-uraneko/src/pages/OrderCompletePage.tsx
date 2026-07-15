@@ -553,6 +553,18 @@ export default function OrderCompletePage() {
                 >
                   contact@rou39.com
                 </a>
+                <Link
+                  to="/guide"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    letterSpacing: 1,
+                    color: 'var(--color-gold)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  ▸ はじめての方へ・送金ガイド
+                </Link>
                 <span
                   style={{
                     fontFamily: 'var(--font-mono)',

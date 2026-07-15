@@ -218,6 +218,9 @@ export default function Layout() {
       >
         <span>uraneko — private archive</span>
         <span style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <Link to="/guide" style={{ color: 'var(--color-gold)', textDecoration: 'none' }}>
+            送金ガイド
+          </Link>
           <Link to="/legal/tokushoho" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
             特定商取引法
           </Link>
