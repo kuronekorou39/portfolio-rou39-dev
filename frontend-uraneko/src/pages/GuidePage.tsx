@@ -6,9 +6,9 @@ import { useIsNarrow } from '../lib/useIsNarrow';
 
 /**
  * はじめての送金ガイド。図・表・カード中心。文章は最小限。
- * 「初心者が、使っているアプリから何をどうすればいいか」わかることを目標にする。
- * ステップ番号は最上部の概要(1買う/2送る/3受け取る)と説明アコーディオンを一致させる。
+ * ステップ番号は概要(1買う/2送る/3受け取る)と説明アコーディオンを一致させる。
  * コインアイコンはインライン SVG(外部リクエストなし=CSP 準拠)。
+ * 比較表は狭い画面(<=720px)ではカードに畳んで横スクロールを出さない(CmpTable)。
  * 個人情報はページに書かない(第三者登録が要る人は contact 経由=案B)。手数料等の変動値は断定しない。
  */
 
@@ -22,16 +22,7 @@ function CoinIcon({ coin, size = 30 }: { coin: 'btc' | 'ltc'; size?: number }) {
     <svg width={size} height={size} viewBox="0 0 32 32" role="img" aria-label={isBtc ? 'Bitcoin' : 'Litecoin'}>
       <circle cx="16" cy="16" r="16" fill={isBtc ? '#F7931A' : '#345D9D'} />
       <g transform={isBtc ? 'rotate(-8 16 16)' : ''}>
-        <text
-          x="16"
-          y="16"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontFamily="Arial, Helvetica, sans-serif"
-          fontWeight="700"
-          fontSize="19"
-          fill="#fff"
-        >
+        <text x="16" y="16" textAnchor="middle" dominantBaseline="central" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="19" fill="#fff">
           {isBtc ? '₿' : 'Ł'}
         </text>
       </g>
@@ -48,31 +39,14 @@ function Term({ label, children }: { label: string; children: ReactNode }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        style={{
-          background: 'none',
-          border: 'none',
-          padding: 0,
-          font: 'inherit',
-          color: 'var(--color-gold-bright)',
-          borderBottom: '1px dotted var(--color-gold)',
-          cursor: 'pointer',
-        }}
+        style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', color: 'var(--color-gold-bright)', borderBottom: '1px dotted var(--color-gold)', cursor: 'pointer' }}
       >
         {label}
       </button>
       {open && (
         <span
           className="anim-soft"
-          style={{
-            display: 'block',
-            margin: '8px 0 4px',
-            padding: '10px 14px',
-            borderLeft: '2px solid var(--color-gold)',
-            background: 'rgba(184,181,172,0.05)',
-            fontSize: 12.5,
-            lineHeight: 1.9,
-            color: 'var(--muted)',
-          }}
+          style={{ display: 'block', margin: '8px 0 4px', padding: '10px 14px', borderLeft: '2px solid var(--color-gold)', background: 'rgba(184,181,172,0.05)', fontSize: 12.5, lineHeight: 1.9, color: 'var(--muted)' }}
         >
           {children}
         </span>
@@ -81,17 +55,7 @@ function Term({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Accordion({
-  n,
-  title,
-  defaultOpen = false,
-  children,
-}: {
-  n?: string;
-  title: string;
-  defaultOpen?: boolean;
-  children: ReactNode;
-}) {
+function Accordion({ n, title, defaultOpen = false, children }: { n?: string; title: string; defaultOpen?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderTop: '1px solid var(--faint)' }}>
@@ -99,66 +63,14 @@ function Accordion({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        style={{
-          width: '100%',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '16px 4px',
-          textAlign: 'left',
-        }}
+        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, padding: '16px 4px', textAlign: 'left' }}
       >
-        {n && (
-          <span
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 10,
-              letterSpacing: 2,
-              color: 'var(--color-gold)',
-              minWidth: 48,
-            }}
-          >
-            {n}
-          </span>
-        )}
-        <span
-          style={{
-            flex: 1,
-            fontFamily: 'var(--font-serif-jp)',
-            fontSize: n ? 16 : 14,
-            fontWeight: 300,
-            letterSpacing: n ? 3 : 1,
-            color: 'var(--color-fg)',
-          }}
-        >
-          {title}
-        </span>
-        <span
-          style={{
-            color: 'var(--color-gold)',
-            fontSize: 13,
-            transform: open ? 'rotate(90deg)' : 'none',
-            transition: 'transform .2s',
-          }}
-        >
-          ▸
-        </span>
+        {n && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)', minWidth: 48 }}>{n}</span>}
+        <span style={{ flex: 1, fontFamily: 'var(--font-serif-jp)', fontSize: n ? 16 : 14, fontWeight: 300, letterSpacing: n ? 3 : 1, color: 'var(--color-fg)' }}>{title}</span>
+        <span style={{ color: 'var(--color-gold)', fontSize: 13, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .2s' }}>▸</span>
       </button>
       {open && (
-        <div
-          className="anim-soft"
-          style={{
-            padding: '0 4px 22px',
-            fontFamily: 'var(--font-serif-jp)',
-            fontSize: 13.5,
-            lineHeight: 2,
-            color: 'var(--muted)',
-            fontWeight: 300,
-          }}
-        >
+        <div className="anim-soft" style={{ padding: '0 4px 22px', fontFamily: 'var(--font-serif-jp)', fontSize: 13.5, lineHeight: 2, color: 'var(--muted)', fontWeight: 300 }}>
           {children}
         </div>
       )}
@@ -167,34 +79,12 @@ function Accordion({
 }
 
 function Sub({ children }: { children: ReactNode }) {
-  return (
-    <div
-      style={{
-        fontFamily: 'var(--font-serif-jp)',
-        fontSize: 13.5,
-        letterSpacing: 1,
-        color: 'var(--color-fg)',
-        margin: '16px 0 6px',
-      }}
-    >
-      ■ {children}
-    </div>
-  );
+  return <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 13.5, letterSpacing: 1, color: 'var(--color-fg)', margin: '16px 0 6px' }}>■ {children}</div>;
 }
 
 function Warn({ children }: { children: ReactNode }) {
   return (
-    <div
-      style={{
-        margin: '14px 0',
-        padding: '12px 14px',
-        border: '1px solid rgba(168,67,63,0.4)',
-        background: 'rgba(168,67,63,0.06)',
-        fontSize: 13,
-        lineHeight: 1.9,
-        color: 'var(--color-fg)',
-      }}
-    >
+    <div style={{ margin: '14px 0', padding: '12px 14px', border: '1px solid rgba(168,67,63,0.4)', background: 'rgba(168,67,63,0.06)', fontSize: 13, lineHeight: 1.9, color: 'var(--color-fg)' }}>
       ⚠ {children}
     </div>
   );
@@ -204,18 +94,7 @@ function Head({ label, title }: { label: string; title: string }) {
   return (
     <div style={{ marginTop: 44, marginBottom: 14 }}>
       <SectionLabel style={{ marginBottom: 6 }}>— {label}</SectionLabel>
-      <h2
-        style={{
-          fontFamily: 'var(--font-serif-jp)',
-          fontSize: 'clamp(18px, 4.5vw, 22px)',
-          fontWeight: 300,
-          letterSpacing: 3,
-          margin: 0,
-          color: 'var(--color-fg)',
-        }}
-      >
-        {title}
-      </h2>
+      <h2 style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: 300, letterSpacing: 3, margin: 0, color: 'var(--color-fg)' }}>{title}</h2>
     </div>
   );
 }
@@ -224,9 +103,7 @@ function Mk({ good, children }: { good?: boolean; children: ReactNode }) {
   return <span style={{ color: good ? 'var(--color-gold-bright)' : 'var(--dim)' }}>{children}</span>;
 }
 
-// テーブル
-const tWrap: CSSProperties = { overflowX: 'auto', margin: '6px 0' };
-const tbl: CSSProperties = { width: '100%', borderCollapse: 'collapse', minWidth: 460, fontFamily: 'var(--font-serif-jp)' };
+// ---------- 比較(広い画面=表 / 狭い画面=カード) ----------
 const th: CSSProperties = {
   textAlign: 'left',
   fontFamily: 'var(--font-mono)',
@@ -237,65 +114,60 @@ const th: CSSProperties = {
   borderBottom: '1px solid rgba(168,166,158,0.3)',
   whiteSpace: 'nowrap',
 };
-const td: CSSProperties = {
-  fontSize: 12.5,
-  fontWeight: 300,
-  color: 'var(--muted)',
-  padding: '11px 12px',
-  borderBottom: '1px solid var(--faint)',
-  verticalAlign: 'top',
-  lineHeight: 1.7,
-};
+const td: CSSProperties = { fontSize: 12.5, fontWeight: 300, color: 'var(--muted)', padding: '11px 12px', borderBottom: '1px solid var(--faint)', verticalAlign: 'top', lineHeight: 1.7 };
 const tdName: CSSProperties = { ...td, color: 'var(--color-fg)', whiteSpace: 'nowrap' };
-const cmpLabel: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 10,
-  letterSpacing: 2,
-  color: 'var(--color-gold)',
-  margin: '16px 0 2px',
-};
+const cmpLabel: CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)', margin: '16px 0 2px' };
 
-function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+function CmpTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
+  const isNarrow = useIsNarrow();
+  if (isNarrow) {
+    // 狭い画面: 1行=1カードに畳む(横スクロールを出さない)
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '8px 0' }}>
+        {rows.map((r, ri) => (
+          <div key={ri} style={{ border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '12px 14px' }}>
+            <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 14, fontWeight: 300, letterSpacing: 1, color: 'var(--color-fg)', marginBottom: 8 }}>{r[0]}</div>
+            {r.slice(1).map((c, ci) => (
+              <div key={ci} style={{ display: 'flex', gap: 10, fontSize: 12.5, lineHeight: 1.8, marginTop: 3 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1, color: 'var(--color-gold)', minWidth: 64, flexShrink: 0, paddingTop: 2 }}>{columns[ci + 1]}</span>
+                <span style={{ color: 'var(--muted)', fontWeight: 300 }}>{c}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
-    <div
-      style={{
-        flex: 1,
-        minWidth: 220,
-        border: '1px solid var(--faint)',
-        background: 'var(--color-panel)',
-        padding: '16px 18px',
-        ...style,
-      }}
-    >
-      {children}
+    <div style={{ margin: '6px 0' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-serif-jp)' }}>
+        <thead>
+          <tr>{columns.map((c, i) => <th key={i} style={th}>{c}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, ri) => (
+            <tr key={ri}>{r.map((c, ci) => <td key={ci} style={ci === 0 ? tdName : td}>{c}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function CoinCard({
-  coin,
-  name,
-  tag,
-  pros,
-  cons,
-}: {
-  coin: 'btc' | 'ltc';
-  name: string;
-  tag: string;
-  pros: string[];
-  cons: string[];
-}) {
+function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  return (
+    <div style={{ flex: 1, minWidth: 220, border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '16px 18px', ...style }}>{children}</div>
+  );
+}
+
+function CoinCard({ coin, name, tag, pros, cons }: { coin: 'btc' | 'ltc'; name: string; tag: string; pros: string[]; cons: string[] }) {
   return (
     <Card>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <CoinIcon coin={coin} size={30} />
-        <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 16, fontWeight: 300, letterSpacing: 2, color: 'var(--color-fg)' }}>
-          {name}
-        </span>
+        <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 16, fontWeight: 300, letterSpacing: 2, color: 'var(--color-fg)' }}>{name}</span>
       </div>
-      <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, color: 'var(--muted)', fontWeight: 300, marginBottom: 12, lineHeight: 1.7 }}>
-        {tag}
-      </div>
+      <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, color: 'var(--muted)', fontWeight: 300, marginBottom: 12, lineHeight: 1.7 }}>{tag}</div>
       <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, lineHeight: 1.9, fontWeight: 300 }}>
         {pros.map((p) => (
           <div key={p} style={{ color: 'var(--muted)' }}>
@@ -322,34 +194,32 @@ export default function GuidePage() {
     { n: '3', t: '受け取る', d: '自動でダウンロード＋メール', coins: false },
   ];
 
-  const exchanges = [
-    { name: 'GMOコイン', feat: '東証プライム系。手数料が比較的安いことで知られる', bg: '◎' },
-    { name: 'Coincheck', feat: 'アプリが分かりやすく初心者に人気', bg: '◎' },
-    { name: 'bitFlyer', feat: 'BTC取引量が国内トップ級の大手', bg: '○' },
-    { name: 'bitbank', feat: '取扱通貨が多く、板取引でスプレッドが有利', bg: '○' },
+  // 用途別ルート(片方だけでもOK)
+  const routeRows: ReactNode[][] = [
+    ['取引所だけ', '手早く済ませたい / 初めて', '取引所で買う → そのまま送る'],
+    ['ウォレットだけ', 'もう暗号資産を持っている', 'ウォレットから送るだけ'],
+    ['取引所 → ウォレット', '匿名性を重視したい', '取引所で買う → 自分のウォレットへ → 送る'],
   ];
 
-  const wallets = [
-    { name: 'Trust Wallet', type: 'スマホアプリ', coins: 'BTC・LTC', feat: '無料・多通貨・初心者向け' },
-    { name: 'Exodus', type: 'スマホ / PC', coins: 'BTC・LTC', feat: '見やすい UI・多通貨' },
-    { name: 'MetaMask', type: 'スマホ / 拡張', coins: 'BTCのみ', feat: 'ETH中心。LTC は非対応' },
-    { name: 'Ledger', type: 'ハードウェア', coins: 'BTC・LTC', feat: '最も安全・有料' },
+  const exRows: ReactNode[][] = [
+    ['GMOコイン', '東証プライム系。手数料が比較的安いことで知られる', <Mk good>◎</Mk>, <Mk good>○</Mk>],
+    ['Coincheck', 'アプリが分かりやすく初心者に人気', <Mk good>◎</Mk>, <Mk good>○</Mk>],
+    ['bitFlyer', 'BTC取引量が国内トップ級の大手', <Mk good>○</Mk>, <Mk good>○</Mk>],
+    ['bitbank', '取扱通貨が多く、板取引でスプレッドが有利', <Mk good>○</Mk>, <Mk good>○</Mk>],
+  ];
+
+  const wRows: ReactNode[][] = [
+    ['Trust Wallet', 'スマホアプリ', <Mk good>BTC・LTC</Mk>, '無料・多通貨・初心者向け'],
+    ['Exodus', 'スマホ / PC', <Mk good>BTC・LTC</Mk>, '見やすい UI・多通貨'],
+    ['MetaMask', 'スマホ / 拡張', <span style={{ color: 'var(--color-accent)' }}>BTCのみ</span>, 'ETH中心。LTC は非対応'],
+    ['Ledger', 'ハードウェア', <Mk good>BTC・LTC</Mk>, '最も安全・有料'],
   ];
 
   return (
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
       {/* ヒーロー */}
       <SectionLabel style={{ marginBottom: 12 }}>— PAYMENT GUIDE</SectionLabel>
-      <h1
-        style={{
-          fontFamily: 'var(--font-serif-jp)',
-          fontSize: 'clamp(24px, 6vw, 34px)',
-          fontWeight: 200,
-          letterSpacing: 4,
-          margin: '0 0 14px',
-          color: 'var(--color-fg)',
-        }}
-      >
+      <h1 style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 'clamp(24px, 6vw, 34px)', fontWeight: 200, letterSpacing: 4, margin: '0 0 14px', color: 'var(--color-fg)' }}>
         はじめての送金ガイド
       </h1>
       <p style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 14, lineHeight: 2, fontWeight: 300, color: 'var(--muted)', margin: '0 0 28px' }}>
@@ -363,15 +233,9 @@ export default function GuidePage() {
         {steps.map((s, i) => (
           <Fragment key={s.n}>
             <div style={{ flex: 1, border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '20px 16px', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 3, color: 'var(--color-gold)', marginBottom: 8 }}>
-                STEP {s.n}
-              </div>
-              <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 22, fontWeight: 300, letterSpacing: 4, color: 'var(--color-fg)', marginBottom: 8 }}>
-                {s.t}
-              </div>
-              <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.7 }}>
-                {s.d}
-              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 3, color: 'var(--color-gold)', marginBottom: 8 }}>STEP {s.n}</div>
+              <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 22, fontWeight: 300, letterSpacing: 4, color: 'var(--color-fg)', marginBottom: 8 }}>{s.t}</div>
+              <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.7 }}>{s.d}</div>
               {s.coins && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 10 }}>
                   <CoinIcon coin="btc" size={22} />
@@ -380,15 +244,13 @@ export default function GuidePage() {
               )}
             </div>
             {i < steps.length - 1 && (
-              <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-gold)', fontSize: 18, padding: isNarrow ? '6px 0' : '0 12px' }}>
-                {arrow}
-              </div>
+              <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-gold)', fontSize: 18, padding: isNarrow ? '6px 0' : '0 12px' }}>{arrow}</div>
             )}
           </Fragment>
         ))}
       </div>
 
-      {/* 手順を詳しく(概要と同じ 1買う / 2送る / 3受け取る) */}
+      {/* 手順を詳しく */}
       <SectionLabel style={{ marginTop: 40, marginBottom: 2 }}>— 手順を詳しく</SectionLabel>
       <div>
         {/* STEP 1 買う */}
@@ -415,83 +277,22 @@ export default function GuidePage() {
             <b style={{ color: 'var(--muted)' }}>現在未対応</b>です。
           </div>
 
-          <Sub>どこで買う? どこに持つ?</Sub>
-          <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14, marginBottom: 4 }}>
-            <Card>
-              <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>取引所(交換所)</div>
-              <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
-                円で BTC / LTC を<b style={{ color: 'var(--color-fg)' }}>買える</b>。
-                <b style={{ color: 'var(--color-fg)' }}>円への換金(売却)は取引所だけ。</b>
-              </div>
-            </Card>
-            <Card>
-              <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>ウォレット(財布)</div>
-              <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
-                暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>。換金は取引所経由。
-              </div>
-            </Card>
+          <Sub>どのルートで用意する?</Sub>
+          <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.9, fontWeight: 300 }}>
+            取引所は<b style={{ color: 'var(--color-fg)' }}>円で買う・換金</b>の場所、ウォレットは
+            <b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>道具。
+            <b style={{ color: 'var(--color-fg)' }}>どちらか一方だけでも大丈夫</b>です。合うものを選んでください。
           </div>
+          <CmpTable columns={['ルート', 'こんな人に', '流れ']} rows={routeRows} />
 
           <div style={cmpLabel}>取引所くらべ(買う・換金)</div>
-          <div style={tWrap}>
-            <table style={tbl}>
-              <thead>
-                <tr>
-                  <th style={th}>取引所</th>
-                  <th style={th}>特徴</th>
-                  <th style={th}>初心者</th>
-                  <th style={th}>BTC/LTC</th>
-                </tr>
-              </thead>
-              <tbody>
-                {exchanges.map((e) => (
-                  <tr key={e.name}>
-                    <td style={tdName}>{e.name}</td>
-                    <td style={td}>{e.feat}</td>
-                    <td style={td}>
-                      <Mk good>{e.bg}</Mk>
-                    </td>
-                    <td style={td}>
-                      <Mk good>○</Mk>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CmpTable columns={['取引所', '特徴', '初心者', 'BTC/LTC']} rows={exRows} />
 
           <div style={cmpLabel}>ウォレットくらべ(持つ・送る)</div>
-          <div style={tWrap}>
-            <table style={tbl}>
-              <thead>
-                <tr>
-                  <th style={th}>ウォレット</th>
-                  <th style={th}>タイプ</th>
-                  <th style={th}>対応</th>
-                  <th style={th}>特徴</th>
-                </tr>
-              </thead>
-              <tbody>
-                {wallets.map((w) => (
-                  <tr key={w.name}>
-                    <td style={tdName}>{w.name}</td>
-                    <td style={td}>{w.type}</td>
-                    <td style={td}>
-                      {w.coins === 'BTC・LTC' ? (
-                        <Mk good>{w.coins}</Mk>
-                      ) : (
-                        <span style={{ color: 'var(--color-accent)' }}>{w.coins}</span>
-                      )}
-                    </td>
-                    <td style={td}>{w.feat}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CmpTable columns={['ウォレット', 'タイプ', '対応', '特徴']} rows={wRows} />
 
-          <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8 }}>
-            ※ 手数料・対応コインは変わるので、各公式で確認を。
+          <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8, marginTop: 6 }}>
+            ※ 手数料・対応コインは変わるので、各公式で確認を。円への換金(売却)は取引所だけ。
           </div>
         </Accordion>
 
@@ -525,22 +326,9 @@ export default function GuidePage() {
             </Term>
             {' '}で送ってください。
           </Warn>
-          <div
-            style={{
-              marginTop: 4,
-              padding: '12px 14px',
-              border: '1px solid rgba(214,183,110,0.3)',
-              background: 'rgba(184,181,172,0.05)',
-              fontSize: 12.5,
-              lineHeight: 1.9,
-              color: 'var(--muted)',
-            }}
-          >
+          <div style={{ marginTop: 4, padding: '12px 14px', border: '1px solid rgba(214,183,110,0.3)', background: 'rgba(184,181,172,0.05)', fontSize: 12.5, lineHeight: 1.9, color: 'var(--muted)' }}>
             ◇ 取引所で「受取人(第三者)情報」の登録が必要な場合は、
-            <a href={CONTACT_MAILTO} style={{ color: 'var(--color-gold-bright)' }}>
-              {' '}
-              {CONTACT}
-            </a>{' '}
+            <a href={CONTACT_MAILTO} style={{ color: 'var(--color-gold-bright)' }}> {CONTACT}</a>{' '}
             までご連絡ください。登録に必要な情報を個別にお渡しします
             <span style={{ color: 'var(--dim)' }}>(過去にやり取りのある方もどうぞ)</span>。
           </div>
@@ -592,9 +380,7 @@ export default function GuidePage() {
         <p style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, lineHeight: 2, letterSpacing: 1, color: 'var(--muted)', fontWeight: 300, margin: 0 }}>
           わからないことは何でも大丈夫です。はじめての暗号資産でも、こちらで一緒に確認します。
           <br />
-          <a href={CONTACT_MAILTO} style={{ color: 'var(--color-gold-bright)', textDecoration: 'underline' }}>
-            {CONTACT}
-          </a>
+          <a href={CONTACT_MAILTO} style={{ color: 'var(--color-gold-bright)', textDecoration: 'underline' }}>{CONTACT}</a>
         </p>
       </div>
     </div>
