@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { useIsNarrow } from '../lib/useIsNarrow';
 import { useAuth } from '../contexts/AuthContext';
@@ -189,8 +189,8 @@ export default function CheckoutPage() {
   const [stage, setStage] = useState<'account' | 'payment'>('account');
   const [authOpen, setAuthOpen] = useState(false);
 
-  // BTC / LTC は同列。主要通貨の BTC を既定にする(リストの先頭と一致)。
-  const [currency, setCurrency] = useState('btc');
+  // 既定は未選択。BTC / LTC を利用者自身に選んでもらう(同列)。
+  const [currency, setCurrency] = useState('');
   const [payMethod, setPayMethod] = useState<PayMethodId>('crypto');
   const [coupon, setCoupon] = useState('');
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
@@ -229,6 +229,8 @@ export default function CheckoutPage() {
   const selMethod = PAY_METHODS.find((m) => m.id === payMethod)!;
   // 未実装の支払い方法を選んでいる間は購入不可(無料購入は方法不問)
   const methodBlocked = !isFree && payMethod !== 'crypto';
+  // 有料の暗号資産決済は通貨選択が必須(未選択では進めない)。
+  const needsCurrency = !isFree && payMethod === 'crypto' && !currency;
 
   async function applyCoupon() {
     if (!product) return;
@@ -264,6 +266,10 @@ export default function CheckoutPage() {
   async function submit() {
     if (!product) return;
     if (methodBlocked) return; // 準備中の支払い方法では進めない
+    if (needsCurrency) {
+      setErr('支払い通貨(BTC / LTC)を選んでください。');
+      return;
+    }
     setErr(null);
     // 未適用のまま入力されたコードは、適用して金額を確認してから購入してもらう
     if (coupon.trim() && !applied) {
@@ -620,8 +626,16 @@ export default function CheckoutPage() {
                     <select
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value)}
-                      style={{ ...inputStyle, fontFamily: 'var(--font-serif-jp)', appearance: 'none' }}
+                      style={{
+                        ...inputStyle,
+                        fontFamily: 'var(--font-serif-jp)',
+                        appearance: 'none',
+                        color: currency ? 'var(--color-fg)' : 'var(--dim)',
+                      }}
                     >
+                      <option value="" disabled style={{ background: 'var(--color-panel)' }}>
+                        — BTC / LTC を選択 —
+                      </option>
                       {CURRENCIES.map((c) => (
                         <option key={c.value} value={c.value} style={{ background: 'var(--color-panel)' }}>
                           {c.label}
@@ -630,64 +644,13 @@ export default function CheckoutPage() {
                     </select>
                   </div>
 
-                  {/* 送金手数料の目安(初心者向けヘルプ) */}
-                  <div
-                    style={{
-                      marginTop: 18,
-                      padding: '14px 16px',
-                      border: '1px solid rgba(168,166,158,0.25)',
-                      background: 'rgba(168,166,158,0.05)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 10,
-                        letterSpacing: 3,
-                        color: 'var(--color-gold)',
-                        marginBottom: 10,
-                      }}
-                    >
-                      — 送金手数料について —
-                    </div>
-                    <div style={{ ...noteStyle, marginBottom: 10 }}>
-                      送金手数料は主に<b style={{ color: 'var(--color-fg)' }}>取引所の「出金手数料」</b>で決まります。
-                      同じ取引所なら LTC と BTC で大きく変わらないことも多いです。
-                    </div>
-                    <div style={{ ...noteStyle, marginBottom: 0 }}>
-                      取引所によって<b style={{ color: 'var(--color-fg)' }}>無料〜数千円</b>と幅があります
-                      (BTC の出金手数料を高めに設定している取引所もあるので、送る前にご確認を)。
-                      BTC / LTC どちらでも購入できます(BTC は主要通貨で広く対応、LTC は確認が数分と速め)。
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 10,
-                        paddingTop: 10,
-                        borderTop: '1px solid rgba(168,166,158,0.15)',
-                        fontFamily: 'var(--font-serif-jp)',
-                        fontSize: 11,
-                        lineHeight: 1.7,
-                        color: 'var(--dim)',
-                        fontWeight: 300,
-                      }}
-                    >
-                      ※ USDC / USDT などのステーブルコインは現在未対応です。
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 12,
-                        fontFamily: 'var(--font-serif-jp)',
-                        fontSize: 11,
-                        lineHeight: 1.7,
-                        color: 'var(--dim)',
-                        fontWeight: 300,
-                      }}
-                    >
-                      おすすめウォレットは <strong style={{ color: 'var(--muted)' }}>Trust Wallet</strong>(スマホ用・無料)。
-                      決済ページのQRを送金画面で読み取ると、送金先と金額が自動で入ります。
-                    </div>
+                  {/* 短い補足(詳細はガイドへ) */}
+                  <div style={{ ...noteStyle, marginTop: 14, fontSize: 11.5, color: 'var(--dim)' }}>
+                    ※ 送金手数料は取引所しだい(無料〜数千円)。スマホは{' '}
+                    <strong style={{ color: 'var(--muted)' }}>Trust Wallet</strong> 等で QR を読むと宛先・金額が自動で入ります。{' '}
+                    <Link to="/guide" style={{ color: 'var(--color-gold)', whiteSpace: 'nowrap' }}>
+                      送金ガイド →
+                    </Link>
                   </div>
                 </BrassFrame>
               ) : (
@@ -884,11 +847,11 @@ export default function CheckoutPage() {
             <div style={{ marginTop: 24 }}>
               <BarButton
                 onClick={submit}
-                disabled={submitting || soldOut || methodBlocked}
+                disabled={submitting || soldOut || methodBlocked || needsCurrency}
                 size="lg"
                 style={{
                   width: '100%',
-                  opacity: submitting || soldOut || methodBlocked ? 0.5 : 1,
+                  opacity: submitting || soldOut || methodBlocked || needsCurrency ? 0.5 : 1,
                 }}
               >
                 {submitting
@@ -897,6 +860,8 @@ export default function CheckoutPage() {
                   ? 'COMPLETE · 取引を完了する'
                   : methodBlocked
                   ? '準備中 · 選べません'
+                  : needsCurrency
+                  ? '通貨を選んでください'
                   : 'PROCEED · 送金へ進む'}
               </BarButton>
             </div>
