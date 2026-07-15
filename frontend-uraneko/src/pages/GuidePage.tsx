@@ -247,6 +247,13 @@ const td: CSSProperties = {
   lineHeight: 1.7,
 };
 const tdName: CSSProperties = { ...td, color: 'var(--color-fg)', whiteSpace: 'nowrap' };
+const cmpLabel: CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: 10,
+  letterSpacing: 2,
+  color: 'var(--color-gold)',
+  margin: '16px 0 2px',
+};
 
 function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
@@ -305,25 +312,6 @@ function CoinCard({
   );
 }
 
-// Yes/No 判定の分岐カード
-function Branch({ label, accent, steps }: { label: string; accent: string; steps: string[] }) {
-  return (
-    <div style={{ flex: 1, minWidth: 220 }}>
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: 3, color: accent }}>{label}</span>
-        <div aria-hidden style={{ color: 'var(--color-gold)', fontSize: 14, lineHeight: 1 }}>↓</div>
-      </div>
-      <div style={{ border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '16px 18px' }}>
-        {steps.map((s, i) => (
-          <div key={i} style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300, lineHeight: 2 }}>
-            {s}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function GuidePage() {
   const isNarrow = useIsNarrow();
   const arrow = isNarrow ? '↓' : '→';
@@ -339,6 +327,12 @@ export default function GuidePage() {
     { name: 'Coincheck', feat: 'アプリが分かりやすく初心者に人気', bg: '◎' },
     { name: 'bitFlyer', feat: 'BTC取引量が国内トップ級の大手', bg: '○' },
     { name: 'bitbank', feat: '取扱通貨が多く、板取引でスプレッドが有利', bg: '○' },
+  ];
+
+  const wallets = [
+    { name: 'Trust Wallet', type: 'スマホアプリ', feat: '無料・多通貨対応・初心者向け' },
+    { name: 'Exodus', type: 'スマホ / PC', feat: '見やすい UI・多通貨対応' },
+    { name: 'Ledger', type: 'ハードウェア(端末)', feat: '最も安全・有料(中〜上級者向け)' },
   ];
 
   return (
@@ -415,58 +409,31 @@ export default function GuidePage() {
               cons={['BTC より知名度は低い']}
             />
           </div>
-          <div style={tWrap}>
-            <table style={tbl}>
-              <thead>
-                <tr>
-                  <th style={th}></th>
-                  <th style={th}>BTC</th>
-                  <th style={th}>LTC</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={tdName}>確認の速さ</td>
-                  <td style={td}>ふつう(約10分)</td>
-                  <td style={td}>速い(約2.5分)</td>
-                </tr>
-                <tr>
-                  <td style={tdName}>手数料の傾向</td>
-                  <td style={td}>混雑で上下する</td>
-                  <td style={td}>安定して低め</td>
-                </tr>
-                <tr>
-                  <td style={tdName}>uraneko で使える</td>
-                  <td style={td}>
-                    <Mk good>◎</Mk> 使える
-                  </td>
-                  <td style={td}>
-                    <Mk good>◎</Mk> 使える
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8 }}>
+          <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8, marginTop: 8 }}>
             どちらでも購入できます。使い慣れている方・お持ちの方で。ETH / USDT などのステーブルコイン等は
             <b style={{ color: 'var(--muted)' }}>現在未対応</b>です。
           </div>
 
-          <Sub>どこで買う?</Sub>
+          <Sub>どこで買う? どこに持つ?</Sub>
           <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14, marginBottom: 4 }}>
             <Card>
               <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>取引所(交換所)</div>
               <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
-                円で暗号資産を<b style={{ color: 'var(--color-fg)' }}>買う</b>お店。ここで BTC / LTC を用意します。
+                円で暗号資産を<b style={{ color: 'var(--color-fg)' }}>買う・売る(換金)</b>お店。
+                BTC / LTC を用意するのも、円に戻すのもここ。
               </div>
             </Card>
             <Card>
               <div style={{ fontSize: 14, color: 'var(--color-fg)', marginBottom: 6, letterSpacing: 1 }}>ウォレット(財布)</div>
               <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
-                自分で暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>アプリ(任意)。例:Trust Wallet
+                暗号資産を<b style={{ color: 'var(--color-fg)' }}>持つ・送る</b>アプリ(任意)。
+                <b style={{ color: 'var(--color-fg)' }}>日本円への換金はできません</b>
+                (円に戻すときは取引所へ送り返す。コイン同士の交換=スワップができるものはあります)。
               </div>
             </Card>
           </div>
+
+          <div style={cmpLabel}>取引所くらべ(買う・換金)</div>
           <div style={tWrap}>
             <table style={tbl}>
               <thead>
@@ -493,16 +460,39 @@ export default function GuidePage() {
               </tbody>
             </table>
           </div>
+
+          <div style={cmpLabel}>ウォレットくらべ(持つ・送る / 任意)</div>
+          <div style={tWrap}>
+            <table style={tbl}>
+              <thead>
+                <tr>
+                  <th style={th}>ウォレット</th>
+                  <th style={th}>タイプ</th>
+                  <th style={th}>BTC/LTC</th>
+                  <th style={th}>特徴</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wallets.map((w) => (
+                  <tr key={w.name}>
+                    <td style={tdName}>{w.name}</td>
+                    <td style={td}>{w.type}</td>
+                    <td style={td}>
+                      <Mk good>○</Mk>
+                    </td>
+                    <td style={td}>{w.feat}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8 }}>
-            ◎ とても向く / ○ 向く。どこも BTC・LTC を購入でき、
+            ◎ とても向く / ○ 向く。取引所はどこも BTC・LTC を購入でき、
             <b style={{ color: 'var(--muted)' }}>初回の送金には審査(〜30分)</b>があります(国内共通)。
-            手数料・条件は変わるので各公式で確認を。
-            <br />◇ もっとスムーズにしたい人は 取引所 →{' '}
-            <Term label="自分のウォレット">
-              Trust Wallet などの自己管理ウォレット。取引所を介さない送金は氏名入力や審査が無く速い。
-              ○ スムーズ・自分で管理 / △ 秘密鍵の管理は自己責任(無くすと復元不可)。
-            </Term>
-            {' '}→ uraneko、の順にすると氏名入力も審査も避けやすいです。
+            手数料・条件・対応コインは変わるので各公式で確認を。ウォレットの秘密鍵は自己責任です。
+            <br />◇ もっとスムーズにしたい人は 取引所 → 自分のウォレット → uraneko の順にすると、
+            氏名入力も審査も避けやすくなります。
           </div>
         </Accordion>
 
@@ -565,51 +555,6 @@ export default function GuidePage() {
             <b style={{ color: 'var(--color-fg)' }}>画面は閉じてしまって大丈夫</b>です。
           </div>
         </Accordion>
-      </div>
-
-      {/* いま、何をすればいい?(Yes/No 判定フロー) */}
-      <Head label="START HERE" title="いま、何をすればいい?" />
-      <div
-        style={{
-          maxWidth: 440,
-          margin: '0 auto',
-          textAlign: 'center',
-          border: '1px solid rgba(214,183,110,0.4)',
-          background: 'rgba(214,183,110,0.06)',
-          padding: '14px 18px',
-          fontFamily: 'var(--font-serif-jp)',
-          fontSize: 15,
-          color: 'var(--color-fg)',
-          fontWeight: 300,
-          letterSpacing: 1,
-        }}
-      >
-        取引所アプリ(GMO / Coincheck 等)を持っている?
-      </div>
-      <div aria-hidden style={{ textAlign: 'center', color: 'var(--color-gold)', fontSize: 16, margin: '4px 0' }}>
-        ↓
-      </div>
-      <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 16 }}>
-        <Branch
-          label="はい"
-          accent="var(--color-gold-bright)"
-          steps={[
-            '① BTC か LTC を買う',
-            '② uraneko のアドレスを登録(本人)',
-            '③ QR で表示どおりの数量を送る',
-            '→ 自動で受け取り(メールも届く)',
-          ]}
-        />
-        <Branch
-          label="いいえ"
-          accent="var(--muted)"
-          steps={[
-            '① 取引所アプリを入れて口座開設',
-            '(GMOコイン / Coincheck が分かりやすい)',
-            '② BTC か LTC を買う',
-            '③「はい」と同じ手順で送る',
-          ]}
-        />
       </div>
 
       {/* FAQ */}
