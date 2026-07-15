@@ -108,38 +108,30 @@ const th: CSSProperties = {
   textAlign: 'left',
   fontFamily: 'var(--font-mono)',
   fontSize: 10,
-  letterSpacing: 1.5,
+  letterSpacing: 1,
   color: 'var(--color-gold)',
-  padding: '9px 12px',
+  padding: '9px 8px',
   borderBottom: '1px solid rgba(168,166,158,0.3)',
   whiteSpace: 'nowrap',
 };
-const td: CSSProperties = { fontSize: 12.5, fontWeight: 300, color: 'var(--muted)', padding: '11px 12px', borderBottom: '1px solid var(--faint)', verticalAlign: 'top', lineHeight: 1.7 };
-const tdName: CSSProperties = { ...td, color: 'var(--color-fg)', whiteSpace: 'nowrap' };
+const td: CSSProperties = {
+  fontSize: 12.5,
+  fontWeight: 300,
+  color: 'var(--muted)',
+  padding: '10px 8px',
+  borderBottom: '1px solid var(--faint)',
+  verticalAlign: 'top',
+  lineHeight: 1.7,
+  overflowWrap: 'anywhere',
+};
+const tdName: CSSProperties = { ...td, color: 'var(--color-fg)' };
 const cmpLabel: CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)', margin: '16px 0 2px' };
 
 function CmpTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
-  const isNarrow = useIsNarrow();
-  if (isNarrow) {
-    // 狭い画面: 1行=1カードに畳む(横スクロールを出さない)
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '8px 0' }}>
-        {rows.map((r, ri) => (
-          <div key={ri} style={{ border: '1px solid var(--faint)', background: 'var(--color-panel)', padding: '12px 14px' }}>
-            <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 14, fontWeight: 300, letterSpacing: 1, color: 'var(--color-fg)', marginBottom: 8 }}>{r[0]}</div>
-            {r.slice(1).map((c, ci) => (
-              <div key={ci} style={{ display: 'flex', gap: 10, fontSize: 12.5, lineHeight: 1.8, marginTop: 3 }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1, color: 'var(--color-gold)', minWidth: 64, flexShrink: 0, paddingTop: 2 }}>{columns[ci + 1]}</span>
-                <span style={{ color: 'var(--muted)', fontWeight: 300 }}>{c}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // 表は表のまま維持。minWidth を持たせず、狭い画面ではセル内で折り返して収める
+  // (横スクロールバーを出さない)。overflowX は万一の保険。
   return (
-    <div style={{ margin: '6px 0' }}>
+    <div style={{ overflowX: 'auto', margin: '6px 0' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-serif-jp)' }}>
         <thead>
           <tr>{columns.map((c, i) => <th key={i} style={th}>{c}</th>)}</tr>
