@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <!-- 秘密URL(フラグメントにトークン)を Referer から一切漏らさない。
+         インフラ側の Referrer-Policy ヘッダーと二重化 -->
+    <meta name="referrer" content="no-referrer" />
+    <!-- 外部フォント/CDN は使わない(メモ画面は外部依存ゼロが要件) -->
+    <title>Stash Notes</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

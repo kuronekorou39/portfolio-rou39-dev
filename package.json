@@ -4,6 +4,7 @@
   "workspaces": [
     "frontend",
     "frontend-uraneko",
+    "frontend-notes",
     "backend",
     "infra",
     "shared"
@@ -11,8 +12,10 @@
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
     "dev:uraneko": "npm run dev --workspace=frontend-uraneko",
+    "dev:notes": "npm run dev --workspace=frontend-notes",
     "build": "npm run build --workspace=frontend",
     "build:uraneko": "npm run build --workspace=frontend-uraneko",
+    "build:notes": "npm run build --workspace=frontend-notes",
     "deploy:infra": "npm run deploy --workspace=infra"
   }
 }

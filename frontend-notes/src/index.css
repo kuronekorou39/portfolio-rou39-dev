@@ -1,0 +1,44 @@
+/* Stash Notes — 軽量・外部依存ゼロ(システムフォントのみ) */
+:root {
+  --bg: #fafaf8;
+  --fg: #1c1c1a;
+  --muted: #71716c;
+  --border: #e2e2dd;
+  --accent: #2b6cb0;
+  --danger: #b03a2b;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP',
+    Meiryo, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: var(--accent);
+}
