@@ -25,6 +25,7 @@ import { UranekoFrontendStack } from '../lib/uraneko/frontend-stack';
 import { UranekoMonitoringStack } from '../lib/uraneko/monitoring-stack';
 import { NotesStorageStack } from '../lib/notes/storage-stack';
 import { NotesSecretsStack } from '../lib/notes/secrets-stack';
+import { NotesAuthStack } from '../lib/notes/auth-stack';
 
 const app = new cdk.App();
 
@@ -34,6 +35,9 @@ const URANEKO_SUBDOMAIN = `uraneko.${DOMAIN_NAME}`;
 // uraneko 専用の Cognito 認証ドメイン。auth.uraneko.rou39.com は
 // *.rou39.com ワイルドカード証明書の対象外(2階層)なので1階層に置く。
 const URANEKO_AUTH_DOMAIN = `uraneko-auth.${DOMAIN_NAME}`;
+const NOTES_SUBDOMAIN = `notes.${DOMAIN_NAME}`;
+// notes 専用の Cognito 認証ドメイン(uraneko と同じく1階層必須)
+const NOTES_AUTH_DOMAIN = `notes-auth.${DOMAIN_NAME}`;
 const HOSTED_ZONE_ID = 'Z064847133X63Y56L8D3W';
 
 const env = {
@@ -217,8 +221,25 @@ new UranekoMonitoringStack(app, 'UranekoMonitoring', {
 // 設計と段取りは docs/notes-implementation-plan.md を参照。
 // ============================================================
 
-// P0: データ層とシークレットのみ。Auth/Api/Waf/Frontend/Monitoring は P1 以降で追加する。
-// (NotesAuth は Google 連携のみ=NotesEmail 不要。認証ドメインはカスタム notes-auth.rou39.com
-//  で、uraneko-auth と同様に共有証明書 + crossRegionReferences を使う)
+// P0-P1: Storage / Secrets / Auth まで。Api/Waf/Frontend/Monitoring は以降のフェーズで追加する。
+// NotesAuth は Google 連携のみ(NotesEmail・pre-signup 不要)。認証ドメインはカスタム
+// notes-auth.rou39.com で、uraneko-auth と同様に共有証明書 + crossRegionReferences を使う。
+const notesHostedZone = route53.HostedZone.fromHostedZoneAttributes(
+  app, 'NotesHostedZone', {
+    hostedZoneId: HOSTED_ZONE_ID,
+    zoneName: DOMAIN_NAME,
+  },
+);
+
 new NotesStorageStack(app, 'NotesStorage', { env });
-new NotesSecretsStack(app, 'NotesSecrets', { env });
+const notesSecrets = new NotesSecretsStack(app, 'NotesSecrets', { env });
+
+new NotesAuthStack(app, 'NotesAuth', {
+  env,
+  crossRegionReferences: true,
+  certificate,
+  hostedZone: notesHostedZone,
+  authDomain: NOTES_AUTH_DOMAIN,
+  subdomain: NOTES_SUBDOMAIN,
+  googleClientSecret: notesSecrets.googleOAuthClientSecret,
+});
