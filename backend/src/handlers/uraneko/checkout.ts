@@ -191,6 +191,22 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       } catch (e) {
         // 決済作成等に失敗 → 予約トークンを在庫へ戻す(オーバーセル防止の予約を確実に解放)
         await releaseReservedToken(reserved.token_id, order_id);
+        // 先に書いた pending 注文を failed に落とす。予約解放後は release-expired の対象外に
+        // なるため、放置すると pending のまま孤児化する。注文が存在し pending の時のみ更新。
+        try {
+          await docClient.send(
+            new UpdateCommand({
+              TableName: ORDERS_TABLE,
+              Key: { order_id },
+              ConditionExpression: 'attribute_exists(order_id) AND #s = :pending',
+              UpdateExpression: 'SET #s = :failed',
+              ExpressionAttributeNames: { '#s': 'status' },
+              ExpressionAttributeValues: { ':pending': 'pending', ':failed': 'failed' },
+            }),
+          );
+        } catch {
+          // 注文未作成 / 既に別状態(遅延着金で復帰済み等)なら何もしない
+        }
         throw e;
       }
     } finally {

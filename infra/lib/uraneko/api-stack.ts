@@ -115,7 +115,7 @@ export class UranekoApiStack extends cdk.Stack {
     props.productsTable.grantReadData(validateCouponFn);
     props.couponsTable.grantReadData(validateCouponFn);
 
-    // --- checkout (ログインでもゲストでも動く、Cognito 認証は任意) ---
+    // --- checkout (ログイン必須。オーソライザーは付けず Lambda 側で Cognito IDトークンを検証) ---
     const checkoutFn = new nodejs.NodejsFunction(this, 'CheckoutFn', {
       runtime,
       entry: path.join(handlerDir, 'checkout.ts'),
@@ -235,9 +235,9 @@ export class UranekoApiStack extends cdk.Stack {
 
     const checkout = this.api.root.addResource('checkout');
     checkout.addMethod('POST', new apigateway.LambdaIntegration(checkoutFn));
-    // NOTE: checkout は Cognito 任意。明示的に authorizer を付けないことで、
-    // ゲスト購入(Authorization ヘッダー無し)にも対応。
-    // ログインユーザーの場合はフロントが Authorization ヘッダーを付ける → claims が乗る
+    // NOTE: checkout はログイン必須だが、API Gateway のオーソライザーは付けず、
+    // Lambda 側(member-auth)で Authorization の Cognito IDトークンを検証する
+    // (get-order/cancel と同じ方式)。未ログインは checkout ハンドラが 403 login_required を返す。
 
     const webhooks = this.api.root.addResource('webhooks');
     const npWebhook = webhooks.addResource('nowpayments');

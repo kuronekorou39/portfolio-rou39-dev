@@ -34,44 +34,6 @@ export async function getIpnSecret(): Promise<string> {
   return v;
 }
 
-export interface CreatePaymentParams {
-  price_amount: number;
-  price_currency: string; // "jpy"
-  pay_currency?: string; // "btc", "usdttrc20" 等(未指定なら NOWPayments の画面で選ばせる)
-  order_id: string;
-  order_description: string;
-  ipn_callback_url: string;
-  success_url: string;
-  cancel_url: string;
-}
-
-export interface CreatePaymentResponse {
-  id: string;
-  invoice_url: string;
-  order_id: string;
-  price_amount: number;
-  price_currency: string;
-  pay_amount?: number;
-  pay_currency?: string;
-}
-
-export async function createInvoice(params: CreatePaymentParams): Promise<CreatePaymentResponse> {
-  const apiKey = await getApiKey();
-  const res = await fetch(`${BASE_URL}/invoice`, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`NOWPayments createInvoice failed: ${res.status} ${text}`);
-  }
-  return res.json() as Promise<CreatePaymentResponse>;
-}
-
 export interface CreateDirectPaymentParams {
   price_amount: number;
   price_currency: string; // "jpy"

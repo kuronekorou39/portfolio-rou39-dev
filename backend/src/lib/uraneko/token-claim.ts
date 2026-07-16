@@ -10,11 +10,9 @@ const TOKENS_TABLE = process.env.TOKENS_TABLE!;
 // その間は在庫を押さえ続け、着金時にそのまま受け渡せる(表示上の失効を避ける)。
 // なお失効後の遅延着金も webhook が expired/failed から復帰させる(fulfill の FORWARD_FROM)。
 const RESERVATION_TTL_SEC_DEFAULT = 24 * 60 * 60;
-const RESERVATION_TTL_SEC_BTC = 24 * 60 * 60;
-export function initialReservationTtlSec(currency?: string): number {
-  return (currency || '').toLowerCase() === 'btc'
-    ? RESERVATION_TTL_SEC_BTC
-    : RESERVATION_TTL_SEC_DEFAULT;
+// 通貨別に猶予を変えたくなったらここで分岐する(現状は BTC/LTC とも一律 24 時間)。
+export function initialReservationTtlSec(_currency?: string): number {
+  return RESERVATION_TTL_SEC_DEFAULT;
 }
 // 入金が検知(confirming)されたら、この長さに延長する。送金済み=ブロック確定待ちを吸収し、
 // 確定前に失効して「支払ったのに売切」になるのを防ぐ。
@@ -147,7 +145,7 @@ export async function releaseToken(
 export async function reserveToken(params: {
   product_id: string;
   order_id: string;
-  ttlSec?: number; // 初期予約の猶予秒。未指定は既定(30分)
+  ttlSec?: number; // 初期予約の猶予秒。未指定は既定(24時間)
 }): Promise<VideoToken | null> {
   const { product_id, order_id } = params;
   const ttlSec = params.ttlSec ?? RESERVATION_TTL_SEC_DEFAULT;
