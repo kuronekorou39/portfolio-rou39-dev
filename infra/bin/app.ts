@@ -23,6 +23,8 @@ import { UranekoApiStack } from '../lib/uraneko/api-stack';
 import { UranekoWafStack } from '../lib/uraneko/waf-stack';
 import { UranekoFrontendStack } from '../lib/uraneko/frontend-stack';
 import { UranekoMonitoringStack } from '../lib/uraneko/monitoring-stack';
+import { NotesStorageStack } from '../lib/notes/storage-stack';
+import { NotesSecretsStack } from '../lib/notes/secrets-stack';
 
 const app = new cdk.App();
 
@@ -208,3 +210,15 @@ new UranekoMonitoringStack(app, 'UranekoMonitoring', {
   checkoutFn: uranekoApi.checkoutFn,
   webhookFn: uranekoApi.webhookFn,
 });
+
+// ============================================================
+// notes.rou39.com (秘密URLメモサービス Stash Notes)
+// 「管理=Googleログイン必須 / 利用=秘密URLでログイン不要」
+// 設計と段取りは docs/notes-implementation-plan.md を参照。
+// ============================================================
+
+// P0: データ層とシークレットのみ。Auth/Api/Waf/Frontend/Monitoring は P1 以降で追加する。
+// (NotesAuth は Google 連携のみ=NotesEmail 不要。認証ドメインはカスタム notes-auth.rou39.com
+//  で、uraneko-auth と同様に共有証明書 + crossRegionReferences を使う)
+new NotesStorageStack(app, 'NotesStorage', { env });
+new NotesSecretsStack(app, 'NotesSecrets', { env });

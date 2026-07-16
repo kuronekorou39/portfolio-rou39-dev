@@ -21,8 +21,8 @@
 
 **決定1(Googleのみ)による簡素化 —— uraneko より軽い:**
 - `email-stack`(SES DKIM/SPF/DMARC/MAIL-FROM)を**丸ごと削除**(Cognitoが検証メールを出さない)。
-- Cognito は**デフォルトのホストドメイン**(`notes-xxxx.auth.ap-northeast-1.amazoncognito.com`)を使い、**カスタムauthドメイン + us-east-1 ACM証明書 + Route53 Aレコードを削除**。→ 「2階層サブドメインは `*.rou39.com` 非対象」の面倒が消える。
-- 結果、**NotesAuth は素の ap-northeast-1 スタック**(crossRegionReferences 不要)。us-east-1 の共有証明書が要るのは NotesFrontend(CloudFront)と NotesWaf のみ。
+- Cognito 認証ドメインは**カスタム `notes-auth.rou39.com`**(2026-07-17 ユーザー決定。当初のデフォルトドメイン案から変更)。理由: ブランド確認未通過のアプリは Google ログイン画面に「リダイレクトURIの eTLD+1」が表示されるため、デフォルトドメインだと `amazoncognito.com` と出て第三者の利用者に不信感を与える。カスタムなら `rou39.com` 表示。公開サービスとして運用するのでこちらを採る。
+- 認証ドメインは **1階層必須**(`auth.notes.rou39.com` は `*.rou39.com` 非対象)。uraneko の `uraneko-auth.rou39.com` と同じ実証済みパターン: us-east-1 共有証明書 + Route53 Aレコード + `crossRegionReferences:true`、初回プロビジョニング ~15-20分。
 
 ### スタック構成(uraneko からの派生)
 
@@ -30,7 +30,7 @@
 |---|---|---|
 | **NotesStorage** | uraneko/storage-stack | 5テーブル(users/memos/tabs/tokens/access-logs)。決済テーブルは無し |
 | **NotesSecrets** | uraneko/secrets-stack | `notes/google-oauth-client-secret` + `notes/ip-hash-salt`。nowpayments/order-access は削除 |
-| **NotesAuth** | uraneko/auth-stack | Google IdP + app client、**デフォルトcognitoドメイン**。SES email config と `addDependency(email)` を削除、`pre-signup.ts`(base)流用。`supportedIdentityProviders=[GOOGLE]` |
+| **NotesAuth** | uraneko/auth-stack | Google IdP + app client、**カスタム認証ドメイン `notes-auth.rou39.com`**(共有証明書 + Aレコード)。SES email config と `addDependency(email)` を削除、`pre-signup.ts`(base)流用。`supportedIdentityProviders=[GOOGLE]` |
 | ~~NotesEmail~~ | — | **削除**(決定1) |
 | ~~NotesIngestIam~~ | — | **削除**(非commerce) |
 | **NotesApi** | uraneko/api-stack | RestApi。`/admin/*`=Cognitoオーソライザー、`/m/*`=オーソライザー無し(body内トークン検証)。handler毎 NodejsFunction、予約同時実行、最小権限grant |
@@ -52,7 +52,7 @@
     googleClientId: string;         // 直書き(公開値)
     googleClientSecret: secretsmanager.ISecret;
     siteBucketName: string;         // グローバル一意
-    cspConnectSrc: string[];        // ['self', cognito idp, default cognito domain]
+    cspConnectSrc: string[];        // ['self', cognito idp, https://notes-auth.rou39.com]
     wafRateRules: RateRule[];
     // API ルート/ハンドラ・テーブルは子クラスまたは addRoutes() で注入
   }
@@ -66,7 +66,8 @@ const NOTES_SUBDOMAIN = `notes.${DOMAIN_NAME}`;
 const notesHostedZone = route53.HostedZone.fromHostedZoneAttributes(app, 'NotesHostedZone', {...});
 const notesStorage = new NotesStorageStack(app, 'NotesStorage', { env });
 const notesSecrets = new NotesSecretsStack(app, 'NotesSecrets', { env });
-const notesAuth   = new NotesAuthStack(app, 'NotesAuth', { env, googleClientSecret: notesSecrets.googleOAuthClientSecret });
+const NOTES_AUTH_DOMAIN = `notes-auth.${DOMAIN_NAME}`; // 1階層必須(*.rou39.com の対象内)
+const notesAuth   = new NotesAuthStack(app, 'NotesAuth', { env, crossRegionReferences: true, certificate, hostedZone: notesHostedZone, authDomain: NOTES_AUTH_DOMAIN, subdomain: NOTES_SUBDOMAIN, googleClientSecret: notesSecrets.googleOAuthClientSecret });
 const notesApi    = new NotesApiStack(app, 'NotesApi', { env, ...notesStorage.tables, userPool: notesAuth.userPool, userPoolClientId: notesAuth.userPoolClient.userPoolClientId });
 const notesWaf    = new NotesWafStack(app, 'NotesWaf', { env: { account, region: 'us-east-1' }, crossRegionReferences: true });
 new NotesFrontendStack(app, 'NotesFrontend', { env, crossRegionReferences: true, api: notesApi.api, certificate, hostedZone: notesHostedZone, subdomain: NOTES_SUBDOMAIN, webAclArn: notesWaf.webAclArn });
@@ -85,7 +86,7 @@ new NotesMonitoringStack(app, 'NotesMonitoring', { env, alertEmail: process.env.
 ### デプロイ前チェックリスト(手動・順序厳守)
 
 1. **新規GCPプロジェクト** + OAuth 同意画面 + OAuth クライアント作成(プール分離ポリシー)。client ID 控える。
-2. **cognitoドメインの prefix を予約**(グローバル一意)。その `https://notes-<prefix>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse` を Google の承認済みリダイレクトURIに登録(uraneko の Google クライアント流用は redirect_uri 不一致で失敗する)。
+2. Google の承認済みリダイレクトURIに **`https://notes-auth.rou39.com/oauth2/idpresponse`** を登録(uraneko の Google クライアントは流用しない=新規クライアントに登録。redirect_uri 不一致だとログインが失敗する)。
 3. `notes/google-oauth-client-secret` を **初回デプロイ前に** Secrets Manager 投入(でないと PLACEHOLDER が焼き込まれる)。
 4. `cdk deploy` → CfnOutput(pool id / client id / cognito domain)取得。
 5. それらを `frontend-notes/src/lib/auth.ts` に直書き。
@@ -183,9 +184,9 @@ WAF/IP はorigin直叩きでバイパス可能 & body内トークンを見られ
 
 Vite + React 19 + react-router 7、devポート5175。**2つの隔離されたルートツリー**:
 
-- **ADMIN SPA**: Google-only ログイン(uraneko の PKCE+state OAuth `auth.ts:156-267` 流用、email/pass 関数は削除、COGNITO_DOMAIN をデフォルトに、キーを `notes_*` に)。`AuthContext`/`AuthCallbackPage` は verbatim(二重code交換ガード込み)。DashboardPage は MyOrdersPage のマストヘッド+レスポンシブ表を流用(memo一覧/状態/日時/発行・再発行・失効・削除)。**秘密URLは発行/再発行時に1回だけ**モーダル表示(サーバはハッシュのみ保持=再表示不可、要注意書き)。
+- **ADMIN SPA**: Google-only ログイン(uraneko の PKCE+state OAuth `auth.ts:156-267` 流用、email/pass 関数は削除、COGNITO_DOMAIN を `https://notes-auth.rou39.com` に、キーを `notes_*` に)。`AuthContext`/`AuthCallbackPage` は verbatim(二重code交換ガード込み)。DashboardPage は MyOrdersPage のマストヘッド+レスポンシブ表を流用(memo一覧/状態/日時/発行・再発行・失効・削除)。**秘密URLは発行/再発行時に1回だけ**モーダル表示(サーバはハッシュのみ保持=再表示不可、要注意書き)。
 - **MEMO 画面(`/m`)**: **AuthProvider の外**に隔離(Cognito SDK/Google Fonts/全外部依存を memo チャンクから排除)。`App.tsx` 先頭で `pathname.startsWith('/m')` を分岐し **admin ツリーも lazy 化**(critique: 静的 import で Cognito が entry チャンクに漏れると XSS でフラグメントトークン窃取面が広がる)。token は `location.hash` から読み POST body のみで送信。複数タブ(title+body、作成/切替/編集)、上記自動保存、保存状態表示、アクセスログ表示。**contentはtextContent/textarea描画(HTML化しない)**、外部依存ゼロ、システムフォント。
-- **CSP**(NotesFrontend、フロントの要求): `connect-src 'self' https://notes-<prefix>.auth.ap-northeast-1.amazoncognito.com https://cognito-idp.ap-northeast-1.amazonaws.com; font-src 'self'`(uraneko のフォントホスト許可はコピーしない)。`/m` は `script-src 'self'`。`index.html` に `<meta name="referrer" content="no-referrer">` + robots noindex。
+- **CSP**(NotesFrontend、フロントの要求): `connect-src 'self' https://notes-auth.rou39.com https://cognito-idp.ap-northeast-1.amazonaws.com; font-src 'self'`(uraneko のフォントホスト許可はコピーしない)。`/m` は `script-src 'self'`。`index.html` に `<meta name="referrer" content="no-referrer">` + robots noindex。
 - **PWA-ready 構造**(SW は MVP 後回し): 将来 SW scope は `/m/` 限定、メモ内容は IndexedDB にトークン別、**SW HTTPキャッシュにメモ応答を絶対載せない**(URL同一で秘密URL間混線)。MVP のオフライン網は localStorage dirty バッファのみ。
 
 ---
@@ -210,7 +211,7 @@ Vite + React 19 + react-router 7、devポート5175。**2つの隔離された�
 決定的にビルドできる順序。各フェーズ末で verify。
 
 - **P0 インフラ土台**: `SubdomainSpa` construct + NotesStorage(5表)+ NotesSecrets を app.ts に配線し `cdk deploy`(RETAINで非破壊)。GCP/cognitoドメイン/シークレットのチェックリスト実施。
-- **P1 認証**: NotesAuth(Google IdP・デフォルトドメイン)+ NotesApi 骨組み + NotesFrontend。frontend-notes を scaffold(P0チェックリストのID直書き)。Google ログイン往復を実機確認。
+- **P1 認証**: NotesAuth(Google IdP・カスタムドメイン `notes-auth.rou39.com`)+ NotesApi 骨組み + NotesFrontend。frontend-notes を scaffold(P0チェックリストのID直書き)。Google ログイン往復を実機確認。
 - **P2 発行 + 秘密URLアクセス(コア)**: tokens.ts / issue-memo / get-memo(強整合解決・一律404・no-store)。admin DashboardPage で発行→秘密URLをモーダル表示→`/m/#token` で開けることを確認。
 - **P3 複数タブ + 自動保存**: tabs.ts / save-tab(version楽観ロック409 + throttle429 + byte413)/ create-tab / MemoScreen + autosave.ts。stale保存409・過大413・連打429・タブ切替/pagehideのflush(`/m/flush`)を検証。
 - **P4 再発行/失効/削除**: reissue/revoke/delete cascade。**「再発行で旧URLが次の強整合読みで即404、新URLは200」**を実地検証。
@@ -236,4 +237,4 @@ Vite + React 19 + react-router 7、devポート5175。**2つの隔離された�
 | 削除順 | **トークンを先に revoke** → タブ削除(半削除の生URLを防ぐ) |
 | ip_hash | 日次ローテート salt の HMAC(実際に回す) |
 
-**ロック(変更しない中核)**: フルSHA-256トークン + 強整合解決 + 条件付きTransactWrite再発行/失効 / タブ毎version 409 / coupon.ts原子カウンタ / 一律404 / フラグメント+no-store+no-referrer+textContent+外部依存ゼロ / 本番非retrofit + 共有証明書再利用 + デフォルトcognitoドメイン。
+**ロック(変更しない中核)**: フルSHA-256トークン + 強整合解決 + 条件付きTransactWrite再発行/失効 / タブ毎version 409 / coupon.ts原子カウンタ / 一律404 / フラグメント+no-store+no-referrer+textContent+外部依存ゼロ / 本番非retrofit + 共有証明書再利用 + カスタム認証ドメイン `notes-auth.rou39.com`(2026-07-17 確定)。
