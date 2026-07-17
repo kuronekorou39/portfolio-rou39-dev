@@ -27,6 +27,7 @@ import { NotesStorageStack } from '../lib/notes/storage-stack';
 import { NotesSecretsStack } from '../lib/notes/secrets-stack';
 import { NotesAuthStack } from '../lib/notes/auth-stack';
 import { NotesApiStack } from '../lib/notes/api-stack';
+import { NotesFrontendStack } from '../lib/notes/frontend-stack';
 
 const app = new cdk.App();
 
@@ -245,7 +246,7 @@ const notesAuth = new NotesAuthStack(app, 'NotesAuth', {
   googleClientSecret: notesSecrets.googleOAuthClientSecret,
 });
 
-new NotesApiStack(app, 'NotesApi', {
+const notesApi = new NotesApiStack(app, 'NotesApi', {
   env,
   usersTable: notesStorage.usersTable,
   memosTable: notesStorage.memosTable,
@@ -253,4 +254,15 @@ new NotesApiStack(app, 'NotesApi', {
   tokensTable: notesStorage.tokensTable,
   userPool: notesAuth.userPool,
   siteUrl: `https://${NOTES_SUBDOMAIN}`,
+});
+
+// WAF(webAclArn)は P5 で付ける。無くても配信は成立する。
+new NotesFrontendStack(app, 'NotesFrontend', {
+  env,
+  crossRegionReferences: true,
+  api: notesApi.api,
+  certificate,
+  hostedZone: notesHostedZone,
+  subdomain: NOTES_SUBDOMAIN,
+  authDomain: NOTES_AUTH_DOMAIN,
 });

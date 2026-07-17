@@ -31,6 +31,10 @@ jobs:
       - name: Build frontend-uraneko
         run: npm run build:uraneko
 
+      # notes フロント(NotesFrontendStack も dist があればデプロイ、無ければ既存温存)
+      - name: Build frontend-notes
+        run: npm run build:notes
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

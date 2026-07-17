@@ -16,7 +16,8 @@ function PageLoader() {
 }
 
 export default function App() {
-  const isMemo = window.location.pathname.startsWith('/m');
+  const p = window.location.pathname;
+  const isMemo = p === '/m' || p.startsWith('/m/');
   return (
     <Suspense fallback={<PageLoader />}>{isMemo ? <MemoScreen /> : <AdminApp />}</Suspense>
   );
