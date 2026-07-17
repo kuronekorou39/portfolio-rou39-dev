@@ -26,6 +26,7 @@ import { UranekoMonitoringStack } from '../lib/uraneko/monitoring-stack';
 import { NotesStorageStack } from '../lib/notes/storage-stack';
 import { NotesSecretsStack } from '../lib/notes/secrets-stack';
 import { NotesAuthStack } from '../lib/notes/auth-stack';
+import { NotesApiStack } from '../lib/notes/api-stack';
 
 const app = new cdk.App();
 
@@ -221,7 +222,7 @@ new UranekoMonitoringStack(app, 'UranekoMonitoring', {
 // 設計と段取りは docs/notes-implementation-plan.md を参照。
 // ============================================================
 
-// P0-P1: Storage / Secrets / Auth まで。Api/Waf/Frontend/Monitoring は以降のフェーズで追加する。
+// Storage / Secrets / Auth / Api まで。Waf/Frontend/Monitoring は以降のフェーズで追加する。
 // NotesAuth は Google 連携のみ(NotesEmail・pre-signup 不要)。認証ドメインはカスタム
 // notes-auth.rou39.com で、uraneko-auth と同様に共有証明書 + crossRegionReferences を使う。
 const notesHostedZone = route53.HostedZone.fromHostedZoneAttributes(
@@ -231,10 +232,10 @@ const notesHostedZone = route53.HostedZone.fromHostedZoneAttributes(
   },
 );
 
-new NotesStorageStack(app, 'NotesStorage', { env });
+const notesStorage = new NotesStorageStack(app, 'NotesStorage', { env });
 const notesSecrets = new NotesSecretsStack(app, 'NotesSecrets', { env });
 
-new NotesAuthStack(app, 'NotesAuth', {
+const notesAuth = new NotesAuthStack(app, 'NotesAuth', {
   env,
   crossRegionReferences: true,
   certificate,
@@ -242,4 +243,14 @@ new NotesAuthStack(app, 'NotesAuth', {
   authDomain: NOTES_AUTH_DOMAIN,
   subdomain: NOTES_SUBDOMAIN,
   googleClientSecret: notesSecrets.googleOAuthClientSecret,
+});
+
+new NotesApiStack(app, 'NotesApi', {
+  env,
+  usersTable: notesStorage.usersTable,
+  memosTable: notesStorage.memosTable,
+  tabsTable: notesStorage.tabsTable,
+  tokensTable: notesStorage.tokensTable,
+  userPool: notesAuth.userPool,
+  siteUrl: `https://${NOTES_SUBDOMAIN}`,
 });
