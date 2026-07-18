@@ -36,15 +36,18 @@ async function hashIp(ip: string): Promise<string> {
 }
 
 /**
- * クライアント IP の抽出。CloudFront → エッジ最適化 API Gateway の二重CDN構成では
- * X-Forwarded-For の「末尾から2番目」が実クライアント(先頭はクライアント自身が
- * 偽装可能。本家 contact のレート制限で実証済みの取り方)。
+ * クライアント IP の抽出。この構成(notes CloudFront → エッジ最適化 API Gateway)では
+ * XFF はインフラが末尾に3要素を積む: [クライアントIP(CF#1が付与), CF#1エグレス(CF#2が付与),
+ * CF#2エグレス(APIGWが付与)]。よって実クライアントは「末尾から3番目」
+ * (2026-07-19 に本番実測で確認。末尾から2番目だと CloudFront の 3.x IP が記録された)。
+ * クライアントが XFF を偽装して先頭に積んでも、インフラ付与分は常に末尾3つなので影響しない。
  */
 function clientIpOf(event: APIGatewayProxyEvent): string {
   const xff = event.headers?.['X-Forwarded-For'] ?? event.headers?.['x-forwarded-for'] ?? '';
   const parts = xff.split(',').map((s) => s.trim()).filter(Boolean);
-  if (parts.length >= 2) return parts[parts.length - 2];
-  if (parts.length === 1) return parts[0];
+  if (parts.length >= 3) return parts[parts.length - 3];
+  // 経路が変わった場合(REGIONAL 化等)のフォールバック
+  if (parts.length >= 1) return parts[0];
   return event.requestContext?.identity?.sourceIp ?? 'unknown';
 }
 
