@@ -40,6 +40,12 @@ function CoinIcon({ coin, size = 30 }: { coin: 'btc' | 'ltc'; size?: number }) {
 
 // ---------- 図記号(インライン SVG・線画で統一) ----------
 const GLYPH = 'var(--color-gold-bright)';
+// 取引所=温色 / ウォレット=寒色 で色分け(役割カード・比較見出し・ルート図で共通)。
+// 円・送金先は「どのルートも共通の端点」なので中立色のまま。色が付くのは中間の2つだけ。
+const EXCHANGE = { fg: '#caa25a', line: 'rgba(202,162,90,0.55)', wash: 'rgba(202,162,90,0.08)' };
+const WALLET = { fg: '#6aa0b8', line: 'rgba(106,160,184,0.55)', wash: 'rgba(106,160,184,0.08)' };
+// 番号ふせん(①②③…)の色。灰より視認しやすい温かい金にする。
+const PIN_BG = '#d6b76e';
 
 // STEP 2 / 送金先。QR の見た目(ファインダ3つ + データ)を記号化したもの。
 function QrIcon({ size = 26, color = GLYPH }: { size?: number; color?: string }) {
@@ -349,7 +355,7 @@ function Pin({ n, style }: { n: number; style?: CSSProperties }) {
         height: 16,
         flexShrink: 0,
         borderRadius: '50%',
-        background: 'var(--color-gold-bright)',
+        background: PIN_BG,
         color: 'var(--color-deep)',
         fontFamily: 'var(--font-mono)',
         fontSize: 9,
@@ -419,9 +425,27 @@ const NODE_LABEL: Record<NodeKind, string> = {
 
 function NodeGlyph({ kind, size }: { kind: NodeKind; size: number }) {
   if (kind === 'yen') return <YenIcon size={size} />;
-  if (kind === 'exchange') return <ExchangeIcon size={size} />;
-  if (kind === 'wallet') return <WalletIcon size={size} />;
+  if (kind === 'exchange') return <ExchangeIcon size={size} color={EXCHANGE.fg} />;
+  if (kind === 'wallet') return <WalletIcon size={size} color={WALLET.fg} />;
   return <QrIcon size={size} />;
+}
+
+// 中間(取引所/ウォレット)だけ色付き。端点(円/送金先)は中立で、強調しない。
+function nodeStyle(kind: NodeKind): { line: string; wash: string; fg: string } {
+  if (kind === 'exchange') return EXCHANGE;
+  if (kind === 'wallet') return WALLET;
+  return { line: 'var(--faint)', wash: 'transparent', fg: 'var(--color-fg)' };
+}
+
+/**
+ * 隣り合うノード間の矢印。行き来できる関係は両向き(↔)、片道は(→)。
+ * ↔ = 円⇄取引所(買う/換金)、取引所⇄ウォレット(出し入れ)。
+ * → = 送金先へ向かう最後の1本、および 円→ウォレット(ウォレットからは直接円に戻せない)。
+ */
+function arrowBetween(a: NodeKind, b: NodeKind): '↔' | '→' {
+  if (a === 'yen' && b === 'exchange') return '↔';
+  if (a === 'exchange' && b === 'wallet') return '↔';
+  return '→';
 }
 
 /**
@@ -455,42 +479,45 @@ function RouteCard({
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'stretch', flexWrap: 'wrap', marginBottom: 10 }}>
-        {nodes.map((kind, i) => (
-          <Fragment key={`${kind}-${i}`}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5,
-                padding: isTiny ? '7px 3px' : isNarrow ? '8px 5px' : '10px 8px',
-                minWidth: isTiny ? 40 : isNarrow ? 54 : 72,
-                border: `1px solid ${kind === 'dest' ? 'rgba(184,181,172,0.5)' : 'var(--faint)'}`,
-                background: kind === 'dest' ? 'rgba(184,181,172,0.06)' : 'transparent',
-              }}
-            >
-              <NodeGlyph kind={kind} size={iconSize} />
-              <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: isTiny ? 9 : isNarrow ? 9.5 : 11, letterSpacing: isTiny ? 0 : 0.5, color: 'var(--color-fg)', whiteSpace: 'nowrap' }}>
-                {NODE_LABEL[kind]}
-              </span>
-            </div>
-            {i < nodes.length - 1 && (
-              <span
-                aria-hidden
+        {nodes.map((kind, i) => {
+          const ns = nodeStyle(kind);
+          return (
+            <Fragment key={`${kind}-${i}`}>
+              <div
                 style={{
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  color: 'var(--color-gold)',
-                  fontSize: isTiny ? 11 : 13,
-                  padding: isTiny ? '0 2px' : isNarrow ? '0 4px' : '0 8px',
+                  justifyContent: 'center',
+                  gap: 5,
+                  padding: isTiny ? '7px 3px' : isNarrow ? '8px 5px' : '10px 8px',
+                  minWidth: isTiny ? 40 : isNarrow ? 54 : 72,
+                  border: `1px solid ${ns.line}`,
+                  background: ns.wash,
                 }}
               >
-                →
-              </span>
-            )}
-          </Fragment>
-        ))}
+                <NodeGlyph kind={kind} size={iconSize} />
+                <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: isTiny ? 9 : isNarrow ? 9.5 : 11, letterSpacing: isTiny ? 0 : 0.5, color: ns.fg, whiteSpace: 'nowrap' }}>
+                  {NODE_LABEL[kind]}
+                </span>
+              </div>
+              {i < nodes.length - 1 && (
+                <span
+                  aria-hidden
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: 'var(--color-gold)',
+                    fontSize: isTiny ? 12 : 14,
+                    padding: isTiny ? '0 2px' : isNarrow ? '0 4px' : '0 7px',
+                  }}
+                >
+                  {arrowBetween(kind, nodes[i + 1])}
+                </span>
+              )}
+            </Fragment>
+          );
+        })}
       </div>
       <div style={{ fontSize: 12, lineHeight: 1.8, color: 'var(--muted)' }}>{note}</div>
     </div>
@@ -539,12 +566,12 @@ function CmpTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] })
   );
 }
 
-// 比較表の見出し。種別グリフを添えて「取引所の表/ウォレットの表」を一目で分ける。
-function CmpHead({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+// 比較表の見出し。種別グリフと色で「取引所の表/ウォレットの表」を一目で分ける。
+function CmpHead({ icon, accent, children }: { icon: ReactNode; accent?: string; children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '18px 0 2px' }}>
       {icon}
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)' }}>{children}</span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: accent ?? 'var(--color-gold)' }}>{children}</span>
     </div>
   );
 }
@@ -579,13 +606,13 @@ function CoinCard({ coin, name, tag, pros, cons }: { coin: 'btc' | 'ltc'; name: 
   );
 }
 
-// 取引所 / ウォレットの役割カード
-function DefCard({ icon, name, tag, note }: { icon: ReactNode; name: string; tag: string; note: ReactNode }) {
+// 取引所 / ウォレットの役割カード。accent で種別色を上辺と名前に効かせる。
+function DefCard({ icon, name, tag, note, accent }: { icon: ReactNode; name: string; tag: string; note: ReactNode; accent?: string }) {
   return (
-    <Card>
+    <Card style={accent ? { borderTop: `2px solid ${accent}` } : undefined}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         {icon}
-        <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 16, fontWeight: 300, letterSpacing: 2, color: 'var(--color-fg)' }}>{name}</span>
+        <span style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 16, fontWeight: 300, letterSpacing: 2, color: accent ?? 'var(--color-fg)' }}>{name}</span>
       </div>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, color: 'var(--color-gold)', marginBottom: 10 }}>{tag}</div>
       <div style={{ fontFamily: 'var(--font-serif-jp)', fontSize: 12.5, lineHeight: 1.9, fontWeight: 300, color: 'var(--muted)' }}>{note}</div>
@@ -658,8 +685,8 @@ export default function GuidePage() {
     {
       title: 'ウォレットだけ',
       who: '既にコインがある・急ぎ',
-      nodes: ['wallet', 'dest'],
-      note: '自分のウォレットから送るだけ。取引所の審査を挟まないぶん速い。',
+      nodes: ['yen', 'wallet', 'dest'],
+      note: 'すでに持っているコインを、自分のウォレットから送るだけ。取引所の審査を挟まないぶん速い。',
     },
     {
       title: '取引所 → ウォレット',
@@ -760,7 +787,8 @@ export default function GuidePage() {
           <Sub>どのルートで用意する?</Sub>
           <div style={{ display: 'flex', flexDirection: isNarrow ? 'column' : 'row', gap: 14, margin: '10px 0 16px' }}>
             <DefCard
-              icon={<ExchangeIcon size={26} />}
+              icon={<ExchangeIcon size={26} color={EXCHANGE.fg} />}
+              accent={EXCHANGE.fg}
               name="取引所"
               tag="円で買う・換金する"
               note={
@@ -771,7 +799,8 @@ export default function GuidePage() {
               }
             />
             <DefCard
-              icon={<WalletIcon size={26} />}
+              icon={<WalletIcon size={26} color={WALLET.fg} />}
+              accent={WALLET.fg}
               name="ウォレット"
               tag="持つ・送る"
               note={
@@ -788,11 +817,17 @@ export default function GuidePage() {
           {routes.map((r) => (
             <RouteCard key={r.title} {...r} isNarrow={isNarrow} isTiny={isTiny} />
           ))}
+          <div style={{ fontSize: 11.5, color: 'var(--dim)', lineHeight: 1.85, margin: '2px 0 6px' }}>
+            矢印 <b style={{ color: 'var(--muted)' }}>↔</b> は行き来できる関係(取引所なら<b style={{ color: 'var(--muted)' }}>円に戻す＝換金</b>もできる)、
+            <b style={{ color: 'var(--muted)' }}>→</b> は片道。
+            <span style={{ color: 'var(--color-fg)' }}>円</span>と<span style={{ color: 'var(--color-fg)' }}>送金先</span>はどのルートも同じで、
+            選ぶのは<b style={{ color: 'var(--color-fg)' }}>あいだの道具</b>だけ。
+          </div>
 
-          <CmpHead icon={<ExchangeIcon size={18} />}>取引所くらべ(買う・換金)</CmpHead>
+          <CmpHead icon={<ExchangeIcon size={18} color={EXCHANGE.fg} />} accent={EXCHANGE.fg}>取引所くらべ(買う・換金)</CmpHead>
           <CmpTable columns={['取引所', '特徴', '初心者', 'BTC/LTC']} rows={exRows} />
 
-          <CmpHead icon={<WalletIcon size={18} />}>ウォレットくらべ(持つ・送る)</CmpHead>
+          <CmpHead icon={<WalletIcon size={18} color={WALLET.fg} />} accent={WALLET.fg}>ウォレットくらべ(持つ・送る)</CmpHead>
           <CmpTable columns={['ウォレット', 'タイプ', '対応', '特徴']} rows={wRows} />
 
           <div style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.8, marginTop: 6 }}>
