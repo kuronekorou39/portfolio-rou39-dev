@@ -43,9 +43,18 @@ export interface IssueResult {
   url: string;
 }
 
+export interface AccessLogEntry {
+  ts: string;
+  /** HMAC(日次salt, IP) の先頭16hex。生IPは復元不能。同日内の同一相手は同じ値になる。 */
+  ip_hash: string;
+  ua: string;
+}
+
 export interface MemoData {
   memo: { title: string; updated_at: string };
   tabs: { tab_id: string; title: string; content: string; version: number; position: number }[];
+  /** 直近のアクセス履歴(新しい順)。「誰がいつ開いたか」の可視化。 */
+  access_log?: AccessLogEntry[];
 }
 
 export const api = {
@@ -86,6 +95,12 @@ export const api = {
       headers: authHeaders(idToken),
       body: JSON.stringify({ title }),
     });
+  },
+  memoAccessLog(idToken: string, memoId: string): Promise<{ entries: AccessLogEntry[] }> {
+    return request<{ entries: AccessLogEntry[] }>(
+      `/admin/memos/${encodeURIComponent(memoId)}/access-log`,
+      { headers: authHeaders(idToken) },
+    );
   },
 
   // ---- メモ画面(秘密URLトークンを body でのみ渡す。path/query に載せない) ----

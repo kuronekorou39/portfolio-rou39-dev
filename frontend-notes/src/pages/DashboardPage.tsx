@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { beginGoogleLogin, getIdToken } from '../lib/auth';
-import { api, ApiError, type MemoSummary } from '../lib/api';
+import { api, ApiError, type AccessLogEntry, type MemoSummary } from '../lib/api';
 
 function fmtJst(iso: string): string {
   return new Date(iso).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
@@ -211,6 +211,34 @@ export default function DashboardPage() {
     );
   };
 
+  // アクセス履歴のインライン展開(memo_id → entries / 'loading')
+  const [logs, setLogs] = useState<Record<string, AccessLogEntry[] | 'loading'>>({});
+  const onToggleLog = async (memoId: string) => {
+    if (logs[memoId]) {
+      // 既に開いていれば閉じる
+      setLogs((prev) => {
+        const next = { ...prev };
+        delete next[memoId];
+        return next;
+      });
+      return;
+    }
+    setLogs((prev) => ({ ...prev, [memoId]: 'loading' }));
+    try {
+      const idToken = await getIdToken();
+      if (!idToken) throw new Error('login');
+      const r = await api.memoAccessLog(idToken, memoId);
+      setLogs((prev) => ({ ...prev, [memoId]: r.entries }));
+    } catch {
+      setLogs((prev) => {
+        const next = { ...prev };
+        delete next[memoId];
+        return next;
+      });
+      setActionError('アクセス履歴の取得に失敗しました。');
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '96px 24px', color: 'var(--muted)' }}>
@@ -403,6 +431,9 @@ export default function DashboardPage() {
                           無効化
                         </button>
                       )}
+                      <button onClick={() => void onToggleLog(m.memo_id)} style={actionBtn}>
+                        {logs[m.memo_id] ? '履歴を閉じる' : '履歴'}
+                      </button>
                       <button
                         onClick={() => onDelete(m)}
                         disabled={busy}
@@ -411,6 +442,49 @@ export default function DashboardPage() {
                         削除
                       </button>
                     </div>
+                    {logs[m.memo_id] === 'loading' && (
+                      <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 0' }}>
+                        読み込み中…
+                      </p>
+                    )}
+                    {Array.isArray(logs[m.memo_id]) && (
+                      <ul style={{ listStyle: 'none', padding: '6px 0 0', margin: 0 }}>
+                        {(logs[m.memo_id] as AccessLogEntry[]).length === 0 && (
+                          <li style={{ fontSize: 12, color: 'var(--muted)' }}>
+                            アクセスはまだありません。
+                          </li>
+                        )}
+                        {(logs[m.memo_id] as AccessLogEntry[]).map((e, i) => (
+                          <li
+                            key={i}
+                            style={{
+                              display: 'flex',
+                              gap: 10,
+                              fontSize: 12,
+                              color: 'var(--muted)',
+                              padding: '2px 0',
+                            }}
+                          >
+                            <span style={{ flexShrink: 0 }}>{fmtJst(e.ts)}</span>
+                            <span
+                              style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }}
+                              title="訪問元の匿名ID(同日の同じ相手は同じID)"
+                            >
+                              {e.ip_hash.slice(0, 8)}
+                            </span>
+                            <span
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {e.ua}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   <span
                     style={{

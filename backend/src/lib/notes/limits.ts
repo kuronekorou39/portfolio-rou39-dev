@@ -28,3 +28,13 @@ export const MIN_SAVE_INTERVAL_MS = 1_000;
  * ならないように分離している(ページ離脱時の 429 はリトライ不能=編集消失のため)。
  */
 export const MIN_FLUSH_INTERVAL_MS = 1_000;
+
+/**
+ * アクセスログの coalesce 窓(ms)。同じ秘密URLからの閲覧はこの間隔で1件だけ記録する。
+ * 未スロットルの読み取りパスからの書き込みアンプ(連打で無制限にログ行が増える)を防ぎ、
+ * 「誰がいつ開いたか」という目的には十分な粒度に抑える。
+ */
+export const ACCESS_LOG_COALESCE_MS = 10 * 60 * 1000;
+
+/** アクセスログの保持日数(DynamoDB TTL)。 */
+export const ACCESS_LOG_RETENTION_DAYS = 90;

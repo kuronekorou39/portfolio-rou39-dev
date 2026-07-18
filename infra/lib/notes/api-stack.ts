@@ -4,6 +4,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -12,6 +13,8 @@ interface NotesApiStackProps extends cdk.StackProps {
   memosTable: dynamodb.ITable;
   tabsTable: dynamodb.ITable;
   tokensTable: dynamodb.ITable;
+  accessLogsTable: dynamodb.ITable;
+  ipHashSecret: secretsmanager.ISecret; // アクセスログの ip_hash 日次salt導出用
   userPool: cognito.IUserPool;
   siteUrl: string; // https://notes.rou39.com
 }
@@ -57,6 +60,8 @@ export class NotesApiStack extends cdk.Stack {
       MEMOS_TABLE: props.memosTable.tableName,
       TABS_TABLE: props.tabsTable.tableName,
       TOKENS_TABLE: props.tokensTable.tableName,
+      ACCESS_LOGS_TABLE: props.accessLogsTable.tableName,
+      IP_HASH_SECRET: props.ipHashSecret.secretName,
       NOTES_SITE_URL: props.siteUrl,
     };
 
@@ -104,9 +109,12 @@ export class NotesApiStack extends cdk.Stack {
       bundling,
       reservedConcurrentExecutions: 20,
     });
-    props.tokensTable.grantReadData(getMemoFn);
+    // tokens は RW(アクセスログの coalesce マーク last_view_log_ms を条件付き更新するため)
+    props.tokensTable.grantReadWriteData(getMemoFn);
     props.memosTable.grantReadData(getMemoFn);
     props.tabsTable.grantReadData(getMemoFn);
+    props.accessLogsTable.grantReadWriteData(getMemoFn); // 閲覧記録の Put + 表示用 Query
+    props.ipHashSecret.grantRead(getMemoFn);
 
     // --- 管理系(再発行/失効/削除/リネーム) ---
     const adminFn = (id: string, entry: string) =>
@@ -141,6 +149,10 @@ export class NotesApiStack extends cdk.Stack {
 
     const renameFn = adminFn('RenameFn', 'admin-rename.ts');
     props.memosTable.grantReadWriteData(renameFn);
+
+    const accessLogFn = adminFn('AccessLogFn', 'admin-access-log.ts');
+    props.memosTable.grantReadData(accessLogFn); // 所有者チェック
+    props.accessLogsTable.grantReadData(accessLogFn);
 
     // --- 書き込み系(公開: 保存/タブ追加/タブ削除/離脱時フラッシュ) ---
     // いずれも未認証。resolveTokenThrottled がトークンアイテムへの条件付き Update で
@@ -227,6 +239,9 @@ export class NotesApiStack extends cdk.Stack {
     adminMemoById
       .addResource('revoke')
       .addMethod('POST', new apigateway.LambdaIntegration(revokeFn), adminAuth);
+    adminMemoById
+      .addResource('access-log')
+      .addMethod('GET', new apigateway.LambdaIntegration(accessLogFn), adminAuth);
 
     const m = this.api.root.addResource('m');
     m.addResource('get').addMethod('POST', new apigateway.LambdaIntegration(getMemoFn));

@@ -41,6 +41,22 @@ export interface NotesToken {
   last_save_ms?: number;
 }
 
+/**
+ * notes-access-logs のアクセス記録(PK memo_id / SK ts_ulid)。
+ * ip はそのまま保存せず HMAC(日次salt, ip) の先頭16hex のみ(逆引き不能・同日内の同一性は判別可)。
+ * expires_at の TTL で自動失効する。
+ */
+export interface AccessLogEntry {
+  memo_id: string;
+  ts_ulid: string; // `${ISO時刻}#${乱数}` — 新しい順に Query するための複合SK
+  token_hash: string; // どのURL経由か(生トークンは絶対に保存しない)
+  ip_hash: string;
+  ua: string;
+  event: 'view';
+  ts: string;
+  expires_at: number; // epoch秒(TTL)
+}
+
 /** notes-users の無料枠カウンタ行(PK user_id)。未認証 Lambda からは一切触らない。 */
 export interface NotesUserQuota {
   user_id: string;

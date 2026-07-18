@@ -1,6 +1,45 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, ApiError, type MemoData } from '../lib/api';
+import { api, ApiError, type AccessLogEntry, type MemoData } from '../lib/api';
 import { useAutosave, type TabState } from '../lib/autosave';
+
+/** アクセス履歴(直近)。E2E暗号化しない代わりに「誰がいつ開いたか」を利用者に見せる。 */
+function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
+  if (entries.length === 0) return null;
+  return (
+    <details style={{ marginTop: 24, fontSize: 12, color: 'var(--muted)' }}>
+      <summary style={{ cursor: 'pointer', userSelect: 'none' }}>
+        アクセス履歴(直近 {entries.length} 件)
+      </summary>
+      <ul style={{ listStyle: 'none', padding: '8px 0 0', margin: 0 }}>
+        {entries.map((e, i) => (
+          <li
+            key={i}
+            style={{
+              display: 'flex',
+              gap: 12,
+              padding: '3px 0',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            <span style={{ flexShrink: 0 }}>
+              {new Date(e.ts).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }} title="訪問元の匿名ID(同じ日の同じ相手は同じIDになります)">
+              {e.ip_hash.slice(0, 8)}
+            </span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {e.ua}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p style={{ margin: '8px 0 0' }}>
+        ※ このURLを開いたアクセスの記録です(10分内の連続アクセスは1件にまとめられます)。
+        IDは匿名化されており、IPアドレスそのものは保存されません。
+      </p>
+    </details>
+  );
+}
 
 /**
  * メモ画面(秘密URL専用・ログイン不要)。
@@ -266,6 +305,8 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
           />
         </>
       )}
+
+      <AccessLogPanel entries={data.access_log ?? []} />
     </main>
   );
 }

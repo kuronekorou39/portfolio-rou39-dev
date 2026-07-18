@@ -4,6 +4,7 @@ import { docClient } from '../../lib/dynamo';
 import { ok, notFound, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
 import { resolveToken } from '../../lib/notes/tokens';
+import { recordViewCoalesced, listAccess } from '../../lib/notes/access-log';
 import type { Memo, Tab } from '../../lib/notes/types';
 
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
@@ -35,6 +36,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const memo = memoRes.Item as Memo | undefined;
     if (!memo || memo.status !== 'active') return noStore(notFound());
 
+    // 閲覧を記録(トークン単位で10分coalesce・best-effort)。
+    // 「誰がいつ開いたか」をメモ画面に出すのが、E2E暗号化しない代わりの受容策。
+    await recordViewCoalesced({ token_hash: resolved.token_hash, memo_id: memo.memo_id, event });
+
     // 全タブ取得。MAX_TABS_PER_MEMO × TAB_CAP_BYTES ≤ 約1MB に制約しているため
     // Query 1ページに必ず収まる(limits.ts 参照)。
     const tabsRes = await docClient.send(
@@ -54,10 +59,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         position: t.position,
       }));
 
+    const access_log = await listAccess(memo.memo_id, 20);
+
     return noStore(
       ok({
         memo: { title: memo.title, updated_at: memo.updated_at },
         tabs,
+        access_log,
       }),
     );
   } catch (err) {

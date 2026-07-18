@@ -254,6 +254,8 @@ const notesApi = new NotesApiStack(app, 'NotesApi', {
   memosTable: notesStorage.memosTable,
   tabsTable: notesStorage.tabsTable,
   tokensTable: notesStorage.tokensTable,
+  accessLogsTable: notesStorage.accessLogsTable,
+  ipHashSecret: notesSecrets.ipHashSecret,
   userPool: notesAuth.userPool,
   siteUrl: `https://${NOTES_SUBDOMAIN}`,
 });
