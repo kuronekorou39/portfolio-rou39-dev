@@ -45,7 +45,9 @@ export interface IssueResult {
 
 export interface AccessLogEntry {
   ts: string;
-  /** HMAC(日次salt, IP) の先頭16hex。生IPは復元不能。同日内の同一相手は同じ値になる。 */
+  /** アクセス元IPアドレス(IP保存開始前の旧エントリは空)。 */
+  ip: string;
+  /** HMAC(日次salt, IP) の先頭16hex。旧エントリ表示のフォールバック用。 */
   ip_hash: string;
   ua: string;
 }

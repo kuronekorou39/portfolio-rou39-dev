@@ -85,11 +85,13 @@ export async function recordViewCoalesced(params: {
 
   try {
     const ts = new Date(now).toISOString();
+    const ip = clientIpOf(params.event);
     const entry: AccessLogEntry = {
       memo_id: params.memo_id,
       ts_ulid: `${ts}#${randomUUID().slice(0, 8)}`,
       token_hash: params.token_hash,
-      ip_hash: await hashIp(clientIpOf(params.event)),
+      ip,
+      ip_hash: await hashIp(ip),
       ua: (params.event.headers?.['User-Agent'] ?? params.event.headers?.['user-agent'] ?? '').slice(0, 256),
       event: 'view',
       ts,
@@ -103,7 +105,7 @@ export async function recordViewCoalesced(params: {
 
 /** 直近のアクセス記録を新しい順に返す(メモ画面/管理画面の表示用)。 */
 export async function listAccess(memo_id: string, limit: number): Promise<
-  Pick<AccessLogEntry, 'ts' | 'ip_hash' | 'ua'>[]
+  Pick<AccessLogEntry, 'ts' | 'ip' | 'ip_hash' | 'ua'>[]
 > {
   const res = await docClient.send(
     new QueryCommand({
@@ -116,6 +118,7 @@ export async function listAccess(memo_id: string, limit: number): Promise<
   );
   return ((res.Items as AccessLogEntry[] | undefined) ?? []).map((e) => ({
     ts: e.ts,
+    ip: e.ip ?? '', // IP保存前の旧エントリは空(フロントは ip_hash にフォールバック)
     ip_hash: e.ip_hash,
     ua: e.ua,
   }));

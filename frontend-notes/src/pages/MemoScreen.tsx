@@ -24,8 +24,8 @@ function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
             <span style={{ flexShrink: 0 }}>
               {new Date(e.ts).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }} title="訪問元の匿名ID(同じ日の同じ相手は同じIDになります)">
-              {e.ip_hash.slice(0, 8)}
+            <span style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }} title="アクセス元のIPアドレス">
+              {e.ip || e.ip_hash.slice(0, 8)}
             </span>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {e.ua}
@@ -35,7 +35,7 @@ function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
       </ul>
       <p style={{ margin: '8px 0 0' }}>
         ※ このURLを開いたアクセスの記録です(10分内の連続アクセスは1件にまとめられます)。
-        IDは匿名化されており、IPアドレスそのものは保存されません。
+        アクセス元のIPアドレスと端末情報を記録し、90日で自動削除されます。
       </p>
     </details>
   );

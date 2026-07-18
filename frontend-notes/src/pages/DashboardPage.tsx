@@ -468,9 +468,9 @@ export default function DashboardPage() {
                             <span style={{ flexShrink: 0 }}>{fmtJst(e.ts)}</span>
                             <span
                               style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }}
-                              title="訪問元の匿名ID(同日の同じ相手は同じID)"
+                              title="アクセス元のIPアドレス"
                             >
-                              {e.ip_hash.slice(0, 8)}
+                              {e.ip || e.ip_hash.slice(0, 8)}
                             </span>
                             <span
                               style={{

@@ -43,13 +43,15 @@ export interface NotesToken {
 
 /**
  * notes-access-logs のアクセス記録(PK memo_id / SK ts_ulid)。
- * ip はそのまま保存せず HMAC(日次salt, ip) の先頭16hex のみ(逆引き不能・同日内の同一性は判別可)。
- * expires_at の TTL で自動失効する。
+ * 生IPを保存・表示する(2026-07-19 ユーザー決定。「誰が開いたか」を実用にするため)。
+ * ip_hash(HMAC(日次salt, ip) 先頭16hex)も併存させ、日をまたいだ同一性の目安に使える。
+ * expires_at の TTL(90日)で自動失効する。
  */
 export interface AccessLogEntry {
   memo_id: string;
   ts_ulid: string; // `${ISO時刻}#${乱数}` — 新しい順に Query するための複合SK
   token_hash: string; // どのURL経由か(生トークンは絶対に保存しない)
+  ip: string;
   ip_hash: string;
   ua: string;
   event: 'view';
