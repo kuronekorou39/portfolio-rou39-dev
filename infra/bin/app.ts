@@ -28,6 +28,8 @@ import { NotesSecretsStack } from '../lib/notes/secrets-stack';
 import { NotesAuthStack } from '../lib/notes/auth-stack';
 import { NotesApiStack } from '../lib/notes/api-stack';
 import { NotesFrontendStack } from '../lib/notes/frontend-stack';
+import { NotesWafStack } from '../lib/notes/waf-stack';
+import { NotesMonitoringStack } from '../lib/notes/monitoring-stack';
 
 const app = new cdk.App();
 
@@ -256,7 +258,12 @@ const notesApi = new NotesApiStack(app, 'NotesApi', {
   siteUrl: `https://${NOTES_SUBDOMAIN}`,
 });
 
-// WAF(webAclArn)は P5 で付ける。無くても配信は成立する。
+// notes CloudFront 用 WAFv2 WebACL は us-east-1 必須
+const notesWaf = new NotesWafStack(app, 'NotesWaf', {
+  env: { account: env.account, region: 'us-east-1' },
+  crossRegionReferences: true,
+});
+
 new NotesFrontendStack(app, 'NotesFrontend', {
   env,
   crossRegionReferences: true,
@@ -265,4 +272,14 @@ new NotesFrontendStack(app, 'NotesFrontend', {
   hostedZone: notesHostedZone,
   subdomain: NOTES_SUBDOMAIN,
   authDomain: NOTES_AUTH_DOMAIN,
+  webAclArn: notesWaf.webAclArn,
+});
+
+new NotesMonitoringStack(app, 'NotesMonitoring', {
+  env,
+  alertEmail: process.env.ALERT_EMAIL || 'kuronekorou39@gmail.com',
+  getMemoFn: notesApi.getMemoFn,
+  saveTabFn: notesApi.saveTabFn,
+  flushFn: notesApi.flushFn,
+  issueMemoFn: notesApi.issueMemoFn,
 });

@@ -26,6 +26,11 @@ interface NotesApiStackProps extends cdk.StackProps {
  */
 export class NotesApiStack extends cdk.Stack {
   public readonly api: apigateway.RestApi;
+  // 監視スタックからアラームを張れるよう公開
+  public readonly issueMemoFn: lambda.Function;
+  public readonly getMemoFn: lambda.Function;
+  public readonly saveTabFn: lambda.Function;
+  public readonly flushFn: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NotesApiStackProps) {
     super(scope, id, props);
@@ -190,6 +195,11 @@ export class NotesApiStack extends cdk.Stack {
       reservedConcurrentExecutions: 10,
     });
     writeGrants(flushFn, false);
+
+    this.issueMemoFn = issueMemoFn;
+    this.getMemoFn = getMemoFn;
+    this.saveTabFn = saveTabFn;
+    this.flushFn = flushFn;
 
     // ---- ルーティング ----
     // CloudFront の /api/* ビヘイビアが /api プレフィックスを剥がして origin に渡すため、
