@@ -1,14 +1,17 @@
 const BASE_URL = '/api';
 
-/** ステータスコードで分岐できる API エラー(404=失効/未知トークン、409=上限 等)。 */
+/** ステータスコードで分岐できる API エラー(404=失効/未知、409=競合/上限、413/429)。 */
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | null;
+  /** 409 の { current } など、エラー本文の追加ペイロード。 */
+  readonly body: Record<string, unknown>;
 
-  constructor(status: number, code: string | null) {
+  constructor(status: number, code: string | null, body: Record<string, unknown> = {}) {
     super(code ?? `Request failed ${status}`);
     this.status = status;
     this.code = code;
+    this.body = body;
   }
 }
 
@@ -16,7 +19,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, options);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, typeof body.error === 'string' ? body.error : null);
+    throw new ApiError(res.status, typeof body.error === 'string' ? body.error : null, body);
   }
   return res.json();
 }
@@ -65,6 +68,51 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
       cache: 'no-store',
+    });
+  },
+  saveTab(
+    token: string,
+    params: { tab_id: string; base_version: number; title: string; content: string },
+  ): Promise<{ version: number }> {
+    return request<{ version: number }>('/m/tabs/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, ...params }),
+      cache: 'no-store',
+    });
+  },
+  createTab(token: string, title: string): Promise<{ tab: MemoData['tabs'][number] }> {
+    return request<{ tab: MemoData['tabs'][number] }>('/m/tabs/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, title }),
+      cache: 'no-store',
+    });
+  },
+  deleteTab(token: string, tab_id: string): Promise<{ deleted: boolean }> {
+    return request<{ deleted: boolean }>('/m/tabs/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, tab_id }),
+      cache: 'no-store',
+    });
+  },
+  /**
+   * 未保存タブの一括保存。ページ離脱時は keepalive: true で送る
+   * (通常 fetch はページ破棄で中断される。sendBeacon でなく fetch keepalive を
+   * 使うのは、60KB 級タブ + 封筒で sendBeacon の 64KB 制限に当たり得るため)。
+   */
+  flush(
+    token: string,
+    tabs: { tab_id: string; base_version: number; title: string; content: string }[],
+    opts: { keepalive?: boolean } = {},
+  ): Promise<{ results: { tab_id: string; result: string; version?: number }[] }> {
+    return request('/m/flush', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, tabs }),
+      cache: 'no-store',
+      keepalive: opts.keepalive ?? false,
     });
   },
 };

@@ -38,9 +38,25 @@ export function forbidden(message = 'Forbidden') {
   };
 }
 
-export function conflict(message = 'Conflict') {
+export function conflict(message = 'Conflict', extra?: Record<string, unknown>) {
   return {
     statusCode: 409,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ error: message, ...extra }),
+  };
+}
+
+export function payloadTooLarge(message = 'Payload too large') {
+  return {
+    statusCode: 413,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ error: message }),
+  };
+}
+
+export function tooManyRequests(message = 'Too many requests') {
+  return {
+    statusCode: 429,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ error: message }),
   };

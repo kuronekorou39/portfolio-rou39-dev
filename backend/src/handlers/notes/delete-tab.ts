@@ -1,0 +1,32 @@
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { ok, notFound, conflict, tooManyRequests, serverError } from '../../lib/response';
+import { noStore } from '../../lib/notes/http';
+import { resolveTokenThrottled } from '../../lib/notes/tokens';
+import { deleteTab } from '../../lib/notes/tabs';
+import { MIN_SAVE_INTERVAL_MS } from '../../lib/notes/limits';
+
+/** POST /m/tabs/delete — タブ削除(最後の1枚は不可)。 */
+export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  try {
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return noStore(notFound());
+    }
+    const { token, tab_id } = body as { token?: unknown; tab_id?: unknown };
+    if (typeof token !== 'string' || !token) return noStore(notFound());
+    if (typeof tab_id !== 'string' || !tab_id) return noStore(notFound());
+
+    const resolved = await resolveTokenThrottled(token, 'last_save_ms', MIN_SAVE_INTERVAL_MS);
+    if (resolved.kind === 'invalid') return noStore(notFound());
+    if (resolved.kind === 'throttled') return noStore(tooManyRequests('save_throttled'));
+
+    const result = await deleteTab({ memo_id: resolved.token.memo_id, tab_id });
+    if (result.kind === 'last_tab') return noStore(conflict('last_tab'));
+    return noStore(ok({ deleted: true }));
+  } catch (err) {
+    console.error('delete-tab error:', err);
+    return noStore(serverError());
+  }
+}

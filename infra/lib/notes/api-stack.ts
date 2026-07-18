@@ -103,6 +103,60 @@ export class NotesApiStack extends cdk.Stack {
     props.memosTable.grantReadData(getMemoFn);
     props.tabsTable.grantReadData(getMemoFn);
 
+    // --- 書き込み系(公開: 保存/タブ追加/タブ削除/離脱時フラッシュ) ---
+    // いずれも未認証。resolveTokenThrottled がトークンアイテムへの条件付き Update で
+    // 有効性検証とレート制御を同時に行うため tokens は RW。users には一切アクセスさせない。
+    const writeGrants = (fn: nodejs.NodejsFunction, transact: boolean) => {
+      props.tokensTable.grantReadWriteData(fn);
+      props.tabsTable.grantReadWriteData(fn);
+      props.memosTable.grantReadWriteData(fn); // tab_count カウンタ / updated_at
+      if (transact) {
+        props.memosTable.grant(fn, 'dynamodb:TransactWriteItems');
+        props.tabsTable.grant(fn, 'dynamodb:TransactWriteItems');
+      }
+    };
+
+    const saveTabFn = new nodejs.NodejsFunction(this, 'SaveTabFn', {
+      runtime,
+      entry: path.join(handlerDir, 'save-tab.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+      reservedConcurrentExecutions: 20,
+    });
+    writeGrants(saveTabFn, false);
+
+    const createTabFn = new nodejs.NodejsFunction(this, 'CreateTabFn', {
+      runtime,
+      entry: path.join(handlerDir, 'create-tab.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+      reservedConcurrentExecutions: 10,
+    });
+    writeGrants(createTabFn, true);
+
+    const deleteTabFn = new nodejs.NodejsFunction(this, 'DeleteTabFn', {
+      runtime,
+      entry: path.join(handlerDir, 'delete-tab.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+      reservedConcurrentExecutions: 10,
+    });
+    writeGrants(deleteTabFn, true);
+
+    const flushFn = new nodejs.NodejsFunction(this, 'FlushFn', {
+      runtime,
+      entry: path.join(handlerDir, 'flush.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+      timeout: cdk.Duration.seconds(15), // 最大12タブの逐次保存
+      reservedConcurrentExecutions: 10,
+    });
+    writeGrants(flushFn, false);
+
     // ---- ルーティング ----
     // CloudFront の /api/* ビヘイビアが /api プレフィックスを剥がして origin に渡すため、
     // ここでは /admin/... /m/... で定義する(uraneko と同じ構成)。
@@ -119,6 +173,11 @@ export class NotesApiStack extends cdk.Stack {
 
     const m = this.api.root.addResource('m');
     m.addResource('get').addMethod('POST', new apigateway.LambdaIntegration(getMemoFn));
+    const mTabs = m.addResource('tabs');
+    mTabs.addResource('save').addMethod('POST', new apigateway.LambdaIntegration(saveTabFn));
+    mTabs.addResource('create').addMethod('POST', new apigateway.LambdaIntegration(createTabFn));
+    mTabs.addResource('delete').addMethod('POST', new apigateway.LambdaIntegration(deleteTabFn));
+    m.addResource('flush').addMethod('POST', new apigateway.LambdaIntegration(flushFn));
 
     new cdk.CfnOutput(this, 'NotesApiUrl', { value: this.api.url });
   }
