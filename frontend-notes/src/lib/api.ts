@@ -61,6 +61,33 @@ export const api = {
     });
   },
 
+  /** 再発行。旧URLは即無効。新URLの生トークンはこのレスポンスの1回だけ。 */
+  reissueMemo(idToken: string, memoId: string): Promise<IssueResult> {
+    return request<IssueResult>(`/admin/memos/${encodeURIComponent(memoId)}/reissue`, {
+      method: 'POST',
+      headers: authHeaders(idToken),
+    });
+  },
+  revokeMemo(idToken: string, memoId: string): Promise<{ revoked: boolean }> {
+    return request<{ revoked: boolean }>(`/admin/memos/${encodeURIComponent(memoId)}/revoke`, {
+      method: 'POST',
+      headers: authHeaders(idToken),
+    });
+  },
+  deleteMemo(idToken: string, memoId: string): Promise<{ deleted: boolean }> {
+    return request<{ deleted: boolean }>(`/admin/memos/${encodeURIComponent(memoId)}`, {
+      method: 'DELETE',
+      headers: authHeaders(idToken),
+    });
+  },
+  renameMemo(idToken: string, memoId: string, title: string): Promise<{ title: string }> {
+    return request<{ title: string }>(`/admin/memos/${encodeURIComponent(memoId)}`, {
+      method: 'PATCH',
+      headers: authHeaders(idToken),
+      body: JSON.stringify({ title }),
+    });
+  },
+
   // ---- メモ画面(秘密URLトークンを body でのみ渡す。path/query に載せない) ----
   getMemo(token: string): Promise<MemoData> {
     return request<MemoData>('/m/get', {

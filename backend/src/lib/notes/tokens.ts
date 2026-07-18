@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'crypto';
 import { GetCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../dynamo';
 import { MAX_MEMOS_PER_USER } from './limits';
-import type { NotesToken } from './types';
+import type { Memo, NotesToken } from './types';
 
 const USERS_TABLE = process.env.USERS_TABLE!;
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
@@ -103,6 +103,151 @@ export async function resolveTokenThrottled(
 export type IssueResult =
   | { ok: true; memo_id: string; rawToken: string }
   | { ok: false; reason: 'limit' };
+
+/** 所有者チェック込みでメモを強整合読みする(管理系操作の共通前段)。 */
+export async function getOwnedMemo(memo_id: string, owner_user_id: string): Promise<Memo | null> {
+  const res = await docClient.send(
+    new GetCommand({ TableName: MEMOS_TABLE, Key: { memo_id }, ConsistentRead: true }),
+  );
+  const memo = res.Item as Memo | undefined;
+  if (!memo || memo.status !== 'active' || memo.owner_user_id !== owner_user_id) return null;
+  return memo;
+}
+
+export type ReissueResult =
+  | { ok: true; rawToken: string }
+  | { ok: false; reason: 'not_found' | 'conflict' };
+
+/**
+ * 秘密URLの再発行。1回の TransactWrite で「新トークン作成 + 旧トークン失効 +
+ * memo.active_token_hash 差し替え」を原子的に行う。
+ *
+ * コミットした瞬間から旧URLは(解決が強整合 GetItem のため)次のリクエストで必ず 404。
+ * memo 側の条件(active_token_hash = 読み取り時の値)が二重再発行の競合を防ぐ
+ * (負けた方は TransactionCanceled → conflict)。
+ */
+export async function reissueToken(params: {
+  memo_id: string;
+  owner_user_id: string;
+}): Promise<ReissueResult> {
+  const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
+  if (!memo) return { ok: false, reason: 'not_found' };
+
+  const oldHash = memo.active_token_hash;
+  const rawToken = generateToken();
+  const newHash = hashToken(rawToken);
+  const now = new Date().toISOString();
+
+  const items: NonNullable<
+    ConstructorParameters<typeof TransactWriteCommand>[0]['TransactItems']
+  > = [
+    {
+      Put: {
+        TableName: TOKENS_TABLE,
+        Item: {
+          token_hash: newHash,
+          memo_id: memo.memo_id,
+          owner_user_id: params.owner_user_id,
+          status: 'active',
+          issued_at: now,
+        },
+        ConditionExpression: 'attribute_not_exists(token_hash)',
+      },
+    },
+    {
+      Update: {
+        TableName: MEMOS_TABLE,
+        Key: { memo_id: memo.memo_id },
+        // 読み取り時の active_token_hash と一致する場合のみ = 並行する再発行/失効に負けたら中止
+        ConditionExpression:
+          'owner_user_id = :me AND #s = :active AND active_token_hash = :old',
+        UpdateExpression: 'SET active_token_hash = :new, updated_at = :now',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: {
+          ':me': params.owner_user_id,
+          ':active': 'active',
+          ':old': oldHash,
+          ':new': newHash,
+          ':now': now,
+        },
+      },
+    },
+  ];
+  if (oldHash) {
+    items.push({
+      Update: {
+        TableName: TOKENS_TABLE,
+        Key: { token_hash: oldHash },
+        ConditionExpression: '#s = :active',
+        UpdateExpression: 'SET #s = :revoked, revoked_at = :now',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: { ':active': 'active', ':revoked': 'revoked', ':now': now },
+      },
+    });
+  }
+
+  try {
+    await docClient.send(new TransactWriteCommand({ TransactItems: items }));
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name === 'TransactionCanceledException') {
+      return { ok: false, reason: 'conflict' };
+    }
+    throw err;
+  }
+  return { ok: true, rawToken };
+}
+
+/**
+ * 秘密URLの失効(代替を発行しない)。既に失効済みなら no-op 成功(冪等)。
+ */
+export async function revokeToken(params: {
+  memo_id: string;
+  owner_user_id: string;
+}): Promise<{ ok: boolean }> {
+  const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
+  if (!memo) return { ok: false };
+  const oldHash = memo.active_token_hash;
+  if (!oldHash) return { ok: true }; // 既に無効
+
+  const now = new Date().toISOString();
+  try {
+    await docClient.send(
+      new TransactWriteCommand({
+        TransactItems: [
+          {
+            Update: {
+              TableName: TOKENS_TABLE,
+              Key: { token_hash: oldHash },
+              ConditionExpression: '#s = :active',
+              UpdateExpression: 'SET #s = :revoked, revoked_at = :now',
+              ExpressionAttributeNames: { '#s': 'status' },
+              ExpressionAttributeValues: { ':active': 'active', ':revoked': 'revoked', ':now': now },
+            },
+          },
+          {
+            Update: {
+              TableName: MEMOS_TABLE,
+              Key: { memo_id: memo.memo_id },
+              ConditionExpression: 'owner_user_id = :me AND active_token_hash = :old',
+              UpdateExpression: 'SET active_token_hash = :null, updated_at = :now',
+              ExpressionAttributeValues: {
+                ':me': params.owner_user_id,
+                ':old': oldHash,
+                ':null': null,
+                ':now': now,
+              },
+            },
+          },
+        ],
+      }),
+    );
+  } catch (err: unknown) {
+    // 並行操作(再発行等)と競合した場合は現状を尊重して失敗にしない
+    if ((err as { name?: string })?.name === 'TransactionCanceledException') return { ok: true };
+    throw err;
+  }
+  return { ok: true };
+}
 
 /**
  * メモを新規発行する。1回の TransactWrite で以下を原子的に行う:

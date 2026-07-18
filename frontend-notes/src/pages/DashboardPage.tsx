@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { beginGoogleLogin, getIdToken } from '../lib/auth';
 import { api, ApiError, type MemoSummary } from '../lib/api';
@@ -130,6 +130,87 @@ export default function DashboardPage() {
     }
   }, [title, reload]);
 
+  // ---- 行操作(リネーム/再発行/無効化/削除) ----
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  const rowAction = useCallback(
+    async (memoId: string, fn: (idToken: string) => Promise<void>, failMsg: string) => {
+      setBusyId(memoId);
+      setActionError(null);
+      try {
+        const idToken = await getIdToken();
+        if (!idToken) throw new Error('login');
+        await fn(idToken);
+        await reload();
+      } catch {
+        setActionError(failMsg);
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [reload],
+  );
+
+  const onReissue = (m: MemoSummary) => {
+    const name = m.title || '(名称未設定)';
+    if (!window.confirm(`「${name}」のURLを再発行しますか?\n現在のURLは即座に使えなくなります。`))
+      return;
+    void rowAction(
+      m.memo_id,
+      async (idToken) => {
+        const r = await api.reissueMemo(idToken, m.memo_id);
+        setIssuedUrl(r.url); // 新URLを1回限りモーダルで表示
+      },
+      '再発行に失敗しました。時間をおいて再試行してください。',
+    );
+  };
+
+  const onRevoke = (m: MemoSummary) => {
+    const name = m.title || '(名称未設定)';
+    if (
+      !window.confirm(
+        `「${name}」のURLを無効化しますか?\n再発行するまで誰もこのメモを開けなくなります。`,
+      )
+    )
+      return;
+    void rowAction(
+      m.memo_id,
+      async (idToken) => {
+        await api.revokeMemo(idToken, m.memo_id);
+      },
+      '無効化に失敗しました。時間をおいて再試行してください。',
+    );
+  };
+
+  const onDelete = (m: MemoSummary) => {
+    const name = m.title || '(名称未設定)';
+    if (
+      !window.confirm(`「${name}」を削除しますか?\nすべてのタブが消え、元に戻せません。`)
+    )
+      return;
+    void rowAction(
+      m.memo_id,
+      async (idToken) => {
+        await api.deleteMemo(idToken, m.memo_id);
+      },
+      '削除に失敗しました。時間をおいて再試行してください。',
+    );
+  };
+
+  const onRenameSave = (memoId: string) => {
+    void rowAction(
+      memoId,
+      async (idToken) => {
+        await api.renameMemo(idToken, memoId, renameValue.trim());
+        setRenamingId(null);
+      },
+      '名前の変更に失敗しました。',
+    );
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '96px 24px', color: 'var(--muted)' }}>
@@ -242,44 +323,117 @@ export default function DashboardPage() {
           </p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {memos.map((m) => (
-              <li
-                key={m.memo_id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 4px',
-                  borderBottom: '1px solid var(--border)',
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {m.title || '(名称未設定)'}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                    タブ {m.tab_count} · 作成 {fmtJst(m.created_at)} · 更新 {fmtJst(m.updated_at)}
-                  </div>
-                </div>
-                <span
+            {memos.map((m) => {
+              const busy = busyId === m.memo_id;
+              const actionBtn: CSSProperties = {
+                border: 'none',
+                background: 'transparent',
+                fontSize: 12,
+                color: 'var(--accent)',
+                padding: '2px 6px',
+                opacity: busy ? 0.4 : 1,
+                cursor: busy ? 'wait' : 'pointer',
+              };
+              return (
+                <li
+                  key={m.memo_id}
                   style={{
-                    flexShrink: 0,
-                    fontSize: 12,
-                    padding: '2px 10px',
-                    borderRadius: 99,
-                    border: '1px solid var(--border)',
-                    color: m.has_active_url ? 'var(--accent)' : 'var(--muted)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '12px 4px',
+                    borderBottom: '1px solid var(--border)',
                   }}
                 >
-                  {m.has_active_url ? '有効' : '無効'}
-                </span>
-              </li>
-            ))}
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    {renamingId === m.memo_id ? (
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <input
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          maxLength={200}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') onRenameSave(m.memo_id);
+                            if (e.key === 'Escape') setRenamingId(null);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '4px 8px',
+                            border: '1px solid var(--border)',
+                            borderRadius: 4,
+                            fontSize: 14,
+                          }}
+                        />
+                        <button onClick={() => onRenameSave(m.memo_id)} disabled={busy} style={actionBtn}>
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setRenamingId(null)}
+                          style={{ ...actionBtn, color: 'var(--muted)' }}
+                        >
+                          キャンセル
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {m.title || '(名称未設定)'}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                      タブ {m.tab_count} · 作成 {fmtJst(m.created_at)} · 更新 {fmtJst(m.updated_at)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => {
+                          setRenamingId(m.memo_id);
+                          setRenameValue(m.title);
+                        }}
+                        disabled={busy}
+                        style={actionBtn}
+                      >
+                        名前変更
+                      </button>
+                      <button onClick={() => onReissue(m)} disabled={busy} style={actionBtn}>
+                        再発行
+                      </button>
+                      {m.has_active_url && (
+                        <button onClick={() => onRevoke(m)} disabled={busy} style={actionBtn}>
+                          無効化
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onDelete(m)}
+                        disabled={busy}
+                        style={{ ...actionBtn, color: 'var(--danger)' }}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: 12,
+                      padding: '2px 10px',
+                      borderRadius: 99,
+                      border: '1px solid var(--border)',
+                      color: m.has_active_url ? 'var(--accent)' : 'var(--muted)',
+                    }}
+                  >
+                    {m.has_active_url ? '有効' : '無効'}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
+        {actionError && (
+          <p style={{ fontSize: 13, color: 'var(--danger)', marginTop: 12 }}>{actionError}</p>
+        )}
         <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 16 }}>
-          ※ 発行済みURLの再表示はできません(サーバに保存されないため)。再発行・無効化・削除の操作は近日追加。
+          ※ 発行済みURLの再表示はできません(サーバに保存されないため)。URLを失くしたときは「再発行」を(旧URLは無効になります)。
         </p>
       </section>
     </main>

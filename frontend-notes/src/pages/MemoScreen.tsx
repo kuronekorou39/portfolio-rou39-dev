@@ -29,12 +29,17 @@ function saveLabel(tab: TabState | undefined): { text: string; color: string } {
   }
 }
 
+// backend limits.ts の MAX_TABS_PER_MEMO と一致させる(上限に達したら+ボタン自体を出さない)
+const MAX_TABS = 12;
+
 function Editor({ token, data }: { token: string; data: MemoData }) {
   const { tabs, edit, saveNow, adoptServer, overwriteServer, addTab, removeTab } = useAutosave(
     token,
     data.tabs,
   );
   const [activeId, setActiveId] = useState<string>(data.tabs[0]?.tab_id ?? '');
+  const [adding, setAdding] = useState(false);
+  const [tabError, setTabError] = useState<string | null>(null);
   const active = tabs.find((t) => t.tab_id === activeId) ?? tabs[0];
 
   const switchTab = (id: string) => {
@@ -44,8 +49,20 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
   };
 
   const onAddTab = async () => {
-    const id = await addTab();
-    if (id) setActiveId(id);
+    if (adding) return; // 連打防止(処理中は無視)
+    setAdding(true);
+    setTabError(null);
+    const r = await addTab();
+    if (r.ok) {
+      setActiveId(r.tab_id);
+    } else if (r.code === 'tab_limit_reached') {
+      setTabError(`タブは最大 ${MAX_TABS} 枚までです`);
+    } else if (r.code === 'save_throttled') {
+      setTabError('操作が早すぎます。1秒ほど待ってからもう一度どうぞ');
+    } else {
+      setTabError('タブを追加できませんでした。時間をおいて再試行してください');
+    }
+    setAdding(false);
   };
 
   const onRemoveTab = async (id: string) => {
@@ -53,8 +70,13 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
     if (!t) return;
     const hasText = t.content.trim().length > 0;
     if (hasText && !window.confirm('このタブを削除しますか?(元に戻せません)')) return;
+    setTabError(null);
     const okDeleted = await removeTab(id);
-    if (okDeleted && activeId === id) {
+    if (!okDeleted) {
+      setTabError('タブを削除できませんでした。時間をおいて再試行してください');
+      return;
+    }
+    if (activeId === id) {
       const rest = tabs.filter((x) => x.tab_id !== id);
       setActiveId(rest[0]?.tab_id ?? '');
     }
@@ -86,14 +108,14 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
         <span style={{ fontSize: 12, color: indicator.color }}>{indicator.text}</span>
       </header>
 
-      {/* タブバー */}
+      {/* タブバー(横スクロールではなく折り返しで全タブを見せる) */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
+          flexWrap: 'wrap',
           gap: 2,
           borderBottom: '1px solid var(--border)',
-          overflowX: 'auto',
         }}
       >
         {tabs.map((t, i) => (
@@ -133,21 +155,29 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
             )}
           </div>
         ))}
-        <button
-          onClick={() => void onAddTab()}
-          title="タブを追加"
-          style={{
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--accent)',
-            fontSize: 16,
-            padding: '4px 10px',
-            flexShrink: 0,
-          }}
-        >
-          +
-        </button>
+        {tabs.length < MAX_TABS && (
+          <button
+            onClick={() => void onAddTab()}
+            disabled={adding}
+            title="タブを追加"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: adding ? 'var(--muted)' : 'var(--accent)',
+              fontSize: 16,
+              padding: '4px 10px',
+              flexShrink: 0,
+              cursor: adding ? 'wait' : 'pointer',
+            }}
+          >
+            {adding ? '…' : '+'}
+          </button>
+        )}
       </div>
+
+      {tabError && (
+        <p style={{ fontSize: 13, color: 'var(--danger)', margin: '8px 0 0' }}>{tabError}</p>
+      )}
 
       {/* 競合調停バナー */}
       {active?.save === 'conflict' && active.conflictCurrent && (

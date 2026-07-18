@@ -103,6 +103,40 @@ export class NotesApiStack extends cdk.Stack {
     props.memosTable.grantReadData(getMemoFn);
     props.tabsTable.grantReadData(getMemoFn);
 
+    // --- 管理系(再発行/失効/削除/リネーム) ---
+    const adminFn = (id: string, entry: string) =>
+      new nodejs.NodejsFunction(this, id, {
+        runtime,
+        entry: path.join(handlerDir, entry),
+        handler: 'handler',
+        environment: commonEnv,
+        bundling,
+        reservedConcurrentExecutions: 5,
+      });
+
+    const reissueFn = adminFn('ReissueFn', 'admin-reissue.ts');
+    props.memosTable.grantReadWriteData(reissueFn);
+    props.tokensTable.grantReadWriteData(reissueFn);
+    props.memosTable.grant(reissueFn, 'dynamodb:TransactWriteItems');
+    props.tokensTable.grant(reissueFn, 'dynamodb:TransactWriteItems');
+
+    const revokeFn = adminFn('RevokeFn', 'admin-revoke.ts');
+    props.memosTable.grantReadWriteData(revokeFn);
+    props.tokensTable.grantReadWriteData(revokeFn);
+    props.memosTable.grant(revokeFn, 'dynamodb:TransactWriteItems');
+    props.tokensTable.grant(revokeFn, 'dynamodb:TransactWriteItems');
+
+    const deleteMemoFn = adminFn('DeleteMemoFn', 'admin-delete-memo.ts');
+    props.memosTable.grantReadWriteData(deleteMemoFn);
+    props.tokensTable.grantReadWriteData(deleteMemoFn);
+    props.tabsTable.grantReadWriteData(deleteMemoFn); // タブのカスケード削除
+    props.usersTable.grantWriteData(deleteMemoFn); // 無料枠カウンタの返却
+    props.memosTable.grant(deleteMemoFn, 'dynamodb:TransactWriteItems');
+    props.tokensTable.grant(deleteMemoFn, 'dynamodb:TransactWriteItems');
+
+    const renameFn = adminFn('RenameFn', 'admin-rename.ts');
+    props.memosTable.grantReadWriteData(renameFn);
+
     // --- 書き込み系(公開: 保存/タブ追加/タブ削除/離脱時フラッシュ) ---
     // いずれも未認証。resolveTokenThrottled がトークンアイテムへの条件付き Update で
     // 有効性検証とレート制御を同時に行うため tokens は RW。users には一切アクセスさせない。
@@ -170,6 +204,19 @@ export class NotesApiStack extends cdk.Stack {
       authorizer,
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
+    const adminMemoById = adminMemos.addResource('{memo_id}');
+    const adminAuth = {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    };
+    adminMemoById.addMethod('PATCH', new apigateway.LambdaIntegration(renameFn), adminAuth);
+    adminMemoById.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMemoFn), adminAuth);
+    adminMemoById
+      .addResource('reissue')
+      .addMethod('POST', new apigateway.LambdaIntegration(reissueFn), adminAuth);
+    adminMemoById
+      .addResource('revoke')
+      .addMethod('POST', new apigateway.LambdaIntegration(revokeFn), adminAuth);
 
     const m = this.api.root.addResource('m');
     m.addResource('get').addMethod('POST', new apigateway.LambdaIntegration(getMemoFn));

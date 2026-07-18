@@ -261,14 +261,16 @@ export function useAutosave(
     [patchTab, saveNow],
   );
 
-  /** タブ追加。 */
-  const addTab = useCallback(async (): Promise<string | null> => {
+  /** タブ追加。失敗時はエラーコードを返して UI に理由を表示させる。 */
+  const addTab = useCallback(async (): Promise<
+    { ok: true; tab_id: string } | { ok: false; code: string | null }
+  > => {
     try {
       const { tab } = await api.createTab(token, '');
       setTabs((prev) => [...prev, { ...tab, dirty: false, save: 'saved' as const }]);
-      return tab.tab_id;
-    } catch {
-      return null;
+      return { ok: true, tab_id: tab.tab_id };
+    } catch (e) {
+      return { ok: false, code: e instanceof ApiError ? e.code : null };
     }
   }, [token]);
 
