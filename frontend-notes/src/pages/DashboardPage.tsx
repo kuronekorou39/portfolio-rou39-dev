@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { beginGoogleLogin, getIdToken } from '../lib/auth';
 import { api, ApiError, type AccessLogEntry, type MemoSummary } from '../lib/api';
+import ThemeToggle from '../components/ThemeToggle';
 
 function fmtJst(iso: string): string {
   return new Date(iso).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
@@ -258,7 +259,10 @@ export default function DashboardPage() {
       flex: '1 1 200px',
     };
     return (
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: '72px 24px 48px' }}>
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: '24px 24px 48px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 32 }}>
+          <ThemeToggle />
+        </div>
         <section style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{ fontSize: 34, margin: '0 0 12px' }}>Stash Notes</h1>
           <p style={{ fontSize: 16, color: 'var(--muted)', margin: '0 0 28px' }}>
@@ -343,17 +347,26 @@ export default function DashboardPage() {
         }}
       >
         <h1 style={{ fontSize: 22, margin: 0 }}>Stash Notes</h1>
-        <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-          {user.email}{' '}
+        <div
+          style={{
+            fontSize: 13,
+            color: 'var(--muted)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <ThemeToggle />
+          {user.email}
           <button
             onClick={signOut}
             style={{
-              marginLeft: 12,
               padding: '4px 10px',
               fontSize: 12,
               border: '1px solid var(--border)',
               borderRadius: 4,
               background: 'transparent',
+              color: 'var(--muted)',
             }}
           >
             ログアウト

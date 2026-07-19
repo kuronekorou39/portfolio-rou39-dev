@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError, type AccessLogEntry, type MemoData } from '../lib/api';
 import { useAutosave, type TabState } from '../lib/autosave';
+import ThemeToggle from '../components/ThemeToggle';
 
 /** アクセス履歴(直近)。E2E暗号化しない代わりに「誰がいつ開いたか」を利用者に見せる。 */
 function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
@@ -144,7 +145,10 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
         }}
       >
         <span style={{ fontSize: 13, color: 'var(--muted)' }}>{data.memo.title || 'メモ'}</span>
-        <span style={{ fontSize: 12, color: indicator.color }}>{indicator.text}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12, color: indicator.color }}>{indicator.text}</span>
+          <ThemeToggle />
+        </span>
       </header>
 
       {/* タブバー(横スクロールではなく折り返しで全タブを見せる) */}

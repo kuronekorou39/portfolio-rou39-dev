@@ -1,8 +1,9 @@
 /* Stash Notes — 軽量・外部依存ゼロ(システムフォントのみ)。
-   ライト/ダーク両対応: OS 設定(prefers-color-scheme)に追従する。
+   ライト/ダーク両対応: 既定は OS 設定(prefers-color-scheme)に追従し、
+   手動切替(lib/theme.ts が <html data-theme> を設定)が OS 設定に勝つ。
    コンポーネントは必ず var(--*) を使い、色のハードコードをしない。 */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #fafaf8;
   --surface: #ffffff; /* カード・モーダル・ボタン面 */
   --fg: #1c1c1a;
@@ -16,8 +17,11 @@
   --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
 }
 
+/* ダークのトークンは「OS がダーク かつ 手動ライト指定でない」と「手動ダーク指定」の
+   2ブロックに現れる。CSS では共通化できないため、変更時は両方を同時に更新すること。 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
     --bg: #16181d;
     --surface: #1f2229;
     --fg: #e8e8e4;
@@ -27,6 +31,18 @@
     --accent-fg: #10151c;
     --danger: #e0796a;
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #16181d;
+  --surface: #1f2229;
+  --fg: #e8e8e4;
+  --muted: #9a9a94;
+  --border: #34383f;
+  --accent: #6ea8dc;
+  --accent-fg: #10151c;
+  --danger: #e0796a;
 }
 
 * {
