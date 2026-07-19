@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function PageLoader() {
@@ -20,6 +21,7 @@ export default function AdminApp() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

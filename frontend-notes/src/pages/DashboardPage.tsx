@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { beginGoogleLogin, getIdToken } from '../lib/auth';
 import { api, ApiError, type AccessLogEntry, type MemoSummary } from '../lib/api';
@@ -248,24 +249,81 @@ export default function DashboardPage() {
   }
 
   if (!user) {
+    // 未ログイン時はトップページ(サービス概要 + ログイン導線)
+    const feature: CSSProperties = {
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      padding: '16px 18px',
+      background: '#fff',
+      flex: '1 1 200px',
+    };
     return (
-      <main style={{ maxWidth: 480, margin: '0 auto', padding: '96px 24px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: 28, marginBottom: 8 }}>Stash Notes</h1>
-        <p style={{ color: 'var(--muted)', marginBottom: 32 }}>
-          管理画面はログインが必要です。メモの閲覧・編集は発行済みの秘密URLから直接どうぞ。
-        </p>
-        <button
-          onClick={() => void beginGoogleLogin()}
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: '72px 24px 48px' }}>
+        <section style={{ textAlign: 'center', marginBottom: 48 }}>
+          <h1 style={{ fontSize: 34, margin: '0 0 12px' }}>Stash Notes</h1>
+          <p style={{ fontSize: 16, color: 'var(--muted)', margin: '0 0 28px' }}>
+            ログインは管理だけ。メモは URL ひとつで開ける、身軽なメモサービス。
+          </p>
+          <button
+            onClick={() => void beginGoogleLogin()}
+            style={{
+              padding: '12px 32px',
+              fontSize: 15,
+              border: 'none',
+              borderRadius: 8,
+              background: 'var(--accent)',
+              color: '#fff',
+            }}
+          >
+            Google でログインして始める
+          </button>
+        </section>
+
+        <section style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 48 }}>
+          <div style={feature}>
+            <h2 style={{ fontSize: 15, margin: '0 0 6px' }}>秘密URLで即アクセス</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
+              発行したURLを知っていれば、ログイン不要でメモを開いて編集できます。ブックマークすれば次からワンタップ。
+            </p>
+          </div>
+          <div style={feature}>
+            <h2 style={{ fontSize: 15, margin: '0 0 6px' }}>自動保存と複数タブ</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
+              書けば勝手に保存。タブでメモを整理。通信が不安定でも編集はローカルに残ります。
+            </p>
+          </div>
+          <div style={feature}>
+            <h2 style={{ fontSize: 15, margin: '0 0 6px' }}>管理はあなたの手に</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
+              URLが漏れたら再発行で即無効化。誰がいつ開いたかのアクセス履歴も確認できます。
+            </p>
+          </div>
+        </section>
+
+        <section style={{ marginBottom: 48 }}>
+          <h2 style={{ fontSize: 16, marginBottom: 12, textAlign: 'center' }}>使い方は3ステップ</h2>
+          <ol style={{ fontSize: 14, color: 'var(--muted)', maxWidth: 480, margin: '0 auto', paddingLeft: 24 }}>
+            <li style={{ marginBottom: 6 }}>Google でログインして管理画面へ</li>
+            <li style={{ marginBottom: 6 }}>メモURLを発行(URLはその場で1回だけ表示)</li>
+            <li>URLをブックマーク。次からはログイン不要で開くだけ</li>
+          </ol>
+        </section>
+
+        <footer
           style={{
-            padding: '10px 24px',
-            fontSize: 15,
-            border: '1px solid var(--border)',
-            borderRadius: 6,
-            background: '#fff',
+            borderTop: '1px solid var(--border)',
+            paddingTop: 16,
+            textAlign: 'center',
+            fontSize: 12,
+            color: 'var(--muted)',
           }}
         >
-          Google でログイン
-        </button>
+          <Link to="/privacy" style={{ color: 'var(--muted)' }}>
+            プライバシーポリシー
+          </Link>
+          <span style={{ margin: '0 8px' }}>·</span>
+          <span>© 2026 rou39</span>
+        </footer>
       </main>
     );
   }
@@ -510,6 +568,20 @@ export default function DashboardPage() {
           ※ 発行済みURLの再表示はできません(サーバに保存されないため)。URLを失くしたときは「再発行」を(旧URLは無効になります)。
         </p>
       </section>
+
+      <footer
+        style={{
+          borderTop: '1px solid var(--border)',
+          marginTop: 40,
+          paddingTop: 12,
+          fontSize: 12,
+          color: 'var(--muted)',
+        }}
+      >
+        <Link to="/privacy" style={{ color: 'var(--muted)' }}>
+          プライバシーポリシー
+        </Link>
+      </footer>
     </main>
   );
 }
