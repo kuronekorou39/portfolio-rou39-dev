@@ -79,10 +79,11 @@ export async function clearMemoPin(params: {
         TableName: MEMOS_TABLE,
         Key: { memo_id: params.memo_id },
         ConditionExpression: 'owner_user_id = :me AND #s = :active',
-        UpdateExpression: 'REMOVE pin_hash SET updated_at = :now',
+        UpdateExpression: 'SET updated_at = :now REMOVE pin_hash',
         ExpressionAttributeNames: { '#s': 'status' },
         ExpressionAttributeValues: {
           ':me': params.owner_user_id,
+          ':active': 'active',
           ':now': new Date().toISOString(),
         },
       }),
