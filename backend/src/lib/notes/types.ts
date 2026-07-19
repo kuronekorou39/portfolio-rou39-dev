@@ -1,10 +1,18 @@
+/** トークンの権限モード。'rw'=読み書き(既定)、'ro'=読み取り専用。 */
+export type TokenMode = 'rw' | 'ro';
+
 /** notes-memos のメモ本体(メタ)。タブ本文は notes-tabs に分離。 */
 export interface Memo {
   memo_id: string;
   owner_user_id: string; // Cognito sub
   title: string;
-  /** 現在有効な秘密URLトークンの SHA-256(フル64hex)。失効中は null。 */
+  /** 現在有効な「編集用」秘密URLトークンの SHA-256(フル64hex)。失効中は null。 */
   active_token_hash: string | null;
+  /**
+   * 現在有効な「読み取り専用」秘密URLトークンの SHA-256。編集用とは独立に発行/失効できる。
+   * 一度も発行していないメモでは属性自体が存在しない(undefined)、失効後は null。
+   */
+  active_readonly_token_hash?: string | null;
   tab_count: number;
   status: 'active' | 'deleted';
   created_at: string;
@@ -35,6 +43,8 @@ export interface NotesToken {
   memo_id: string;
   owner_user_id: string;
   status: 'active' | 'revoked';
+  /** 権限。属性が無い旧トークンは 'rw' 扱い(後方互換)。書き込み系は 'ro' を 403 で弾く。 */
+  mode?: TokenMode;
   issued_at: string;
   revoked_at?: string | null;
   /** per-token 保存スロットル(P3)。最終保存時刻 epoch ms。 */
@@ -55,6 +65,8 @@ export interface AccessLogEntry {
   ip_hash: string;
   ua: string;
   event: 'view';
+  /** どのURL経由の閲覧か(編集用/読み取り専用)。旧エントリは未設定。 */
+  via?: TokenMode;
   ts: string;
   expires_at: number; // epoch秒(TTL)
 }

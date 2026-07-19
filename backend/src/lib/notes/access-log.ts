@@ -62,6 +62,7 @@ function clientIpOf(event: APIGatewayProxyEvent): string {
 export async function recordViewCoalesced(params: {
   token_hash: string;
   memo_id: string;
+  via: 'rw' | 'ro';
   event: APIGatewayProxyEvent;
 }): Promise<void> {
   const now = Date.now();
@@ -97,6 +98,7 @@ export async function recordViewCoalesced(params: {
       ip_hash: await hashIp(ip),
       ua: (params.event.headers?.['User-Agent'] ?? params.event.headers?.['user-agent'] ?? '').slice(0, 256),
       event: 'view',
+      via: params.via,
       ts,
       expires_at: Math.floor(now / 1000) + ACCESS_LOG_RETENTION_DAYS * 24 * 60 * 60,
     };
@@ -108,7 +110,7 @@ export async function recordViewCoalesced(params: {
 
 /** 直近のアクセス記録を新しい順に返す(メモ画面/管理画面の表示用)。 */
 export async function listAccess(memo_id: string, limit: number): Promise<
-  Pick<AccessLogEntry, 'ts' | 'ip' | 'ip_hash' | 'ua'>[]
+  Pick<AccessLogEntry, 'ts' | 'ip' | 'ip_hash' | 'ua' | 'via'>[]
 > {
   const res = await docClient.send(
     new QueryCommand({
@@ -124,5 +126,6 @@ export async function listAccess(memo_id: string, limit: number): Promise<
     ip: e.ip ?? '', // IP保存前の旧エントリは空(フロントは ip_hash にフォールバック)
     ip_hash: e.ip_hash,
     ua: e.ua,
+    via: e.via, // 'ro'=読み取り専用URL経由。旧エントリは undefined
   }));
 }

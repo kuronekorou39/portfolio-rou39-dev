@@ -32,6 +32,7 @@ export interface MemoSummary {
   memo_id: string;
   title: string;
   has_active_url: boolean;
+  has_readonly_url: boolean;
   tab_count: number;
   created_at: string;
   updated_at: string;
@@ -43,6 +44,8 @@ export interface IssueResult {
   url: string;
 }
 
+export type TokenMode = 'rw' | 'ro';
+
 export interface AccessLogEntry {
   ts: string;
   /** アクセス元IPアドレス(IP保存開始前の旧エントリは空)。 */
@@ -50,12 +53,16 @@ export interface AccessLogEntry {
   /** HMAC(日次salt, IP) の先頭16hex。旧エントリ表示のフォールバック用。 */
   ip_hash: string;
   ua: string;
+  /** 'ro'=読み取り専用URL経由の閲覧。旧エントリは undefined。 */
+  via?: TokenMode;
 }
 
 export interface MemoData {
   memo: { title: string; updated_at: string };
+  /** このURLの権限。'ro' なら閲覧専用(編集操作は 403 になる)。 */
+  mode?: TokenMode;
   tabs: { tab_id: string; title: string; content: string; version: number; position: number }[];
-  /** 直近のアクセス履歴(新しい順)。「誰がいつ開いたか」の可視化。 */
+  /** 直近のアクセス履歴(新しい順)。読み取り専用URLでは空。 */
   access_log?: AccessLogEntry[];
 }
 
@@ -102,6 +109,19 @@ export const api = {
     return request<{ entries: AccessLogEntry[] }>(
       `/admin/memos/${encodeURIComponent(memoId)}/access-log`,
       { headers: authHeaders(idToken) },
+    );
+  },
+  /** 読み取り専用URLの発行/再発行(旧readonly URLは無効化。編集用URLは無傷)。 */
+  issueReadonly(idToken: string, memoId: string): Promise<IssueResult> {
+    return request<IssueResult>(`/admin/memos/${encodeURIComponent(memoId)}/readonly`, {
+      method: 'POST',
+      headers: authHeaders(idToken),
+    });
+  },
+  revokeReadonly(idToken: string, memoId: string): Promise<{ revoked: boolean }> {
+    return request<{ revoked: boolean }>(
+      `/admin/memos/${encodeURIComponent(memoId)}/readonly/revoke`,
+      { method: 'POST', headers: authHeaders(idToken) },
     );
   },
 

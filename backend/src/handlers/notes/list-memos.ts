@@ -30,6 +30,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         title: m.title,
         // 生トークンは無いので URL は返せない(発行/再発行時のみ)。有効状態だけ返す
         has_active_url: !!m.active_token_hash,
+        has_readonly_url: !!m.active_readonly_token_hash,
         tab_count: m.tab_count,
         created_at: m.created_at,
         updated_at: m.updated_at,

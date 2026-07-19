@@ -154,6 +154,19 @@ export class NotesApiStack extends cdk.Stack {
     props.memosTable.grantReadData(accessLogFn); // 所有者チェック
     props.accessLogsTable.grantReadData(accessLogFn);
 
+    // 読み取り専用URL の発行/再発行・失効(reissue/revoke と同じ TransactWrite 権限)
+    const readonlyFn = adminFn('ReadonlyFn', 'admin-readonly.ts');
+    props.memosTable.grantReadWriteData(readonlyFn);
+    props.tokensTable.grantReadWriteData(readonlyFn);
+    props.memosTable.grant(readonlyFn, 'dynamodb:TransactWriteItems');
+    props.tokensTable.grant(readonlyFn, 'dynamodb:TransactWriteItems');
+
+    const readonlyRevokeFn = adminFn('ReadonlyRevokeFn', 'admin-readonly-revoke.ts');
+    props.memosTable.grantReadWriteData(readonlyRevokeFn);
+    props.tokensTable.grantReadWriteData(readonlyRevokeFn);
+    props.memosTable.grant(readonlyRevokeFn, 'dynamodb:TransactWriteItems');
+    props.tokensTable.grant(readonlyRevokeFn, 'dynamodb:TransactWriteItems');
+
     // --- 書き込み系(公開: 保存/タブ追加/タブ削除/離脱時フラッシュ) ---
     // いずれも未認証。resolveTokenThrottled がトークンアイテムへの条件付き Update で
     // 有効性検証とレート制御を同時に行うため tokens は RW。users には一切アクセスさせない。
@@ -242,6 +255,11 @@ export class NotesApiStack extends cdk.Stack {
     adminMemoById
       .addResource('access-log')
       .addMethod('GET', new apigateway.LambdaIntegration(accessLogFn), adminAuth);
+    const adminReadonly = adminMemoById.addResource('readonly');
+    adminReadonly.addMethod('POST', new apigateway.LambdaIntegration(readonlyFn), adminAuth);
+    adminReadonly
+      .addResource('revoke')
+      .addMethod('POST', new apigateway.LambdaIntegration(readonlyRevokeFn), adminAuth);
 
     const m = this.api.root.addResource('m');
     m.addResource('get').addMethod('POST', new apigateway.LambdaIntegration(getMemoFn));

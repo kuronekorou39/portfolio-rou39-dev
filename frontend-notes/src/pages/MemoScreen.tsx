@@ -342,6 +342,115 @@ function Editor({
   );
 }
 
+/** 読み取り専用URLで開いたときのビュー(閲覧のみ・編集不可・アクセス履歴も非表示)。 */
+function ReadonlyView({ data, offlineAt }: { data: MemoData; offlineAt: number | null }) {
+  const tabs = data.tabs;
+  const [activeId, setActiveId] = useState<string>(tabs[0]?.tab_id ?? '');
+  const active = tabs.find((t) => t.tab_id === activeId) ?? tabs[0];
+
+  return (
+    <main
+      style={{
+        maxWidth: 860,
+        margin: '0 auto',
+        padding: '16px 16px 48px',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100dvh',
+      }}
+    >
+      <header
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 8,
+        }}
+      >
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{data.memo.title || 'メモ'}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            style={{
+              fontSize: 12,
+              color: 'var(--muted)',
+              border: '1px solid var(--border)',
+              borderRadius: 99,
+              padding: '2px 10px',
+            }}
+          >
+            読み取り専用
+          </span>
+          <ThemeToggle />
+        </span>
+      </header>
+
+      {offlineAt !== null && (
+        <p
+          style={{
+            fontSize: 12,
+            color: 'var(--muted)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            padding: '6px 10px',
+            margin: '0 0 8px',
+          }}
+        >
+          オフライン表示中(最終同期:{' '}
+          {new Date(offlineAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })})
+        </p>
+      )}
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 2,
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        {tabs.map((t, i) => (
+          <button
+            key={t.tab_id}
+            onClick={() => setActiveId(t.tab_id)}
+            style={{
+              padding: '8px 14px',
+              fontSize: 13,
+              border: 'none',
+              borderBottom:
+                t.tab_id === active?.tab_id ? '2px solid var(--accent)' : '2px solid transparent',
+              background: 'transparent',
+              color: t.tab_id === active?.tab_id ? 'var(--fg)' : 'var(--muted)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t.title || `タブ ${i + 1}`}
+          </button>
+        ))}
+      </div>
+
+      {active?.title && (
+        <div style={{ fontSize: 15, fontWeight: 600, padding: '12px 4px 0' }}>{active.title}</div>
+      )}
+      {/* 本文は必ずテキストノードとして描画(HTML 解釈しない) */}
+      <div
+        style={{
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          fontSize: 15,
+          lineHeight: 1.8,
+          padding: '8px 4px',
+          flex: 1,
+          minHeight: '55dvh',
+        }}
+      >
+        {active?.content || <span style={{ color: 'var(--muted)' }}>(空のタブ)</span>}
+      </div>
+    </main>
+  );
+}
+
 export default function MemoScreen() {
   const token = useMemo(() => window.location.hash.slice(1), []);
   const [data, setData] = useState<MemoData | null>(null);
@@ -421,5 +530,7 @@ export default function MemoScreen() {
     );
   }
 
+  // 読み取り専用URL(mode='ro')は閲覧ビュー。編集エンジンは起動しない
+  if (data.mode === 'ro') return <ReadonlyView data={data} offlineAt={offlineAt} />;
   return <Editor token={token} data={data} offlineAt={offlineAt} />;
 }

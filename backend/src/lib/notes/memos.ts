@@ -53,8 +53,9 @@ export async function deleteMemo(params: {
   const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
   if (!memo) return { ok: false };
 
-  // 1. トークン失効
-  await revokeToken(params);
+  // 1. トークン失効(編集用・読み取り専用の両方。生きたURLが半削除メモを配信しないように)
+  await revokeToken({ ...params, mode: 'rw' });
+  await revokeToken({ ...params, mode: 'ro' });
 
   // 2. タブ一括削除(BatchWrite は25件/回)
   const tabsRes = await docClient.send(

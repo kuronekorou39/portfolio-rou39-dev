@@ -10,7 +10,15 @@ function fmtJst(iso: string): string {
 }
 
 /** 発行直後の秘密URLを1回だけ見せるモーダル(サーバはハッシュのみ保持=再表示不可)。 */
-function SecretUrlModal({ url, onClose }: { url: string; onClose: () => void }) {
+function SecretUrlModal({
+  url,
+  readonly,
+  onClose,
+}: {
+  url: string;
+  readonly?: boolean;
+  onClose: () => void;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <div
@@ -34,12 +42,16 @@ function SecretUrlModal({ url, onClose }: { url: string; onClose: () => void }) 
           width: '100%',
         }}
       >
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>メモURL を発行しました</h2>
+        <h2 style={{ fontSize: 17, marginTop: 0 }}>
+          {readonly ? '読み取り専用URL を発行しました' : 'メモURL を発行しました'}
+        </h2>
         <p style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>
           この URL は二度と表示できません。必ずコピーして保存してください。
         </p>
         <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-          URL を知っている人は誰でもこのメモを開けます。紛失・漏洩したときは「再発行」で旧URLを無効化できます。
+          {readonly
+            ? 'この URL を知っている人は、メモを閲覧できます(編集はできません)。「再発行」すると古い読み取り専用URLは無効になります。'
+            : 'URL を知っている人は誰でもこのメモを開けます。紛失・漏洩したときは「再発行」で旧URLを無効化できます。'}
         </p>
         <div
           style={{
@@ -95,6 +107,7 @@ export default function DashboardPage() {
   const [issuing, setIssuing] = useState(false);
   const [issueError, setIssueError] = useState<string | null>(null);
   const [issuedUrl, setIssuedUrl] = useState<string | null>(null);
+  const [issuedReadonly, setIssuedReadonly] = useState(false);
 
   const reload = useCallback(async () => {
     const idToken = await getIdToken();
@@ -118,6 +131,7 @@ export default function DashboardPage() {
       const idToken = await getIdToken();
       if (!idToken) throw new Error('login');
       const result = await api.issueMemo(idToken, title.trim());
+      setIssuedReadonly(false);
       setIssuedUrl(result.url);
       setTitle('');
       void reload();
@@ -164,9 +178,42 @@ export default function DashboardPage() {
       m.memo_id,
       async (idToken) => {
         const r = await api.reissueMemo(idToken, m.memo_id);
+        setIssuedReadonly(false);
         setIssuedUrl(r.url); // 新URLを1回限りモーダルで表示
       },
       '再発行に失敗しました。時間をおいて再試行してください。',
+    );
+  };
+
+  const onIssueReadonly = (m: MemoSummary) => {
+    const name = m.title || '(名称未設定)';
+    if (
+      m.has_readonly_url &&
+      !window.confirm(
+        `「${name}」の読み取り専用URLを再発行しますか?\n現在の読み取り専用URLは使えなくなります(編集用URLは影響しません)。`,
+      )
+    )
+      return;
+    void rowAction(
+      m.memo_id,
+      async (idToken) => {
+        const r = await api.issueReadonly(idToken, m.memo_id);
+        setIssuedReadonly(true);
+        setIssuedUrl(r.url);
+      },
+      '読み取り専用URLの発行に失敗しました。時間をおいて再試行してください。',
+    );
+  };
+
+  const onRevokeReadonly = (m: MemoSummary) => {
+    const name = m.title || '(名称未設定)';
+    if (!window.confirm(`「${name}」の読み取り専用URLを無効化しますか?`)) return;
+    void rowAction(
+      m.memo_id,
+      async (idToken) => {
+        await api.revokeReadonly(idToken, m.memo_id);
+      },
+      '読み取り専用URLの無効化に失敗しました。時間をおいて再試行してください。',
     );
   };
 
@@ -334,7 +381,13 @@ export default function DashboardPage() {
 
   return (
     <main style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px' }}>
-      {issuedUrl && <SecretUrlModal url={issuedUrl} onClose={() => setIssuedUrl(null)} />}
+      {issuedUrl && (
+        <SecretUrlModal
+          url={issuedUrl}
+          readonly={issuedReadonly}
+          onClose={() => setIssuedUrl(null)}
+        />
+      )}
 
       <header
         style={{
@@ -483,7 +536,20 @@ export default function DashboardPage() {
                     <div style={{ fontSize: 12, color: 'var(--muted)' }}>
                       タブ {m.tab_count} · 作成 {fmtJst(m.created_at)} · 更新 {fmtJst(m.updated_at)}
                     </div>
-                    <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
+                    {/* 編集用URL の操作 */}
+                    <div
+                      style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}
+                    >
+                      <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 2 }}>編集URL</span>
+                      <button onClick={() => onReissue(m)} disabled={busy} style={actionBtn}>
+                        {m.has_active_url ? '再発行' : '発行'}
+                      </button>
+                      {m.has_active_url && (
+                        <button onClick={() => onRevoke(m)} disabled={busy} style={actionBtn}>
+                          無効化
+                        </button>
+                      )}
+                      <span style={{ color: 'var(--border)' }}>|</span>
                       <button
                         onClick={() => {
                           setRenamingId(m.memo_id);
@@ -494,14 +560,6 @@ export default function DashboardPage() {
                       >
                         名前変更
                       </button>
-                      <button onClick={() => onReissue(m)} disabled={busy} style={actionBtn}>
-                        再発行
-                      </button>
-                      {m.has_active_url && (
-                        <button onClick={() => onRevoke(m)} disabled={busy} style={actionBtn}>
-                          無効化
-                        </button>
-                      )}
                       <button onClick={() => void onToggleLog(m.memo_id)} style={actionBtn}>
                         {logs[m.memo_id] ? '履歴を閉じる' : '履歴'}
                       </button>
@@ -512,6 +570,25 @@ export default function DashboardPage() {
                       >
                         削除
                       </button>
+                    </div>
+                    {/* 読み取り専用URL の操作 */}
+                    <div
+                      style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}
+                    >
+                      <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 2 }}>
+                        読み取り専用URL
+                      </span>
+                      <button onClick={() => onIssueReadonly(m)} disabled={busy} style={actionBtn}>
+                        {m.has_readonly_url ? '再発行' : '発行'}
+                      </button>
+                      {m.has_readonly_url && (
+                        <button onClick={() => onRevokeReadonly(m)} disabled={busy} style={actionBtn}>
+                          無効化
+                        </button>
+                      )}
+                      {m.has_readonly_url && (
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>(有効)</span>
+                      )}
                     </div>
                     {logs[m.memo_id] === 'loading' && (
                       <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 0' }}>
@@ -537,6 +614,11 @@ export default function DashboardPage() {
                             }}
                           >
                             <span style={{ flexShrink: 0 }}>{fmtJst(e.ts)}</span>
+                            {e.via === 'ro' && (
+                              <span style={{ flexShrink: 0, color: 'var(--accent)' }} title="読み取り専用URL経由">
+                                閲覧専用
+                              </span>
+                            )}
                             <span
                               style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }}
                               title="アクセス元のIPアドレス"

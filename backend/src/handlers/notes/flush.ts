@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { ok, badRequest, notFound, tooManyRequests, serverError } from '../../lib/response';
+import { ok, badRequest, notFound, forbidden, tooManyRequests, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
-import { resolveTokenThrottled } from '../../lib/notes/tokens';
+import { resolveTokenThrottled, modeOf } from '../../lib/notes/tokens';
 import { saveTab } from '../../lib/notes/tabs';
 import { MAX_TABS_PER_MEMO, MIN_FLUSH_INTERVAL_MS } from '../../lib/notes/limits';
 
@@ -49,6 +49,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const resolved = await resolveTokenThrottled(token, 'last_flush_ms', MIN_FLUSH_INTERVAL_MS);
     if (resolved.kind === 'invalid') return noStore(notFound());
     if (resolved.kind === 'throttled') return noStore(tooManyRequests('flush_throttled'));
+    if (modeOf(resolved.token) === 'ro') return noStore(forbidden('read_only'));
 
     const memo_id = resolved.token.memo_id;
     const results = [];

@@ -2,12 +2,40 @@ import { createHash, randomBytes, randomUUID } from 'crypto';
 import { GetCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../dynamo';
 import { MAX_MEMOS_PER_USER } from './limits';
-import type { Memo, NotesToken } from './types';
+import type { Memo, NotesToken, TokenMode } from './types';
 
 const USERS_TABLE = process.env.USERS_TABLE!;
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
 const TABS_TABLE = process.env.TABS_TABLE!;
 const TOKENS_TABLE = process.env.TOKENS_TABLE!;
+
+/** トークンの権限モード。属性が無い旧トークンは 'rw' 扱い(後方互換)。 */
+export function modeOf(token: Pick<NotesToken, 'mode'>): TokenMode {
+  return token.mode === 'ro' ? 'ro' : 'rw';
+}
+
+/** mode に対応する memo 側のスロット属性名。編集用と読み取り専用は独立に管理する。 */
+function memoSlot(mode: TokenMode): 'active_token_hash' | 'active_readonly_token_hash' {
+  return mode === 'ro' ? 'active_readonly_token_hash' : 'active_token_hash';
+}
+
+const MAX_TX_ATTEMPTS = 5;
+// 再試行で解消する一時的な取り消し理由。論理的な失敗(ConditionalCheckFailed)とは区別する。
+const TRANSIENT_CANCEL_CODES = ['TransactionConflict', 'ThrottlingError', 'ProvisionedThroughputExceeded'];
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/**
+ * TransactWrite が「一時的な競合(=再試行で解消)」で取り消されたかを判定する。
+ * 失効/再発行の TransactWrite は memo 行を更新するが、その memo 行は自動保存の touchMemo 等で
+ * 非トランザクションに頻繁に書かれる。その並行書き込みと衝突すると DynamoDB は
+ * TransactionConflict でトランザクション全体を取り消す(=何も書かれない)。これを
+ * ConditionalCheckFailed(論理的にスロット/状態が既に変わっていた)と取り違えると、
+ * 失効が「成功」と誤報告され漏れたURLが生き残る。理由コードを見て厳密に区別する。
+ */
+function isTransientCancel(err: unknown): boolean {
+  const reasons = (err as { CancellationReasons?: { Code?: string }[] }).CancellationReasons;
+  return !!reasons?.some((r) => r?.Code && TRANSIENT_CANCEL_CODES.includes(r.Code));
+}
 
 /**
  * 秘密URLトークンを生成する(256bit 乱数 → base64url 43文字)。
@@ -119,134 +147,175 @@ export type ReissueResult =
   | { ok: false; reason: 'not_found' | 'conflict' };
 
 /**
- * 秘密URLの再発行。1回の TransactWrite で「新トークン作成 + 旧トークン失効 +
- * memo.active_token_hash 差し替え」を原子的に行う。
+ * 秘密URLの発行/再発行(mode で編集用/読み取り専用を切り替え)。1回の TransactWrite で
+ * 「新トークン作成 + 旧トークン失効 + memo の該当スロット差し替え」を原子的に行う。
  *
+ * 読み取り専用は最初スロットが無い(=空)ため「発行」も「再発行」もこの1関数で兼ねる。
  * コミットした瞬間から旧URLは(解決が強整合 GetItem のため)次のリクエストで必ず 404。
- * memo 側の条件(active_token_hash = 読み取り時の値)が二重再発行の競合を防ぐ
- * (負けた方は TransactionCanceled → conflict)。
+ * memo 側スロットの「読み取り時の値と一致」条件が並行する再発行/失効との競合を排除する
+ * (負けた方は TransactionCanceled → conflict)。編集用と読み取り専用は別スロットなので
+ * 互いに影響しない。
  */
 export async function reissueToken(params: {
   memo_id: string;
   owner_user_id: string;
+  mode: TokenMode;
 }): Promise<ReissueResult> {
-  const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
-  if (!memo) return { ok: false, reason: 'not_found' };
+  // TransactionConflict(自動保存等との一時的な衝突)は再試行。毎回 memo を読み直して
+  // スロットの現在値で条件を組み直す。ConditionalCheckFailed(並行再発行に敗北)は conflict。
+  for (let attempt = 0; attempt < MAX_TX_ATTEMPTS; attempt++) {
+    const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
+    if (!memo) return { ok: false, reason: 'not_found' };
 
-  const oldHash = memo.active_token_hash;
-  const rawToken = generateToken();
-  const newHash = hashToken(rawToken);
-  const now = new Date().toISOString();
+    const slot = memoSlot(params.mode);
+    const oldHash = memo[slot]; // string | null | undefined
+    const rawToken = generateToken();
+    const newHash = hashToken(rawToken);
+    const now = new Date().toISOString();
 
-  const items: NonNullable<
-    ConstructorParameters<typeof TransactWriteCommand>[0]['TransactItems']
-  > = [
-    {
-      Put: {
-        TableName: TOKENS_TABLE,
-        Item: {
-          token_hash: newHash,
-          memo_id: memo.memo_id,
-          owner_user_id: params.owner_user_id,
-          status: 'active',
-          issued_at: now,
-        },
-        ConditionExpression: 'attribute_not_exists(token_hash)',
-      },
-    },
-    {
-      Update: {
-        TableName: MEMOS_TABLE,
-        Key: { memo_id: memo.memo_id },
-        // 読み取り時の active_token_hash と一致する場合のみ = 並行する再発行/失効に負けたら中止
-        ConditionExpression:
-          'owner_user_id = :me AND #s = :active AND active_token_hash = :old',
-        UpdateExpression: 'SET active_token_hash = :new, updated_at = :now',
-        ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: {
-          ':me': params.owner_user_id,
-          ':active': 'active',
-          ':old': oldHash,
-          ':new': newHash,
-          ':now': now,
-        },
-      },
-    },
-  ];
-  if (oldHash) {
-    items.push({
-      Update: {
-        TableName: TOKENS_TABLE,
-        Key: { token_hash: oldHash },
-        ConditionExpression: '#s = :active',
-        UpdateExpression: 'SET #s = :revoked, revoked_at = :now',
-        ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':active': 'active', ':revoked': 'revoked', ':now': now },
-      },
-    });
-  }
-
-  try {
-    await docClient.send(new TransactWriteCommand({ TransactItems: items }));
-  } catch (err: unknown) {
-    if ((err as { name?: string })?.name === 'TransactionCanceledException') {
-      return { ok: false, reason: 'conflict' };
+    // スロットの現在値(hash / null / 未設定)を厳密に条件化し、並行変更に負けたら中止する。
+    const memoValues: Record<string, unknown> = {
+      ':me': params.owner_user_id,
+      ':active': 'active',
+      ':new': newHash,
+      ':now': now,
+    };
+    let slotCond: string;
+    if (typeof oldHash === 'string') {
+      slotCond = '#slot = :old';
+      memoValues[':old'] = oldHash;
+    } else if (oldHash === null) {
+      slotCond = '#slot = :nullv';
+      memoValues[':nullv'] = null;
+    } else {
+      slotCond = 'attribute_not_exists(#slot)';
     }
-    throw err;
+
+    const items: NonNullable<
+      ConstructorParameters<typeof TransactWriteCommand>[0]['TransactItems']
+    > = [
+      {
+        Put: {
+          TableName: TOKENS_TABLE,
+          Item: {
+            token_hash: newHash,
+            memo_id: memo.memo_id,
+            owner_user_id: params.owner_user_id,
+            status: 'active',
+            mode: params.mode,
+            issued_at: now,
+          },
+          ConditionExpression: 'attribute_not_exists(token_hash)',
+        },
+      },
+      {
+        Update: {
+          TableName: MEMOS_TABLE,
+          Key: { memo_id: memo.memo_id },
+          ConditionExpression: `owner_user_id = :me AND #s = :active AND ${slotCond}`,
+          UpdateExpression: 'SET #slot = :new, updated_at = :now',
+          ExpressionAttributeNames: { '#s': 'status', '#slot': slot },
+          ExpressionAttributeValues: memoValues,
+        },
+      },
+    ];
+    if (typeof oldHash === 'string') {
+      items.push({
+        Update: {
+          TableName: TOKENS_TABLE,
+          Key: { token_hash: oldHash },
+          ConditionExpression: '#s = :active',
+          UpdateExpression: 'SET #s = :revoked, revoked_at = :now',
+          ExpressionAttributeNames: { '#s': 'status' },
+          ExpressionAttributeValues: { ':active': 'active', ':revoked': 'revoked', ':now': now },
+        },
+      });
+    }
+
+    try {
+      await docClient.send(new TransactWriteCommand({ TransactItems: items }));
+      return { ok: true, rawToken };
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'TransactionCanceledException') throw err;
+      if (isTransientCancel(err)) {
+        await sleep(40 * (attempt + 1));
+        continue; // memo を読み直して再試行
+      }
+      return { ok: false, reason: 'conflict' }; // 並行再発行/失効に敗北(論理的競合)
+    }
   }
-  return { ok: true, rawToken };
+  return { ok: false, reason: 'conflict' }; // 一時競合が継続
 }
 
+export type RevokeResult = { ok: true } | { ok: false; reason: 'not_found' | 'conflict' };
+
 /**
- * 秘密URLの失効(代替を発行しない)。既に失効済みなら no-op 成功(冪等)。
+ * 秘密URLの失効(代替を発行しない)。mode で編集用/読み取り専用を選ぶ。
+ * 既に失効済み(スロットが null / 未設定)なら no-op 成功(冪等)。
+ *
+ * 【重要】キルスイッチなので fail-open させないこと。TransactionConflict(自動保存等との
+ * 一時衝突=何も書かれていない)は再試行し、決して「成功」と誤報告しない。
+ * ConditionalCheckFailed(対象トークンが既に失効/スロットが並行操作で変化=消したいURLは
+ * 既に死んでいる)のみ冪等成功として扱う。
  */
 export async function revokeToken(params: {
   memo_id: string;
   owner_user_id: string;
-}): Promise<{ ok: boolean }> {
-  const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
-  if (!memo) return { ok: false };
-  const oldHash = memo.active_token_hash;
-  if (!oldHash) return { ok: true }; // 既に無効
+  mode: TokenMode;
+}): Promise<RevokeResult> {
+  for (let attempt = 0; attempt < MAX_TX_ATTEMPTS; attempt++) {
+    const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
+    if (!memo) return { ok: false, reason: 'not_found' };
+    const slot = memoSlot(params.mode);
+    const oldHash = memo[slot];
+    if (typeof oldHash !== 'string') return { ok: true }; // 既に無効(null / 未設定)
 
-  const now = new Date().toISOString();
-  try {
-    await docClient.send(
-      new TransactWriteCommand({
-        TransactItems: [
-          {
-            Update: {
-              TableName: TOKENS_TABLE,
-              Key: { token_hash: oldHash },
-              ConditionExpression: '#s = :active',
-              UpdateExpression: 'SET #s = :revoked, revoked_at = :now',
-              ExpressionAttributeNames: { '#s': 'status' },
-              ExpressionAttributeValues: { ':active': 'active', ':revoked': 'revoked', ':now': now },
-            },
-          },
-          {
-            Update: {
-              TableName: MEMOS_TABLE,
-              Key: { memo_id: memo.memo_id },
-              ConditionExpression: 'owner_user_id = :me AND active_token_hash = :old',
-              UpdateExpression: 'SET active_token_hash = :null, updated_at = :now',
-              ExpressionAttributeValues: {
-                ':me': params.owner_user_id,
-                ':old': oldHash,
-                ':null': null,
-                ':now': now,
+    const now = new Date().toISOString();
+    try {
+      await docClient.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              Update: {
+                TableName: TOKENS_TABLE,
+                Key: { token_hash: oldHash },
+                ConditionExpression: '#s = :active',
+                UpdateExpression: 'SET #s = :revoked, revoked_at = :now',
+                ExpressionAttributeNames: { '#s': 'status' },
+                ExpressionAttributeValues: { ':active': 'active', ':revoked': 'revoked', ':now': now },
               },
             },
-          },
-        ],
-      }),
-    );
-  } catch (err: unknown) {
-    // 並行操作(再発行等)と競合した場合は現状を尊重して失敗にしない
-    if ((err as { name?: string })?.name === 'TransactionCanceledException') return { ok: true };
-    throw err;
+            {
+              Update: {
+                TableName: MEMOS_TABLE,
+                Key: { memo_id: memo.memo_id },
+                ConditionExpression: 'owner_user_id = :me AND #slot = :old',
+                UpdateExpression: 'SET #slot = :null, updated_at = :now',
+                ExpressionAttributeNames: { '#slot': slot },
+                ExpressionAttributeValues: {
+                  ':me': params.owner_user_id,
+                  ':old': oldHash,
+                  ':null': null,
+                  ':now': now,
+                },
+              },
+            },
+          ],
+        }),
+      );
+      return { ok: true };
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'TransactionCanceledException') throw err;
+      if (isTransientCancel(err)) {
+        await sleep(40 * (attempt + 1));
+        continue; // 何も書かれていない。memo を読み直して再試行
+      }
+      // ConditionalCheckFailed(一時競合でない): 対象は既に失効、またはスロットが並行操作で
+      // 変化 = 消したかったURLは既に死んでいる。冪等成功。
+      return { ok: true };
+    }
   }
-  return { ok: true };
+  return { ok: false, reason: 'conflict' }; // 一時競合が継続=失効できていない(fail-open しない)
 }
 
 /**
@@ -307,6 +376,7 @@ export async function issueMemo(params: {
                 memo_id,
                 owner_user_id,
                 status: 'active',
+                mode: 'rw', // 発行時の秘密URLは編集用
                 issued_at: now,
               },
               // 256bit 乱数の衝突は事実上起きないが、起きた場合に既存トークンを
