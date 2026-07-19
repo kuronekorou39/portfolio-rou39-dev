@@ -154,6 +154,10 @@ export class NotesApiStack extends cdk.Stack {
     props.memosTable.grantReadData(accessLogFn); // 所有者チェック
     props.accessLogsTable.grantReadData(accessLogFn);
 
+    // PIN の設定/解除(所有者のみ)
+    const setPinFn = adminFn('SetPinFn', 'admin-set-pin.ts');
+    props.memosTable.grantReadWriteData(setPinFn);
+
     // 読み取り専用URL の発行/再発行・失効(reissue/revoke と同じ TransactWrite 権限)
     const readonlyFn = adminFn('ReadonlyFn', 'admin-readonly.ts');
     props.memosTable.grantReadWriteData(readonlyFn);
@@ -260,6 +264,9 @@ export class NotesApiStack extends cdk.Stack {
     adminReadonly
       .addResource('revoke')
       .addMethod('POST', new apigateway.LambdaIntegration(readonlyRevokeFn), adminAuth);
+    adminMemoById
+      .addResource('pin')
+      .addMethod('PUT', new apigateway.LambdaIntegration(setPinFn), adminAuth);
 
     const m = this.api.root.addResource('m');
     m.addResource('get').addMethod('POST', new apigateway.LambdaIntegration(getMemoFn));

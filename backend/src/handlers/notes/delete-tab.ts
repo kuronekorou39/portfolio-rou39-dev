@@ -2,6 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ok, notFound, conflict, forbidden, tooManyRequests, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
 import { resolveTokenThrottled, modeOf } from '../../lib/notes/tokens';
+import { pinGateResponse } from '../../lib/notes/pin';
 import { deleteTab } from '../../lib/notes/tabs';
 import { MIN_SAVE_INTERVAL_MS } from '../../lib/notes/limits';
 
@@ -14,7 +15,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     } catch {
       return noStore(notFound());
     }
-    const { token, tab_id } = body as { token?: unknown; tab_id?: unknown };
+    const { token, tab_id, pin } = body as { token?: unknown; tab_id?: unknown; pin?: unknown };
     if (typeof token !== 'string' || !token) return noStore(notFound());
     if (typeof tab_id !== 'string' || !tab_id) return noStore(notFound());
 
@@ -22,6 +23,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (resolved.kind === 'invalid') return noStore(notFound());
     if (resolved.kind === 'throttled') return noStore(tooManyRequests('save_throttled'));
     if (modeOf(resolved.token) === 'ro') return noStore(forbidden('read_only'));
+    const pinResp = await pinGateResponse(resolved.token.memo_id, resolved.token.token_hash, resolved.token, pin);
+    if (pinResp) return pinResp;
 
     const result = await deleteTab({ memo_id: resolved.token.memo_id, tab_id });
     if (result.kind === 'last_tab') return noStore(conflict('last_tab'));

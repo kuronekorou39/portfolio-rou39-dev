@@ -67,6 +67,7 @@ export function clearBuffer(tabId: string): void {
 export function useAutosave(
   token: string,
   initialTabs: { tab_id: string; title: string; content: string; version: number; position: number }[],
+  pin?: string,
 ) {
   const [tabs, setTabs] = useState<TabState[]>(() =>
     initialTabs.map((t) => {
@@ -112,7 +113,7 @@ export function useAutosave(
       const snapshot = { title: t.title, content: t.content, base_version: t.version };
       patchTab(tabId, { save: 'saving' });
       try {
-        const r = await api.saveTab(token, { tab_id: tabId, ...snapshot });
+        const r = await api.saveTab(token, { tab_id: tabId, ...snapshot }, pin);
         retryCountRef.current.delete(tabId);
         const cur = tabsRef.current.find((x) => x.tab_id === tabId);
         const unchanged =
@@ -188,7 +189,7 @@ export function useAutosave(
             title: t.title,
             content: t.content,
           })),
-          { keepalive },
+          { keepalive, pin },
         )
         .then(({ results }) => {
           for (const r of results) {
@@ -274,19 +275,19 @@ export function useAutosave(
     { ok: true; tab_id: string } | { ok: false; code: string | null }
   > => {
     try {
-      const { tab } = await api.createTab(token, '');
+      const { tab } = await api.createTab(token, '', pin);
       setTabs((prev) => [...prev, { ...tab, dirty: false, save: 'saved' as const }]);
       return { ok: true, tab_id: tab.tab_id };
     } catch (e) {
       return { ok: false, code: e instanceof ApiError ? e.code : null };
     }
-  }, [token]);
+  }, [token, pin]);
 
   /** タブ削除(最後の1枚はサーバ側で拒否される)。 */
   const removeTab = useCallback(
     async (tabId: string): Promise<boolean> => {
       try {
-        await api.deleteTab(token, tabId);
+        await api.deleteTab(token, tabId, pin);
         clearBuffer(tabId);
         const timer = timersRef.current.get(tabId);
         if (timer) clearTimeout(timer);
@@ -296,7 +297,7 @@ export function useAutosave(
         return false;
       }
     },
-    [token],
+    [token, pin],
   );
 
   return { tabs, edit, saveNow, flushAll, adoptServer, overwriteServer, addTab, removeTab };

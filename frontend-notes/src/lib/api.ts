@@ -33,6 +33,12 @@ export interface MemoSummary {
   title: string;
   has_active_url: boolean;
   has_readonly_url: boolean;
+  /** メモ画面アクセスに PIN が必要か。 */
+  has_pin: boolean;
+  /** 編集用の秘密URL(生トークン保存済みなら再表示。旧メモは null=再発行で表示)。 */
+  url: string | null;
+  /** 読み取り専用の秘密URL。 */
+  readonly_url: string | null;
   tab_count: number;
   created_at: string;
   updated_at: string;
@@ -61,6 +67,8 @@ export interface MemoData {
   memo: { title: string; updated_at: string };
   /** このURLの権限。'ro' なら閲覧専用(編集操作は 403 になる)。 */
   mode?: TokenMode;
+  /** このメモが PIN 保護されているか(書き込み時に PIN を同送する必要がある)。 */
+  has_pin?: boolean;
   tabs: { tab_id: string; title: string; content: string; version: number; position: number }[];
   /** 直近のアクセス履歴(新しい順)。読み取り専用URLでは空。 */
   access_log?: AccessLogEntry[];
@@ -111,6 +119,14 @@ export const api = {
       { headers: authHeaders(idToken) },
     );
   },
+  /** PIN を設定/変更(pin は 4〜10桁の数字)。null で解除。 */
+  setPin(idToken: string, memoId: string, pin: string | null): Promise<{ has_pin: boolean }> {
+    return request<{ has_pin: boolean }>(`/admin/memos/${encodeURIComponent(memoId)}/pin`, {
+      method: 'PUT',
+      headers: authHeaders(idToken),
+      body: JSON.stringify({ pin }),
+    });
+  },
   /** 読み取り専用URLの発行/再発行(旧readonly URLは無効化。編集用URLは無傷)。 */
   issueReadonly(idToken: string, memoId: string): Promise<IssueResult> {
     return request<IssueResult>(`/admin/memos/${encodeURIComponent(memoId)}/readonly`, {
@@ -126,38 +142,40 @@ export const api = {
   },
 
   // ---- メモ画面(秘密URLトークンを body でのみ渡す。path/query に載せない) ----
-  getMemo(token: string): Promise<MemoData> {
+  // PIN 保護されたメモは pin を同送する(未設定なら pin=undefined でも通る)。
+  getMemo(token: string, pin?: string): Promise<MemoData> {
     return request<MemoData>('/m/get', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, pin }),
       cache: 'no-store',
     });
   },
   saveTab(
     token: string,
     params: { tab_id: string; base_version: number; title: string; content: string },
+    pin?: string,
   ): Promise<{ version: number }> {
     return request<{ version: number }>('/m/tabs/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, ...params }),
+      body: JSON.stringify({ token, pin, ...params }),
       cache: 'no-store',
     });
   },
-  createTab(token: string, title: string): Promise<{ tab: MemoData['tabs'][number] }> {
+  createTab(token: string, title: string, pin?: string): Promise<{ tab: MemoData['tabs'][number] }> {
     return request<{ tab: MemoData['tabs'][number] }>('/m/tabs/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, title }),
+      body: JSON.stringify({ token, title, pin }),
       cache: 'no-store',
     });
   },
-  deleteTab(token: string, tab_id: string): Promise<{ deleted: boolean }> {
+  deleteTab(token: string, tab_id: string, pin?: string): Promise<{ deleted: boolean }> {
     return request<{ deleted: boolean }>('/m/tabs/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, tab_id }),
+      body: JSON.stringify({ token, tab_id, pin }),
       cache: 'no-store',
     });
   },
@@ -169,12 +187,12 @@ export const api = {
   flush(
     token: string,
     tabs: { tab_id: string; base_version: number; title: string; content: string }[],
-    opts: { keepalive?: boolean } = {},
+    opts: { keepalive?: boolean; pin?: string } = {},
   ): Promise<{ results: { tab_id: string; result: string; version?: number }[] }> {
     return request('/m/flush', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, tabs }),
+      body: JSON.stringify({ token, tabs, pin: opts.pin }),
       cache: 'no-store',
       keepalive: opts.keepalive ?? false,
     });

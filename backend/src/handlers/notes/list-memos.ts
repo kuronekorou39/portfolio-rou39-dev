@@ -5,6 +5,12 @@ import { ok, forbidden, serverError } from '../../lib/response';
 import type { Memo } from '../../lib/notes/types';
 
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
+const SITE_BASE_URL = process.env.NOTES_SITE_URL!; // https://notes.rou39.com
+
+/** 生トークンから秘密URLを組み立てる(保存済みの場合のみ)。 */
+function urlOf(raw: string | null | undefined): string | null {
+  return typeof raw === 'string' && raw ? `${SITE_BASE_URL}/m#${raw}` : null;
+}
 
 /** GET /admin/memos — 自分のメモ一覧(新しい順、Cognito オーソライザー必須)。 */
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -28,9 +34,12 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       .map((m) => ({
         memo_id: m.memo_id,
         title: m.title,
-        // 生トークンは無いので URL は返せない(発行/再発行時のみ)。有効状態だけ返す
         has_active_url: !!m.active_token_hash,
         has_readonly_url: !!m.active_readonly_token_hash,
+        has_pin: !!m.pin_hash,
+        // 秘密URL(生トークン保存済みなら再表示。旧メモは null=再発行で表示)
+        url: urlOf(m.active_token_raw),
+        readonly_url: urlOf(m.active_readonly_token_raw),
         tab_count: m.tab_count,
         created_at: m.created_at,
         updated_at: m.updated_at,

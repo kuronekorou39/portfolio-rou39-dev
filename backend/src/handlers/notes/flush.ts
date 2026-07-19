@@ -2,6 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ok, badRequest, notFound, forbidden, tooManyRequests, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
 import { resolveTokenThrottled, modeOf } from '../../lib/notes/tokens';
+import { pinGateResponse } from '../../lib/notes/pin';
 import { saveTab } from '../../lib/notes/tabs';
 import { MAX_TABS_PER_MEMO, MIN_FLUSH_INTERVAL_MS } from '../../lib/notes/limits';
 
@@ -30,7 +31,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     } catch {
       return noStore(notFound());
     }
-    const { token, tabs } = body as { token?: unknown; tabs?: unknown };
+    const { token, tabs, pin } = body as { token?: unknown; tabs?: unknown; pin?: unknown };
     if (typeof token !== 'string' || !token) return noStore(notFound());
     if (!Array.isArray(tabs) || tabs.length === 0 || tabs.length > MAX_TABS_PER_MEMO) {
       return noStore(badRequest('invalid_params'));
@@ -50,6 +51,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (resolved.kind === 'invalid') return noStore(notFound());
     if (resolved.kind === 'throttled') return noStore(tooManyRequests('flush_throttled'));
     if (modeOf(resolved.token) === 'ro') return noStore(forbidden('read_only'));
+    const pinResp = await pinGateResponse(resolved.token.memo_id, resolved.token.token_hash, resolved.token, pin);
+    if (pinResp) return pinResp;
 
     const memo_id = resolved.token.memo_id;
     const results = [];

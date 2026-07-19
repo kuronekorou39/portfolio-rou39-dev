@@ -38,6 +38,14 @@ export function forbidden(message = 'Forbidden') {
   };
 }
 
+export function unauthorized(message = 'Unauthorized') {
+  return {
+    statusCode: 401,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ error: message }),
+  };
+}
+
 export function conflict(message = 'Conflict', extra?: Record<string, unknown>) {
   return {
     statusCode: 409,

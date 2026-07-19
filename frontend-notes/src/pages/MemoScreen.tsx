@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, ApiError, type AccessLogEntry, type MemoData } from '../lib/api';
 import { useAutosave, type TabState } from '../lib/autosave';
 import { saveSnapshot, loadSnapshot, deleteSnapshot } from '../lib/offline';
@@ -77,15 +77,19 @@ function Editor({
   token,
   data,
   offlineAt,
+  pin,
 }: {
   token: string;
   data: MemoData;
   /** オフライン表示中なら、そのスナップショットの最終同期時刻(epoch ms)。 */
   offlineAt: number | null;
+  /** PIN 保護メモの場合の PIN(書き込みに同送)。 */
+  pin?: string;
 }) {
   const { tabs, edit, saveNow, adoptServer, overwriteServer, addTab, removeTab } = useAutosave(
     token,
     data.tabs,
+    pin,
   );
   const [activeId, setActiveId] = useState<string>(data.tabs[0]?.tab_id ?? '');
   const [adding, setAdding] = useState(false);
@@ -451,14 +455,90 @@ function ReadonlyView({ data, offlineAt }: { data: MemoData; offlineAt: number |
   );
 }
 
+/** PIN 入力フォーム(PIN 保護されたメモを開くとき)。 */
+function PinGate({
+  onSubmit,
+  error,
+  locked,
+}: {
+  onSubmit: (pin: string) => void;
+  error: boolean;
+  locked: boolean;
+}) {
+  const [pin, setPin] = useState('');
+  return (
+    <main style={{ maxWidth: 360, margin: '0 auto', padding: '96px 24px', textAlign: 'center' }}>
+      <h1 style={{ fontSize: 20, marginBottom: 8 }}>PIN を入力</h1>
+      <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 24 }}>
+        このメモは PIN で保護されています。
+      </p>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (pin) onSubmit(pin);
+        }}
+      >
+        <input
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
+          inputMode="numeric"
+          autoComplete="off"
+          autoFocus
+          maxLength={10}
+          disabled={locked}
+          placeholder="••••••"
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            fontSize: 18,
+            letterSpacing: 6,
+            textAlign: 'center',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            marginBottom: 12,
+          }}
+        />
+        <button
+          type="submit"
+          disabled={locked || pin.length < 6}
+          style={{
+            width: '100%',
+            padding: '10px',
+            fontSize: 15,
+            border: 'none',
+            borderRadius: 8,
+            background: 'var(--accent)',
+            color: 'var(--accent-fg)',
+            opacity: locked || pin.length < 4 ? 0.5 : 1,
+          }}
+        >
+          開く
+        </button>
+      </form>
+      {error && !locked && (
+        <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 12 }}>
+          PIN が違います。もう一度お試しください。
+        </p>
+      )}
+      {locked && (
+        <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 12 }}>
+          試行回数が上限に達しました。しばらく待ってから再度お試しください。
+        </p>
+      )}
+    </main>
+  );
+}
+
 export default function MemoScreen() {
   const token = useMemo(() => window.location.hash.slice(1), []);
   const [data, setData] = useState<MemoData | null>(null);
-  const [state, setState] = useState<'loading' | 'ready' | 'unavailable' | 'error'>('loading');
+  const [state, setState] = useState<
+    'loading' | 'ready' | 'unavailable' | 'error' | 'pin' | 'pin_error' | 'pin_locked'
+  >('loading');
   const [offlineAt, setOfflineAt] = useState<number | null>(null);
+  const [pin, setPin] = useState<string | undefined>(undefined);
 
   // メモ画面のみ Service Worker を登録(scope /m。管理画面は制御下に置かない)。
-  // アプリシェルをキャッシュし、オフラインでもこの画面自体を開けるようにする
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/m' }).catch(() => {
@@ -467,38 +547,63 @@ export default function MemoScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!token) {
-      setState('unavailable');
-      return;
-    }
-    (async () => {
+  const load = useCallback(
+    async (tryPin?: string) => {
+      if (!token) {
+        setState('unavailable');
+        return;
+      }
       try {
-        const d = await api.getMemo(token);
+        const d = await api.getMemo(token, tryPin);
         setData(d);
+        setPin(tryPin);
         setState('ready');
-        // オフライン再表示用スナップショット(best-effort)。
-        // メモ内容は SW キャッシュではなくここ(IndexedDB・トークン別)にだけ持つ
         void saveSnapshot(token, d).catch(() => {});
       } catch (e) {
-        if (e instanceof ApiError && e.status === 404) {
-          // 未知・失効・削除(理由は区別しない)。ローカルのスナップショットも掃除する
-          void deleteSnapshot(token).catch(() => {});
-          setState('unavailable');
-          return;
+        if (e instanceof ApiError) {
+          if (e.status === 404) {
+            void deleteSnapshot(token).catch(() => {});
+            setState('unavailable');
+            return;
+          }
+          // PIN 保護: 未提示/誤り(401)・ロック(429)
+          if (e.status === 401) {
+            setState(tryPin ? 'pin_error' : 'pin');
+            return;
+          }
+          if (e.status === 429 && e.code === 'pin_locked') {
+            setState('pin_locked');
+            return;
+          }
         }
         // ネットワーク断・サーバ障害 → オフラインスナップショットにフォールバック
         const snap = await loadSnapshot(token).catch(() => null);
         if (snap) {
           setData(snap.data);
+          setPin(tryPin);
           setOfflineAt(snap.savedAt);
           setState('ready');
         } else {
           setState('error');
         }
       }
-    })();
-  }, [token]);
+    },
+    [token],
+  );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (state === 'pin' || state === 'pin_error' || state === 'pin_locked') {
+    return (
+      <PinGate
+        onSubmit={(p) => void load(p)}
+        error={state === 'pin_error'}
+        locked={state === 'pin_locked'}
+      />
+    );
+  }
 
   if (state === 'loading') {
     return (
@@ -532,5 +637,5 @@ export default function MemoScreen() {
 
   // 読み取り専用URL(mode='ro')は閲覧ビュー。編集エンジンは起動しない
   if (data.mode === 'ro') return <ReadonlyView data={data} offlineAt={offlineAt} />;
-  return <Editor token={token} data={data} offlineAt={offlineAt} />;
+  return <Editor token={token} data={data} offlineAt={offlineAt} pin={pin} />;
 }

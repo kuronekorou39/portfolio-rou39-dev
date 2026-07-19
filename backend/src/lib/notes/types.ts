@@ -6,13 +6,24 @@ export interface Memo {
   memo_id: string;
   owner_user_id: string; // Cognito sub
   title: string;
-  /** 現在有効な「編集用」秘密URLトークンの SHA-256(フル64hex)。失効中は null。 */
+  /** 現在有効な「編集用」秘密URLトークンの SHA-256(フル64hex)。失効中は null。解決の照合鍵。 */
   active_token_hash: string | null;
+  /**
+   * 管理画面での URL 再表示用に、生トークンも保存する(2026-07-20)。
+   * これにより DB ダンプで秘密URLが露出するが、本サービスはメモ本文も平文保存(E2Eなし)
+   * のため脅威モデルは実質変わらない。表示はログイン必須の管理画面のみ。
+   * この属性が無い旧メモは「再発行で表示」フォールバック。
+   */
+  active_token_raw?: string | null;
   /**
    * 現在有効な「読み取り専用」秘密URLトークンの SHA-256。編集用とは独立に発行/失効できる。
    * 一度も発行していないメモでは属性自体が存在しない(undefined)、失効後は null。
    */
   active_readonly_token_hash?: string | null;
+  /** 読み取り専用URLの生トークン(管理画面での再表示用)。 */
+  active_readonly_token_raw?: string | null;
+  /** メモ画面アクセス時に要求する PIN(scrypt ハッシュ "salt:hash")。未設定なら属性なし。 */
+  pin_hash?: string | null;
   tab_count: number;
   status: 'active' | 'deleted';
   created_at: string;
@@ -49,6 +60,10 @@ export interface NotesToken {
   revoked_at?: string | null;
   /** per-token 保存スロットル(P3)。最終保存時刻 epoch ms。 */
   last_save_ms?: number;
+  /** PIN 連続失敗回数(上限でロック)。トークン単位なので漏洩URLの総当たりが他に波及しない。 */
+  pin_fail_count?: number;
+  /** PIN ロック期限 epoch ms。これ未満の間は PIN 照合を受け付けない。 */
+  pin_locked_until?: number;
 }
 
 /**

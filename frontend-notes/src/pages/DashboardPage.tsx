@@ -45,13 +45,10 @@ function SecretUrlModal({
         <h2 style={{ fontSize: 17, marginTop: 0 }}>
           {readonly ? '読み取り専用URL を発行しました' : 'メモURL を発行しました'}
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>
-          この URL は二度と表示できません。必ずコピーして保存してください。
-        </p>
         <p style={{ fontSize: 13, color: 'var(--muted)' }}>
           {readonly
-            ? 'この URL を知っている人は、メモを閲覧できます(編集はできません)。「再発行」すると古い読み取り専用URLは無効になります。'
-            : 'URL を知っている人は誰でもこのメモを開けます。紛失・漏洩したときは「再発行」で旧URLを無効化できます。'}
+            ? 'この URL を知っている人は、メモを閲覧できます(編集はできません)。一覧からいつでも確認できます。'
+            : 'URL を知っている人は誰でもこのメモを開けます。一覧からいつでも確認できます。漏洩したときは「再発行」で旧URLを無効化してください。'}
         </p>
         <div
           style={{
@@ -95,6 +92,50 @@ function SecretUrlModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** 秘密URLをインライン表示 + ワンクリックコピー(管理画面はログイン必須なので常時表示でよい)。 */
+function CopyableUrl({ label, url }: { label: string; url: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, minWidth: 0 }}>
+      <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0, width: 76 }}>{label}</span>
+      <code
+        style={{
+          fontSize: 11,
+          fontFamily: 'var(--font-mono)',
+          color: 'var(--muted)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          flex: 1,
+          minWidth: 0,
+        }}
+        title={url}
+      >
+        {url}
+      </code>
+      <button
+        onClick={() =>
+          void navigator.clipboard.writeText(url).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          })
+        }
+        style={{
+          fontSize: 11,
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          background: 'var(--surface)',
+          color: copied ? 'var(--accent)' : 'var(--muted)',
+          padding: '1px 8px',
+          flexShrink: 0,
+        }}
+      >
+        {copied ? 'コピー済' : 'コピー'}
+      </button>
     </div>
   );
 }
@@ -257,6 +298,35 @@ export default function DashboardPage() {
         setRenamingId(null);
       },
       '名前の変更に失敗しました。',
+    );
+  };
+
+  // PIN 設定/変更/解除のインライン UI
+  const [pinEditId, setPinEditId] = useState<string | null>(null);
+  const [pinValue, setPinValue] = useState('');
+  const onSetPin = (memoId: string) => {
+    if (pinValue.length < 6 || pinValue.length > 10) {
+      setActionError('PIN は6〜10桁の数字で入力してください。');
+      return;
+    }
+    void rowAction(
+      memoId,
+      async (idToken) => {
+        await api.setPin(idToken, memoId, pinValue);
+        setPinEditId(null);
+        setPinValue('');
+      },
+      'PIN の設定に失敗しました。',
+    );
+  };
+  const onClearPin = (m: MemoSummary) => {
+    if (!window.confirm(`「${m.title || '(名称未設定)'}」の PIN を解除しますか?`)) return;
+    void rowAction(
+      m.memo_id,
+      async (idToken) => {
+        await api.setPin(idToken, m.memo_id, null);
+      },
+      'PIN の解除に失敗しました。',
     );
   };
 
@@ -590,6 +660,74 @@ export default function DashboardPage() {
                         <span style={{ fontSize: 11, color: 'var(--muted)' }}>(有効)</span>
                       )}
                     </div>
+                    {/* PIN の操作 */}
+                    <div
+                      style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}
+                    >
+                      <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 2 }}>PIN</span>
+                      {m.has_pin && (
+                        <span style={{ fontSize: 11, color: 'var(--accent)' }}>設定済み</span>
+                      )}
+                      {pinEditId === m.memo_id ? (
+                        <>
+                          <input
+                            value={pinValue}
+                            onChange={(e) => setPinValue(e.target.value.replace(/[^0-9]/g, ''))}
+                            inputMode="numeric"
+                            autoFocus
+                            maxLength={10}
+                            placeholder="6〜10桁"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') onSetPin(m.memo_id);
+                              if (e.key === 'Escape') {
+                                setPinEditId(null);
+                                setPinValue('');
+                              }
+                            }}
+                            style={{
+                              width: 90,
+                              padding: '2px 8px',
+                              border: '1px solid var(--border)',
+                              borderRadius: 4,
+                              fontSize: 12,
+                            }}
+                          />
+                          <button onClick={() => onSetPin(m.memo_id)} disabled={busy} style={actionBtn}>
+                            保存
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPinEditId(null);
+                              setPinValue('');
+                            }}
+                            style={{ ...actionBtn, color: 'var(--muted)' }}
+                          >
+                            キャンセル
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setPinEditId(m.memo_id);
+                              setPinValue('');
+                            }}
+                            disabled={busy}
+                            style={actionBtn}
+                          >
+                            {m.has_pin ? '変更' : '設定'}
+                          </button>
+                          {m.has_pin && (
+                            <button onClick={() => onClearPin(m)} disabled={busy} style={actionBtn}>
+                              解除
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {/* 秘密URL の常時表示(発行済みなら) */}
+                    {m.url && <CopyableUrl label="編集URL" url={m.url} />}
+                    {m.readonly_url && <CopyableUrl label="閲覧専用URL" url={m.readonly_url} />}
                     {logs[m.memo_id] === 'loading' && (
                       <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 0' }}>
                         読み込み中…

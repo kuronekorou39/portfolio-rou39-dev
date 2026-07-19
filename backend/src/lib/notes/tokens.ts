@@ -14,9 +14,14 @@ export function modeOf(token: Pick<NotesToken, 'mode'>): TokenMode {
   return token.mode === 'ro' ? 'ro' : 'rw';
 }
 
-/** mode に対応する memo 側のスロット属性名。編集用と読み取り専用は独立に管理する。 */
+/** mode に対応する memo 側のハッシュスロット属性名(解決/条件の照合鍵)。 */
 function memoSlot(mode: TokenMode): 'active_token_hash' | 'active_readonly_token_hash' {
   return mode === 'ro' ? 'active_readonly_token_hash' : 'active_token_hash';
+}
+
+/** mode に対応する memo 側の生トークンスロット属性名(管理画面での再表示用)。 */
+function memoRawSlot(mode: TokenMode): 'active_token_raw' | 'active_readonly_token_raw' {
+  return mode === 'ro' ? 'active_readonly_token_raw' : 'active_token_raw';
 }
 
 const MAX_TX_ATTEMPTS = 5;
@@ -168,6 +173,7 @@ export async function reissueToken(params: {
     if (!memo) return { ok: false, reason: 'not_found' };
 
     const slot = memoSlot(params.mode);
+    const rawSlot = memoRawSlot(params.mode);
     const oldHash = memo[slot]; // string | null | undefined
     const rawToken = generateToken();
     const newHash = hashToken(rawToken);
@@ -178,6 +184,7 @@ export async function reissueToken(params: {
       ':me': params.owner_user_id,
       ':active': 'active',
       ':new': newHash,
+      ':newraw': rawToken,
       ':now': now,
     };
     let slotCond: string;
@@ -213,8 +220,8 @@ export async function reissueToken(params: {
           TableName: MEMOS_TABLE,
           Key: { memo_id: memo.memo_id },
           ConditionExpression: `owner_user_id = :me AND #s = :active AND ${slotCond}`,
-          UpdateExpression: 'SET #slot = :new, updated_at = :now',
-          ExpressionAttributeNames: { '#s': 'status', '#slot': slot },
+          UpdateExpression: 'SET #slot = :new, #rawslot = :newraw, updated_at = :now',
+          ExpressionAttributeNames: { '#s': 'status', '#slot': slot, '#rawslot': rawSlot },
           ExpressionAttributeValues: memoValues,
         },
       },
@@ -267,6 +274,7 @@ export async function revokeToken(params: {
     const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
     if (!memo) return { ok: false, reason: 'not_found' };
     const slot = memoSlot(params.mode);
+    const rawSlot = memoRawSlot(params.mode);
     const oldHash = memo[slot];
     if (typeof oldHash !== 'string') return { ok: true }; // 既に無効(null / 未設定)
 
@@ -290,8 +298,8 @@ export async function revokeToken(params: {
                 TableName: MEMOS_TABLE,
                 Key: { memo_id: memo.memo_id },
                 ConditionExpression: 'owner_user_id = :me AND #slot = :old',
-                UpdateExpression: 'SET #slot = :null, updated_at = :now',
-                ExpressionAttributeNames: { '#slot': slot },
+                UpdateExpression: 'SET #slot = :null, #rawslot = :null, updated_at = :now',
+                ExpressionAttributeNames: { '#slot': slot, '#rawslot': rawSlot },
                 ExpressionAttributeValues: {
                   ':me': params.owner_user_id,
                   ':old': oldHash,
@@ -360,6 +368,7 @@ export async function issueMemo(params: {
                 owner_user_id,
                 title,
                 active_token_hash: token_hash,
+                active_token_raw: rawToken, // 管理画面での URL 再表示用
                 tab_count: 1,
                 status: 'active',
                 created_at: now,

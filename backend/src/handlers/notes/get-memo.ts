@@ -1,9 +1,10 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
-import { ok, notFound, serverError } from '../../lib/response';
+import { ok, notFound, unauthorized, tooManyRequests, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
 import { resolveToken, modeOf } from '../../lib/notes/tokens';
+import { checkMemoPin } from '../../lib/notes/pin';
 import { recordViewCoalesced, listAccess } from '../../lib/notes/access-log';
 import type { Memo, Tab } from '../../lib/notes/types';
 
@@ -25,6 +26,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     } catch {
       return noStore(notFound());
     }
+    const pin = JSON.parse(event.body || '{}').pin;
     if (typeof token !== 'string' || !token) return noStore(notFound());
 
     const resolved = await resolveToken(token);
@@ -35,6 +37,17 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     );
     const memo = memoRes.Item as Memo | undefined;
     if (!memo || memo.status !== 'active') return noStore(notFound());
+
+    // PIN ゲート(設定されている場合)。トークンは既に解決済みなので lock 状態はそこから使う。
+    const pinRes = await checkMemoPin({
+      memo_pin_hash: memo.pin_hash,
+      token_hash: resolved.token_hash,
+      tokenState: resolved,
+      pin,
+    });
+    if (pinRes === 'locked') return noStore(tooManyRequests('pin_locked'));
+    if (pinRes === 'required') return noStore(unauthorized('pin_required'));
+    if (pinRes === 'incorrect') return noStore(unauthorized('pin_incorrect'));
 
     const mode = modeOf(resolved);
 
@@ -74,6 +87,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       ok({
         memo: { title: memo.title, updated_at: memo.updated_at },
         mode,
+        has_pin: !!memo.pin_hash, // クライアントは書き込み時に PIN を同送する必要があるか判断
         tabs,
         access_log,
       }),
