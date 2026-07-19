@@ -30,6 +30,19 @@ export class UranekoFrontendStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
+    // アクセスログ用バケット(CloudFront 標準ログ)。アクセス数を「軽く」把握する用。
+    // - CloudFront 標準ログ(レガシー)は ACL でログ配信アカウントに書き込むため、
+    //   バケットは ACL 有効(BUCKET_OWNER_PREFERRED)にする必要がある。
+    // - ログには IP / User-Agent が含まれる(個人情報)ので lifecycle で 90 日後に自動削除する。
+    const logBucket = new s3.Bucket(this, 'UranekoAccessLogs', {
+      bucketName: `uraneko-access-logs-${this.account}`,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      lifecycleRules: [{ expiration: cdk.Duration.days(90) }],
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     // CloudFront Function: /api/* の prefix を strip して API Gateway に送る
     const apiRewriteFn = new cloudfront.Function(this, 'UranekoApiRewrite', {
       code: cloudfront.FunctionCode.fromInline(`
@@ -141,6 +154,11 @@ export class UranekoFrontendStack extends cdk.Stack {
       certificate: props.certificate,
       webAclId: props.webAclArn, // WAFv2 は ARN を webAclId に渡す
       defaultRootObject: 'index.html',
+      // アクセスログを S3 に出す(cf/ プレフィックス、Cookie は記録しない)。
+      enableLogging: true,
+      logBucket,
+      logFilePrefix: 'cf/',
+      logIncludesCookies: false,
       // errorResponses は使わない(SPA ルーティングは spaRewriteFn が担当)。
       // これにより /api/* の 403/404 が index.html(200)に化けず、正しく伝わる。
     });
@@ -169,5 +187,6 @@ export class UranekoFrontendStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'UranekoDistributionUrl', {
       value: `https://${distribution.distributionDomainName}`,
     });
+    new cdk.CfnOutput(this, 'UranekoAccessLogBucket', { value: logBucket.bucketName });
   }
 }
