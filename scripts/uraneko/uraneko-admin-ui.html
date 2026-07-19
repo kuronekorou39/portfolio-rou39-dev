@@ -75,6 +75,9 @@
 
   .muted { color:var(--muted); font-size:12px; }
   .hint { color:var(--dim); font-size:11px; margin-top:8px; line-height:1.7; }
+  .hint.collapsed { display:none; } /* 長い説明は既定で隠し、見出しの「?」で開く */
+  /* 説明トグル(?)の ON 表示 */
+  button.small.help.on { background:var(--ash-bright); color:var(--deep); border-color:var(--ash-bright); }
   .err { color:var(--accent); }
   .crumb { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
   .crumb .title { font-family:var(--mono); font-size:15px; letter-spacing:2px; color:var(--fg); }
@@ -272,12 +275,41 @@
   <!-- ===== 注文 ===== -->
   <div id="tab-orders" class="view" hidden>
     <section>
-      <h2>購入・発行 · ORDERS <button class="small" onclick="loadOrders()">更新</button></h2>
+      <h2>購入・発行 · ORDERS
+        <button class="small" onclick="reloadAll()">更新</button>
+        <span id="orders_count" class="muted" style="margin-left:auto;text-transform:none;letter-spacing:0"></span>
+      </h2>
+      <div class="row" style="margin:0 0 14px">
+        <div class="field"><label>商品</label>
+          <select id="of_product" onchange="renderOrders()"><option value="">すべての商品</option></select>
+        </div>
+        <div class="field"><label>状態</label>
+          <select id="of_status" onchange="renderOrders()">
+            <option value="">すべての状態</option>
+            <option value="paid">paid(確定)</option>
+            <option value="confirming">confirming(受渡可)</option>
+            <option value="pending">pending(未入金)</option>
+            <option value="underpaid">underpaid(不足)</option>
+            <option value="expired">expired(期限切れ)</option>
+            <option value="failed">failed(失敗)</option>
+            <option value="cancelled">cancelled(取消)</option>
+          </select>
+        </div>
+        <div class="field"><label>検索(注文ID / メアド)</label>
+          <input id="of_q" oninput="renderOrders()" placeholder="部分一致" style="width:220px" />
+        </div>
+        <div class="field"><label>&nbsp;</label>
+          <label style="flex-direction:row;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="of_hide_excluded" onchange="renderOrders()" style="width:auto" />会計除外を隠す
+          </label>
+        </div>
+        <div class="field"><label>&nbsp;</label><button class="small ghost" onclick="clearOrderFilters()">クリア</button></div>
+      </div>
       <table>
         <thead><tr><th>注文ID</th><th>商品</th><th>状態</th><th>購入者メアド</th><th>動画トークン</th><th>クーポン</th><th>金額</th><th>日時</th><th>発行URL</th></tr></thead>
         <tbody id="orders"><tr><td colspan="9" class="muted">読み込み中…</td></tr></tbody>
       </table>
-      <div class="hint">1注文=1本のユニークな動画(トークン)。発行URLは購入者に送った署名付きDLリンクを再生成します(30日有効・メール紛失時の再発行に)。</div>
+      <div class="hint">1注文=1本のユニークな動画(トークン)。発行URLは購入者に送った署名付きDLリンクを再生成します(30日有効・メール紛失時の再発行に)。<br>「会計除外」は会計タブで付けたテスト注文の印です。ここでは絞り込みの目印として表示します。</div>
     </section>
   </div>
 
@@ -305,15 +337,77 @@
 
   <!-- ===== 会計 ===== -->
   <div id="tab-account" class="view" hidden>
+
+    <!-- 精算(通貨別・コイン建て・全期間) -->
     <section>
-      <h2>集計 · ACCOUNTING
-        <button class="small" onclick="loadAccounting()">更新</button>
+      <h2>精算 · SETTLEMENT(通貨別・全期間)
+        <button class="small" onclick="reloadAll()">更新</button>
+        <span id="acc_ledger_path" class="muted" style="margin-left:auto;text-transform:none;letter-spacing:0;font-size:10px"></span>
+      </h2>
+      <table>
+        <thead><tr>
+          <th>通貨</th>
+          <th style="text-align:right">受領(実受領)</th>
+          <th style="text-align:right">経費(差引)</th>
+          <th style="text-align:right">純受領</th>
+          <th style="text-align:right">相手の取り分 ½</th>
+          <th style="text-align:right">送金済み</th>
+          <th style="text-align:right">次回送る</th>
+        </tr></thead>
+        <tbody id="acc_settle"><tr><td colspan="7" class="muted">読み込み中…</td></tr></tbody>
+      </table>
+      <div id="acc_jpy_cards" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:16px"></div>
+      <div class="hint" id="acc_split_note"></div>
+      <div class="hint">精算はコイン建て。純受領 = 受領 − 経費(コイン経費 + 円経費のコイン換算)。相手の取り分 = 純受領 ÷ 2。次回送る = 取り分 − 送金済み(0 で下限クランプ)。円の経費は各通貨の売上比で按分し、注文の実効レートでコインに換算して差し引きます(概算)。受領コインは各注文の outcome_amount(手数料控除後=ウォレット着金額)。未記録は要求量で概算し、明細の「修正」で実着金額に直せます。</div>
+    </section>
+
+    <!-- 注文ごとの明細(除外トグル付き) -->
+    <section>
+      <h2>注文明細 · LINE ITEMS
+        <span class="muted" style="text-transform:none;letter-spacing:0">確定(paid)+受渡可(confirming)</span>
+        <span style="margin-left:auto;display:flex;gap:16px;align-items:center;text-transform:none;letter-spacing:0">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" id="acc_hide_excluded" onchange="renderAccounting()" style="width:auto">除外を隠す</label>
+          <span id="acc_items_count" class="muted"></span>
+        </span>
+      </h2>
+      <table>
+        <thead><tr>
+          <th>計上日</th><th>商品</th><th>状態</th><th style="text-align:right">請求額</th>
+          <th style="text-align:right">受領コイン</th><th style="text-align:right">レート(円/枚)</th>
+          <th style="text-align:right">手数料(円)</th><th>クーポン</th><th>会計</th>
+        </tr></thead>
+        <tbody id="acc_items"><tr><td colspan="9" class="muted">読み込み中…</td></tr></tbody>
+      </table>
+      <div class="hint">「除外」を押すとテスト注文などを精算から外せます(この PC の台帳に記録)。レートは <b>請求額 ÷ 要求コイン数</b> の実効値、手数料は <b>(要求−受領)×レート</b> の概算です(受領数量が記録された 2026-07-14 以降の注文のみ)。</div>
+    </section>
+
+    <!-- 経費(手入力・通貨別) -->
+    <section>
+      <h2>経費 · EXPENSES(手入力)<button class="small" style="margin-left:auto" onclick="openExpModal()">＋ 経費を追加</button></h2>
+      <table>
+        <thead><tr><th>日付</th><th>通貨</th><th>名目</th><th style="text-align:right">金額</th><th>メモ</th><th></th></tr></thead>
+        <tbody id="acc_expenses"><tr><td colspan="6" class="muted">—</td></tr></tbody>
+      </table>
+      <div class="hint">BTC / LTC の経費(送金手数料など)はその通貨の精算で折半前に差し引きます。円の経費(サーバ代等)は<b>売上比で按分し、注文の実効レートでコインに換算して差し引き</b>ます(換算は概算)。どちらも精算(折半前)に反映されます。</div>
+    </section>
+
+    <!-- 共同出資者への支払い履歴(通貨別・コイン) -->
+    <section>
+      <h2>支払い履歴 · PAYOUTS(共同出資者へ・コイン)<button class="small" style="margin-left:auto" onclick="openPoModal()">＋ 支払いを記録</button></h2>
+      <table>
+        <thead><tr><th>日付</th><th>通貨</th><th style="text-align:right">数量</th><th>メモ</th><th></th></tr></thead>
+        <tbody id="acc_payouts"><tr><td colspan="5" class="muted">—</td></tr></tbody>
+      </table>
+      <div class="hint">通貨ごとの支払い合計が、上の精算の「送金済み」になります。<b>次回送る</b>=(相手の取り分)−(送金済み)。<span id="acc_next_date"></span></div>
+    </section>
+
+    <!-- 税務用サマリ + CSV -->
+    <section>
+      <h2>税務サマリ · TAX
         <button class="small" onclick="downloadAccCsv('year')">この年の明細CSV</button>
         <button class="small" onclick="downloadAccCsv('all')">全期間の明細CSV</button>
       </h2>
-      <div id="acc_cards" style="display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 18px"></div>
-
-      <div class="sub">年次サマリ · BY YEAR</div>
+      <div class="sub" style="margin-top:0;padding-top:0;border-top:none">年次サマリ · BY YEAR</div>
       <table>
         <thead><tr><th>年</th><th style="text-align:right">確定件数</th><th style="text-align:right">売上高(確定)</th><th style="text-align:right">割引総額</th><th style="text-align:right">未確定(参考)</th></tr></thead>
         <tbody id="acc_years"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
@@ -328,7 +422,7 @@
       </table>
 
       <div class="hint">
-        税務用の集計です。<b>確定売上=status が paid の注文</b>を、円建ての請求額(price_jpy)で計上します
+        税務用の集計です。<b>確定売上=status が paid の注文(会計除外を除く)</b>を、円建ての請求額(price_jpy)で計上します
         (暗号資産で受け取っていても、日本では販売時の円価値で売上計上するため)。計上日は受渡確定日(paid_at)。<br>
         「未確定(参考)」は confirming(入金検知済み・最終確認待ち)で、まだ確定していない分です。<br>
         CSV には実受領数量・手数料控除後の受領数量(2026-07-14 以降の注文のみ記録)も含みます。<b>NOWPayments の決済手数料</b>は経費ですが、
@@ -360,6 +454,77 @@
     </div>
     <div class="fp-manual"><input id="fp_manual" placeholder="パスを直接入力して Enter でも移動できます" style="width:100%"></div>
     <div id="fp_list" class="fp-list"></div>
+  </div>
+</div>
+
+<!-- 経費の追加(モーダル) -->
+<div id="expModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(480px,92vw)">
+    <div class="modal-head">
+      <span class="path">経費を追加</span>
+      <button class="small ghost" onclick="closeExpModal()">閉じる</button>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label>日付(空=今日)</label><input id="ex_date" placeholder="2026-07-19" style="width:100%"></div>
+      <div class="field"><label>通貨</label>
+        <select id="ex_currency" style="width:100%">
+          <option value="btc">BTC(コイン経費・折半前に差引)</option>
+          <option value="ltc">LTC(コイン経費・折半前に差引)</option>
+          <option value="jpy">円(コイン換算して差引・売上比で按分)</option>
+        </select>
+      </div>
+      <div class="field"><label>名目</label><input id="ex_label" placeholder="送金手数料 / サーバ代 等" style="width:100%"></div>
+      <div class="field"><label>金額</label><input id="ex_amount" type="number" min="0" step="any" style="width:100%"></div>
+      <div class="field"><label>メモ(任意)</label><input id="ex_note" placeholder="任意" style="width:100%"></div>
+      <div class="actions" style="justify-content:flex-end;margin-top:4px">
+        <button class="ghost" onclick="closeExpModal()">キャンセル</button>
+        <button class="primary" onclick="addExpense()">経費を追加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 受領コインの修正(モーダル) -->
+<div id="recvModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(460px,92vw)">
+    <div class="modal-head">
+      <span class="path">着金額を修正 <span id="recv_oid" class="mono" style="color:var(--muted)"></span></span>
+      <button class="small ghost" onclick="closeRecvModal()">閉じる</button>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <div class="muted" style="font-size:12px;line-height:1.7">ウォレットで実際に着金した数量を入れてください。精算はこの値を優先して使います(自動の概算より優先)。注文データは変更せず、この PC の台帳に覚えます。</div>
+      <div class="field"><label>通貨</label><select id="recv_currency" style="width:100%"><option value="btc">BTC</option><option value="ltc">LTC</option></select></div>
+      <div class="field"><label>着金した数量(コイン)</label><input id="recv_amount" type="number" min="0" step="any" style="width:100%"></div>
+      <div class="actions" style="justify-content:space-between">
+        <button class="ghost" onclick="clearRecv()">自動に戻す</button>
+        <span style="display:flex;gap:12px">
+          <button class="ghost" onclick="closeRecvModal()">キャンセル</button>
+          <button class="primary" onclick="saveRecv()">保存</button>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 支払いの記録(モーダル) -->
+<div id="poModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(480px,92vw)">
+    <div class="modal-head">
+      <span class="path">支払いを記録(共同出資者へ)</span>
+      <button class="small ghost" onclick="closePoModal()">閉じる</button>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label>日付(空=今日)</label><input id="po_date" placeholder="2026-07-19" style="width:100%"></div>
+      <div class="field"><label>通貨</label>
+        <select id="po_currency" style="width:100%"><option value="btc">BTC</option><option value="ltc">LTC</option></select>
+      </div>
+      <div class="field"><label>数量(コイン)</label><input id="po_amount" type="number" min="0" step="any" style="width:100%"></div>
+      <div class="field"><label>メモ(任意)</label><input id="po_note" placeholder="送金先 / txid 等" style="width:100%"></div>
+      <div class="actions" style="justify-content:flex-end;margin-top:4px">
+        <button class="ghost" onclick="closePoModal()">キャンセル</button>
+        <button class="primary" onclick="addPayout()">支払いを記録</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -741,37 +906,105 @@ async function registerWork(btn) {
   } catch (e) { toast(e.message, true); btn.disabled = false; btn.textContent = '登録'; }
 }
 
-// ---- 注文 ----
-async function loadOrders() {
-  const tbody = document.getElementById('orders');
+// ---- 共有データ(注文 + 会計台帳)----
+let ordersCache = [];
+let ledgerCache = { excluded_order_ids: [], expenses: [], payouts: [], received_overrides: {}, path: '' };
+let excludedSet = new Set();
+
+// 注文 + 台帳を取り直し、注文タブと会計タブを両方描き直す。
+async function reloadAll() {
   try {
-    const items = await api('GET', '/api/orders');
-    if (!items.length) { tbody.innerHTML = '<tr><td colspan="9" class="muted">注文なし</td></tr>'; return; }
-    tbody.innerHTML = items.map((o) => {
-      const paid = o.status === 'paid';
-      const stCls = paid ? 'on' : (o.status === 'failed' || o.status === 'expired') ? 'sold' : 'off';
-      const coupon = o.coupon_code
-        ? esc(o.coupon_code) + (o.discount_jpy ? ' (−' + yen(o.discount_jpy) + ')' : '')
-        : '<span class="muted">—</span>';
-      const amount = (o.original_price_jpy && o.original_price_jpy !== o.price_jpy)
-        ? '<span style="text-decoration:line-through;color:var(--dim)">' + yen(o.original_price_jpy) + '</span> ' + yen(o.price_jpy)
-        : yen(o.price_jpy);
-      const urlBtn = paid
-        ? '<button class="small" onclick="showUrl(\'' + esc(o.order_id) + '\')">URL生成</button>'
-        : '<span class="muted">—</span>';
-      return '<tr>' +
-        '<td class="mono" style="font-size:11px">' + esc(o.order_id) + '</td>' +
-        '<td class="mono">' + esc(o.product_id) + '</td>' +
-        '<td><span class="badge ' + stCls + '">' + esc(o.status) + '</span></td>' +
-        '<td class="mono" style="font-size:11px">' + esc(o.email || '-') + '</td>' +
-        '<td class="mono" style="font-size:11px">' + esc(o.token_id || '-') + '</td>' +
-        '<td>' + coupon + '</td>' +
-        '<td style="white-space:nowrap">' + amount + '</td>' +
-        '<td class="mono" style="font-size:11px">' + esc(jst(o.created_at)) + '</td>' +
-        '<td>' + urlBtn + '</td>' +
-        '</tr>';
-    }).join('');
-  } catch (e) { tbody.innerHTML = '<tr><td colspan="9" class="err">' + esc(e.message) + '</td></tr>'; toast(e.message, true); }
+    const [orders, ledger] = await Promise.all([api('GET', '/api/orders'), api('GET', '/api/ledger')]);
+    ordersCache = orders;
+    ledgerCache = ledger;
+    excludedSet = new Set((ledger.excluded_order_ids || []).map(String));
+    populateOrderProductFilter();
+    populateAccYear();
+    renderOrders();
+    renderAccounting();
+  } catch (e) {
+    toast(e.message, true);
+    document.getElementById('orders').innerHTML = '<tr><td colspan="9" class="err">' + esc(e.message) + '</td></tr>';
+  }
+}
+
+// 台帳だけ取り直す(除外/経費/支払いの変更後。注文の再スキャンは不要)。
+async function reloadLedger() {
+  ledgerCache = await api('GET', '/api/ledger');
+  excludedSet = new Set((ledgerCache.excluded_order_ids || []).map(String));
+  renderOrders();
+  renderAccounting();
+}
+
+function isExcluded(o) { return excludedSet.has(String(o.order_id)); }
+function orderTitle(o) { const p = productById(o.product_id); return p ? p.title : null; }
+
+// ---- 注文タブ ----
+function populateOrderProductFilter() {
+  const sel = document.getElementById('of_product');
+  const prev = sel.value;
+  // 注文に現れる商品ID(products に無い旧商品も拾う)
+  const ids = [...new Set(ordersCache.map((o) => o.product_id).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">すべての商品</option>' +
+    ids.map((id) => { const p = productById(id); const label = p ? p.title + ' (' + id + ')' : id; return '<option value="' + esc(id) + '">' + esc(label) + '</option>'; }).join('');
+  if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
+}
+
+function clearOrderFilters() {
+  document.getElementById('of_product').value = '';
+  document.getElementById('of_status').value = '';
+  document.getElementById('of_q').value = '';
+  document.getElementById('of_hide_excluded').checked = false;
+  renderOrders();
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('orders');
+  if (!tbody) return;
+  const fp = document.getElementById('of_product').value;
+  const fs = document.getElementById('of_status').value;
+  const fq = document.getElementById('of_q').value.trim().toLowerCase();
+  const hideEx = document.getElementById('of_hide_excluded').checked;
+  const list = ordersCache.filter((o) => {
+    if (fp && o.product_id !== fp) return false;
+    if (fs && o.status !== fs) return false;
+    if (hideEx && isExcluded(o)) return false;
+    if (fq) {
+      const hay = (String(o.order_id || '') + ' ' + String(o.email || '')).toLowerCase();
+      if (!hay.includes(fq)) return false;
+    }
+    return true;
+  });
+  document.getElementById('orders_count').textContent = list.length + ' / ' + ordersCache.length + ' 件';
+  if (!ordersCache.length) { tbody.innerHTML = '<tr><td colspan="9" class="muted">注文なし</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" class="muted">条件に合う注文がありません</td></tr>'; return; }
+  tbody.innerHTML = list.map((o) => {
+    const paid = o.status === 'paid';
+    const stCls = paid ? 'on' : (o.status === 'failed' || o.status === 'expired' || o.status === 'cancelled') ? 'sold' : 'off';
+    const coupon = o.coupon_code
+      ? esc(o.coupon_code) + (o.discount_jpy ? ' (−' + yen(o.discount_jpy) + ')' : '')
+      : '<span class="muted">—</span>';
+    const amount = (o.original_price_jpy && o.original_price_jpy !== o.price_jpy)
+      ? '<span style="text-decoration:line-through;color:var(--dim)">' + yen(o.original_price_jpy) + '</span> ' + yen(o.price_jpy)
+      : yen(o.price_jpy);
+    const urlBtn = paid
+      ? '<button class="small" onclick="showUrl(\'' + esc(o.order_id) + '\')">URL生成</button>'
+      : '<span class="muted">—</span>';
+    const title = orderTitle(o);
+    const prodCell = (title ? esc(title) + '<br>' : '') + '<span class="mono" style="font-size:10px;color:var(--dim)">' + esc(o.product_id) + '</span>';
+    const exBadge = isExcluded(o) ? ' <span class="badge sold" title="会計から除外中">除外</span>' : '';
+    return '<tr' + (isExcluded(o) ? ' style="opacity:.5"' : '') + '>' +
+      '<td class="mono" style="font-size:11px">' + esc(o.order_id) + '</td>' +
+      '<td>' + prodCell + '</td>' +
+      '<td><span class="badge ' + stCls + '">' + esc(o.status) + '</span>' + exBadge + '</td>' +
+      '<td class="mono" style="font-size:11px">' + esc(o.email || '-') + '</td>' +
+      '<td class="mono" style="font-size:11px">' + esc(o.token_id || '-') + '</td>' +
+      '<td>' + coupon + '</td>' +
+      '<td style="white-space:nowrap">' + amount + '</td>' +
+      '<td class="mono" style="font-size:11px">' + esc(jst(o.created_at)) + '</td>' +
+      '<td>' + urlBtn + '</td>' +
+      '</tr>';
+  }).join('');
 }
 
 async function showUrl(order_id) {
@@ -783,7 +1016,6 @@ async function showUrl(order_id) {
 }
 
 // ---- 会計 · ACCOUNTING ----
-let accOrders = [];
 // 計上日を JST の YYYY-MM-DD で返す(paid_at 優先、無ければ created_at)。
 // UTC の ISO を素朴に slice すると深夜の注文が前日/前年にずれるため JST 変換する。
 function accDate(o) {
@@ -810,32 +1042,252 @@ function curBreakdown(cur) {
   return ks.length ? ks.map((k) => esc(k) + ' ' + yen(cur[k])).join(' / ') : '<span class="muted">—</span>';
 }
 
-async function loadAccounting() {
-  try {
-    accOrders = await api('GET', '/api/orders');
-    const sel = document.getElementById('acc_year');
-    const years = [...new Set(accOrders.map(accDate).map((d) => d.slice(0, 4)).filter(Boolean))].sort().reverse();
-    const cur = accDate({ created_at: new Date().toISOString() }).slice(0, 4);
-    if (cur && !years.includes(cur)) years.unshift(cur);
-    const prev = sel.value;
-    sel.innerHTML = years.map((y) => '<option value="' + y + '">' + y + '年</option>').join('');
-    if (years.includes(prev)) sel.value = prev;
-    renderAccounting();
-  } catch (e) {
-    toast(e.message, true);
-    document.getElementById('acc_years').innerHTML = '<tr><td colspan="5" class="err">' + esc(e.message) + '</td></tr>';
+// 精算対象 = 確定(paid)かつ 会計除外でない注文。
+function settlementOrders() { return ordersCache.filter((o) => o.status === 'paid' && !isExcluded(o)); }
+
+// コイン数の整形(指数表記を避ける)
+function fmtCoin(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '—';
+  return v.toLocaleString('en-US', { maximumFractionDigits: 8 });
+}
+// 実効レート(円/枚)= 請求額 ÷ 要求コイン数。pay_amount が無い注文は null。
+function orderRate(o) {
+  const pay = Number(o.pay_amount), jpy = Number(o.price_jpy);
+  if (!Number.isFinite(pay) || pay <= 0 || !Number.isFinite(jpy)) return null;
+  return jpy / pay;
+}
+// NOWPayments 手数料の円概算 =(要求−受領)× 実効レート。
+// 受領数量が無い/別通貨に変換された注文は算定不可(null)。
+function orderFee(o) {
+  const pay = Number(o.pay_amount), out = Number(o.outcome_amount);
+  if (!Number.isFinite(pay) || pay <= 0 || !Number.isFinite(out)) return null;
+  const payCur = (o.pay_currency || o.currency || '').toLowerCase();
+  const outCur = (o.outcome_currency || '').toLowerCase();
+  if (payCur && outCur && payCur !== outCur) return null; // 別通貨変換は算定不可
+  const rate = orderRate(o);
+  if (rate == null) return null;
+  const feeCoin = pay - out;
+  return feeCoin <= 0 ? 0 : Math.round(feeCoin * rate);
+}
+
+function populateAccYear() {
+  const sel = document.getElementById('acc_year');
+  if (!sel) return;
+  const years = [...new Set(ordersCache.map(accDate).map((d) => d.slice(0, 4)).filter(Boolean))].sort().reverse();
+  const cur = accDate({ created_at: new Date().toISOString() }).slice(0, 4);
+  if (cur && !years.includes(cur)) years.unshift(cur);
+  const prev = sel.value;
+  sel.innerHTML = years.map((y) => '<option value="' + y + '">' + y + '年</option>').join('');
+  if (years.includes(prev)) sel.value = prev;
+}
+
+function accCard(label, val, sub, opts) {
+  opts = opts || {};
+  const border = opts.accent ? '1px solid ' + opts.accent : '1px solid var(--line)';
+  const valColor = opts.valColor ? ';color:' + opts.valColor : '';
+  return '<div style="flex:1;min-width:150px;border:' + border + ';padding:12px 14px">' +
+    '<div class="muted" style="font-size:11px;letter-spacing:1px">' + esc(label) + '</div>' +
+    '<div style="font-size:22px;margin-top:4px' + valColor + '">' + val + '</div>' +
+    (sub ? '<div class="muted" style="font-size:11px;margin-top:2px">' + esc(sub) + '</div>' : '') +
+    '</div>';
+}
+
+// コイン合計の丸め(8桁=最小単位。浮動小数の桁あふれを抑える)
+function round8(n) { return Math.round(Number(n) * 1e8) / 1e8; }
+// 精算に使う受領コイン。優先順位:
+//  1) 手入力の上書き(ウォレット実着金額)→ overridden
+//  2) outcome_amount(手数料控除後の着金額)= 通常はこれがウォレット着金額と一致
+//  3) actually_paid → pay_amount で概算(estimated)
+// どれも無ければ null(コイン数が全く無い=集計不能)。
+function orderReceived(o) {
+  const ov = (ledgerCache.received_overrides || {})[o.order_id];
+  if (ov && Number.isFinite(Number(ov.amount)) && (ov.currency === 'btc' || ov.currency === 'ltc')) {
+    return { amount: Number(ov.amount), currency: ov.currency, overridden: true };
   }
+  const pick = (v) => (v != null && Number.isFinite(Number(v)) ? Number(v) : null);
+  let amount = pick(o.outcome_amount), estimated = false;
+  if (amount == null) { amount = pick(o.actually_paid); if (amount != null) estimated = true; }
+  if (amount == null) { amount = pick(o.pay_amount); if (amount != null) estimated = true; }
+  if (amount == null) return null;
+  const cur = (o.outcome_currency || o.pay_currency || o.currency || '').toLowerCase();
+  if (cur !== 'btc' && cur !== 'ltc') return null;
+  return { amount, currency: cur, estimated };
+}
+// 台帳項目の通貨/金額(旧形式 amount_jpy も一応拾う)
+function expenseCurrency(e) { return String(e.currency || (e.amount_jpy != null ? 'jpy' : '')).toLowerCase(); }
+function expenseAmount(e) { return Number(e.amount != null ? e.amount : e.amount_jpy || 0); }
+function payoutCurrency(p) { return String(p.currency || '').toLowerCase(); }
+function payoutAmount(p) { return Number(p.amount != null ? p.amount : p.amount_jpy || 0); }
+function fmtAmount(amount, currency) { return currency === 'jpy' ? yen(amount) : fmtCoin(amount) + ' ' + String(currency || '').toUpperCase(); }
+// 次の送金目安(毎月15日ごろ)。ローカル(JST)基準。
+function nextPayoutDate() {
+  const now = new Date();
+  const target = now.getDate() <= 15 ? new Date(now.getFullYear(), now.getMonth(), 15) : new Date(now.getFullYear(), now.getMonth() + 1, 15);
+  return target.toLocaleDateString('sv-SE');
 }
 
 function renderAccounting() {
-  const year = document.getElementById('acc_year').value;
-  const paidAll = accOrders.filter((o) => o.status === 'paid');
-  const confAll = accOrders.filter((o) => o.status === 'confirming');
+  if (!document.getElementById('acc_settle')) return;
+  document.getElementById('acc_ledger_path').textContent = '台帳: ' + (ledgerCache.path || '(未保存)');
 
-  // 年次サマリ(全年)
+  // ---- 精算(通貨別・コイン建て・全期間・確定・除外を除く)----
+  const paidInc = settlementOrders();
+  const received = { btc: 0, ltc: 0 };
+  const rcount = { btc: 0, ltc: 0 };
+  const jpyRevenue = { btc: 0, ltc: 0 }; // 通貨別の円売上(円経費の按分と実効レートに使う)
+  let unrecorded = 0, estimatedCount = 0;
+  paidInc.forEach((o) => {
+    const r = orderReceived(o);
+    if (!r) { unrecorded++; return; }
+    received[r.currency] = round8(received[r.currency] + r.amount);
+    rcount[r.currency]++;
+    jpyRevenue[r.currency] += Number(o.price_jpy || 0);
+    if (r.estimated) estimatedCount++;
+  });
+  const coinExp = { btc: 0, ltc: 0 };
+  (ledgerCache.expenses || []).forEach((e) => { const c = expenseCurrency(e); if (c === 'btc' || c === 'ltc') coinExp[c] = round8(coinExp[c] + expenseAmount(e)); });
+  const sent = { btc: 0, ltc: 0 };
+  (ledgerCache.payouts || []).forEach((p) => { const c = payoutCurrency(p); if (c === 'btc' || c === 'ltc') sent[c] = round8(sent[c] + payoutAmount(p)); });
+
+  // 円の経費を各通貨の売上比で按分し、その通貨の実効レートでコインに換算して差し引く(大体でOK)。
+  // 整理すると各通貨の差引コイン = 円経費総額 × その通貨の受領コイン ÷ 総売上(円)。
+  const jpyExpTotal = (ledgerCache.expenses || []).filter((e) => expenseCurrency(e) === 'jpy').reduce((s, e) => s + expenseAmount(e), 0);
+  const totalRevenue = jpyRevenue.btc + jpyRevenue.ltc;
+  const jpyCoinExp = { btc: 0, ltc: 0 };
+  if (jpyExpTotal > 0 && totalRevenue > 0) {
+    ['btc', 'ltc'].forEach((c) => { if (jpyRevenue[c] > 0 && received[c] > 0) jpyCoinExp[c] = round8(jpyExpTotal * received[c] / totalRevenue); });
+  }
+  const totalCoinExp = { btc: round8(coinExp.btc + jpyCoinExp.btc), ltc: round8(coinExp.ltc + jpyCoinExp.ltc) };
+  const jpyUnconverted = jpyExpTotal > 0 && jpyCoinExp.btc <= 0 && jpyCoinExp.ltc <= 0;
+
+  let anyOver = false;
+  document.getElementById('acc_settle').innerHTML = ['btc', 'ltc'].map((c) => {
+    const net = round8(received[c] - totalCoinExp[c]);
+    const share = round8(net / 2);
+    // 「次回送る」は 0 で下限クランプ。送金済みが取り分を超えたら過払いとして別表示する
+    // (生のマイナスは分かりにくい)。取り分は受領コインが記録された注文だけで出すので、
+    // 未記録の注文があると取り分が過少に出て過払いに見えることがある。
+    const remaining = Math.max(0, round8(share - sent[c]));
+    const over = Math.max(0, round8(sent[c] - share));
+    if (over > 1e-8) anyOver = true;
+    const U = c.toUpperCase();
+    const nextCell = over > 1e-8
+      ? '<span class="muted">0</span> <span style="font-size:10px;color:var(--accent)">(過払い ' + fmtCoin(over) + ' ' + U + ')</span>'
+      : '<span' + (remaining > 1e-8 ? ' style="color:var(--accent)"' : '') + '>' + fmtCoin(remaining) + ' <span style="font-size:10px">' + U + '</span></span>';
+    return '<tr>' +
+      '<td class="mono">' + U + '</td>' +
+      '<td style="text-align:right" class="mono">' + fmtCoin(received[c]) + ' <span class="muted" style="font-size:10px">(' + rcount[c] + '件)</span></td>' +
+      '<td style="text-align:right" class="mono muted">' + (totalCoinExp[c] ? '−' + fmtCoin(totalCoinExp[c]) : '0') + '</td>' +
+      '<td style="text-align:right" class="mono">' + fmtCoin(net) + '</td>' +
+      '<td style="text-align:right" class="mono">' + fmtCoin(share) + '</td>' +
+      '<td style="text-align:right" class="mono muted">' + fmtCoin(sent[c]) + '</td>' +
+      '<td style="text-align:right" class="mono">' + nextCell + '</td>' +
+      '</tr>';
+  }).join('');
+
+  // 円サマリ(確定売上=税務用。円の経費はコインに換算して精算から差引済み)
+  const gross = paidInc.reduce((s, o) => s + Number(o.price_jpy || 0), 0);
+  document.getElementById('acc_jpy_cards').innerHTML =
+    accCard('確定売上(円・税務用)', yen(gross), paidInc.length + ' 件(除外を除く)') +
+    accCard('円の経費(コイン換算で差引)', yen(jpyExpTotal), totalRevenue > 0 ? '売上比で按分し精算から差引済み' : '換算待ち(コイン売上待ち)');
+
+  const noteBits = []; // 動的な内訳・警告のみ(仕組みの説明は下の「?」の hint に集約)
+  if (jpyExpTotal > 0 && !jpyUnconverted) {
+    const parts = [];
+    if (jpyCoinExp.btc > 0) parts.push('BTC −' + fmtCoin(jpyCoinExp.btc));
+    if (jpyCoinExp.ltc > 0) parts.push('LTC −' + fmtCoin(jpyCoinExp.ltc));
+    noteBits.push('円の経費 ' + yen(jpyExpTotal) + ' を売上比で按分・実効レートでコイン換算して差引: ' + parts.join(' / ') + '。');
+  }
+  if (jpyUnconverted) noteBits.push('※ 円の経費 ' + yen(jpyExpTotal) + ' はコイン売上がまだ無く換算できていません(コイン売上が出れば反映されます)。');
+  if (estimatedCount) noteBits.push('※ ' + estimatedCount + ' 件は着金額(outcome_amount)が未記録のため要求量で概算しています(明細に「概算」表示)。明細の「修正」からウォレットの実着金額を入れると正確になります。');
+  if (unrecorded) noteBits.push('※ ' + unrecorded + ' 件はコイン数が全く記録されておらず精算に含められません(無料購入 等)。');
+  if (anyOver) noteBits.push('※「過払い」= 送金済みが現在の取り分を上回っています(上の受領・送金済みの数値をご確認ください)。');
+  document.getElementById('acc_split_note').innerHTML = noteBits.map(esc).join('<br>');
+  const nd = document.getElementById('acc_next_date');
+  if (nd) nd.textContent = ' 次回送金の目安: 毎月15日ごろ(次回 ' + nextPayoutDate() + ')。';
+
+  // ---- 注文明細(paid + confirming)----
+  const hideEx = !!(document.getElementById('acc_hide_excluded') && document.getElementById('acc_hide_excluded').checked);
+  const itemsAll = ordersCache.filter((o) => (o.status === 'paid' || o.status === 'confirming') && !(hideEx && isExcluded(o)))
+    .sort((a, b) => accDate(b).localeCompare(accDate(a)));
+  const activeCount = itemsAll.filter((o) => o.status === 'paid' && !isExcluded(o)).length;
+  document.getElementById('acc_items_count').textContent = '精算対象 ' + activeCount + ' 件 / 表示 ' + itemsAll.length + ' 件';
+  document.getElementById('acc_items').innerHTML = itemsAll.length ? itemsAll.map((o) => {
+    const ex = isExcluded(o);
+    const conf = o.status === 'confirming';
+    const title = orderTitle(o);
+    const prodCell = (title ? esc(title) : '') + '<br><span class="mono" style="font-size:10px;color:var(--dim)">' + esc(o.product_id) + '</span>';
+    // 受領コイン列は精算と同じ値。上書きあり=「修正済」、outcome 無し=「概算」。
+    const rec = orderReceived(o);
+    const mark = rec
+      ? (rec.overridden ? ' <span style="color:var(--ash-bright);font-size:10px">修正済</span>'
+        : (rec.estimated ? ' <span style="color:var(--accent);font-size:10px">概算</span>' : ''))
+      : '';
+    const recVal = rec
+      ? fmtCoin(rec.amount) + ' <span class="muted" style="font-size:10px">' + esc(rec.currency.toUpperCase()) + '</span>' + mark
+      : '<span class="muted" style="font-size:11px">未記録</span>';
+    const recBtn = ' <button class="small" style="padding:1px 7px;font-size:10px;letter-spacing:0" onclick="openRecvModal(\'' + esc(o.order_id) + '\')">修正</button>';
+    const coinCell = recVal + recBtn;
+    const rate = orderRate(o);
+    const rateCell = rate != null ? yen(Math.round(rate)) : '<span class="muted">—</span>';
+    const fee = orderFee(o);
+    const feeCell = fee != null ? yen(fee) : '<span class="muted">—</span>';
+    const coupon = o.coupon_code ? esc(o.coupon_code) : '<span class="muted">—</span>';
+    const stBadge = '<span class="badge ' + (conf ? 'off' : 'on') + '">' + esc(o.status) + '</span>';
+    const exToggle = ex
+      ? '<button class="small" onclick="toggleExclude(\'' + esc(o.order_id) + '\',false)">戻す</button>'
+      : '<button class="small danger" onclick="toggleExclude(\'' + esc(o.order_id) + '\',true)">除外</button>';
+    return '<tr' + (ex ? ' style="opacity:.45"' : '') + '>' +
+      '<td class="mono" style="font-size:11px">' + esc(accDate(o)) + '</td>' +
+      '<td>' + prodCell + '</td>' +
+      '<td>' + stBadge + (ex ? ' <span class="badge sold">除外</span>' : '') + '</td>' +
+      '<td style="text-align:right;white-space:nowrap">' + yen(o.price_jpy) + '</td>' +
+      '<td style="text-align:right;white-space:nowrap" class="mono">' + coinCell + '</td>' +
+      '<td style="text-align:right;white-space:nowrap" class="mono">' + rateCell + '</td>' +
+      '<td style="text-align:right;white-space:nowrap" class="mono">' + feeCell + '</td>' +
+      '<td>' + coupon + '</td>' +
+      '<td>' + exToggle + '</td>' +
+      '</tr>';
+  }).join('') : '<tr><td colspan="9" class="muted">確定・受渡可の注文がありません</td></tr>';
+
+  // ---- 経費(手入力・通貨別)----
+  const exs = (ledgerCache.expenses || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  document.getElementById('acc_expenses').innerHTML = exs.length ? exs.map((e) => {
+    const cur = expenseCurrency(e);
+    return '<tr>' +
+      '<td class="mono" style="font-size:11px">' + esc(e.date) + '</td>' +
+      '<td class="mono">' + esc(cur.toUpperCase()) + '</td>' +
+      '<td>' + esc(e.label) + '</td>' +
+      '<td style="text-align:right;white-space:nowrap" class="mono">' + fmtAmount(expenseAmount(e), cur) + '</td>' +
+      '<td class="muted">' + esc(e.note || '') + '</td>' +
+      '<td><button class="small danger" onclick="delExpense(\'' + esc(e.id) + '\')">削除</button></td>' +
+      '</tr>';
+  }).join('') : '<tr><td colspan="6" class="muted">手入力の経費はありません</td></tr>';
+
+  // ---- 支払い履歴(通貨別・コイン)----
+  const pos = (ledgerCache.payouts || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  document.getElementById('acc_payouts').innerHTML = pos.length ? pos.map((p) => {
+    const cur = payoutCurrency(p);
+    return '<tr>' +
+      '<td class="mono" style="font-size:11px">' + esc(p.date) + '</td>' +
+      '<td class="mono">' + esc(cur.toUpperCase()) + '</td>' +
+      '<td style="text-align:right;white-space:nowrap" class="mono">' + fmtCoin(payoutAmount(p)) + '</td>' +
+      '<td class="muted">' + esc(p.note || '') + '</td>' +
+      '<td><button class="small danger" onclick="delPayout(\'' + esc(p.id) + '\')">削除</button></td>' +
+      '</tr>';
+  }).join('') : '<tr><td colspan="5" class="muted">支払い記録はありません</td></tr>';
+
+  renderTaxSummary();
+}
+
+function renderTaxSummary() {
+  const year = document.getElementById('acc_year').value;
+  const paidAll = settlementOrders(); // paid かつ 会計除外を除く
+  const confAll = ordersCache.filter((o) => o.status === 'confirming' && !isExcluded(o));
+
   const years = [...new Set(paidAll.concat(confAll).map(accDate).map((d) => d.slice(0, 4)).filter(Boolean))].sort().reverse();
-  const yt = document.getElementById('acc_years');
-  yt.innerHTML = years.length
+  document.getElementById('acc_years').innerHTML = years.length
     ? years.map((y) => {
         const p = accAgg(paidAll.filter((o) => accDate(o).slice(0, 4) === y));
         const cy = confAll.filter((o) => accDate(o).slice(0, 4) === y);
@@ -850,23 +1302,6 @@ function renderAccounting() {
       }).join('')
     : '<tr><td colspan="5" class="muted">確定売上なし</td></tr>';
 
-  // カード(選択年)
-  const yp = accAgg(paidAll.filter((o) => accDate(o).slice(0, 4) === year));
-  const confY = confAll.filter((o) => accDate(o).slice(0, 4) === year);
-  const confJpy = confY.reduce((s, o) => s + Number(o.price_jpy || 0), 0);
-  const card = (label, val, sub) =>
-    '<div style="flex:1;min-width:150px;border:1px solid var(--line);padding:12px 14px">' +
-    '<div class="muted" style="font-size:11px;letter-spacing:1px">' + esc(label) + '</div>' +
-    '<div style="font-size:22px;margin-top:4px">' + val + '</div>' +
-    (sub ? '<div class="muted" style="font-size:11px;margin-top:2px">' + esc(sub) + '</div>' : '') +
-    '</div>';
-  document.getElementById('acc_cards').innerHTML =
-    card(year + '年 確定売上高', yen(yp.jpy), yp.n + ' 件') +
-    card('割引総額', yen(yp.discount), '') +
-    card('通貨別内訳', '<span style="font-size:14px">' + curBreakdown(yp.cur) + '</span>', '') +
-    card('未確定(参考)', yen(confJpy), confY.length + ' 件 confirming');
-
-  // 月次内訳(選択年)
   const rows = [];
   for (let m = 1; m <= 12; m++) {
     const mm = String(m).padStart(2, '0');
@@ -879,20 +1314,111 @@ function renderAccounting() {
   document.getElementById('acc_months').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" class="muted">この年の確定売上なし</td></tr>';
 }
 
+// ---- 会計の書き込み(台帳)----
+// 追加フォームはモーダルで開く(常時表示にしない)。
+function openExpModal() {
+  document.getElementById('ex_date').value = ''; document.getElementById('ex_label').value = '';
+  document.getElementById('ex_amount').value = ''; document.getElementById('ex_note').value = '';
+  document.getElementById('ex_currency').value = 'btc';
+  document.getElementById('expModal').hidden = false;
+  document.getElementById('ex_label').focus();
+}
+function closeExpModal() { document.getElementById('expModal').hidden = true; }
+function openPoModal() {
+  document.getElementById('po_date').value = ''; document.getElementById('po_amount').value = ''; document.getElementById('po_note').value = '';
+  document.getElementById('po_currency').value = 'btc';
+  document.getElementById('poModal').hidden = false;
+  document.getElementById('po_amount').focus();
+}
+function closePoModal() { document.getElementById('poModal').hidden = true; }
+
+let recvOrderId = null;
+function openRecvModal(order_id) {
+  recvOrderId = order_id;
+  const o = ordersCache.find((x) => x.order_id === order_id);
+  document.getElementById('recv_oid').textContent = String(order_id).slice(0, 8).toUpperCase();
+  const ov = (ledgerCache.received_overrides || {})[order_id];
+  const rec = o ? orderReceived(o) : null; // 既存の上書き or 現在の推定値を初期表示
+  document.getElementById('recv_currency').value = (ov && ov.currency) || (rec && rec.currency) || 'btc';
+  document.getElementById('recv_amount').value = ov ? ov.amount : (rec ? rec.amount : '');
+  document.getElementById('recvModal').hidden = false;
+  document.getElementById('recv_amount').focus();
+}
+function closeRecvModal() { document.getElementById('recvModal').hidden = true; recvOrderId = null; }
+async function saveRecv() {
+  try {
+    await api('POST', '/api/ledger/received', {
+      order_id: recvOrderId,
+      currency: document.getElementById('recv_currency').value,
+      amount: Number(document.getElementById('recv_amount').value),
+    });
+    closeRecvModal(); await reloadLedger(); toast('着金額を修正しました');
+  } catch (e) { toast(e.message, true); }
+}
+async function clearRecv() {
+  try { await api('POST', '/api/ledger/received/delete', { order_id: recvOrderId }); closeRecvModal(); await reloadLedger(); toast('自動計算に戻しました'); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function toggleExclude(order_id, excluded) {
+  try { await api('POST', '/api/ledger/exclude', { order_id, excluded }); await reloadLedger(); toast(excluded ? '会計から除外しました' : '会計に戻しました'); }
+  catch (e) { toast(e.message, true); }
+}
+async function addExpense() {
+  const body = {
+    date: document.getElementById('ex_date').value.trim(),
+    currency: document.getElementById('ex_currency').value,
+    label: document.getElementById('ex_label').value.trim(),
+    amount: Number(document.getElementById('ex_amount').value),
+    note: document.getElementById('ex_note').value.trim(),
+  };
+  try {
+    await api('POST', '/api/ledger/expense', body);
+    closeExpModal();
+    await reloadLedger(); toast('経費を追加しました');
+  } catch (e) { toast(e.message, true); }
+}
+async function delExpense(id) {
+  if (!confirm('この経費を削除しますか?')) return;
+  try { await api('POST', '/api/ledger/expense/delete', { id }); await reloadLedger(); toast('経費を削除しました'); }
+  catch (e) { toast(e.message, true); }
+}
+async function addPayout() {
+  const body = {
+    date: document.getElementById('po_date').value.trim(),
+    currency: document.getElementById('po_currency').value,
+    amount: Number(document.getElementById('po_amount').value),
+    note: document.getElementById('po_note').value.trim(),
+  };
+  try {
+    await api('POST', '/api/ledger/payout', body);
+    closePoModal();
+    await reloadLedger(); toast('支払いを記録しました');
+  } catch (e) { toast(e.message, true); }
+}
+async function delPayout(id) {
+  if (!confirm('この支払い記録を削除しますか?')) return;
+  try { await api('POST', '/api/ledger/payout/delete', { id }); await reloadLedger(); toast('支払い記録を削除しました'); }
+  catch (e) { toast(e.message, true); }
+}
+
 function csvCell(v) {
   const s = String(v == null ? '' : v);
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 function downloadAccCsv(scope) {
   const year = document.getElementById('acc_year').value;
-  const rows = accOrders
-    .filter((o) => o.status === 'paid')
+  // 会計除外(テスト注文)は税務用 CSV からも外す。
+  const rows = ordersCache
+    .filter((o) => o.status === 'paid' && !isExcluded(o))
     .filter((o) => (scope === 'all' ? true : accDate(o).slice(0, 4) === year))
     .sort((a, b) => accDate(a).localeCompare(accDate(b)));
   if (!rows.length) { toast('対象の確定売上がありません', true); return; }
-  const header = ['計上日', '注文ID', '商品ID', '状態', '通貨', '請求額_円', '元価格_円', '割引_円', 'クーポン', '実受領数量', '受領数量_手数料控除後', '受領通貨', '決済ID'];
+  const header = ['計上日', '注文ID', '商品ID', '状態', '通貨', '請求額_円', '元価格_円', '割引_円', 'クーポン', '実受領数量', '受領数量_手数料控除後', '受領通貨', '実効レート_円per枚', '手数料_円', '決済ID'];
   const lines = [header.join(',')];
   rows.forEach((o) => {
+    const rate = orderRate(o);
+    const fee = orderFee(o);
     lines.push([
       accDate(o), o.order_id, o.product_id, o.status,
       (o.currency || o.pay_currency || '').toUpperCase(),
@@ -903,6 +1429,8 @@ function downloadAccCsv(scope) {
       o.actually_paid != null ? o.actually_paid : '',
       o.outcome_amount != null ? o.outcome_amount : '',
       (o.outcome_currency || '').toUpperCase(),
+      rate != null ? Math.round(rate) : '',
+      fee != null ? fee : '',
       o.nowpayments_payment_id || '',
     ].map(csvCell).join(','));
   });
@@ -960,7 +1488,31 @@ async function backfill(dryRun) {
   catch (e) { toast(e.message, true); }
 }
 
+// 各セクションの長い説明(.hint)を既定で隠し、見出しに「?」トグルを付けて見たいときだけ開く。
+// 精算の動的な注記(過払い/概算/円換算の内訳など=警告)は常時表示のまま残す(acc_split_note は除外)。
+function setupHintToggles() {
+  document.querySelectorAll('section').forEach((sec) => {
+    const hints = [...sec.querySelectorAll('.hint')].filter((h) => h.id !== 'acc_split_note');
+    const h2 = sec.querySelector('h2');
+    if (!hints.length || !h2) return;
+    hints.forEach((h) => h.classList.add('collapsed'));
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'small ghost help';
+    btn.textContent = '?';
+    btn.title = '説明の表示 / 非表示';
+    btn.style.cssText = 'margin-left:8px;padding:2px 9px';
+    btn.addEventListener('click', () => {
+      const show = hints[0].classList.contains('collapsed');
+      hints.forEach((h) => h.classList.toggle('collapsed', !show));
+      btn.classList.toggle('on', show);
+    });
+    h2.insertBefore(btn, h2.firstChild ? h2.firstChild.nextSibling : null);
+  });
+}
+
 async function init() {
+  setupHintToggles();
   // ファイル参照リストのクリック(イベント委譲: Windows パスをそのまま data 属性で扱う)
   document.getElementById('fp_list').addEventListener('click', (ev) => {
     const el = ev.target.closest('.fp-item'); if (!el) return;
@@ -969,12 +1521,16 @@ async function init() {
   });
   document.getElementById('fp_manual').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') fpLoad(ev.target.value.trim()); });
   document.getElementById('fpick').addEventListener('click', (ev) => { if (ev.target.id === 'fpick') closeFilePicker(); });
+  // 会計モーダル: 背景クリック / Esc で閉じる
+  document.getElementById('expModal').addEventListener('click', (ev) => { if (ev.target.id === 'expModal') closeExpModal(); });
+  document.getElementById('poModal').addEventListener('click', (ev) => { if (ev.target.id === 'poModal') closePoModal(); });
+  document.getElementById('recvModal').addEventListener('click', (ev) => { if (ev.target.id === 'recvModal') closeRecvModal(); });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { closeExpModal(); closePoModal(); closeRecvModal(); } });
 
   try { const b = await api('GET', '/api/bucket'); document.getElementById('bucket').textContent = b.bucket; } catch {}
-  await loadProducts();
+  await loadProducts();     // productCache を先に用意(注文/会計の商品名解決に使う)
   await loadCoupons();
-  await loadOrders();
-  await loadAccounting();
+  await reloadAll();        // 注文 + 会計台帳をまとめて読み込み、注文タブ・会計タブを描画
 }
 init();
 </script>

@@ -36,3 +36,7 @@ frontend/public/relations-app/data/depth2*.json
 # プロジェクトルートに書かれた生成物 (cwd 起点で出る場合あり)
 /depth2.json
 /depth2-*.json
+
+# uraneko 会計台帳(ローカル専用・共同出資者との精算元帳。財務データなのでコミットしない)
+scripts/uraneko/uraneko-ledger.json
+scripts/uraneko/uraneko-ledger.json.tmp

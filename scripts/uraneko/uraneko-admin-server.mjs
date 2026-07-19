@@ -14,6 +14,7 @@
 import { createServer } from 'http';
 import { readFileSync } from 'fs';
 import * as store from './lib/uraneko-store.mjs';
+import * as ledger from './lib/uraneko-ledger.mjs';
 
 const HOST = '127.0.0.1'; // ローカル専用。0.0.0.0 にはしない
 const PORT = Number(process.env.URANEKO_ADMIN_PORT) || 4173;
@@ -55,6 +56,15 @@ const routes = {
   'POST /api/tokens/delete': async (_q, body) => store.deleteToken(body.token_id, { force: Boolean(body.force) }),
   'GET /api/orders': async () => store.listOrders(),
   'POST /api/orders/url': async (_q, body) => store.downloadUrlFor(body.order_id),
+  // 会計台帳(ローカル JSON)。除外フラグ・経費・共同出資者への支払い履歴。
+  'GET /api/ledger': async () => ledger.getLedger(),
+  'POST /api/ledger/exclude': async (_q, body) => ledger.setExcluded(body.order_id, Boolean(body.excluded)),
+  'POST /api/ledger/expense': async (_q, body) => ledger.addExpense(body),
+  'POST /api/ledger/expense/delete': async (_q, body) => ledger.deleteExpense(body.id),
+  'POST /api/ledger/payout': async (_q, body) => ledger.addPayout(body),
+  'POST /api/ledger/payout/delete': async (_q, body) => ledger.deletePayout(body.id),
+  'POST /api/ledger/received': async (_q, body) => ledger.setReceivedOverride(body),
+  'POST /api/ledger/received/delete': async (_q, body) => ledger.clearReceivedOverride(body.order_id),
   'POST /api/ingest': async (_q, body) => {
     if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の mp4 パス)が必要です');
     let fileBytes;
@@ -148,7 +158,8 @@ const server = createServer(async (req, res) => {
     const result = await handler(url.searchParams, body);
     sendJson(res, 200, result ?? { ok: true });
   } catch (err) {
-    const isValidation = err instanceof store.ValidationError;
+    // 台帳モジュールの入力エラーは validation フラグで判別(store.ValidationError と同扱い)。
+    const isValidation = err instanceof store.ValidationError || err?.validation === true;
     if (!isValidation) console.error('admin-server error:', err);
     sendJson(res, isValidation ? 400 : 500, { error: err?.message ?? String(err) });
   }
