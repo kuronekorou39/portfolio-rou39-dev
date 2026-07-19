@@ -33,7 +33,7 @@ function SecretUrlModal({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 24,
-        zIndex: 10,
+        zIndex: 30,
       }}
     >
       <div
@@ -185,7 +185,7 @@ function UrlBlock({
   onRevoke,
   busy,
 }: {
-  label: string;
+  label: React.ReactNode;
   url: string | null;
   active: boolean;
   emptyText: string;
@@ -380,6 +380,347 @@ function AccessLogModal({
   );
 }
 
+/** 編集用/閲覧のみを「色 + アイコン + 文言」の3重で区別するラベル(渡し間違い防止)。 */
+function UrlKindBadge({ kind }: { kind: 'edit' | 'view' }) {
+  const isEdit = kind === 'edit';
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        flexShrink: 0,
+        width: 78,
+        fontSize: 11.5,
+        fontWeight: 650,
+        padding: '3px 9px',
+        borderRadius: 7,
+        color: isEdit ? 'var(--accent)' : 'var(--ok)',
+        background: isEdit ? 'var(--accent-soft)' : 'var(--ok-soft)',
+      }}
+    >
+      {isEdit ? '✎ 編集用' : '👁 閲覧のみ'}
+    </span>
+  );
+}
+
+/** 一覧の1URL行: 用途バッジ + クリックで開けるURL + コピー。停止中は用途説明を出す。 */
+function ListUrlRow({
+  kind,
+  url,
+  revokedText,
+}: {
+  kind: 'edit' | 'view';
+  url: string | null;
+  revokedText: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 0' }}>
+      <UrlKindBadge kind={kind} />
+      {url ? (
+        <>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="新しいタブで開く"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 12.5,
+              color: 'var(--fg)',
+              textDecoration: 'none',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {url}
+          </a>
+          <Btn
+            onClick={() =>
+              void navigator.clipboard.writeText(url).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              })
+            }
+          >
+            {copied ? 'コピー済' : 'コピー'}
+          </Btn>
+        </>
+      ) : (
+        <span style={{ flex: 1, fontSize: 12.5, color: 'var(--muted)' }}>{revokedText}</span>
+      )}
+    </div>
+  );
+}
+
+/** 1メモの詳細操作をまとめる設定モーダル。一覧は最小限に保ち、操作はすべてここへ集約する。 */
+function SettingsModal({
+  memo,
+  busy,
+  onClose,
+  onRename,
+  onReissue,
+  onRevoke,
+  onIssueReadonly,
+  onRevokeReadonly,
+  onSetPin,
+  onClearPin,
+  onDelete,
+  onOpenLog,
+}: {
+  memo: MemoSummary;
+  busy: boolean;
+  onClose: () => void;
+  onRename: (memoId: string, value: string) => Promise<boolean>;
+  onReissue: (m: MemoSummary) => void;
+  onRevoke: (m: MemoSummary) => void;
+  onIssueReadonly: (m: MemoSummary) => void;
+  onRevokeReadonly: (m: MemoSummary) => void;
+  onSetPin: (memoId: string, pin: string) => Promise<boolean>;
+  onClearPin: (m: MemoSummary) => Promise<boolean>;
+  onDelete: (m: MemoSummary) => void;
+  onOpenLog: (m: MemoSummary) => void;
+}) {
+  const [titleInput, setTitleInput] = useState(memo.title);
+  const [titleSaved, setTitleSaved] = useState(false);
+  const [pinEditing, setPinEditing] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+
+  const saveTitle = async () => {
+    const ok = await onRename(memo.memo_id, titleInput);
+    if (ok) {
+      setTitleSaved(true);
+      setTimeout(() => setTitleSaved(false), 1500);
+    }
+  };
+  const savePin = async () => {
+    const ok = await onSetPin(memo.memo_id, pinInput);
+    if (ok) {
+      setPinEditing(false);
+      setPinInput('');
+    }
+  };
+
+  const sec: CSSProperties = { padding: '15px 0', borderTop: '1px solid var(--border)' };
+  const secLabel: CSSProperties = {
+    fontSize: 12,
+    color: 'var(--muted)',
+    marginBottom: 8,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  };
+
+  return (
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,.45)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        zIndex: 20,
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          width: '100%',
+          maxWidth: 540,
+          maxHeight: '86vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 18px 12px',
+            borderBottom: '1px solid var(--border)',
+            gap: 10,
+          }}
+        >
+          <h3 style={{ margin: 0, fontSize: 16 }}>設定</h3>
+          <Btn variant="ghost" onClick={onClose}>
+            ✕ 閉じる
+          </Btn>
+        </div>
+
+        <div style={{ overflowY: 'auto', padding: '0 18px 8px' }}>
+          {/* 名前 */}
+          <div style={{ ...sec, borderTop: 'none' }}>
+            <div style={secLabel}>メモの名前(任意・管理用)</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                value={titleInput}
+                onChange={(e) => setTitleInput(e.target.value)}
+                maxLength={200}
+                placeholder="例: 買い物リスト"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void saveTitle();
+                }}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '8px 11px',
+                  border: '1px solid var(--border)',
+                  borderRadius: 7,
+                  fontSize: 13,
+                  background: 'var(--surface)',
+                }}
+              />
+              <Btn busy={busy} onClick={() => void saveTitle()}>
+                {titleSaved ? '保存済' : '保存'}
+              </Btn>
+            </div>
+          </div>
+
+          {/* 編集用URL */}
+          <div style={sec}>
+            <UrlBlock
+              label={
+                <span>
+                  <b style={{ color: 'var(--accent)', fontWeight: 650 }}>✎ 編集用URL</b> — 渡すと相手も編集できます
+                </span>
+              }
+              url={memo.url}
+              active={memo.has_active_url}
+              emptyText={
+                memo.has_active_url
+                  ? 'URLは発行済みです(表示するには再発行してください)'
+                  : '無効化されています — 誰も開けません'
+              }
+              onIssue={() => onReissue(memo)}
+              issueLabel="URLを発行"
+              issuePrimary
+              onReissue={() => onReissue(memo)}
+              onRevoke={memo.has_active_url ? () => onRevoke(memo) : undefined}
+              busy={busy}
+            />
+          </div>
+
+          {/* 閲覧のみURL */}
+          <div style={sec}>
+            <UrlBlock
+              label={
+                <span>
+                  <b style={{ color: 'var(--ok)', fontWeight: 650 }}>👁 閲覧のみURL</b> — 閲覧だけ許可したい相手に
+                </span>
+              }
+              url={memo.readonly_url}
+              active={memo.has_readonly_url}
+              emptyText="未発行 — 閲覧だけ許可したい相手に渡せます"
+              onIssue={() => onIssueReadonly(memo)}
+              issueLabel="発行する"
+              onReissue={() => onIssueReadonly(memo)}
+              onRevoke={memo.has_readonly_url ? () => onRevokeReadonly(memo) : undefined}
+              busy={busy}
+            />
+          </div>
+
+          {/* PIN */}
+          <div style={sec}>
+            <div style={secLabel}>
+              PIN{' '}
+              {memo.has_pin ? (
+                <Badge kind="pin">🔒 設定済み</Badge>
+              ) : (
+                <span style={{ color: 'var(--muted)' }}>未設定</span>
+              )}
+            </div>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '0 0 8px' }}>
+              URL に加えて暗証番号(6〜10桁)の入力を必須にします。
+            </p>
+            {pinEditing ? (
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  inputMode="numeric"
+                  autoFocus
+                  maxLength={10}
+                  placeholder="6〜10桁"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void savePin();
+                    if (e.key === 'Escape') {
+                      setPinEditing(false);
+                      setPinInput('');
+                    }
+                  }}
+                  style={{
+                    width: 130,
+                    padding: '7px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 7,
+                    fontSize: 13,
+                    letterSpacing: 3,
+                    background: 'var(--surface)',
+                  }}
+                />
+                <Btn busy={busy} onClick={() => void savePin()}>
+                  保存
+                </Btn>
+                <Btn
+                  variant="ghost"
+                  onClick={() => {
+                    setPinEditing(false);
+                    setPinInput('');
+                  }}
+                >
+                  キャンセル
+                </Btn>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <Btn busy={busy} onClick={() => {
+                  setPinEditing(true);
+                  setPinInput('');
+                }}>
+                  {memo.has_pin ? '変更' : '設定'}
+                </Btn>
+                {memo.has_pin && (
+                  <Btn busy={busy} onClick={() => void onClearPin(memo)}>
+                    解除
+                  </Btn>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 履歴 / 削除 */}
+          <div
+            style={{
+              ...sec,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+            }}
+          >
+            <Btn onClick={() => onOpenLog(memo)}>アクセス履歴を見る</Btn>
+            <Btn busy={busy} variant="danger" onClick={() => onDelete(memo)}>
+              このメモを削除
+            </Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth();
   const [memos, setMemos] = useState<MemoSummary[] | null>(null);
@@ -389,6 +730,8 @@ export default function DashboardPage() {
   const [issueError, setIssueError] = useState<string | null>(null);
   const [issuedUrl, setIssuedUrl] = useState<string | null>(null);
   const [issuedReadonly, setIssuedReadonly] = useState(false);
+  // 設定モーダルを開いているメモID(一覧は最小限、詳細操作はモーダルに集約)
+  const [settingsId, setSettingsId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     const idToken = await getIdToken();
@@ -427,14 +770,17 @@ export default function DashboardPage() {
     }
   }, [title, reload]);
 
-  // ---- 行操作(リネーム/再発行/無効化/削除) ----
+  // ---- 行操作(再発行/無効化/削除/リネーム/PIN) ----
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState('');
 
+  /** 認証付き操作の共通ラッパ。成功で true、失敗で false を返す(モーダルが後処理に使う)。 */
   const rowAction = useCallback(
-    async (memoId: string, fn: (idToken: string) => Promise<void>, failMsg: string) => {
+    async (
+      memoId: string,
+      fn: (idToken: string) => Promise<void>,
+      failMsg: string,
+    ): Promise<boolean> => {
       setBusyId(memoId);
       setActionError(null);
       try {
@@ -442,8 +788,10 @@ export default function DashboardPage() {
         if (!idToken) throw new Error('login');
         await fn(idToken);
         await reload();
+        return true;
       } catch {
         setActionError(failMsg);
+        return false;
       } finally {
         setBusyId(null);
       }
@@ -521,54 +869,50 @@ export default function DashboardPage() {
       !window.confirm(`「${name}」を削除しますか?\nすべてのタブが消え、元に戻せません。`)
     )
       return;
-    void rowAction(
-      m.memo_id,
-      async (idToken) => {
-        await api.deleteMemo(idToken, m.memo_id);
-      },
-      '削除に失敗しました。時間をおいて再試行してください。',
-    );
+    void (async () => {
+      const ok = await rowAction(
+        m.memo_id,
+        async (idToken) => {
+          await api.deleteMemo(idToken, m.memo_id);
+        },
+        '削除に失敗しました。時間をおいて再試行してください。',
+      );
+      if (ok) setSettingsId(null); // 削除できたら設定モーダルを閉じる
+    })();
   };
 
-  const onRenameSave = (memoId: string) => {
-    void rowAction(
+  // 名前の保存(値は設定モーダルのローカル state から渡す)
+  const onRename = (memoId: string, value: string): Promise<boolean> =>
+    rowAction(
       memoId,
       async (idToken) => {
-        await api.renameMemo(idToken, memoId, renameValue.trim());
-        setRenamingId(null);
+        await api.renameMemo(idToken, memoId, value.trim());
       },
       '名前の変更に失敗しました。',
     );
-  };
 
-  // PIN 設定/変更/解除のインライン UI
-  const [pinEditId, setPinEditId] = useState<string | null>(null);
-  const [pinValue, setPinValue] = useState('');
-  const onSetPin = (memoId: string) => {
-    if (pinValue.length < 6 || pinValue.length > 10) {
+  // PIN 設定/解除(値は設定モーダルのローカル state から渡す)
+  const onSetPin = (memoId: string, pin: string): Promise<boolean> => {
+    if (pin.length < 6 || pin.length > 10) {
       setActionError('PIN は6〜10桁の数字で入力してください。');
-      return;
+      return Promise.resolve(false);
     }
-    void rowAction(
+    return rowAction(
       memoId,
       async (idToken) => {
-        await api.setPin(idToken, memoId, pinValue);
-        setPinEditId(null);
-        setPinValue('');
+        await api.setPin(idToken, memoId, pin);
       },
       'PIN の設定に失敗しました。',
     );
   };
-  const onClearPin = (m: MemoSummary) => {
-    if (!window.confirm(`「${m.title || '(名称未設定)'}」の PIN を解除しますか?`)) return;
-    void rowAction(
+  const onClearPin = (m: MemoSummary): Promise<boolean> =>
+    rowAction(
       m.memo_id,
       async (idToken) => {
         await api.setPin(idToken, m.memo_id, null);
       },
       'PIN の解除に失敗しました。',
     );
-  };
 
   // アクセス履歴モーダル(1メモ分をモーダルで表示。件数が多くてもスクロールで収める)
   const [logModal, setLogModal] = useState<{
@@ -686,6 +1030,28 @@ export default function DashboardPage() {
       {issuedUrl && (
         <SecretUrlModal url={issuedUrl} readonly={issuedReadonly} onClose={() => setIssuedUrl(null)} />
       )}
+      {settingsId &&
+        memos &&
+        (() => {
+          const sm = memos.find((x) => x.memo_id === settingsId);
+          if (!sm) return null;
+          return (
+            <SettingsModal
+              memo={sm}
+              busy={busyId === sm.memo_id}
+              onClose={() => setSettingsId(null)}
+              onRename={onRename}
+              onReissue={onReissue}
+              onRevoke={onRevoke}
+              onIssueReadonly={onIssueReadonly}
+              onRevokeReadonly={onRevokeReadonly}
+              onSetPin={onSetPin}
+              onClearPin={onClearPin}
+              onDelete={onDelete}
+              onOpenLog={(m) => void openLog(m)}
+            />
+          );
+        })()}
       {logModal && (
         <AccessLogModal
           memoTitle={logModal.memo.title || '(名称未設定)'}
@@ -793,188 +1159,60 @@ export default function DashboardPage() {
                 key={m.memo_id}
                 style={{
                   border: '1px solid var(--border)',
-                  borderRadius: 12,
+                  borderRadius: 11,
                   background: 'var(--surface)',
-                  padding: '16px 18px',
-                  marginBottom: 14,
+                  padding: '13px 15px',
+                  marginBottom: 10,
                 }}
               >
-                {/* ヘッダー: タイトル + 状態バッジ */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                  {renamingId === m.memo_id ? (
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flex: 1 }}>
-                      <input
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        maxLength={200}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') onRenameSave(m.memo_id);
-                          if (e.key === 'Escape') setRenamingId(null);
-                        }}
-                        style={{
-                          flex: 1,
-                          minWidth: 0,
-                          padding: '6px 10px',
-                          border: '1px solid var(--border)',
-                          borderRadius: 6,
-                          fontSize: 15,
-                          background: 'var(--surface)',
-                        }}
-                      />
-                      <Btn busy={busy} onClick={() => onRenameSave(m.memo_id)}>
-                        保存
-                      </Btn>
-                      <Btn variant="ghost" onClick={() => setRenamingId(null)}>
-                        キャンセル
-                      </Btn>
-                    </div>
-                  ) : (
-                    <h2
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        margin: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        minWidth: 0,
-                      }}
-                    >
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: m.title ? undefined : 'var(--muted)', fontWeight: m.title ? 600 : 500 }}>
-                        {m.title || '名称未設定のメモ'}
-                      </span>
-                      <button
-                        title="名前を変更"
-                        onClick={() => {
-                          setRenamingId(m.memo_id);
-                          setRenameValue(m.title);
-                        }}
-                        style={{ border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 13, padding: 0 }}
-                      >
-                        ✎
-                      </button>
-                    </h2>
+                {/* 上段: 名前(任意) + PIN印 + 設定 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: m.title ? 600 : 500,
+                      fontStyle: m.title ? undefined : 'italic',
+                      color: m.title ? undefined : 'var(--muted)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {m.title || '名称未設定'}
+                  </span>
+                  {m.has_pin && (
+                    <span title="PIN で保護" style={{ fontSize: 12, flexShrink: 0 }}>
+                      🔒
+                    </span>
                   )}
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {m.has_active_url ? <Badge kind="ok">● 公開中</Badge> : <Badge kind="off">停止中</Badge>}
-                    {m.has_pin && <Badge kind="pin">🔒 PIN</Badge>}
-                  </div>
+                  <span style={{ flex: 1 }} />
+                  <Btn busy={busy} onClick={() => setSettingsId(m.memo_id)}>
+                    ⚙ 設定
+                  </Btn>
                 </div>
 
-                <div style={{ fontSize: 12, color: 'var(--muted)', margin: '4px 0 16px', fontVariantNumeric: 'tabular-nums' }}>
-                  タブ <b style={{ color: 'var(--fg)' }}>{m.tab_count}</b> ・ 作成{' '}
-                  <b style={{ color: 'var(--fg)' }}>{fmtJst(m.created_at)}</b> ・ 最終更新{' '}
-                  <b style={{ color: 'var(--fg)' }}>{fmtJst(m.updated_at)}</b>
-                </div>
-
-                {/* 編集URL */}
-                <UrlBlock
-                  label="編集URL"
+                {/* 編集用URL(停止中も用途を表示) */}
+                <ListUrlRow
+                  kind="edit"
                   url={m.url}
-                  active={m.has_active_url}
-                  emptyText={
-                    m.has_active_url
-                      ? 'URLは発行済みです(表示するには再発行してください)'
-                      : '無効化されています — 誰も開けません'
-                  }
-                  onIssue={() => onReissue(m)}
-                  issueLabel="URLを発行"
-                  issuePrimary
-                  onReissue={() => onReissue(m)}
-                  onRevoke={m.has_active_url ? () => onRevoke(m) : undefined}
-                  busy={busy}
+                  revokedText="URLは停止中です — 設定から発行できます"
                 />
-
-                {/* 閲覧専用URL */}
-                <UrlBlock
-                  label="閲覧専用URL"
-                  url={m.readonly_url}
-                  active={m.has_readonly_url}
-                  emptyText="未発行 — 閲覧だけ許可したい相手に渡せます"
-                  onIssue={() => onIssueReadonly(m)}
-                  issueLabel="発行する"
-                  onReissue={() => onIssueReadonly(m)}
-                  onRevoke={m.has_readonly_url ? () => onRevokeReadonly(m) : undefined}
-                  busy={busy}
-                />
-
-                {/* PIN のインライン編集 */}
-                {pinEditId === m.memo_id && (
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>PIN(6〜10桁)</span>
-                    <input
-                      value={pinValue}
-                      onChange={(e) => setPinValue(e.target.value.replace(/[^0-9]/g, ''))}
-                      inputMode="numeric"
-                      autoFocus
-                      maxLength={10}
-                      placeholder="••••••"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') onSetPin(m.memo_id);
-                        if (e.key === 'Escape') {
-                          setPinEditId(null);
-                          setPinValue('');
-                        }
-                      }}
-                      style={{
-                        width: 120,
-                        padding: '6px 10px',
-                        border: '1px solid var(--border)',
-                        borderRadius: 6,
-                        fontSize: 13,
-                        letterSpacing: 3,
-                        background: 'var(--surface)',
-                      }}
-                    />
-                    <Btn busy={busy} onClick={() => onSetPin(m.memo_id)}>
-                      保存
-                    </Btn>
-                    <Btn
-                      variant="ghost"
-                      onClick={() => {
-                        setPinEditId(null);
-                        setPinValue('');
-                      }}
-                    >
-                      キャンセル
-                    </Btn>
-                  </div>
+                {/* 閲覧のみURL(発行済みのときだけ) */}
+                {m.has_readonly_url && (
+                  <ListUrlRow kind="view" url={m.readonly_url} revokedText="" />
                 )}
 
-                {/* フッター操作 */}
+                {/* メタ: タブ数 ・ 最終更新 */}
                 <div
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    flexWrap: 'wrap',
-                    marginTop: 6,
-                    paddingTop: 13,
-                    borderTop: '1px solid var(--border)',
+                    fontSize: 12,
+                    color: 'var(--muted)',
+                    marginTop: 8,
+                    fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  {pinEditId !== m.memo_id && (
-                    <Btn
-                      busy={busy}
-                      onClick={() => {
-                        setPinEditId(m.memo_id);
-                        setPinValue('');
-                      }}
-                    >
-                      {m.has_pin ? 'PIN を変更' : 'PIN を設定'}
-                    </Btn>
-                  )}
-                  {m.has_pin && pinEditId !== m.memo_id && (
-                    <Btn busy={busy} onClick={() => onClearPin(m)}>
-                      PIN を解除
-                    </Btn>
-                  )}
-                  <Btn onClick={() => void openLog(m)}>アクセス履歴</Btn>
-                  <span style={{ flex: 1 }} />
-                  <Btn busy={busy} variant="danger" onClick={() => onDelete(m)}>
-                    削除
-                  </Btn>
+                  タブ <b style={{ color: 'var(--fg)' }}>{m.tab_count}</b> ・ 最終更新{' '}
+                  <b style={{ color: 'var(--fg)' }}>{fmtJst(m.updated_at)}</b>
                 </div>
               </div>
             );
