@@ -240,7 +240,7 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
                 padding: '6px 14px',
                 border: '1px solid var(--accent)',
                 color: 'var(--accent)',
-                background: '#fff',
+                background: 'var(--surface)',
                 borderRadius: 6,
                 fontSize: 13,
               }}
@@ -252,7 +252,7 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
               style={{
                 padding: '6px 14px',
                 border: '1px solid var(--border)',
-                background: '#fff',
+                background: 'var(--surface)',
                 borderRadius: 6,
                 fontSize: 13,
               }}

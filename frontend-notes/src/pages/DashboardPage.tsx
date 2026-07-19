@@ -26,7 +26,7 @@ function SecretUrlModal({ url, onClose }: { url: string; onClose: () => void }) 
     >
       <div
         style={{
-          background: '#fff',
+          background: 'var(--surface)',
           borderRadius: 8,
           padding: 24,
           maxWidth: 560,
@@ -62,8 +62,8 @@ function SecretUrlModal({ url, onClose }: { url: string; onClose: () => void }) 
             style={{
               padding: '8px 16px',
               border: '1px solid var(--accent)',
-              color: copied ? '#fff' : 'var(--accent)',
-              background: copied ? 'var(--accent)' : '#fff',
+              color: copied ? 'var(--accent-fg)' : 'var(--accent)',
+              background: copied ? 'var(--accent)' : 'var(--surface)',
               borderRadius: 6,
             }}
           >
@@ -74,7 +74,7 @@ function SecretUrlModal({ url, onClose }: { url: string; onClose: () => void }) 
             style={{
               padding: '8px 16px',
               border: '1px solid var(--border)',
-              background: '#fff',
+              background: 'var(--surface)',
               borderRadius: 6,
             }}
           >
@@ -254,7 +254,7 @@ export default function DashboardPage() {
       border: '1px solid var(--border)',
       borderRadius: 8,
       padding: '16px 18px',
-      background: '#fff',
+      background: 'var(--surface)',
       flex: '1 1 200px',
     };
     return (
@@ -272,7 +272,7 @@ export default function DashboardPage() {
               border: 'none',
               borderRadius: 8,
               background: 'var(--accent)',
-              color: '#fff',
+              color: 'var(--accent-fg)',
             }}
           >
             Google でログインして始める
@@ -385,7 +385,7 @@ export default function DashboardPage() {
               border: 'none',
               borderRadius: 6,
               background: 'var(--accent)',
-              color: '#fff',
+              color: 'var(--accent-fg)',
               fontSize: 14,
               opacity: issuing ? 0.6 : 1,
             }}
