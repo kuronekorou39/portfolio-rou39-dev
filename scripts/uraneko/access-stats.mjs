@@ -105,24 +105,40 @@ async function listRecentKeys(s3, bucket, since) {
 function bar(n, max, width = 28) { return max <= 0 ? '' : '█'.repeat(Math.max(n > 0 ? 1 : 0, Math.round((n / max) * width))); }
 function pad(s, n) { s = String(s); return s.length >= n ? s : ' '.repeat(n - s.length) + s; }
 
-async function main() {
-  const DAYS = Math.max(1, parseInt((process.argv.find((a) => a.startsWith('--days=')) || '').split('=')[1] || '7', 10));
-  const s3 = new S3Client({ region: REGION });
-  const bucket = await findBucket(s3);
-  const since = Date.now() - DAYS * 86400 * 1000;
-  process.stdout.write(`バケット: ${bucket} / 直近 ${DAYS} 日を集計中…\n`);
+// S3 からログを取得して集計まで行う(CLI と 管理GUI の両方から使う)。
+export async function collect({ days = 7, region, bucket, s3 } = {}) {
+  s3 = s3 || new S3Client({ region: region || REGION });
+  bucket = bucket || (await findBucket(s3));
+  const since = Date.now() - Math.max(1, days) * 86400 * 1000;
   const keys = await listRecentKeys(s3, bucket, since);
-  if (!keys.length) { console.log('ログがまだありません(配信に数分〜数時間かかります。アクセスが無ければ空です)。'); return; }
-
   const rows = [];
   for (const key of keys) {
     const obj = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
     rows.push(...parseLog(gunzipSync(await toBuffer(obj.Body)).toString('utf-8')));
   }
-  const st = summarize(rows);
+  return { bucket, days, keysCount: keys.length, stats: summarize(rows) };
+}
+
+// collect() の結果を JSON 化(Map → 配列)。管理GUI のエンドポイント用。
+export function statsToJSON(res) {
+  const s = res.stats;
+  return {
+    bucket: res.bucket, days: res.days, keysCount: res.keysCount,
+    total: s.total, pageViews: s.pv, uniqueIps: s.uniqueIps, bots: s.bots,
+    byDay: [...s.byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])),
+    byHour: [...s.byHour.entries()].sort((a, b) => a[0].localeCompare(b[0])),
+    refs: [...s.refs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15),
+  };
+}
+
+async function main() {
+  const DAYS = Math.max(1, parseInt((process.argv.find((a) => a.startsWith('--days=')) || '').split('=')[1] || '7', 10));
+  process.stdout.write(`直近 ${DAYS} 日を集計中…\n`);
+  const { bucket, keysCount, stats: st } = await collect({ days: DAYS });
+  if (!keysCount) { console.log(`バケット: ${bucket}\nログがまだありません(配信に数分〜数時間かかります。アクセスが無ければ空です)。`); return; }
 
   console.log(`\n=== uraneko アクセス集計(直近 ${DAYS} 日 / JST)===`);
-  console.log(`ログファイル: ${keys.length} 個   総リクエスト: ${st.total}(アセット等込み)`);
+  console.log(`バケット: ${bucket}   ログファイル: ${keysCount} 個   総リクエスト: ${st.total}(アセット等込み)`);
   console.log(`ページ表示: ${st.pv}   ざっくり訪問者(ユニークIP): ${st.uniqueIps}   うちボットっぽい: ${st.bots}`);
 
   const days = [...st.byDay.keys()].sort();

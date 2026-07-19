@@ -134,6 +134,7 @@
   <button class="tab" data-tab="orders" onclick="showTab('orders')">注文</button>
   <button class="tab" data-tab="coupons" onclick="showTab('coupons')">クーポン</button>
   <button class="tab" data-tab="account" onclick="showTab('account')">会計</button>
+  <button class="tab" data-tab="access" onclick="showTab('access')">アクセス</button>
   <button class="tab" data-tab="maint" onclick="showTab('maint')">メンテナンス</button>
 </nav>
 
@@ -431,6 +432,24 @@
     </section>
   </div>
 
+  <!-- ===== アクセス ===== -->
+  <div id="tab-access" class="view" hidden>
+    <section>
+      <h2>アクセス · TRAFFIC
+        <select id="acx_days" onchange="loadAccess()" style="margin-left:8px">
+          <option value="7">直近 7 日</option>
+          <option value="14">直近 14 日</option>
+          <option value="30">直近 30 日</option>
+        </select>
+        <button class="small" onclick="loadAccess()">更新</button>
+        <span id="acx_meta" class="muted" style="margin-left:auto;text-transform:none;letter-spacing:0;font-size:10px"></span>
+      </h2>
+      <div id="acx_cards" style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:6px"></div>
+      <div id="acx_body"><div class="muted">「更新」で読み込みます(ログの取得+解凍に少しかかります)。</div></div>
+      <div class="hint">CloudFront のアクセスログ(S3)を集計。SPA のためページ表示は /index.html に集約され、ページ別内訳は取れません。ログは配信に数分〜数時間の遅延があり、90日で自動削除。時刻は JST。</div>
+    </section>
+  </div>
+
   <!-- ===== メンテナンス ===== -->
   <div id="tab-maint" class="view" hidden>
     <section>
@@ -537,6 +556,7 @@ let currentPid = null;
 function showTab(name) {
   document.querySelectorAll('.view').forEach((v) => { v.hidden = v.id !== 'tab-' + name; });
   document.querySelectorAll('nav.tabs .tab').forEach((t) => { t.classList.toggle('active', t.dataset.tab === name); });
+  if (name === 'access' && !accessLoaded) loadAccess(); // 初回表示時に読み込む(重いので自動は初回だけ)
 }
 function showSub(name) {
   document.querySelectorAll('.subview').forEach((v) => { v.hidden = v.id !== 'sub-' + name; });
@@ -1486,6 +1506,56 @@ async function delCoupon(code) {
 async function backfill(dryRun) {
   try { const r = await api('POST', '/api/tokens/backfill', { dryRun }); toast('scanned=' + r.scanned + ' ' + (r.dryRun ? 'would-fix' : 'fixed') + '=' + r.fixed); loadProducts(); }
   catch (e) { toast(e.message, true); }
+}
+
+// ---- アクセス(CloudFront ログ集計)----
+let accessLoaded = false;
+async function loadAccess() {
+  const days = document.getElementById('acx_days').value;
+  document.getElementById('acx_cards').innerHTML = '';
+  document.getElementById('acx_meta').textContent = '';
+  document.getElementById('acx_body').innerHTML = '<div class="muted">読み込み中…(ログの取得+解凍に少しかかります)</div>';
+  try {
+    const d = await api('GET', '/api/access-stats?days=' + days);
+    accessLoaded = true;
+    renderAccess(d);
+  } catch (e) {
+    document.getElementById('acx_body').innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+function acxBar(n, max) {
+  const w = max > 0 ? Math.max(n > 0 ? 2 : 0, Math.round((n / max) * 200)) : 0;
+  return '<span style="display:inline-block;height:8px;width:' + w + 'px;background:var(--ash-bright);vertical-align:middle"></span>';
+}
+function renderAccess(d) {
+  document.getElementById('acx_meta').textContent = 'バケット: ' + (d.bucket || '') + ' / ログ ' + d.keysCount + ' 個 / 取得 ' + new Date().toLocaleTimeString('ja-JP');
+  if (!d.keysCount) {
+    document.getElementById('acx_cards').innerHTML = '';
+    document.getElementById('acx_body').innerHTML = '<div class="muted">ログがまだありません(配信に数分〜数時間かかります。アクセスが無ければ空です)。</div>';
+    return;
+  }
+  document.getElementById('acx_cards').innerHTML =
+    accCard('総リクエスト', String(d.total), 'アセット等込み') +
+    accCard('ページ表示', String(d.pageViews), '直近 ' + d.days + ' 日') +
+    accCard('ざっくり訪問者', String(d.uniqueIps), 'ユニークIP') +
+    accCard('ボットっぽい', String(d.bots), 'ページ表示のうち');
+
+  const dMax = Math.max(1, ...d.byDay.map((x) => x[1]));
+  const dayRows = d.byDay.map((x) => '<tr><td class="mono">' + esc(x[0]) + '</td><td style="text-align:right">' + x[1] + '</td><td style="width:210px">' + acxBar(x[1], dMax) + '</td></tr>').join('');
+  const hours = d.byHour.slice(-48);
+  const hMax = Math.max(1, ...hours.map((x) => x[1]));
+  const hourRows = hours.map((x) => '<tr><td class="mono" style="font-size:11px">' + esc(x[0]) + '時</td><td style="text-align:right">' + x[1] + '</td><td style="width:210px">' + acxBar(x[1], hMax) + '</td></tr>').join('');
+  const refRows = d.refs.length
+    ? d.refs.map((x) => '<tr><td style="text-align:right;width:60px">' + x[1] + '</td><td class="mono" style="font-size:11px">' + esc(x[0]) + '</td></tr>').join('')
+    : '<tr><td colspan="2" class="muted">外部リファラなし(直アクセス/ブックマーク中心)</td></tr>';
+
+  document.getElementById('acx_body').innerHTML =
+    '<div class="sub" style="margin-top:6px;padding-top:0;border-top:none">日別ページ表示 · BY DAY</div>' +
+    '<table><thead><tr><th>日</th><th style="text-align:right">表示</th><th></th></tr></thead><tbody>' + dayRows + '</tbody></table>' +
+    '<div class="sub">時間別(直近48時間)· HOURLY</div>' +
+    '<table><thead><tr><th>時刻(JST)</th><th style="text-align:right">表示</th><th></th></tr></thead><tbody>' + hourRows + '</tbody></table>' +
+    '<div class="sub">流入元(リファラ)· REFERRERS</div>' +
+    '<table><thead><tr><th style="text-align:right">件</th><th>ホスト</th></tr></thead><tbody>' + refRows + '</tbody></table>';
 }
 
 // 各セクションの長い説明(.hint)を既定で隠し、見出しに「?」トグルを付けて見たいときだけ開く。

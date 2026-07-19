@@ -56,8 +56,13 @@ node scripts/uraneko/uraneko-admin.mjs ingest --id <product_id> --file <local.mp
 ## アクセス集計(軽量)
 
 サイトのアクセス数を「軽く」把握する用に、CloudFront の標準アクセスログを S3 に出している
-(`infra/lib/uraneko/frontend-stack.ts` で有効化)。常設ダッシュボードは持たず、見たいとき
-にローカルスクリプトで集計する運用。
+(`infra/lib/uraneko/frontend-stack.ts` で有効化)。集計は **管理 GUI の「アクセス」タブ**か、
+同じロジックのローカルスクリプトのどちらでも見られる(解析・集計は `access-stats.mjs` の
+`parseLog` / `summarize` / `collect` を GUI・CLI で共有)。
+
+- **GUI**: 管理画面の「アクセス」タブ。日数(7/14/30)を選んで「更新」で取得。開くたびに読むと
+  重いので初回表示時のみ自動読み込み。GUI サーバは S3 を読むだけ(書き込みなし)。
+- **CLI**:
 
 ```bash
 node scripts/uraneko/access-stats.mjs            # 直近7日

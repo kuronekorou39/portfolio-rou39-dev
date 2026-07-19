@@ -15,6 +15,7 @@ import { createServer } from 'http';
 import { readFileSync } from 'fs';
 import * as store from './lib/uraneko-store.mjs';
 import * as ledger from './lib/uraneko-ledger.mjs';
+import * as access from './access-stats.mjs';
 
 const HOST = '127.0.0.1'; // ローカル専用。0.0.0.0 にはしない
 const PORT = Number(process.env.URANEKO_ADMIN_PORT) || 4173;
@@ -65,6 +66,8 @@ const routes = {
   'POST /api/ledger/payout/delete': async (_q, body) => ledger.deletePayout(body.id),
   'POST /api/ledger/received': async (_q, body) => ledger.setReceivedOverride(body),
   'POST /api/ledger/received/delete': async (_q, body) => ledger.clearReceivedOverride(body.order_id),
+  // CloudFront アクセスログ集計(S3 を読むだけ・書き込みなし)
+  'GET /api/access-stats': async (q) => access.statsToJSON(await access.collect({ days: Number(q.get('days')) || 7 })),
   'POST /api/ingest': async (_q, body) => {
     if (!body.file_path) throw new store.ValidationError('file_path(この PC 上の mp4 パス)が必要です');
     let fileBytes;
