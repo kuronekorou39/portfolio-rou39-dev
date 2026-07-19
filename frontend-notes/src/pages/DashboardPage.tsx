@@ -5,6 +5,9 @@ import { beginGoogleLogin, getIdToken } from '../lib/auth';
 import { api, ApiError, type AccessLogEntry, type MemoSummary } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
 
+// backend の MAX_MEMOS_PER_USER と一致させる(残り作成可能数の表示用)
+const MAX_MEMOS = 20;
+
 function fmtJst(iso: string): string {
   return new Date(iso).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
 }
@@ -96,46 +99,283 @@ function SecretUrlModal({
   );
 }
 
-/** 秘密URLをインライン表示 + ワンクリックコピー(管理画面はログイン必須なので常時表示でよい)。 */
-function CopyableUrl({ label, url }: { label: string; url: string }) {
+// ---- 共通の見た目部品(既存トークンで実ボタン化)----
+type BtnVariant = 'default' | 'primary' | 'danger' | 'ghost';
+const btnStyle = (variant: BtnVariant, busy?: boolean): CSSProperties => {
+  const base: CSSProperties = {
+    fontFamily: 'inherit',
+    fontSize: 12.5,
+    lineHeight: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '6px 11px',
+    borderRadius: 7,
+    cursor: busy ? 'wait' : 'pointer',
+    border: '1px solid var(--border)',
+    background: 'var(--surface)',
+    color: 'var(--fg)',
+    whiteSpace: 'nowrap',
+    opacity: busy ? 0.5 : 1,
+  };
+  if (variant === 'primary')
+    return { ...base, background: 'var(--accent)', borderColor: 'var(--accent)', color: 'var(--accent-fg)' };
+  if (variant === 'danger') return { ...base, color: 'var(--danger)' };
+  if (variant === 'ghost') return { ...base, border: '1px solid transparent', background: 'transparent', color: 'var(--muted)' };
+  return base;
+};
+
+function Btn({
+  children,
+  onClick,
+  variant = 'default',
+  busy,
+  disabled,
+  title,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: BtnVariant;
+  busy?: boolean;
+  disabled?: boolean;
+  title?: string;
+}) {
+  return (
+    <button onClick={onClick} disabled={disabled || busy} title={title} style={btnStyle(variant, busy)}>
+      {children}
+    </button>
+  );
+}
+
+function Badge({ kind, children }: { kind: 'ok' | 'off' | 'pin'; children: React.ReactNode }) {
+  const c: CSSProperties =
+    kind === 'ok'
+      ? { color: 'var(--ok)', background: 'var(--ok-soft)' }
+      : kind === 'pin'
+        ? { color: 'var(--accent)', background: 'var(--accent-soft)' }
+        : { color: 'var(--muted)', border: '1px solid var(--border)' };
+  return (
+    <span
+      style={{
+        fontSize: 11.5,
+        fontWeight: 550,
+        padding: '3px 9px',
+        borderRadius: 99,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        border: '1px solid transparent',
+        ...c,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** URL は1行フル幅で表示し、操作(コピー/開く/再発行/無効化)は下段に分離する。 */
+function UrlBlock({
+  label,
+  url,
+  emptyText,
+  onIssue,
+  issueLabel = '発行する',
+  issuePrimary,
+  onReissue,
+  onRevoke,
+  busy,
+}: {
+  label: string;
+  url: string | null;
+  active: boolean;
+  emptyText: string;
+  onIssue: () => void;
+  issueLabel?: string;
+  issuePrimary?: boolean;
+  onReissue: () => void;
+  onRevoke?: () => void;
+  busy?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, minWidth: 0 }}>
-      <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0, width: 76 }}>{label}</span>
-      <code
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 5 }}>{label}</div>
+      {url ? (
+        <>
+          <code
+            style={{
+              display: 'block',
+              width: '100%',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 12.5,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              padding: '9px 12px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              color: 'var(--fg)',
+            }}
+            title={url}
+          >
+            {url}
+          </code>
+          <div style={{ display: 'flex', gap: 6, marginTop: 7, flexWrap: 'wrap' }}>
+            <Btn
+              busy={busy}
+              onClick={() =>
+                void navigator.clipboard.writeText(url).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                })
+              }
+            >
+              {copied ? 'コピー済' : 'コピー'}
+            </Btn>
+            <Btn onClick={() => window.open(url, '_blank', 'noopener')}>開く ↗</Btn>
+            <Btn busy={busy} onClick={onReissue}>
+              ↻ 再発行
+            </Btn>
+            {onRevoke && (
+              <Btn busy={busy} variant="danger" onClick={onRevoke}>
+                無効化
+              </Btn>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div
+            style={{
+              width: '100%',
+              fontSize: 12.5,
+              color: 'var(--muted)',
+              border: '1px dashed var(--border)',
+              borderRadius: 8,
+              padding: '9px 12px',
+            }}
+          >
+            {emptyText}
+          </div>
+          <div style={{ marginTop: 7 }}>
+            <Btn busy={busy} variant={issuePrimary ? 'primary' : 'default'} onClick={onIssue}>
+              {issueLabel}
+            </Btn>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** アクセス履歴モーダル(件数が多くてもモーダル内スクロールで収める)。 */
+function AccessLogModal({
+  memoTitle,
+  entries,
+  onClose,
+}: {
+  memoTitle: string;
+  entries: AccessLogEntry[] | 'loading';
+  onClose: () => void;
+}) {
+  return (
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,.45)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        zIndex: 20,
+      }}
+    >
+      <div
         style={{
-          fontSize: 11,
-          fontFamily: 'var(--font-mono)',
-          color: 'var(--muted)',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          flex: 1,
-          minWidth: 0,
-        }}
-        title={url}
-      >
-        {url}
-      </code>
-      <button
-        onClick={() =>
-          void navigator.clipboard.writeText(url).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          })
-        }
-        style={{
-          fontSize: 11,
-          border: '1px solid var(--border)',
-          borderRadius: 4,
           background: 'var(--surface)',
-          color: copied ? 'var(--accent)' : 'var(--muted)',
-          padding: '1px 8px',
-          flexShrink: 0,
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          width: '100%',
+          maxWidth: 540,
+          maxHeight: '82vh',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        {copied ? 'コピー済' : 'コピー'}
-      </button>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 18px 12px',
+            gap: 10,
+          }}
+        >
+          <h3 style={{ margin: 0, fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            アクセス履歴 — {memoTitle}
+          </h3>
+          <Btn variant="ghost" onClick={onClose}>
+            ✕ 閉じる
+          </Btn>
+        </div>
+        <div style={{ overflowY: 'auto', padding: '0 18px' }}>
+          {entries === 'loading' ? (
+            <p style={{ color: 'var(--muted)', fontSize: 13, padding: '12px 0' }}>読み込み中…</p>
+          ) : entries.length === 0 ? (
+            <p style={{ color: 'var(--muted)', fontSize: 13, padding: '12px 0' }}>
+              アクセスはまだありません。
+            </p>
+          ) : (
+            entries.map((e, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '150px auto 1fr',
+                  gap: 12,
+                  alignItems: 'center',
+                  fontSize: 12.5,
+                  color: 'var(--muted)',
+                  padding: '9px 0',
+                  borderTop: '1px solid var(--border)',
+                }}
+              >
+                <span style={{ color: 'var(--fg)', fontVariantNumeric: 'tabular-nums' }}>
+                  {fmtJst(e.ts)}
+                </span>
+                {e.via === 'ro' ? (
+                  <span
+                    style={{
+                      color: 'var(--accent)',
+                      fontSize: 11,
+                      background: 'var(--accent-soft)',
+                      borderRadius: 99,
+                      padding: '1px 7px',
+                      justifySelf: 'start',
+                    }}
+                  >
+                    閲覧専用
+                  </span>
+                ) : (
+                  <span />
+                )}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{e.ip || e.ip_hash.slice(0, 8)}</span>
+                  {e.ua ? ` · ${e.ua}` : ''}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+        <div style={{ padding: '12px 18px 16px', fontSize: 12, color: 'var(--muted)' }}>
+          最新 50 件を表示しています。記録は 90 日で自動的に削除されます。
+        </div>
+      </div>
     </div>
   );
 }
@@ -330,30 +570,20 @@ export default function DashboardPage() {
     );
   };
 
-  // アクセス履歴のインライン展開(memo_id → entries / 'loading')
-  const [logs, setLogs] = useState<Record<string, AccessLogEntry[] | 'loading'>>({});
-  const onToggleLog = async (memoId: string) => {
-    if (logs[memoId]) {
-      // 既に開いていれば閉じる
-      setLogs((prev) => {
-        const next = { ...prev };
-        delete next[memoId];
-        return next;
-      });
-      return;
-    }
-    setLogs((prev) => ({ ...prev, [memoId]: 'loading' }));
+  // アクセス履歴モーダル(1メモ分をモーダルで表示。件数が多くてもスクロールで収める)
+  const [logModal, setLogModal] = useState<{
+    memo: MemoSummary;
+    entries: AccessLogEntry[] | 'loading';
+  } | null>(null);
+  const openLog = async (m: MemoSummary) => {
+    setLogModal({ memo: m, entries: 'loading' });
     try {
       const idToken = await getIdToken();
       if (!idToken) throw new Error('login');
-      const r = await api.memoAccessLog(idToken, memoId);
-      setLogs((prev) => ({ ...prev, [memoId]: r.entries }));
+      const r = await api.memoAccessLog(idToken, m.memo_id);
+      setLogModal({ memo: m, entries: r.entries });
     } catch {
-      setLogs((prev) => {
-        const next = { ...prev };
-        delete next[memoId];
-        return next;
-      });
+      setLogModal(null);
       setActionError('アクセス履歴の取得に失敗しました。');
     }
   };
@@ -449,364 +679,314 @@ export default function DashboardPage() {
     );
   }
 
+  const remaining = memos ? Math.max(0, MAX_MEMOS - memos.length) : null;
+
   return (
-    <main style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px' }}>
+    <main style={{ maxWidth: 760, margin: '0 auto', padding: '20px 20px 64px' }}>
       {issuedUrl && (
-        <SecretUrlModal
-          url={issuedUrl}
-          readonly={issuedReadonly}
-          onClose={() => setIssuedUrl(null)}
+        <SecretUrlModal url={issuedUrl} readonly={issuedReadonly} onClose={() => setIssuedUrl(null)} />
+      )}
+      {logModal && (
+        <AccessLogModal
+          memoTitle={logModal.memo.title || '(名称未設定)'}
+          entries={logModal.entries}
+          onClose={() => setLogModal(null)}
         />
       )}
 
+      {/* ツールバー */}
       <header
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'baseline',
+          alignItems: 'center',
+          gap: 12,
           borderBottom: '1px solid var(--border)',
-          paddingBottom: 12,
-          marginBottom: 24,
+          paddingBottom: 16,
         }}
       >
-        <h1 style={{ fontSize: 22, margin: 0 }}>Stash Notes</h1>
-        <div
-          style={{
-            fontSize: 13,
-            color: 'var(--muted)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-          }}
-        >
+        <h1 style={{ fontSize: 18, fontWeight: 650, margin: 0, letterSpacing: '-0.01em' }}>
+          Stash Notes
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--muted)' }}>
           <ThemeToggle />
-          {user.email}
-          <button
-            onClick={signOut}
-            style={{
-              padding: '4px 10px',
-              fontSize: 12,
-              border: '1px solid var(--border)',
-              borderRadius: 4,
-              background: 'transparent',
-              color: 'var(--muted)',
-            }}
-          >
-            ログアウト
-          </button>
+          <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user.email}
+          </span>
+          <Btn onClick={signOut}>ログアウト</Btn>
         </div>
       </header>
 
       {/* 新規発行 */}
-      <section style={{ marginBottom: 32 }}>
+      <section style={{ margin: '24px 0 6px' }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="メモの名前(任意・管理用)"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !issuing) void issue();
+            }}
+            placeholder="メモの名前(任意・あとで変更できます)"
             maxLength={200}
             style={{
               flex: 1,
-              padding: '8px 12px',
+              minWidth: 0,
+              padding: '10px 14px',
               border: '1px solid var(--border)',
-              borderRadius: 6,
+              borderRadius: 8,
               fontSize: 14,
+              background: 'var(--surface)',
             }}
           />
-          <button
-            onClick={() => void issue()}
-            disabled={issuing}
-            style={{
-              padding: '8px 20px',
-              border: 'none',
-              borderRadius: 6,
-              background: 'var(--accent)',
-              color: 'var(--accent-fg)',
-              fontSize: 14,
-              opacity: issuing ? 0.6 : 1,
-            }}
-          >
-            {issuing ? '発行中…' : '新しいメモURLを発行'}
-          </button>
+          <Btn variant="primary" busy={issuing} onClick={() => void issue()}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {issuing ? '発行中…' : 'メモを新規発行'}
+          </Btn>
         </div>
-        {issueError && (
-          <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 8 }}>{issueError}</p>
-        )}
+        <p style={{ fontSize: 12, color: 'var(--muted)', margin: '8px 0 0 2px' }}>
+          {issueError ? (
+            <span style={{ color: 'var(--danger)' }}>{issueError}</span>
+          ) : (
+            <>発行するとメモ用の秘密URLが作られます{remaining !== null && `(あと ${remaining} 個作れます)`}。</>
+          )}
+        </p>
       </section>
 
       {/* 一覧 */}
-      <section>
-        {listError && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{listError}</p>}
+      <section style={{ marginTop: 26 }}>
+        {listError && (
+          <p style={{ color: 'var(--danger)', fontSize: 13 }}>{listError}</p>
+        )}
+        {actionError && (
+          <p style={{ color: 'var(--danger)', fontSize: 13 }}>{actionError}</p>
+        )}
         {memos === null ? (
           <p style={{ color: 'var(--muted)' }}>読み込み中…</p>
         ) : memos.length === 0 ? (
-          <p style={{ color: 'var(--muted)' }}>
-            メモはまだありません。上のボタンから発行してください。
-          </p>
+          <div
+            style={{
+              border: '1px dashed var(--border)',
+              borderRadius: 12,
+              padding: '40px 24px',
+              textAlign: 'center',
+              color: 'var(--muted)',
+              fontSize: 14,
+            }}
+          >
+            メモはまだありません。上の「メモを新規発行」から作成してください。
+          </div>
         ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {memos.map((m) => {
-              const busy = busyId === m.memo_id;
-              const actionBtn: CSSProperties = {
-                border: 'none',
-                background: 'transparent',
-                fontSize: 12,
-                color: 'var(--accent)',
-                padding: '2px 6px',
-                opacity: busy ? 0.4 : 1,
-                cursor: busy ? 'wait' : 'pointer',
-              };
-              return (
-                <li
-                  key={m.memo_id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 4px',
-                    borderBottom: '1px solid var(--border)',
-                  }}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    {renamingId === m.memo_id ? (
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <input
-                          value={renameValue}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          maxLength={200}
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') onRenameSave(m.memo_id);
-                            if (e.key === 'Escape') setRenamingId(null);
-                          }}
-                          style={{
-                            flex: 1,
-                            padding: '4px 8px',
-                            border: '1px solid var(--border)',
-                            borderRadius: 4,
-                            fontSize: 14,
-                          }}
-                        />
-                        <button onClick={() => onRenameSave(m.memo_id)} disabled={busy} style={actionBtn}>
-                          保存
-                        </button>
-                        <button
-                          onClick={() => setRenamingId(null)}
-                          style={{ ...actionBtn, color: 'var(--muted)' }}
-                        >
-                          キャンセル
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {m.title || '(名称未設定)'}
-                      </div>
-                    )}
-                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                      タブ {m.tab_count} · 作成 {fmtJst(m.created_at)} · 更新 {fmtJst(m.updated_at)}
+          memos.map((m) => {
+            const busy = busyId === m.memo_id;
+            return (
+              <div
+                key={m.memo_id}
+                style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 12,
+                  background: 'var(--surface)',
+                  padding: '16px 18px',
+                  marginBottom: 14,
+                }}
+              >
+                {/* ヘッダー: タイトル + 状態バッジ */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  {renamingId === m.memo_id ? (
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flex: 1 }}>
+                      <input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        maxLength={200}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') onRenameSave(m.memo_id);
+                          if (e.key === 'Escape') setRenamingId(null);
+                        }}
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          padding: '6px 10px',
+                          border: '1px solid var(--border)',
+                          borderRadius: 6,
+                          fontSize: 15,
+                          background: 'var(--surface)',
+                        }}
+                      />
+                      <Btn busy={busy} onClick={() => onRenameSave(m.memo_id)}>
+                        保存
+                      </Btn>
+                      <Btn variant="ghost" onClick={() => setRenamingId(null)}>
+                        キャンセル
+                      </Btn>
                     </div>
-                    {/* 編集用URL の操作 */}
-                    <div
-                      style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}
+                  ) : (
+                    <h2
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 600,
+                        margin: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        minWidth: 0,
+                      }}
                     >
-                      <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 2 }}>編集URL</span>
-                      <button onClick={() => onReissue(m)} disabled={busy} style={actionBtn}>
-                        {m.has_active_url ? '再発行' : '発行'}
-                      </button>
-                      {m.has_active_url && (
-                        <button onClick={() => onRevoke(m)} disabled={busy} style={actionBtn}>
-                          無効化
-                        </button>
-                      )}
-                      <span style={{ color: 'var(--border)' }}>|</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: m.title ? undefined : 'var(--muted)', fontWeight: m.title ? 600 : 500 }}>
+                        {m.title || '名称未設定のメモ'}
+                      </span>
                       <button
+                        title="名前を変更"
                         onClick={() => {
                           setRenamingId(m.memo_id);
                           setRenameValue(m.title);
                         }}
-                        disabled={busy}
-                        style={actionBtn}
+                        style={{ border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 13, padding: 0 }}
                       >
-                        名前変更
+                        ✎
                       </button>
-                      <button onClick={() => void onToggleLog(m.memo_id)} style={actionBtn}>
-                        {logs[m.memo_id] ? '履歴を閉じる' : '履歴'}
-                      </button>
-                      <button
-                        onClick={() => onDelete(m)}
-                        disabled={busy}
-                        style={{ ...actionBtn, color: 'var(--danger)' }}
-                      >
-                        削除
-                      </button>
-                    </div>
-                    {/* 読み取り専用URL の操作 */}
-                    <div
-                      style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}
-                    >
-                      <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 2 }}>
-                        読み取り専用URL
-                      </span>
-                      <button onClick={() => onIssueReadonly(m)} disabled={busy} style={actionBtn}>
-                        {m.has_readonly_url ? '再発行' : '発行'}
-                      </button>
-                      {m.has_readonly_url && (
-                        <button onClick={() => onRevokeReadonly(m)} disabled={busy} style={actionBtn}>
-                          無効化
-                        </button>
-                      )}
-                      {m.has_readonly_url && (
-                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>(有効)</span>
-                      )}
-                    </div>
-                    {/* PIN の操作 */}
-                    <div
-                      style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}
-                    >
-                      <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 2 }}>PIN</span>
-                      {m.has_pin && (
-                        <span style={{ fontSize: 11, color: 'var(--accent)' }}>設定済み</span>
-                      )}
-                      {pinEditId === m.memo_id ? (
-                        <>
-                          <input
-                            value={pinValue}
-                            onChange={(e) => setPinValue(e.target.value.replace(/[^0-9]/g, ''))}
-                            inputMode="numeric"
-                            autoFocus
-                            maxLength={10}
-                            placeholder="6〜10桁"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') onSetPin(m.memo_id);
-                              if (e.key === 'Escape') {
-                                setPinEditId(null);
-                                setPinValue('');
-                              }
-                            }}
-                            style={{
-                              width: 90,
-                              padding: '2px 8px',
-                              border: '1px solid var(--border)',
-                              borderRadius: 4,
-                              fontSize: 12,
-                            }}
-                          />
-                          <button onClick={() => onSetPin(m.memo_id)} disabled={busy} style={actionBtn}>
-                            保存
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPinEditId(null);
-                              setPinValue('');
-                            }}
-                            style={{ ...actionBtn, color: 'var(--muted)' }}
-                          >
-                            キャンセル
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => {
-                              setPinEditId(m.memo_id);
-                              setPinValue('');
-                            }}
-                            disabled={busy}
-                            style={actionBtn}
-                          >
-                            {m.has_pin ? '変更' : '設定'}
-                          </button>
-                          {m.has_pin && (
-                            <button onClick={() => onClearPin(m)} disabled={busy} style={actionBtn}>
-                              解除
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    {/* 秘密URL の常時表示(発行済みなら) */}
-                    {m.url && <CopyableUrl label="編集URL" url={m.url} />}
-                    {m.readonly_url && <CopyableUrl label="閲覧専用URL" url={m.readonly_url} />}
-                    {logs[m.memo_id] === 'loading' && (
-                      <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 0' }}>
-                        読み込み中…
-                      </p>
-                    )}
-                    {Array.isArray(logs[m.memo_id]) && (
-                      <ul style={{ listStyle: 'none', padding: '6px 0 0', margin: 0 }}>
-                        {(logs[m.memo_id] as AccessLogEntry[]).length === 0 && (
-                          <li style={{ fontSize: 12, color: 'var(--muted)' }}>
-                            アクセスはまだありません。
-                          </li>
-                        )}
-                        {(logs[m.memo_id] as AccessLogEntry[]).map((e, i) => (
-                          <li
-                            key={i}
-                            style={{
-                              display: 'flex',
-                              gap: 10,
-                              fontSize: 12,
-                              color: 'var(--muted)',
-                              padding: '2px 0',
-                            }}
-                          >
-                            <span style={{ flexShrink: 0 }}>{fmtJst(e.ts)}</span>
-                            {e.via === 'ro' && (
-                              <span style={{ flexShrink: 0, color: 'var(--accent)' }} title="読み取り専用URL経由">
-                                閲覧専用
-                              </span>
-                            )}
-                            <span
-                              style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }}
-                              title="アクセス元のIPアドレス"
-                            >
-                              {e.ip || e.ip_hash.slice(0, 8)}
-                            </span>
-                            <span
-                              style={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {e.ua}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    </h2>
+                  )}
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {m.has_active_url ? <Badge kind="ok">● 公開中</Badge> : <Badge kind="off">停止中</Badge>}
+                    {m.has_pin && <Badge kind="pin">🔒 PIN</Badge>}
                   </div>
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      fontSize: 12,
-                      padding: '2px 10px',
-                      borderRadius: 99,
-                      border: '1px solid var(--border)',
-                      color: m.has_active_url ? 'var(--accent)' : 'var(--muted)',
-                    }}
-                  >
-                    {m.has_active_url ? '有効' : '無効'}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+
+                <div style={{ fontSize: 12, color: 'var(--muted)', margin: '4px 0 16px', fontVariantNumeric: 'tabular-nums' }}>
+                  タブ <b style={{ color: 'var(--fg)' }}>{m.tab_count}</b> ・ 作成{' '}
+                  <b style={{ color: 'var(--fg)' }}>{fmtJst(m.created_at)}</b> ・ 最終更新{' '}
+                  <b style={{ color: 'var(--fg)' }}>{fmtJst(m.updated_at)}</b>
+                </div>
+
+                {/* 編集URL */}
+                <UrlBlock
+                  label="編集URL"
+                  url={m.url}
+                  active={m.has_active_url}
+                  emptyText={
+                    m.has_active_url
+                      ? 'URLは発行済みです(表示するには再発行してください)'
+                      : '無効化されています — 誰も開けません'
+                  }
+                  onIssue={() => onReissue(m)}
+                  issueLabel="URLを発行"
+                  issuePrimary
+                  onReissue={() => onReissue(m)}
+                  onRevoke={m.has_active_url ? () => onRevoke(m) : undefined}
+                  busy={busy}
+                />
+
+                {/* 閲覧専用URL */}
+                <UrlBlock
+                  label="閲覧専用URL"
+                  url={m.readonly_url}
+                  active={m.has_readonly_url}
+                  emptyText="未発行 — 閲覧だけ許可したい相手に渡せます"
+                  onIssue={() => onIssueReadonly(m)}
+                  issueLabel="発行する"
+                  onReissue={() => onIssueReadonly(m)}
+                  onRevoke={m.has_readonly_url ? () => onRevokeReadonly(m) : undefined}
+                  busy={busy}
+                />
+
+                {/* PIN のインライン編集 */}
+                {pinEditId === m.memo_id && (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>PIN(6〜10桁)</span>
+                    <input
+                      value={pinValue}
+                      onChange={(e) => setPinValue(e.target.value.replace(/[^0-9]/g, ''))}
+                      inputMode="numeric"
+                      autoFocus
+                      maxLength={10}
+                      placeholder="••••••"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') onSetPin(m.memo_id);
+                        if (e.key === 'Escape') {
+                          setPinEditId(null);
+                          setPinValue('');
+                        }
+                      }}
+                      style={{
+                        width: 120,
+                        padding: '6px 10px',
+                        border: '1px solid var(--border)',
+                        borderRadius: 6,
+                        fontSize: 13,
+                        letterSpacing: 3,
+                        background: 'var(--surface)',
+                      }}
+                    />
+                    <Btn busy={busy} onClick={() => onSetPin(m.memo_id)}>
+                      保存
+                    </Btn>
+                    <Btn
+                      variant="ghost"
+                      onClick={() => {
+                        setPinEditId(null);
+                        setPinValue('');
+                      }}
+                    >
+                      キャンセル
+                    </Btn>
+                  </div>
+                )}
+
+                {/* フッター操作 */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    flexWrap: 'wrap',
+                    marginTop: 6,
+                    paddingTop: 13,
+                    borderTop: '1px solid var(--border)',
+                  }}
+                >
+                  {pinEditId !== m.memo_id && (
+                    <Btn
+                      busy={busy}
+                      onClick={() => {
+                        setPinEditId(m.memo_id);
+                        setPinValue('');
+                      }}
+                    >
+                      {m.has_pin ? 'PIN を変更' : 'PIN を設定'}
+                    </Btn>
+                  )}
+                  {m.has_pin && pinEditId !== m.memo_id && (
+                    <Btn busy={busy} onClick={() => onClearPin(m)}>
+                      PIN を解除
+                    </Btn>
+                  )}
+                  <Btn onClick={() => void openLog(m)}>アクセス履歴</Btn>
+                  <span style={{ flex: 1 }} />
+                  <Btn busy={busy} variant="danger" onClick={() => onDelete(m)}>
+                    削除
+                  </Btn>
+                </div>
+              </div>
+            );
+          })
         )}
-        {actionError && (
-          <p style={{ fontSize: 13, color: 'var(--danger)', marginTop: 12 }}>{actionError}</p>
-        )}
-        <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 16 }}>
-          ※ 発行済みURLの再表示はできません(サーバに保存されないため)。URLを失くしたときは「再発行」を(旧URLは無効になります)。
-        </p>
       </section>
 
       <footer
         style={{
           borderTop: '1px solid var(--border)',
           marginTop: 40,
-          paddingTop: 12,
+          paddingTop: 14,
           fontSize: 12,
           color: 'var(--muted)',
         }}
@@ -814,6 +994,8 @@ export default function DashboardPage() {
         <Link to="/privacy" style={{ color: 'var(--muted)' }}>
           プライバシーポリシー
         </Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <span>© 2026 rou39</span>
       </footer>
     </main>
   );

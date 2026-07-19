@@ -12,6 +12,12 @@
   --accent: #2b6cb0;
   --accent-fg: #ffffff; /* accent 背景上の文字色 */
   --danger: #b03a2b;
+  --surface-2: #f4f4f0; /* カード内のサブ面(URL枠など) */
+  --ok: #2f7a4f; /* 意味色: 公開中/有効(good) */
+  /* soft は accent/ok/danger から派生。テーマで各色が変わると自動追従する */
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --ok-soft: color-mix(in srgb, var(--ok) 14%, transparent);
+  --danger-soft: color-mix(in srgb, var(--danger) 12%, transparent);
   --font-sans: system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP',
     Meiryo, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
@@ -30,6 +36,8 @@
     --accent: #6ea8dc; /* 暗色背景でも十分なコントラストの明るめブルー */
     --accent-fg: #10151c;
     --danger: #e0796a;
+    --surface-2: #262a32;
+    --ok: #68c088;
   }
 }
 
@@ -43,6 +51,8 @@
   --accent: #6ea8dc;
   --accent-fg: #10151c;
   --danger: #e0796a;
+  --surface-2: #262a32;
+  --ok: #68c088;
 }
 
 * {
