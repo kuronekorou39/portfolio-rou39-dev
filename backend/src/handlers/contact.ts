@@ -17,13 +17,18 @@ const MIN_SUBMIT_TIME_MS = 3000; // 3 seconds minimum
 const VALID_CATEGORIES = ['work', 'feedback', 'other'];
 
 function getClientIp(event: APIGatewayProxyEvent): string {
-  // CloudFront 経由の X-Forwarded-For は「クライアント自称値..., 実クライアントIP,
-  // CloudFrontエッジIP」の形で届く。先頭要素はクライアントが任意に注入できるため
-  // レート制限キーには使わず、末尾から2番目(CloudFront が観測した実IP)を採る。
-  // 直叩き(XFF 1要素以下)は API Gateway の sourceIp がそのまま実IP。
+  // 本 API は CloudFront → エッジ最適化 API Gateway(=それ自体も CloudFront 前段)の
+  // 二重 CDN 構成。XFF はインフラが末尾に3要素 [実クライアント, CF#1エグレス, CF#2エグレス]
+  // を積むので、実クライアントは【末尾から3番目】。
+  // (2026-07-20 修正: 従来の「末尾から2番目」は CloudFront のエグレスIP(3.172.x 等)を
+  //  拾っており、全ユーザーが少数の CF IP に束ねられてレート制限が誤爆していた。notes の
+  //  アクセスログで実測・是正した知見と同じ。クライアントが XFF を偽装しても偽装分は先頭に
+  //  積まれるだけなので、末尾からの位置は不変=偽装に強い。)
   const xff = event.headers['X-Forwarded-For'] ?? event.headers['x-forwarded-for'] ?? '';
   const parts = xff.split(',').map((s) => s.trim()).filter(Boolean);
-  if (parts.length >= 2) return parts[parts.length - 2];
+  if (parts.length >= 3) return parts[parts.length - 3];
+  // 経路が変わった場合(REGIONAL 化・直叩き等)のフォールバック
+  if (parts.length >= 1) return parts[0];
   return event.requestContext.identity?.sourceIp || 'unknown';
 }
 
