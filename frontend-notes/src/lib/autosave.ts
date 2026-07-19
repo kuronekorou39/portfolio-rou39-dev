@@ -199,29 +199,37 @@ export function useAutosave(
                 !!cur && !!sent && cur.title === sent.title && cur.content === sent.content;
               if (unchanged) clearBuffer(r.tab_id);
               patchTab(r.tab_id, { version: r.version, dirty: !unchanged, save: unchanged ? 'saved' : 'retrying' });
+            } else if (r.result === 'conflict') {
+              // 画面がまだ生きていれば個別保存で 409 を踏み直し、調停バナーを出す
+              // (スロットル窓を跨ぐよう少し待つ)。離脱後なら次回ロードのバッファ調停に委ねる
+              const timer = setTimeout(() => void saveNow(r.tab_id), 1500);
+              timersRef.current.set(r.tab_id, timer);
             }
-            // conflict 等は次回ロード時のバッファ調停に委ねる(離脱中は UI を出せない)
           }
         })
         .catch(() => {
           /* 離脱中の失敗はバッファが安全網 */
         });
     },
-    [token, patchTab],
+    [token, patchTab, saveNow],
   );
 
-  // 離脱時フラッシュ。beforeunload ではなく visibilitychange/pagehide(モバイルで確実)
+  // 離脱時フラッシュ(beforeunload ではなく visibilitychange/pagehide=モバイルで確実)
+  // + オンライン復帰時は未送信の編集を即座に一括同期する(オフライン編集の同期経路)
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flushAll(true);
     };
     const onPageHide = () => flushAll(true);
+    const onOnline = () => flushAll(false);
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('online', onOnline);
     const timers = timersRef.current;
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('online', onOnline);
       for (const timer of timers.values()) clearTimeout(timer);
     };
   }, [flushAll]);

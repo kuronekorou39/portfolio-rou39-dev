@@ -1,0 +1,9 @@
+{
+  "name": "Stash Notes",
+  "short_name": "Stash",
+  "start_url": "/",
+  "display": "minimal-ui",
+  "background_color": "#fafaf8",
+  "theme_color": "#2b6cb0",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError, type AccessLogEntry, type MemoData } from '../lib/api';
 import { useAutosave, type TabState } from '../lib/autosave';
+import { saveSnapshot, loadSnapshot, deleteSnapshot } from '../lib/offline';
 import ThemeToggle from '../components/ThemeToggle';
 
 /** アクセス履歴(直近)。E2E暗号化しない代わりに「誰がいつ開いたか」を利用者に見せる。 */
@@ -72,7 +73,16 @@ function saveLabel(tab: TabState | undefined): { text: string; color: string } {
 // backend limits.ts の MAX_TABS_PER_MEMO と一致させる(上限に達したら+ボタン自体を出さない)
 const MAX_TABS = 12;
 
-function Editor({ token, data }: { token: string; data: MemoData }) {
+function Editor({
+  token,
+  data,
+  offlineAt,
+}: {
+  token: string;
+  data: MemoData;
+  /** オフライン表示中なら、そのスナップショットの最終同期時刻(epoch ms)。 */
+  offlineAt: number | null;
+}) {
   const { tabs, edit, saveNow, adoptServer, overwriteServer, addTab, removeTab } = useAutosave(
     token,
     data.tabs,
@@ -218,6 +228,23 @@ function Editor({ token, data }: { token: string; data: MemoData }) {
         )}
       </div>
 
+      {offlineAt !== null && (
+        <p
+          style={{
+            fontSize: 12,
+            color: 'var(--muted)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            padding: '6px 10px',
+            margin: '10px 0 0',
+          }}
+        >
+          オフライン表示中(最終同期:{' '}
+          {new Date(offlineAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })})。
+          編集はこの端末に保存され、接続が戻ると自動で同期されます。
+        </p>
+      )}
+
       {tabError && (
         <p style={{ fontSize: 13, color: 'var(--danger)', margin: '8px 0 0' }}>{tabError}</p>
       )}
@@ -319,6 +346,17 @@ export default function MemoScreen() {
   const token = useMemo(() => window.location.hash.slice(1), []);
   const [data, setData] = useState<MemoData | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'unavailable' | 'error'>('loading');
+  const [offlineAt, setOfflineAt] = useState<number | null>(null);
+
+  // メモ画面のみ Service Worker を登録(scope /m。管理画面は制御下に置かない)。
+  // アプリシェルをキャッシュし、オフラインでもこの画面自体を開けるようにする
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/m' }).catch(() => {
+        /* SW 不可でもオンライン動作には影響しない */
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -327,11 +365,28 @@ export default function MemoScreen() {
     }
     (async () => {
       try {
-        setData(await api.getMemo(token));
+        const d = await api.getMemo(token);
+        setData(d);
         setState('ready');
+        // オフライン再表示用スナップショット(best-effort)。
+        // メモ内容は SW キャッシュではなくここ(IndexedDB・トークン別)にだけ持つ
+        void saveSnapshot(token, d).catch(() => {});
       } catch (e) {
-        // 未知・失効・削除はサーバが一律404で返す。ここでも理由は区別して表示しない
-        setState(e instanceof ApiError && e.status === 404 ? 'unavailable' : 'error');
+        if (e instanceof ApiError && e.status === 404) {
+          // 未知・失効・削除(理由は区別しない)。ローカルのスナップショットも掃除する
+          void deleteSnapshot(token).catch(() => {});
+          setState('unavailable');
+          return;
+        }
+        // ネットワーク断・サーバ障害 → オフラインスナップショットにフォールバック
+        const snap = await loadSnapshot(token).catch(() => null);
+        if (snap) {
+          setData(snap.data);
+          setOfflineAt(snap.savedAt);
+          setState('ready');
+        } else {
+          setState('error');
+        }
       }
     })();
   }, [token]);
@@ -366,5 +421,5 @@ export default function MemoScreen() {
     );
   }
 
-  return <Editor token={token} data={data} />;
+  return <Editor token={token} data={data} offlineAt={offlineAt} />;
 }
