@@ -256,6 +256,7 @@ const notesApi = new NotesApiStack(app, 'NotesApi', {
   tokensTable: notesStorage.tokensTable,
   accessLogsTable: notesStorage.accessLogsTable,
   ipHashSecret: notesSecrets.ipHashSecret,
+  originVerifySecret: notesSecrets.originVerifySecret,
   userPool: notesAuth.userPool,
   siteUrl: `https://${NOTES_SUBDOMAIN}`,
 });
@@ -275,6 +276,7 @@ new NotesFrontendStack(app, 'NotesFrontend', {
   subdomain: NOTES_SUBDOMAIN,
   authDomain: NOTES_AUTH_DOMAIN,
   webAclArn: notesWaf.webAclArn,
+  originVerifySecret: notesSecrets.originVerifySecret,
 });
 
 new NotesMonitoringStack(app, 'NotesMonitoring', {

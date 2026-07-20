@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ok, notFound, conflict, forbidden, tooManyRequests, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
+import { passesOriginCheck } from '../../lib/notes/origin';
 import { resolveTokenThrottled, modeOf } from '../../lib/notes/tokens';
 import { pinGateResponse } from '../../lib/notes/pin';
 import { deleteTab } from '../../lib/notes/tabs';
@@ -9,6 +10,7 @@ import { MIN_SAVE_INTERVAL_MS } from '../../lib/notes/limits';
 /** POST /m/tabs/delete — タブ削除(最後の1枚は不可)。 */
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
+    if (!(await passesOriginCheck(event))) return noStore(forbidden('forbidden'));
     let body: Record<string, unknown>;
     try {
       body = JSON.parse(event.body || '{}');

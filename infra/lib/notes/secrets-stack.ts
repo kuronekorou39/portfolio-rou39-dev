@@ -5,6 +5,7 @@ import type { Construct } from 'constructs';
 export class NotesSecretsStack extends cdk.Stack {
   public readonly googleOAuthClientSecret: secretsmanager.Secret;
   public readonly ipHashSecret: secretsmanager.Secret;
+  public readonly originVerifySecret: secretsmanager.Secret;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -28,6 +29,18 @@ export class NotesSecretsStack extends cdk.Stack {
     this.ipHashSecret = new secretsmanager.Secret(this, 'IpHashSecret', {
       secretName: 'notes/ip-hash-secret',
       description: 'Base key for deriving the daily salt used to HMAC access-log IPs',
+      generateSecretString: {
+        passwordLength: 48,
+        excludePunctuation: true,
+      },
+    });
+
+    // execute-api 直叩き遮断の共有秘密。CloudFront が /api/* オリジンに x-origin-verify
+    // ヘッダとして付与し、公開系 Lambda が実行時に照合する。CDK が自動生成(安定値)。
+    // 記号を除くのは CloudFront カスタムヘッダ値/HTTP ヘッダとして安全に扱うため。
+    this.originVerifySecret = new secretsmanager.Secret(this, 'OriginVerifySecret', {
+      secretName: 'notes/origin-verify',
+      description: 'Shared secret: CloudFront sends it as x-origin-verify; API Lambdas verify to block direct execute-api access',
       generateSecretString: {
         passwordLength: 48,
         excludePunctuation: true,

@@ -1,8 +1,9 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../../lib/dynamo';
-import { ok, notFound, unauthorized, tooManyRequests, serverError } from '../../lib/response';
+import { ok, notFound, unauthorized, forbidden, tooManyRequests, serverError } from '../../lib/response';
 import { noStore } from '../../lib/notes/http';
+import { passesOriginCheck } from '../../lib/notes/origin';
 import { resolveToken, modeOf } from '../../lib/notes/tokens';
 import { checkMemoPin } from '../../lib/notes/pin';
 import { recordViewCoalesced, listAccess } from '../../lib/notes/access-log';
@@ -20,6 +21,7 @@ const TABS_TABLE = process.env.TABS_TABLE!;
  */
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
+    if (!(await passesOriginCheck(event))) return noStore(forbidden('forbidden'));
     let token: unknown;
     try {
       token = JSON.parse(event.body || '{}').token;

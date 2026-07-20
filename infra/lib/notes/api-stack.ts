@@ -15,9 +15,21 @@ interface NotesApiStackProps extends cdk.StackProps {
   tokensTable: dynamodb.ITable;
   accessLogsTable: dynamodb.ITable;
   ipHashSecret: secretsmanager.ISecret; // アクセスログの ip_hash 日次salt導出用
+  originVerifySecret: secretsmanager.ISecret; // execute-api 直叩き遮断の共有秘密
   userPool: cognito.IUserPool;
   siteUrl: string; // https://notes.rou39.com
 }
+
+/**
+ * execute-api 直叩き遮断のロールアウト制御(本番を止めないための2段階)。
+ * NotesApi は NotesFrontend より先にデプロイされるため、単発で有効化すると
+ * CloudFront がヘッダ配信を始めるまでの数分間、全 /m/* が 403 になる。
+ *
+ * Phase 1: 'false' … ヘッダ検証はするが遮断しない(無停止で導入)。CloudFront が
+ *          x-origin-verify を実配信できているかを CloudWatch ログ(値は出さない)で確認する。
+ * Phase 2: 'true'  … CloudFront 経由でないリクエストを 403。ログ確認後にここを 'true' にして再デプロイ。
+ */
+const ORIGIN_VERIFY_ENFORCE = 'false';
 
 /**
  * Stash Notes の API。認可モデルは2系統:
@@ -63,6 +75,10 @@ export class NotesApiStack extends cdk.Stack {
       ACCESS_LOGS_TABLE: props.accessLogsTable.tableName,
       IP_HASH_SECRET: props.ipHashSecret.secretName,
       NOTES_SITE_URL: props.siteUrl,
+      // execute-api 直叩き遮断。SECRET 名を渡し、公開系 Lambda が実行時に照合する。
+      // ENFORCE は上記2段階ロールアウトのフラグ(Phase 1='false' で無停止導入)。
+      ORIGIN_VERIFY_SECRET: props.originVerifySecret.secretName,
+      ORIGIN_VERIFY_ENFORCE,
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
@@ -115,6 +131,7 @@ export class NotesApiStack extends cdk.Stack {
     props.tabsTable.grantReadData(getMemoFn);
     props.accessLogsTable.grantReadWriteData(getMemoFn); // 閲覧記録の Put + 表示用 Query
     props.ipHashSecret.grantRead(getMemoFn);
+    props.originVerifySecret.grantRead(getMemoFn); // x-origin-verify 照合用
 
     // --- 管理系(再発行/失効/削除/リネーム) ---
     const adminFn = (id: string, entry: string) =>
@@ -175,6 +192,7 @@ export class NotesApiStack extends cdk.Stack {
     // いずれも未認証。resolveTokenThrottled がトークンアイテムへの条件付き Update で
     // 有効性検証とレート制御を同時に行うため tokens は RW。users には一切アクセスさせない。
     const writeGrants = (fn: nodejs.NodejsFunction, transact: boolean) => {
+      props.originVerifySecret.grantRead(fn); // x-origin-verify 照合用
       props.tokensTable.grantReadWriteData(fn);
       props.tabsTable.grantReadWriteData(fn);
       props.memosTable.grantReadWriteData(fn); // tab_count カウンタ / updated_at

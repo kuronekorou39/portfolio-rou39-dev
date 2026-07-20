@@ -7,6 +7,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
+import type * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -18,6 +19,7 @@ interface NotesFrontendStackProps extends cdk.StackProps {
   subdomain: string; // notes.rou39.com
   authDomain: string; // notes-auth.rou39.com(CSP connect-src 用)
   webAclArn?: string; // us-east-1 の WAFv2 WebACL ARN(P5 で付ける。無くても配信は成立)
+  originVerifySecret: secretsmanager.ISecret; // /api/* オリジンに付ける x-origin-verify の値
 }
 
 export class NotesFrontendStack extends cdk.Stack {
@@ -126,7 +128,13 @@ export class NotesFrontendStack extends cdk.Stack {
       },
       additionalBehaviors: {
         '/api/*': {
-          origin: new origins.RestApiOrigin(props.api),
+          // オリジン(execute-api)に秘密ヘッダを付与。CloudFront はビューアが同名ヘッダを
+          // 送ってきてもこのオリジン値で上書きするため、直叩き経路だけがこの値を持てない。
+          // 値は CloudFormation の Secrets Manager 動的参照でデプロイ時に解決される
+          //(解決可否は Lambda 側の Phase 1 観測ログで確認する)。
+          origin: new origins.RestApiOrigin(props.api, {
+            customHeaders: { 'x-origin-verify': props.originVerifySecret.secretValue.unsafeUnwrap() },
+          }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
           cachePolicy: apiCachePolicy,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
