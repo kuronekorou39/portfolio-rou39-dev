@@ -28,8 +28,11 @@ interface NotesApiStackProps extends cdk.StackProps {
  * Phase 1: 'false' … ヘッダ検証はするが遮断しない(無停止で導入)。CloudFront が
  *          x-origin-verify を実配信できているかを CloudWatch ログ(値は出さない)で確認する。
  * Phase 2: 'true'  … CloudFront 経由でないリクエストを 403。ログ確認後にここを 'true' にして再デプロイ。
+ *
+ * 2026-07-20 Phase 1 実測で確認済み: CloudFront 経由=present/match=true・gotLen=48
+ * (動的参照は解決)、execute-api 直叩き=present=false。よって Phase 2 を有効化。
  */
-const ORIGIN_VERIFY_ENFORCE = 'false';
+const ORIGIN_VERIFY_ENFORCE = 'true';
 
 /**
  * Stash Notes の API。認可モデルは2系統:
