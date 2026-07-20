@@ -78,6 +78,8 @@ export async function resolveToken(raw: string): Promise<NotesToken | null> {
   );
   const token = res.Item as NotesToken | undefined;
   if (!token || token.status !== 'active') return null;
+  // 有効期限切れは解決しない(可逆: レコードは残るので延長/無期限化で復活可能)。
+  if (typeof token.url_expires_at === 'number' && Date.now() > token.url_expires_at) return null;
   return token;
 }
 
@@ -107,10 +109,11 @@ export async function resolveTokenThrottled(
       new UpdateCommand({
         TableName: TOKENS_TABLE,
         Key: { token_hash },
+        // status=active かつ 未期限切れ かつ 間隔下限を満たす、を1回の条件付き更新で検証。
         ConditionExpression:
-          '#s = :active AND (attribute_not_exists(#f) OR #f <= :threshold)',
+          '#s = :active AND (attribute_not_exists(#e) OR #e > :now) AND (attribute_not_exists(#f) OR #f <= :threshold)',
         UpdateExpression: 'SET #f = :now ADD save_count :one',
-        ExpressionAttributeNames: { '#s': 'status', '#f': throttleField },
+        ExpressionAttributeNames: { '#s': 'status', '#f': throttleField, '#e': 'url_expires_at' },
         ExpressionAttributeValues: {
           ':active': 'active',
           ':threshold': now - minIntervalMs,
@@ -129,6 +132,10 @@ export async function resolveTokenThrottled(
     );
     const token = cur.Item as NotesToken | undefined;
     if (!token || token.status !== 'active') return { kind: 'invalid' };
+    // 期限切れは「頻度超過(429)」ではなく「無効(404)」に倒す(読み取り側と同じ扱い)。
+    if (typeof token.url_expires_at === 'number' && Date.now() > token.url_expires_at) {
+      return { kind: 'invalid' };
+    }
     return { kind: 'throttled' };
   }
 }
@@ -145,6 +152,52 @@ export async function getOwnedMemo(memo_id: string, owner_user_id: string): Prom
   const memo = res.Item as Memo | undefined;
   if (!memo || memo.status !== 'active' || memo.owner_user_id !== owner_user_id) return null;
   return memo;
+}
+
+export type SetExpiryResult = { ok: true } | { ok: false; reason: 'not_found' };
+
+/**
+ * 秘密URLの有効期限を設定/延長/クリアする(可逆)。expires_at_ms=null で無期限化(=復活)。
+ *
+ * revoke/reissue と違い token_hash も status もメモスロットも変えない。既存 token アイテムの
+ * url_expires_at 属性を書き換えるだけなので、「同じURLのまま」期限切れ↔有効を往復できる。
+ * 対象は現に active な URL のみ(スロットが token を指していない=revoke 済みや未発行は not_found)。
+ * 単一アイテム更新なので TransactWrite は不要。
+ */
+export async function setTokenExpiry(params: {
+  memo_id: string;
+  owner_user_id: string;
+  mode: TokenMode;
+  expires_at_ms: number | null;
+}): Promise<SetExpiryResult> {
+  const memo = await getOwnedMemo(params.memo_id, params.owner_user_id);
+  if (!memo) return { ok: false, reason: 'not_found' };
+  const hash = memo[memoSlot(params.mode)];
+  if (typeof hash !== 'string') return { ok: false, reason: 'not_found' }; // active な URL 無し
+
+  const clearing = params.expires_at_ms === null;
+  try {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TOKENS_TABLE,
+        Key: { token_hash: hash },
+        // 念のためトークン側でも所有者と有効性を再確認(memo とトークンの owner は一致)。
+        ConditionExpression: '#s = :active AND owner_user_id = :me',
+        UpdateExpression: clearing ? 'REMOVE url_expires_at' : 'SET url_expires_at = :exp',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: clearing
+          ? { ':active': 'active', ':me': params.owner_user_id }
+          : { ':active': 'active', ':me': params.owner_user_id, ':exp': params.expires_at_ms },
+      }),
+    );
+  } catch (err: unknown) {
+    // トークンが並行操作で revoked 等に変わっていた
+    if ((err as { name?: string })?.name === 'ConditionalCheckFailedException') {
+      return { ok: false, reason: 'not_found' };
+    }
+    throw err;
+  }
+  return { ok: true };
 }
 
 export type ReissueResult =

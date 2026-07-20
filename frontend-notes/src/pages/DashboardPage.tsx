@@ -2,7 +2,14 @@ import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { beginGoogleLogin, getIdToken } from '../lib/auth';
-import { api, ApiError, type AccessLogEntry, type MemoSummary } from '../lib/api';
+import {
+  api,
+  ApiError,
+  PIN_MIN_LEN,
+  type AccessLogEntry,
+  type MemoSummary,
+  type TokenMode,
+} from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
 
 // backend の MAX_MEMOS_PER_USER と一致させる(残り作成可能数の表示用)
@@ -10,6 +17,22 @@ const MAX_MEMOS = 20;
 
 function fmtJst(iso: string): string {
   return new Date(iso).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+}
+
+/** 今から n 日後の ISO 文字列(有効期限プリセット用)。 */
+function daysFromNow(n: number): string {
+  return new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
+}
+
+/** 有効期限までの残り時間を「あと N日/時間/分」で表す。 */
+function fmtRemaining(iso: string): string {
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return '期限切れ';
+  const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+  if (days >= 1) return `あと${days}日`;
+  const hours = Math.floor(ms / (60 * 60 * 1000));
+  if (hours >= 1) return `あと${hours}時間`;
+  return `あと${Math.max(1, Math.floor(ms / (60 * 1000)))}分`;
 }
 
 /** 発行直後の秘密URLを1回だけ見せるモーダル(サーバはハッシュのみ保持=再表示不可)。 */
@@ -147,13 +170,21 @@ function Btn({
   );
 }
 
-function Badge({ kind, children }: { kind: 'ok' | 'off' | 'pin'; children: React.ReactNode }) {
+function Badge({
+  kind,
+  children,
+}: {
+  kind: 'ok' | 'off' | 'pin' | 'expired';
+  children: React.ReactNode;
+}) {
   const c: CSSProperties =
     kind === 'ok'
       ? { color: 'var(--ok)', background: 'var(--ok-soft)' }
       : kind === 'pin'
         ? { color: 'var(--accent)', background: 'var(--accent-soft)' }
-        : { color: 'var(--muted)', border: '1px solid var(--border)' };
+        : kind === 'expired'
+          ? { color: 'var(--danger)', background: 'var(--danger-soft)' }
+          : { color: 'var(--muted)', border: '1px solid var(--border)' };
   return (
     <span
       style={{
@@ -183,6 +214,9 @@ function UrlBlock({
   issuePrimary,
   onReissue,
   onRevoke,
+  expiresAt,
+  expired,
+  onSetExpiry,
   busy,
 }: {
   label: React.ReactNode;
@@ -194,6 +228,12 @@ function UrlBlock({
   issuePrimary?: boolean;
   onReissue: () => void;
   onRevoke?: () => void;
+  /** 有効期限(ISO)。null=無期限。 */
+  expiresAt: string | null;
+  /** 期限切れか。 */
+  expired: boolean;
+  /** 期限の設定/延長/クリア(null=無期限化=復活)。 */
+  onSetExpiry: (expiresAt: string | null) => void;
   busy?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
@@ -242,6 +282,46 @@ function UrlBlock({
                 無効化
               </Btn>
             )}
+          </div>
+
+          {/* 有効期限(可逆): 期限切れでもデータは消えず、復活で同じURLが生き返る */}
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
+            {expired ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Badge kind="expired">⌛ 期限切れ</Badge>
+                このURLは今開けません(データは残っています)
+              </span>
+            ) : expiresAt ? (
+              <span>
+                有効期限: <b style={{ color: 'var(--fg)' }}>{fmtJst(expiresAt)}</b>(
+                {fmtRemaining(expiresAt)})
+              </span>
+            ) : (
+              <span>有効期限: なし(無期限)</span>
+            )}
+          </div>
+          <div
+            style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}
+          >
+            <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>
+              {expired ? '復活:' : '期限:'}
+            </span>
+            <Btn busy={busy} onClick={() => onSetExpiry(daysFromNow(1))}>
+              1日
+            </Btn>
+            <Btn busy={busy} onClick={() => onSetExpiry(daysFromNow(7))}>
+              7日
+            </Btn>
+            <Btn busy={busy} onClick={() => onSetExpiry(daysFromNow(30))}>
+              30日
+            </Btn>
+            <Btn
+              busy={busy}
+              variant={expired ? 'primary' : 'default'}
+              onClick={() => onSetExpiry(null)}
+            >
+              無期限
+            </Btn>
           </div>
         </>
       ) : (
@@ -404,21 +484,41 @@ function UrlKindBadge({ kind }: { kind: 'edit' | 'view' }) {
   );
 }
 
-/** 一覧の1URL行: 用途バッジ + クリックで開けるURL + コピー。停止中は用途説明を出す。 */
+/** 一覧の1URL行: 用途バッジ + クリックで開けるURL + コピー。停止中/期限切れは用途説明を出す。 */
 function ListUrlRow({
   kind,
   url,
   revokedText,
+  expired,
 }: {
   kind: 'edit' | 'view';
   url: string | null;
   revokedText: string;
+  /** 期限切れ(URL自体は残っているが今は開けない)。 */
+  expired?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 0' }}>
       <UrlKindBadge kind={kind} />
-      {url ? (
+      {url && expired ? (
+        <span
+          style={{
+            flex: 1,
+            fontSize: 12.5,
+            color: 'var(--muted)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            minWidth: 0,
+          }}
+        >
+          <Badge kind="expired">⌛ 期限切れ</Badge>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            設定から復活できます
+          </span>
+        </span>
+      ) : url ? (
         <>
           <a
             href={url}
@@ -461,6 +561,7 @@ function ListUrlRow({
 function SettingsModal({
   memo,
   busy,
+  actionError,
   onClose,
   onRename,
   onReissue,
@@ -469,11 +570,14 @@ function SettingsModal({
   onRevokeReadonly,
   onSetPin,
   onClearPin,
+  onSetExpiry,
   onDelete,
   onOpenLog,
 }: {
   memo: MemoSummary;
   busy: boolean;
+  /** 直近の操作エラー(モーダル内に表示。背後の一覧のエラー行はオーバーレイで隠れるため)。 */
+  actionError: string | null;
   onClose: () => void;
   onRename: (memoId: string, value: string) => Promise<boolean>;
   onReissue: (m: MemoSummary) => void;
@@ -482,6 +586,7 @@ function SettingsModal({
   onRevokeReadonly: (m: MemoSummary) => void;
   onSetPin: (memoId: string, pin: string) => Promise<boolean>;
   onClearPin: (m: MemoSummary) => Promise<boolean>;
+  onSetExpiry: (memoId: string, kind: TokenMode, expiresAt: string | null) => void;
   onDelete: (m: MemoSummary) => void;
   onOpenLog: (m: MemoSummary) => void;
 }) {
@@ -560,6 +665,20 @@ function SettingsModal({
         </div>
 
         <div style={{ overflowY: 'auto', padding: '0 18px 8px' }}>
+          {actionError && (
+            <p
+              style={{
+                color: 'var(--danger)',
+                background: 'var(--danger-soft)',
+                fontSize: 12.5,
+                margin: '12px 0 0',
+                padding: '8px 11px',
+                borderRadius: 7,
+              }}
+            >
+              {actionError}
+            </p>
+          )}
           {/* 名前 */}
           <div style={{ ...sec, borderTop: 'none' }}>
             <div style={secLabel}>メモの名前(任意・管理用)</div>
@@ -608,6 +727,9 @@ function SettingsModal({
               issuePrimary
               onReissue={() => onReissue(memo)}
               onRevoke={memo.has_active_url ? () => onRevoke(memo) : undefined}
+              expiresAt={memo.url_expires_at}
+              expired={memo.url_expired}
+              onSetExpiry={(exp) => onSetExpiry(memo.memo_id, 'rw', exp)}
               busy={busy}
             />
           </div>
@@ -627,6 +749,9 @@ function SettingsModal({
               issueLabel="発行する"
               onReissue={() => onIssueReadonly(memo)}
               onRevoke={memo.has_readonly_url ? () => onRevokeReadonly(memo) : undefined}
+              expiresAt={memo.readonly_url_expires_at}
+              expired={memo.readonly_url_expired}
+              onSetExpiry={(exp) => onSetExpiry(memo.memo_id, 'ro', exp)}
               busy={busy}
             />
           </div>
@@ -642,7 +767,7 @@ function SettingsModal({
               )}
             </div>
             <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '0 0 8px' }}>
-              URL に加えて暗証番号(6〜10桁)の入力を必須にします。
+              URL に加えて暗証番号(数字・{PIN_MIN_LEN}桁以上、桁数は自由)の入力を必須にします。
             </p>
             {pinEditing ? (
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -651,8 +776,8 @@ function SettingsModal({
                   onChange={(e) => setPinInput(e.target.value.replace(/[^0-9]/g, ''))}
                   inputMode="numeric"
                   autoFocus
-                  maxLength={10}
-                  placeholder="6〜10桁"
+                  maxLength={64}
+                  placeholder={`${PIN_MIN_LEN}桁以上`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') void savePin();
                     if (e.key === 'Escape') {
@@ -891,10 +1016,10 @@ export default function DashboardPage() {
       '名前の変更に失敗しました。',
     );
 
-  // PIN 設定/解除(値は設定モーダルのローカル state から渡す)
+  // PIN 設定/解除(値は設定モーダルのローカル state から渡す)。桁数は固定せず下限のみ。
   const onSetPin = (memoId: string, pin: string): Promise<boolean> => {
-    if (pin.length < 6 || pin.length > 10) {
-      setActionError('PIN は6〜10桁の数字で入力してください。');
+    if (pin.length < PIN_MIN_LEN) {
+      setActionError(`PIN は${PIN_MIN_LEN}桁以上の数字で入力してください。`);
       return Promise.resolve(false);
     }
     return rowAction(
@@ -913,6 +1038,19 @@ export default function DashboardPage() {
       },
       'PIN の解除に失敗しました。',
     );
+
+  // 秘密URLの有効期限を設定/延長/クリア(可逆)。expiresAt=null で無期限化=復活。
+  const onSetExpiry = (memoId: string, kind: TokenMode, expiresAt: string | null): void => {
+    void rowAction(
+      memoId,
+      async (idToken) => {
+        await api.setUrlExpiry(idToken, memoId, kind, expiresAt);
+      },
+      expiresAt === null
+        ? '有効期限の解除に失敗しました。時間をおいて再試行してください。'
+        : '有効期限の設定に失敗しました。時間をおいて再試行してください。',
+    );
+  };
 
   // アクセス履歴モーダル(1メモ分をモーダルで表示。件数が多くてもスクロールで収める)
   const [logModal, setLogModal] = useState<{
@@ -1039,6 +1177,7 @@ export default function DashboardPage() {
             <SettingsModal
               memo={sm}
               busy={busyId === sm.memo_id}
+              actionError={actionError}
               onClose={() => setSettingsId(null)}
               onRename={onRename}
               onReissue={onReissue}
@@ -1047,6 +1186,7 @@ export default function DashboardPage() {
               onRevokeReadonly={onRevokeReadonly}
               onSetPin={onSetPin}
               onClearPin={onClearPin}
+              onSetExpiry={onSetExpiry}
               onDelete={onDelete}
               onOpenLog={(m) => void openLog(m)}
             />
@@ -1186,20 +1326,32 @@ export default function DashboardPage() {
                     </span>
                   )}
                   <span style={{ flex: 1 }} />
-                  <Btn busy={busy} onClick={() => setSettingsId(m.memo_id)}>
+                  <Btn
+                    busy={busy}
+                    onClick={() => {
+                      setActionError(null); // 前回のエラーを持ち込まない
+                      setSettingsId(m.memo_id);
+                    }}
+                  >
                     ⚙ 設定
                   </Btn>
                 </div>
 
-                {/* 編集用URL(停止中も用途を表示) */}
+                {/* 編集用URL(停止中/期限切れも用途を表示) */}
                 <ListUrlRow
                   kind="edit"
                   url={m.url}
+                  expired={m.url_expired}
                   revokedText="URLは停止中です — 設定から発行できます"
                 />
                 {/* 閲覧のみURL(発行済みのときだけ) */}
                 {m.has_readonly_url && (
-                  <ListUrlRow kind="view" url={m.readonly_url} revokedText="" />
+                  <ListUrlRow
+                    kind="view"
+                    url={m.readonly_url}
+                    expired={m.readonly_url_expired}
+                    revokedText=""
+                  />
                 )}
 
                 {/* メタ: タブ数 ・ 最終更新 */}

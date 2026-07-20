@@ -1,5 +1,11 @@
 const BASE_URL = '/api';
 
+/**
+ * PIN の最小桁数(数字のみ・上限は事実上なし)。バックエンド lib/notes/pin.ts の PIN_MIN_LEN と一致必須。
+ * 桁数は固定しない方針だが、ブルートフォース耐性のため下限だけ設ける(2026-07-21)。
+ */
+export const PIN_MIN_LEN = 4;
+
 /** ステータスコードで分岐できる API エラー(404=失効/未知、409=競合/上限、413/429)。 */
 export class ApiError extends Error {
   readonly status: number;
@@ -39,6 +45,14 @@ export interface MemoSummary {
   url: string | null;
   /** 読み取り専用の秘密URL。 */
   readonly_url: string | null;
+  /** 編集用URLの有効期限(ISO8601)。null=無期限。 */
+  url_expires_at: string | null;
+  /** 編集用URLが期限切れか(サーバ時刻基準)。期限切れでもデータは残り、復活で同じURLが生き返る。 */
+  url_expired: boolean;
+  /** 読み取り専用URLの有効期限(ISO8601)。null=無期限。 */
+  readonly_url_expires_at: string | null;
+  /** 読み取り専用URLが期限切れか。 */
+  readonly_url_expired: boolean;
   tab_count: number;
   created_at: string;
   updated_at: string;
@@ -119,12 +133,28 @@ export const api = {
       { headers: authHeaders(idToken) },
     );
   },
-  /** PIN を設定/変更(pin は 4〜10桁の数字)。null で解除。 */
+  /** PIN を設定/変更(pin は4桁以上の数字。桁数は固定しない)。null で解除。 */
   setPin(idToken: string, memoId: string, pin: string | null): Promise<{ has_pin: boolean }> {
     return request<{ has_pin: boolean }>(`/admin/memos/${encodeURIComponent(memoId)}/pin`, {
       method: 'PUT',
       headers: authHeaders(idToken),
       body: JSON.stringify({ pin }),
+    });
+  },
+  /**
+   * 秘密URLの有効期限を設定/延長/クリア(可逆)。expiresAt=ISO文字列で期限設定、null で無期限化(復活)。
+   * kind='rw' は編集用、'ro' は閲覧のみURL。revoke と違い同じURLのまま有効/期限切れを往復できる。
+   */
+  setUrlExpiry(
+    idToken: string,
+    memoId: string,
+    kind: TokenMode,
+    expiresAt: string | null,
+  ): Promise<{ kind: TokenMode; expires_at: string | null }> {
+    return request(`/admin/memos/${encodeURIComponent(memoId)}/expiry`, {
+      method: 'PUT',
+      headers: authHeaders(idToken),
+      body: JSON.stringify({ kind, expires_at: expiresAt }),
     });
   },
   /** 読み取り専用URLの発行/再発行(旧readonly URLは無効化。編集用URLは無傷)。 */

@@ -60,6 +60,13 @@ export interface NotesToken {
   revoked_at?: string | null;
   /** per-token 保存スロットル(P3)。最終保存時刻 epoch ms。 */
   last_save_ms?: number;
+  /**
+   * 秘密URLの有効期限 epoch ms(2026-07-21)。これを過ぎると resolveToken が解決を拒否し
+   * メモを開けなくなる。ただし token レコード・メモ本文は消さないので、管理画面から期限の
+   * 延長/削除(無期限化)で同じURLのまま復活できる(可逆)。属性なし=無期限。
+   * ※ tokens テーブルには DynamoDB TTL を設定しないこと(復活可能なトークンが物理削除される)。
+   */
+  url_expires_at?: number;
   /** PIN 連続失敗回数(上限でロック)。トークン単位なので漏洩URLの総当たりが他に波及しない。 */
   pin_fail_count?: number;
   /** PIN ロック期限 epoch ms。これ未満の間は PIN 照合を受け付けない。 */

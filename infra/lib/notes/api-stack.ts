@@ -117,6 +117,7 @@ export class NotesApiStack extends cdk.Stack {
       reservedConcurrentExecutions: 5,
     });
     props.memosTable.grantReadData(listMemosFn); // GSI by_owner の Query を含む
+    props.tokensTable.grantReadData(listMemosFn); // 有効期限(url_expires_at)の join 用
 
     // --- get memo (公開: 秘密URLトークンでメモ+タブ取得) ---
     // 未認証エンドポイント。users テーブルには一切アクセスさせない(最小権限)。
@@ -190,6 +191,11 @@ export class NotesApiStack extends cdk.Stack {
     props.tokensTable.grantReadWriteData(readonlyRevokeFn);
     props.memosTable.grant(readonlyRevokeFn, 'dynamodb:TransactWriteItems');
     props.tokensTable.grant(readonlyRevokeFn, 'dynamodb:TransactWriteItems');
+
+    // 秘密URLの有効期限 設定/延長/クリア(可逆)。単一アイテム更新なので TransactWrite 不要。
+    const setExpiryFn = adminFn('SetExpiryFn', 'admin-set-expiry.ts');
+    props.memosTable.grantReadData(setExpiryFn); // 所有者チェック
+    props.tokensTable.grantReadWriteData(setExpiryFn); // url_expires_at の更新
 
     // --- 書き込み系(公開: 保存/タブ追加/タブ削除/離脱時フラッシュ) ---
     // いずれも未認証。resolveTokenThrottled がトークンアイテムへの条件付き Update で
@@ -288,6 +294,9 @@ export class NotesApiStack extends cdk.Stack {
     adminMemoById
       .addResource('pin')
       .addMethod('PUT', new apigateway.LambdaIntegration(setPinFn), adminAuth);
+    adminMemoById
+      .addResource('expiry')
+      .addMethod('PUT', new apigateway.LambdaIntegration(setExpiryFn), adminAuth);
 
     const m = this.api.root.addResource('m');
     m.addResource('get').addMethod('POST', new apigateway.LambdaIntegration(getMemoFn));

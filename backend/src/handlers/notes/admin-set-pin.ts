@@ -5,7 +5,8 @@ import { setMemoPin, clearMemoPin, isValidPinFormat } from '../../lib/notes/pin'
 /**
  * PUT /admin/memos/{memo_id}/pin — メモ画面アクセスに必要な PIN を設定/変更/解除(Cognito 必須)。
  * body { pin: "1234" } で設定、{ pin: null } または pin 省略で解除。
- * PIN は 4〜10桁の数字。scrypt でハッシュ保存し、トークン単位の失効ロックで総当たりを抑止する。
+ * PIN は4桁以上の数字(桁数は固定しない)。scrypt でハッシュ保存し、トークン単位の失効ロックで
+ * 総当たりを抑止する。桁数の実定義は lib/notes/pin.ts の PIN_MIN_LEN/PIN_MAX_LEN。
  */
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
@@ -23,7 +24,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return ok({ memo_id, has_pin: false });
     }
 
-    if (!isValidPinFormat(pin)) return badRequest('invalid_pin'); // 4〜10桁の数字
+    if (!isValidPinFormat(pin)) return badRequest('invalid_pin'); // 4桁以上の数字(上限は pin.ts のサニティ値)
     const r = await setMemoPin({ memo_id, owner_user_id: userSub, pin });
     if (!r.ok) return notFound();
     return ok({ memo_id, has_pin: true });

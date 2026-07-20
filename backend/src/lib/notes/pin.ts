@@ -7,13 +7,15 @@ import { noStore } from './http';
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
 const TOKENS_TABLE = process.env.TOKENS_TABLE!;
 
-// PIN の桁数許容(6〜10桁の数字)。低エントロピーなのでオンラインのロックが本命の防御。
-// 最小6桁(=100万通り): 5回/5分のロック下で総当たりは平均~1年。4桁だと~3.5日で割れる。
-export const PIN_MIN_LEN = 6;
-export const PIN_MAX_LEN = 10;
+// PIN の桁数許容(4桁以上の数字。上限は極端な超長入力による scrypt DoS を避けるサニティ値)。
+// 低エントロピーなのでオンラインのロックが本命の防御。桁数は固定せず利用者が選べる(2026-07-21)。
+// 3回/5分のロック下での平均総当たり時間: 4桁(1万)≈約6日 / 6桁(100万)≈数年。
+// 4桁を許すぶんロックを 5回→3回 に強化して補償している。短いPINは「URLが既に漏れた場合のみ」効く二次防御。
+export const PIN_MIN_LEN = 4;
+export const PIN_MAX_LEN = 128;
 
 // 試行ロック: トークン単位で連続失敗を数え、上限でロックする。
-const PIN_MAX_FAILS = 5;
+const PIN_MAX_FAILS = 3;
 const PIN_LOCK_MS = 5 * 60 * 1000; // 5分
 
 const SCRYPT_KEYLEN = 32;

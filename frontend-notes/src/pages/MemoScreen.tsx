@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, ApiError, type AccessLogEntry, type MemoData } from '../lib/api';
+import { api, ApiError, PIN_MIN_LEN, type AccessLogEntry, type MemoData } from '../lib/api';
 import { useAutosave, type TabState } from '../lib/autosave';
 import { saveSnapshot, loadSnapshot, deleteSnapshot } from '../lib/offline';
 import ThemeToggle from '../components/ThemeToggle';
@@ -484,9 +484,9 @@ function PinGate({
           inputMode="numeric"
           autoComplete="off"
           autoFocus
-          maxLength={10}
+          maxLength={64}
           disabled={locked}
-          placeholder="••••••"
+          placeholder="••••"
           style={{
             width: '100%',
             padding: '10px 12px',
@@ -500,7 +500,7 @@ function PinGate({
         />
         <button
           type="submit"
-          disabled={locked || pin.length < 6}
+          disabled={locked || pin.length < PIN_MIN_LEN}
           style={{
             width: '100%',
             padding: '10px',
@@ -509,7 +509,7 @@ function PinGate({
             borderRadius: 8,
             background: 'var(--accent)',
             color: 'var(--accent-fg)',
-            opacity: locked || pin.length < 4 ? 0.5 : 1,
+            opacity: locked || pin.length < PIN_MIN_LEN ? 0.5 : 1,
           }}
         >
           開く
