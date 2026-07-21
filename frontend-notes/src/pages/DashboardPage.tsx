@@ -1155,6 +1155,10 @@ export default function DashboardPage() {
             プライバシーポリシー
           </Link>
           <span style={{ margin: '0 8px' }}>·</span>
+          <Link to="/terms" style={{ color: 'var(--muted)' }}>
+            利用規約
+          </Link>
+          <span style={{ margin: '0 8px' }}>·</span>
           <span>© 2026 rou39</span>
         </footer>
       </main>
@@ -1200,13 +1204,14 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* ツールバー */}
+      {/* ツールバー(狭幅では折り返して横溢れを防ぐ) */}
       <header
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 12,
+          flexWrap: 'wrap',
           borderBottom: '1px solid var(--border)',
           paddingBottom: 16,
         }}
@@ -1214,9 +1219,19 @@ export default function DashboardPage() {
         <h1 style={{ fontSize: 18, fontWeight: 650, margin: 0, letterSpacing: '-0.01em' }}>
           Stash Notes
         </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--muted)' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            fontSize: 13,
+            color: 'var(--muted)',
+          }}
+        >
           <ThemeToggle />
-          <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ maxWidth: 180, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user.email}
           </span>
           <Btn onClick={signOut}>ログアウト</Btn>
@@ -1383,6 +1398,10 @@ export default function DashboardPage() {
       >
         <Link to="/privacy" style={{ color: 'var(--muted)' }}>
           プライバシーポリシー
+        </Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/terms" style={{ color: 'var(--muted)' }}>
+          利用規約
         </Link>
         <span style={{ margin: '0 8px' }}>·</span>
         <span>© 2026 rou39</span>

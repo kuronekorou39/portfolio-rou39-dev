@@ -44,6 +44,38 @@ function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
 }
 
 /**
+ * メモ画面(ログイン不要=一般利用者が見る唯一の公開面)のフッタ。
+ * ポリシー/規約と、濫用コンテンツの通報導線を最小限で置く(運営への到達手段)。
+ * 認証系は import しない方針のため、react-router ではなく素の <a> でSPAへ遷移する。
+ */
+function MemoFooter() {
+  const link: React.CSSProperties = { color: 'var(--muted)' };
+  return (
+    <footer
+      style={{
+        marginTop: 28,
+        paddingTop: 14,
+        borderTop: '1px solid var(--border)',
+        fontSize: 12,
+        color: 'var(--muted)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '4px 12px',
+        alignItems: 'center',
+      }}
+    >
+      <a href="/privacy" style={link}>プライバシーポリシー</a>
+      <a href="/terms" style={link}>利用規約</a>
+      <span>
+        違法・不適切なメモの通報:{' '}
+        <a href="mailto:contact@rou39.com" style={link}>contact@rou39.com</a>
+      </span>
+      <span style={{ marginLeft: 'auto' }}>Stash Notes</span>
+    </footer>
+  );
+}
+
+/**
  * メモ画面(秘密URL専用・ログイン不要)。
  *
  * トークンは URL フラグメント(#以降)にのみ載る。フラグメントはサーバ・Referer・
@@ -65,6 +97,10 @@ function saveLabel(tab: TabState | undefined): { text: string; color: string } {
       return { text: '保存中…', color: 'var(--muted)' };
     case 'retrying':
       return { text: '再試行中…', color: 'var(--danger)' };
+    case 'revoked':
+      return { text: 'URLが無効', color: 'var(--danger)' };
+    case 'auth':
+      return { text: 'PINが変更', color: 'var(--danger)' };
     default:
       return tab.dirty ? { text: '未保存', color: 'var(--muted)' } : { text: '保存済み', color: 'var(--muted)' };
   }
@@ -304,6 +340,27 @@ function Editor({
         </p>
       )}
 
+      {/* 終端状態(これ以上保存できない)。無限リトライさせず、復旧方法を案内する。 */}
+      {(active?.save === 'revoked' || active?.save === 'auth') && (
+        <div
+          role="alert"
+          style={{
+            border: '1px solid var(--danger)',
+            borderRadius: 6,
+            padding: '10px 14px',
+            margin: '12px 0 0',
+            fontSize: 13,
+            color: 'var(--danger)',
+          }}
+        >
+          {active.save === 'auth'
+            ? 'このメモの PIN が変更されたため、これ以上保存できません。ページを再読み込みし、新しい PIN で開き直してください。'
+            : 'この URL は無効化(または期限切れ)になったため、これ以上保存できません。発行者に新しい URL を確認してください。'}
+          <br />
+          いま画面にある未保存の編集はこの端末に残っているので、開き直せば復旧できます。
+        </div>
+      )}
+
       {/* タブ名 + 本文 */}
       {active && (
         <>
@@ -342,6 +399,7 @@ function Editor({
       )}
 
       <AccessLogPanel entries={data.access_log ?? []} />
+      <MemoFooter />
     </main>
   );
 }
@@ -451,6 +509,7 @@ function ReadonlyView({ data, offlineAt }: { data: MemoData; offlineAt: number |
       >
         {active?.content || <span style={{ color: 'var(--muted)' }}>(空のタブ)</span>}
       </div>
+      <MemoFooter />
     </main>
   );
 }

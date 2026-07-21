@@ -286,4 +286,6 @@ new NotesMonitoringStack(app, 'NotesMonitoring', {
   saveTabFn: notesApi.saveTabFn,
   flushFn: notesApi.flushFn,
   issueMemoFn: notesApi.issueMemoFn,
+  memosTable: notesStorage.memosTable,
+  tabsTable: notesStorage.tabsTable,
 });

@@ -22,7 +22,12 @@ export interface TabState {
   version: number;
   position: number;
   dirty: boolean;
-  save: 'saved' | 'saving' | 'retrying' | 'conflict' | 'too_large';
+  /**
+   * 保存状態。'revoked'/'auth' は終端(=これ以上保存できない。リトライしない)。
+   * 'revoked'=URLが無効化/期限切れ/削除(404)、'auth'=PINが変更された(401)。
+   * どちらも dirty バッファは保持するので、新URL/新PINで開き直せば編集を復旧できる。
+   */
+  save: 'saved' | 'saving' | 'retrying' | 'conflict' | 'too_large' | 'revoked' | 'auth';
   /** 409 時のサーバ現在値(調停 UI 用)。 */
   conflictCurrent?: { title: string; content: string; version: number };
 }
@@ -108,7 +113,15 @@ export function useAutosave(
   const saveNow = useCallback(
     async (tabId: string): Promise<void> => {
       const t = tabsRef.current.find((x) => x.tab_id === tabId);
-      if (!t || !t.dirty || t.save === 'conflict' || t.save === 'saving') return;
+      if (
+        !t ||
+        !t.dirty ||
+        t.save === 'conflict' ||
+        t.save === 'saving' ||
+        t.save === 'revoked' ||
+        t.save === 'auth'
+      )
+        return;
 
       const snapshot = { title: t.title, content: t.content, base_version: t.version };
       patchTab(tabId, { save: 'saving' });
@@ -138,8 +151,18 @@ export function useAutosave(
           return;
         }
         if (e instanceof ApiError && e.status === 404) {
-          // トークン失効。以後の保存は不可能(dirty バッファは残す=文面は失わない)
-          patchTab(tabId, { save: 'retrying' });
+          // URL が無効化/期限切れ/削除。以後の保存は不可能=終端(リトライしない)。
+          // dirty バッファは残すので、新しいURLで開き直せば編集を復旧できる。
+          retryCountRef.current.delete(tabId);
+          patchTab(tabId, { save: 'revoked' });
+          return;
+        }
+        if (e instanceof ApiError && e.status === 401) {
+          // セッション中に PIN が設定/変更された(pin_required/pin_incorrect)。古いPINでの
+          // 保存はもう通らない=終端。リトライで送り続けると pin_fail_count を消費してトークンを
+          // 自己ロックするため、必ずここで止める。バッファは残す(再読み込み+新PINで復旧可)。
+          retryCountRef.current.delete(tabId);
+          patchTab(tabId, { save: 'auth' });
           return;
         }
         // 429 / ネットワーク断 / 5xx → 指数バックオフでリトライ(バッファは保持)
@@ -161,12 +184,23 @@ export function useAutosave(
       if (!t) return;
       const next = { title: patch.title ?? t.title, content: patch.content ?? t.content };
       writeBuffer(tabId, { ...next, base_version: t.version, ts: Date.now() });
+      // 終端(revoked/auth)後は編集をローカルバッファに残すだけでサーバ保存は試みない。
+      // 特に auth(PIN変更)で再送し続けると pin_fail_count を消費してトークンを自己ロックするため、
+      // 入力があってもサーバ保存を再アームしない(復旧は新URL/新PINで開き直したとき)。
+      const terminal = t.save === 'revoked' || t.save === 'auth';
       patchTab(tabId, {
         ...next,
         dirty: true,
-        // too_large は書き直しで解除を試みる。conflict は調停まで維持
-        save: t.save === 'conflict' ? 'conflict' : t.save === 'saving' ? 'saving' : 'saved',
+        // too_large は書き直しで解除を試みる。conflict は調停まで維持。終端はそのまま維持。
+        save: terminal
+          ? t.save
+          : t.save === 'conflict'
+            ? 'conflict'
+            : t.save === 'saving'
+              ? 'saving'
+              : 'saved',
       });
+      if (terminal) return;
       const existing = timersRef.current.get(tabId);
       if (existing) clearTimeout(existing);
       const timer = setTimeout(() => void saveNow(tabId), DEBOUNCE_MS);
@@ -178,7 +212,10 @@ export function useAutosave(
   /** 全 dirty タブの一括保存(タブ切替・離脱時)。1回のスロットル消費で送る。 */
   const flushAll = useCallback(
     (keepalive: boolean) => {
-      const dirty = tabsRef.current.filter((t) => t.dirty && t.save !== 'conflict');
+      // 終端(revoked/auth)のタブは送らない(送っても 404/401 で無駄。auth は失敗回数も消費)。
+      const dirty = tabsRef.current.filter(
+        (t) => t.dirty && t.save !== 'conflict' && t.save !== 'revoked' && t.save !== 'auth',
+      );
       if (dirty.length === 0) return;
       void api
         .flush(

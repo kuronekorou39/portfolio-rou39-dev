@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function PageLoader() {
@@ -22,6 +23,7 @@ export default function AdminApp() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
