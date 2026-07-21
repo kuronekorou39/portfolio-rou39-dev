@@ -3,6 +3,7 @@ import { api, ApiError, PIN_MIN_LEN, type AccessLogEntry, type MemoData } from '
 import { useAutosave, type TabState } from '../lib/autosave';
 import { saveSnapshot, loadSnapshot, deleteSnapshot } from '../lib/offline';
 import ThemeToggle from '../components/ThemeToggle';
+import Loading from '../components/Loading';
 
 /** アクセス履歴(直近)。E2E暗号化しない代わりに「誰がいつ開いたか」を利用者に見せる。 */
 function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
@@ -665,11 +666,7 @@ export default function MemoScreen() {
   }
 
   if (state === 'loading') {
-    return (
-      <div style={{ textAlign: 'center', padding: '96px 24px', color: 'var(--muted)' }}>
-        読み込み中…
-      </div>
-    );
+    return <Loading />;
   }
 
   if (state === 'unavailable') {

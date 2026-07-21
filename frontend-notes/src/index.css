@@ -59,6 +59,28 @@
   box-sizing: border-box;
 }
 
+/* ローディングの既定アニメーション(components/Loading.tsx が使用)。
+   アニメーション本体を差し替えるときは Loading.tsx の Dots を書き換える。 */
+@keyframes notes-loading-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-notes-loading] > * {
+    animation: none !important;
+    opacity: 0.6 !important;
+  }
+}
+
 html,
 body {
   margin: 0;

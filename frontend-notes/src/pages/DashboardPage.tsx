@@ -11,6 +11,7 @@ import {
   type TokenMode,
 } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
+import Loading from '../components/Loading';
 
 // backend の MAX_MEMOS_PER_USER と一致させる(残り作成可能数の表示用)
 const MAX_MEMOS = 20;
@@ -204,7 +205,63 @@ function Badge({
   );
 }
 
-/** URL は1行フル幅で表示し、操作(コピー/開く/再発行/無効化)は下段に分離する。 */
+/** 「?」アイコンのポップオーバー。常設の説明文を置かず、必要な人だけが開ける。 */
+function HelpTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex' }}>
+      <button
+        type="button"
+        aria-label="説明"
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        style={{
+          width: 16,
+          height: 16,
+          borderRadius: '50%',
+          border: '1px solid var(--border)',
+          background: 'var(--surface)',
+          color: 'var(--muted)',
+          fontSize: 11,
+          lineHeight: 1,
+          padding: 0,
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        ?
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            left: 0,
+            zIndex: 5,
+            width: 230,
+            fontWeight: 400,
+            fontSize: 12,
+            lineHeight: 1.5,
+            color: 'var(--fg)',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            padding: '8px 10px',
+            boxShadow: '0 6px 20px rgba(0,0,0,.14)',
+          }}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** URL は1行フル幅で表示し、操作(再発行/無効化/有効期限)は下段に分離する。 */
 function UrlBlock({
   label,
   url,
@@ -236,7 +293,6 @@ function UrlBlock({
   onSetExpiry: (expiresAt: string | null) => void;
   busy?: boolean;
 }) {
-  const [copied, setCopied] = useState(false);
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 5 }}>{label}</div>
@@ -261,19 +317,8 @@ function UrlBlock({
           >
             {url}
           </code>
+          {/* コピー/開くは一覧にあるので、ここは発行状態の操作だけ(再発行/無効化)。 */}
           <div style={{ display: 'flex', gap: 6, marginTop: 7, flexWrap: 'wrap' }}>
-            <Btn
-              busy={busy}
-              onClick={() =>
-                void navigator.clipboard.writeText(url).then(() => {
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
-                })
-              }
-            >
-              {copied ? 'コピー済' : 'コピー'}
-            </Btn>
-            <Btn onClick={() => window.open(url, '_blank', 'noopener')}>開く ↗</Btn>
             <Btn busy={busy} onClick={onReissue}>
               ↻ 再発行
             </Btn>
@@ -405,7 +450,9 @@ function AccessLogModal({
         </div>
         <div style={{ overflowY: 'auto', padding: '0 18px' }}>
           {entries === 'loading' ? (
-            <p style={{ color: 'var(--muted)', fontSize: 13, padding: '12px 0' }}>読み込み中…</p>
+            <div style={{ padding: '16px 0' }}>
+              <Loading block={false} />
+            </div>
           ) : entries.length === 0 ? (
             <p style={{ color: 'var(--muted)', fontSize: 13, padding: '12px 0' }}>
               アクセスはまだありません。
@@ -479,7 +526,7 @@ function UrlKindBadge({ kind }: { kind: 'edit' | 'view' }) {
         background: isEdit ? 'var(--accent-soft)' : 'var(--ok-soft)',
       }}
     >
-      {isEdit ? '✎ 編集用' : '👁 閲覧のみ'}
+      {isEdit ? '✎ 編集用' : '👁 閲覧用'}
     </span>
   );
 }
@@ -710,11 +757,7 @@ function SettingsModal({
           {/* 編集用URL */}
           <div style={sec}>
             <UrlBlock
-              label={
-                <span>
-                  <b style={{ color: 'var(--accent)', fontWeight: 650 }}>✎ 編集用URL</b> — 渡すと相手も編集できます
-                </span>
-              }
+              label={<b style={{ color: 'var(--accent)', fontWeight: 650 }}>✎ 編集用URL</b>}
               url={memo.url}
               active={memo.has_active_url}
               emptyText={
@@ -737,14 +780,10 @@ function SettingsModal({
           {/* 閲覧のみURL */}
           <div style={sec}>
             <UrlBlock
-              label={
-                <span>
-                  <b style={{ color: 'var(--ok)', fontWeight: 650 }}>👁 閲覧のみURL</b> — 閲覧だけ許可したい相手に
-                </span>
-              }
+              label={<b style={{ color: 'var(--ok)', fontWeight: 650 }}>👁 閲覧用URL</b>}
               url={memo.readonly_url}
               active={memo.has_readonly_url}
-              emptyText="未発行 — 閲覧だけ許可したい相手に渡せます"
+              emptyText="未発行 — 閲覧だけ許可する相手に渡せます"
               onIssue={() => onIssueReadonly(memo)}
               issueLabel="発行する"
               onReissue={() => onIssueReadonly(memo)}
@@ -765,10 +804,10 @@ function SettingsModal({
               ) : (
                 <span style={{ color: 'var(--muted)' }}>未設定</span>
               )}
+              <HelpTip
+                text={`URL に加えて暗証番号(数字・${PIN_MIN_LEN}桁以上、桁数は自由)の入力を必須にします。`}
+              />
             </div>
-            <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '0 0 8px' }}>
-              URL に加えて暗証番号(数字・{PIN_MIN_LEN}桁以上、桁数は自由)の入力を必須にします。
-            </p>
             {pinEditing ? (
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
@@ -1071,11 +1110,7 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '96px 24px', color: 'var(--muted)' }}>
-        読み込み中…
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!user) {
@@ -1164,8 +1199,6 @@ export default function DashboardPage() {
       </main>
     );
   }
-
-  const remaining = memos ? Math.max(0, MAX_MEMOS - memos.length) : null;
 
   return (
     <main style={{ maxWidth: 760, margin: '0 auto', padding: '20px 20px 64px' }}>
@@ -1274,13 +1307,27 @@ export default function DashboardPage() {
             {issuing ? '発行中…' : 'メモを新規発行'}
           </Btn>
         </div>
-        <p style={{ fontSize: 12, color: 'var(--muted)', margin: '8px 0 0 2px' }}>
-          {issueError ? (
-            <span style={{ color: 'var(--danger)' }}>{issueError}</span>
-          ) : (
-            <>発行するとメモ用の秘密URLが作られます{remaining !== null && `(あと ${remaining} 個作れます)`}。</>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            margin: '8px 2px 0',
+            fontSize: 12,
+            color: 'var(--muted)',
+            minHeight: 16,
+          }}
+        >
+          {issueError && <span style={{ color: 'var(--danger)' }}>{issueError}</span>}
+          {memos && (
+            <span
+              style={{ marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}
+              title="作成済み / 上限"
+            >
+              {memos.length} / {MAX_MEMOS}
+            </span>
           )}
-        </p>
+        </div>
       </section>
 
       {/* 一覧 */}
@@ -1292,7 +1339,7 @@ export default function DashboardPage() {
           <p style={{ color: 'var(--danger)', fontSize: 13 }}>{actionError}</p>
         )}
         {memos === null ? (
-          <p style={{ color: 'var(--muted)' }}>読み込み中…</p>
+          <Loading label="" />
         ) : memos.length === 0 ? (
           <div
             style={{
