@@ -32,6 +32,8 @@ export class NotesFrontendStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      // 中断した多段アップロードの残骸を自動中止(未完了パートは可視化されないまま課金される)
+      lifecycleRules: [{ abortIncompleteMultipartUploadAfter: cdk.Duration.days(7) }],
     });
 
     // CloudFront Function: /api/* の prefix を strip して API Gateway に送る

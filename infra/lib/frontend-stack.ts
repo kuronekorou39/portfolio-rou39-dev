@@ -29,6 +29,10 @@ export class FrontendStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      // relations の巨大 JSON を aws s3 cp で入れる際、中断すると未完了マルチパートが
+      // 残り続ける(list-objects では見えないまま課金される)。実際 depth2.json の残骸が
+      // 3ヶ月放置されていたので自動中止させる。オブジェクト本体には触らないルール。
+      lifecycleRules: [{ abortIncompleteMultipartUploadAfter: cdk.Duration.days(7) }],
     });
 
     // CloudFront standard access logs を S3 に配信。
