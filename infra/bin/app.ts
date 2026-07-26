@@ -12,7 +12,6 @@ import { AuthStack } from '../lib/auth-stack';
 import { ApiStack } from '../lib/api-stack';
 import { FrontendStack } from '../lib/frontend-stack';
 import { WafStack } from '../lib/waf-stack';
-import { UnifiedWafStack } from '../lib/unified-waf-stack';
 import { MailStack } from '../lib/mail-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { UranekoStorageStack } from '../lib/uraneko/storage-stack';
@@ -21,7 +20,6 @@ import { UranekoEmailStack } from '../lib/uraneko/email-stack';
 import { UranekoAuthStack } from '../lib/uraneko/auth-stack';
 import { UranekoIngestIamStack } from '../lib/uraneko/ingest-iam-stack';
 import { UranekoApiStack } from '../lib/uraneko/api-stack';
-import { UranekoWafStack } from '../lib/uraneko/waf-stack';
 import { UranekoFrontendStack } from '../lib/uraneko/frontend-stack';
 import { UranekoMonitoringStack } from '../lib/uraneko/monitoring-stack';
 import { NotesStorageStack } from '../lib/notes/storage-stack';
@@ -29,7 +27,6 @@ import { NotesSecretsStack } from '../lib/notes/secrets-stack';
 import { NotesAuthStack } from '../lib/notes/auth-stack';
 import { NotesApiStack } from '../lib/notes/api-stack';
 import { NotesFrontendStack } from '../lib/notes/frontend-stack';
-import { NotesWafStack } from '../lib/notes/waf-stack';
 import { NotesMonitoringStack } from '../lib/notes/monitoring-stack';
 
 const app = new cdk.App();
@@ -114,21 +111,13 @@ const frontendHostedZone = route53.HostedZone.fromHostedZoneAttributes(
 
 // 3サイト共通の CloudFront 用 WAFv2 WebACL は us-east-1 必須。
 // WebACL / ルールは固定費 ($5 + $1/ルール) なので、サイトごとに分けず 1 つに統合して
-// Host 条件で振り分ける。詳細は UnifiedWafStack の説明を参照。
-const rou39Waf = new UnifiedWafStack(app, 'Rou39Waf', {
+// Host 条件で振り分ける。詳細は WafStack の説明を参照。
+const rou39Waf = new WafStack(app, 'Rou39Waf', {
   env: { account: env.account, region: 'us-east-1' },
   crossRegionReferences: true,
   domainName: DOMAIN_NAME,
   uranekoDomain: URANEKO_SUBDOMAIN,
   notesDomain: NOTES_SUBDOMAIN,
-});
-
-// [統合移行 Phase 1] 旧サイト別 WebACL。CloudFront の付け替えが全ディストリビューションに
-// 伝播しきるまでは削除できない (関連付けが残っている WebACL は削除が失敗する)。
-// 付け替え確認後、Phase 2 で cdk destroy して この宣言ごと消す。
-new WafStack(app, 'PortfolioWaf', {
-  env: { account: env.account, region: 'us-east-1' },
-  crossRegionReferences: true,
 });
 
 new FrontendStack(app, 'PortfolioFrontend', {
@@ -210,12 +199,6 @@ const uranekoApi = new UranekoApiStack(app, 'UranekoApi', {
   fromEmail: uranekoEmail.fromAddress,
 });
 
-// [統合移行 Phase 1] 旧 uraneko 専用 WebACL。Rou39Waf に統合済みで未参照。Phase 2 で destroy する。
-new UranekoWafStack(app, 'UranekoWaf', {
-  env: { account: env.account, region: 'us-east-1' },
-  crossRegionReferences: true,
-});
-
 new UranekoFrontendStack(app, 'UranekoFrontend', {
   env,
   crossRegionReferences: true,
@@ -273,12 +256,6 @@ const notesApi = new NotesApiStack(app, 'NotesApi', {
   originVerifySecret: notesSecrets.originVerifySecret,
   userPool: notesAuth.userPool,
   siteUrl: `https://${NOTES_SUBDOMAIN}`,
-});
-
-// [統合移行 Phase 1] 旧 notes 専用 WebACL。Rou39Waf に統合済みで未参照。Phase 2 で destroy する。
-new NotesWafStack(app, 'NotesWaf', {
-  env: { account: env.account, region: 'us-east-1' },
-  crossRegionReferences: true,
 });
 
 new NotesFrontendStack(app, 'NotesFrontend', {
