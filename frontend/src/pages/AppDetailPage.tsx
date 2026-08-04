@@ -22,6 +22,14 @@ const DownloadIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 );
 
+const AppleIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+);
+
+const PlayStoreIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M3.61 1.84 13.8 12 3.61 22.16a1.7 1.7 0 0 1-.6-1.3V3.14c0-.52.24-.99.6-1.3zm11.4 11.32 2.53 2.53-11.2 6.4 8.67-8.93zM20.6 10.4c.86.48.86 1.72 0 2.2l-2.72 1.55L15.1 12l2.78-2.15 2.72 1.55zM6.34 1.11l11.2 6.4-2.53 2.53L6.34 1.1z"/></svg>
+);
+
 function detectOS(): string {
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes('win')) return 'windows';
@@ -568,6 +576,19 @@ export default function AppDetailPage() {
                       <ExternalLinkIcon size={12} /> Open App
                     </a>
                   )}
+                  {/* ストアはモバイルでの主な導線なので、APK 等の直接ダウンロードより先に置く */}
+                  {project.links.appStore && (
+                    <a href={project.links.appStore} target="_blank" rel="noopener noreferrer"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
+                      <AppleIcon size={12} /> App Store
+                    </a>
+                  )}
+                  {project.links.playStore && (
+                    <a href={project.links.playStore} target="_blank" rel="noopener noreferrer"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
+                      <PlayStoreIcon size={12} /> Google Play
+                    </a>
+                  )}
                   {project.downloads && project.downloads.length > 0 && (
                     <div className="flex-1">
                       <DownloadButton projectId={project.id} downloads={project.downloads} compact />
@@ -1040,6 +1061,19 @@ export default function AppDetailPage() {
                       <ExternalLinkIcon size={14} /> Open App
                     </a>
                   )}
+                  {/* ストアはインストール導線なので、GitHub より上・ダウンロードと同じ扱いにする */}
+                  {project.links.appStore && (
+                    <a href={project.links.appStore} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02]">
+                      <AppleIcon /> App Store
+                    </a>
+                  )}
+                  {project.links.playStore && (
+                    <a href={project.links.playStore} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02]">
+                      <PlayStoreIcon /> Google Play
+                    </a>
+                  )}
                   {project.downloads && project.downloads.length > 0 && (
                     <DownloadButton projectId={project.id} downloads={project.downloads} />
                   )}
@@ -1053,18 +1087,6 @@ export default function AppDetailPage() {
                     <a href={project.links.github} target="_blank" rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
                       <GitHubIcon /> GitHub
-                    </a>
-                  )}
-                  {project.links.appStore && (
-                    <a href={project.links.appStore} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
-                      App Store
-                    </a>
-                  )}
-                  {project.links.playStore && (
-                    <a href={project.links.playStore} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
-                      Google Play
                     </a>
                   )}
                 </div>

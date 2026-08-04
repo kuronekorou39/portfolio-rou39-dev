@@ -15,7 +15,8 @@
       "WebView"
     ],
     "platform": [
-      "Android"
+      "Android",
+      "iOS"
     ],
     "icon": "/projects/omniverse/icon.png",
     "screenshots": [
@@ -23,7 +24,9 @@
       "/projects/omniverse/snapshot-timeline.png",
       "/projects/omniverse/snapshot-overlay.png"
     ],
-    "links": {},
+    "links": {
+      "appStore": "https://apps.apple.com/jp/app/omniverse/id6763051731"
+    },
     "downloads": [
       {
         "label": "Android (.apk)",
@@ -33,9 +36,10 @@
     ],
     "status": "development",
     "publishedAt": "2025-07-20",
-    "updatedAt": "2026-04-17",
+    "updatedAt": "2026-08-05",
     "size": "large",
-    "published": true
+    "published": true,
+    "featured": true
   },
   {
     "id": "koko-meshi",
@@ -64,7 +68,8 @@
     "publishedAt": "2025-03-01",
     "updatedAt": "2026-08-04",
     "size": "large",
-    "published": true
+    "published": true,
+    "featured": true
   },
   {
     "id": "u2b-loop",
