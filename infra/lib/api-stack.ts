@@ -75,6 +75,8 @@ export class ApiStack extends cdk.Stack {
       bundling: bundlingOptions,
     });
     props.projectsTable.grantReadData(projectsFn);
+    // 一覧に表示数・DL数を埋め込むため (フロントの N+1 リクエストを避ける)
+    props.pageViewsTable.grantReadData(projectsFn);
 
     const projects = this.api.root.addResource('projects');
     projects.addMethod('GET', new apigateway.LambdaIntegration(projectsFn));

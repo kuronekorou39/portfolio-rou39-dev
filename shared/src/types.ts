@@ -30,10 +30,15 @@ export interface Project {
   links: ProjectLinks;
   downloads?: DownloadEntry[];
   published?: boolean;
+  /** トップページの Featured 枠に優先的に出す。未指定分は updatedAt の新しい順で補完される */
+  featured?: boolean;
   status: ProjectStatus;
   size: ProjectSize;
   publishedAt: string;
   updatedAt: string;
+  /** GET /projects が埋め込む集計値。単体取得 (GET /projects/{id}) には含まれない */
+  viewCount?: number;
+  downloadCount?: number;
 }
 
 export interface Review {
