@@ -51,7 +51,7 @@ export function jst(date, time) {
 
 // パース済みの行から集計(純関数=テスト可能)
 export function summarize(rows) {
-  const byDay = new Map(), byHour = new Map(), refs = new Map();
+  const byDay = new Map(), byHour = new Map(), refs = new Map(), byIp = new Map(), byUa = new Map();
   const ips = new Set();
   let total = 0, pv = 0, bots = 0;
   for (const r of rows) {
@@ -59,14 +59,27 @@ export function summarize(rows) {
     const t = jst(r['date'], r['time']);
     const uri = r['cs-uri-stem'] || '';
     const status = r['sc-status'] || '';
-    // ページ表示 = GET かつ /index.html or /(SPA の初回ロード)かつ 2xx/304
-    const isPage = r['cs-method'] === 'GET' && (uri === '/index.html' || uri === '/') && /^(2\d\d|304)$/.test(status);
+    const ct = (r['sc-content-type'] || '').toLowerCase();
+    // ページ表示 = GET・2xx/304 で、レスポンスが HTML(または /api でない拡張子なしの SPA ルート)。
+    // SPA は URI がそのまま記録される(/、/guide 等)。アセット(.js/.css/画像)と API(/api・JSON)は除外。
+    const isPage = r['cs-method'] === 'GET' && /^(2\d\d|304)$/.test(status) && !uri.startsWith('/api') &&
+      (ct.includes('text/html') || uri === '/' || uri === '/index.html' || !/\.[a-z0-9]+$/i.test(uri));
     if (!isPage || !t) continue;
     pv++;
-    if (BOT_RE.test(decode(r['cs(User-Agent)']))) bots++;
-    ips.add(r['c-ip']);
+    const ua = decode(r['cs(User-Agent)']);
+    const bot = BOT_RE.test(ua);
+    if (bot) bots++;
+    const ip = r['c-ip'] || '?';
+    ips.add(ip);
     byDay.set(t.day, (byDay.get(t.day) || 0) + 1);
     byHour.set(t.key, (byHour.get(t.key) || 0) + 1);
+    // アクセス元 IP 別(回数・最終アクセス・代表UA)
+    const ts = `${r['date']}T${r['time']}Z`;
+    const rec = byIp.get(ip) || { count: 0, lastTs: '', ua: '', bot };
+    rec.count++;
+    if (ts > rec.lastTs) { rec.lastTs = ts; rec.ua = ua; rec.bot = bot; }
+    byIp.set(ip, rec);
+    byUa.set(ua, (byUa.get(ua) || 0) + 1);
     const ref = decode(r['cs(Referer)']);
     if (ref && ref !== '-' && !/uraneko\.rou39\.com/.test(ref)) {
       let host = ref;
@@ -74,7 +87,7 @@ export function summarize(rows) {
       refs.set(host, (refs.get(host) || 0) + 1);
     }
   }
-  return { total, pv, uniqueIps: ips.size, bots, byDay, byHour, refs };
+  return { total, pv, uniqueIps: ips.size, bots, byDay, byHour, refs, byIp, byUa };
 }
 
 // ---- ここから CLI(直接実行時のみ動く。import 時は動かない=テスト用)----
@@ -122,12 +135,15 @@ export async function collect({ days = 7, region, bucket, s3 } = {}) {
 // collect() の結果を JSON 化(Map → 配列)。管理GUI のエンドポイント用。
 export function statsToJSON(res) {
   const s = res.stats;
+  const jstMin = (utc) => { const d = new Date(utc); return isNaN(d.getTime()) ? '' : new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' '); };
   return {
     bucket: res.bucket, days: res.days, keysCount: res.keysCount,
     total: s.total, pageViews: s.pv, uniqueIps: s.uniqueIps, bots: s.bots,
     byDay: [...s.byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])),
     byHour: [...s.byHour.entries()].sort((a, b) => a[0].localeCompare(b[0])),
     refs: [...s.refs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15),
+    ips: [...s.byIp.entries()].map(([ip, v]) => ({ ip, count: v.count, last: jstMin(v.lastTs), ua: v.ua, bot: v.bot })).sort((a, b) => b.count - a.count).slice(0, 25),
+    uas: [...s.byUa.entries()].map(([ua, n]) => ({ ua, count: n })).sort((a, b) => b.count - a.count).slice(0, 15),
   };
 }
 
@@ -155,6 +171,12 @@ async function main() {
   console.log('\n— 流入元(リファラ)トップ10 —');
   if (!topRefs.length) console.log('  (外部リファラなし=直アクセス/ブックマーク中心)');
   else for (const [h, n] of topRefs) console.log(`  ${pad(n, 5)}  ${h}`);
+
+  const j = statsToJSON({ bucket, days: DAYS, keysCount, stats: st });
+  console.log('\n— アクセス元 IP(ページ表示・上位15)—');
+  for (const x of j.ips.slice(0, 15)) console.log(`  ${pad(x.count, 4)}  ${pad(x.ip, 15)}  ${x.last}  ${x.bot ? '[bot] ' : ''}${(x.ua || '').slice(0, 60)}`);
+  console.log('\n— User-Agent(上位10)—');
+  for (const x of j.uas.slice(0, 10)) console.log(`  ${pad(x.count, 4)}  ${(x.ua || '').slice(0, 80)}`);
 
   console.log('\n※ SPA のためページ別内訳は取れません(全ページ表示が /index.html に集約)。');
   console.log('※ 直近のログは配信遅延で未反映のことがあります。ログは 90 日で自動削除。');

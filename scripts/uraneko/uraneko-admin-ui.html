@@ -446,7 +446,7 @@
       </h2>
       <div id="acx_cards" style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:6px"></div>
       <div id="acx_body"><div class="muted">「更新」で読み込みます(ログの取得+解凍に少しかかります)。</div></div>
-      <div class="hint">CloudFront のアクセスログ(S3)を集計。SPA のためページ表示は /index.html に集約され、ページ別内訳は取れません。ログは配信に数分〜数時間の遅延があり、90日で自動削除。時刻は JST。</div>
+      <div class="hint">CloudFront のアクセスログ(S3)を集計。グラフの棒はホバーで数値。<b>IP・User-Agent はアクセス元の確認用に表示</b>(このローカル管理画面のみ。ログ自体は 90 日で自動削除)。SPA のためページ表示は /index.html に集約され、ページ別内訳は取れません。配信に数分〜数時間の遅延あり。時刻は JST。</div>
     </section>
   </div>
 
@@ -1523,10 +1523,39 @@ async function loadAccess() {
     document.getElementById('acx_body').innerHTML = '<div class="err">' + esc(e.message) + '</div>';
   }
 }
-function acxBar(n, max) {
-  const w = max > 0 ? Math.max(n > 0 ? 2 : 0, Math.round((n / max) * 200)) : 0;
-  return '<span style="display:inline-block;height:8px;width:' + w + 'px;background:var(--ash-bright);vertical-align:middle"></span>';
+// 単一系列の棒グラフ(SVG)。data=[[label, value], ...]。1色=ash、棒ごとにホバーで数値。
+// 色は style で指定(SVG 属性は CSS 変数を解決しないため)。軸は控えめ(上下線+0/最大のみ)。
+function svgBars(data, opts) {
+  opts = opts || {};
+  if (!data.length) return '<div class="muted">データなし</div>';
+  const W = 680, H = opts.height || 148, padL = 30, padR = 8, padT = 12, padB = 20;
+  const n = data.length;
+  const max = Math.max(1, ...data.map((d) => d[1]));
+  const plotW = W - padL - padR, plotH = H - padT - padB, slot = plotW / n, gap = 2;
+  const bw = Math.max(1, slot - gap);
+  const color = opts.color || 'var(--ash-bright)';
+  const labelEvery = opts.labelEvery || Math.ceil(n / 8);
+  const showVals = n <= (opts.valLabelMax || 14); // 疎なときだけ棒上に数値(密なときはホバー+軸)
+  let bars = '', xl = '', vl = '';
+  data.forEach((d, i) => {
+    const x = padL + i * slot + gap / 2;
+    const h = Math.max(d[1] > 0 ? 1 : 0, Math.round((d[1] / max) * plotH));
+    const y = padT + plotH - h;
+    bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + Math.min(3, bw / 2).toFixed(1) + '" style="fill:' + color + '"><title>' + esc(d[0]) + ' : ' + d[1] + '</title></rect>';
+    if (showVals && d[1] > 0) {
+      vl += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle" font-size="9" font-family="ui-monospace,monospace" style="fill:var(--muted)">' + d[1] + '</text>';
+    }
+    if (i % labelEvery === 0 || i === n - 1) {
+      xl += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9" font-family="ui-monospace,Menlo,monospace" style="fill:var(--dim)">' + esc(opts.xfmt ? opts.xfmt(d[0]) : d[0]) + '</text>';
+    }
+  });
+  const axis = '<line x1="' + padL + '" y1="' + padT + '" x2="' + (W - padR) + '" y2="' + padT + '" style="stroke:var(--line-soft)"/>' +
+    '<line x1="' + padL + '" y1="' + (padT + plotH) + '" x2="' + (W - padR) + '" y2="' + (padT + plotH) + '" style="stroke:var(--line)"/>' +
+    '<text x="' + (padL - 5) + '" y="' + (padT + 4) + '" text-anchor="end" font-size="9" font-family="ui-monospace,monospace" style="fill:var(--dim)">' + max + '</text>' +
+    '<text x="' + (padL - 5) + '" y="' + (padT + plotH) + '" text-anchor="end" font-size="9" font-family="ui-monospace,monospace" style="fill:var(--dim)">0</text>';
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" preserveAspectRatio="xMidYMid meet" role="img" style="display:block;max-width:' + W + 'px">' + axis + bars + vl + xl + '</svg>';
 }
+
 function renderAccess(d) {
   document.getElementById('acx_meta').textContent = 'バケット: ' + (d.bucket || '') + ' / ログ ' + d.keysCount + ' 個 / 取得 ' + new Date().toLocaleTimeString('ja-JP');
   if (!d.keysCount) {
@@ -1540,20 +1569,32 @@ function renderAccess(d) {
     accCard('ざっくり訪問者', String(d.uniqueIps), 'ユニークIP') +
     accCard('ボットっぽい', String(d.bots), 'ページ表示のうち');
 
-  const dMax = Math.max(1, ...d.byDay.map((x) => x[1]));
-  const dayRows = d.byDay.map((x) => '<tr><td class="mono">' + esc(x[0]) + '</td><td style="text-align:right">' + x[1] + '</td><td style="width:210px">' + acxBar(x[1], dMax) + '</td></tr>').join('');
-  const hours = d.byHour.slice(-48);
-  const hMax = Math.max(1, ...hours.map((x) => x[1]));
-  const hourRows = hours.map((x) => '<tr><td class="mono" style="font-size:11px">' + esc(x[0]) + '時</td><td style="text-align:right">' + x[1] + '</td><td style="width:210px">' + acxBar(x[1], hMax) + '</td></tr>').join('');
+  const dayChart = svgBars(d.byDay, { height: 150, xfmt: (s) => s.slice(5) });                       // MM-DD
+  const hourChart = svgBars(d.byHour.slice(-48), { height: 150, labelEvery: 6, xfmt: (s) => s.slice(8) }); // HH
+
+  const ipRows = (d.ips || []).length ? d.ips.map((x) =>
+    '<tr>' +
+    '<td class="mono" style="font-size:11px">' + esc(x.ip) + (x.bot ? ' <span class="badge sold" style="font-size:9px;padding:0 5px">bot</span>' : '') + '</td>' +
+    '<td style="text-align:right">' + x.count + '</td>' +
+    '<td class="mono" style="font-size:10px;color:var(--muted);white-space:nowrap">' + esc(x.last) + '</td>' +
+    '<td class="mono" style="font-size:10px;color:var(--dim);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(x.ua) + '">' + esc(x.ua) + '</td>' +
+    '</tr>').join('') : '<tr><td colspan="4" class="muted">—</td></tr>';
+
+  const uaRows = (d.uas || []).length ? d.uas.map((x) =>
+    '<tr><td style="text-align:right;width:56px">' + x.count + '</td>' +
+    '<td class="mono" style="font-size:10px;color:var(--muted);word-break:break-all">' + esc(x.ua) + '</td></tr>').join('') : '<tr><td colspan="2" class="muted">—</td></tr>';
+
   const refRows = d.refs.length
-    ? d.refs.map((x) => '<tr><td style="text-align:right;width:60px">' + x[1] + '</td><td class="mono" style="font-size:11px">' + esc(x[0]) + '</td></tr>').join('')
+    ? d.refs.map((x) => '<tr><td style="text-align:right;width:56px">' + x[1] + '</td><td class="mono" style="font-size:11px">' + esc(x[0]) + '</td></tr>').join('')
     : '<tr><td colspan="2" class="muted">外部リファラなし(直アクセス/ブックマーク中心)</td></tr>';
 
   document.getElementById('acx_body').innerHTML =
-    '<div class="sub" style="margin-top:6px;padding-top:0;border-top:none">日別ページ表示 · BY DAY</div>' +
-    '<table><thead><tr><th>日</th><th style="text-align:right">表示</th><th></th></tr></thead><tbody>' + dayRows + '</tbody></table>' +
-    '<div class="sub">時間別(直近48時間)· HOURLY</div>' +
-    '<table><thead><tr><th>時刻(JST)</th><th style="text-align:right">表示</th><th></th></tr></thead><tbody>' + hourRows + '</tbody></table>' +
+    '<div class="sub" style="margin-top:6px;padding-top:0;border-top:none">日別ページ表示 · BY DAY</div>' + dayChart +
+    '<div class="sub">時間別(直近48時間 / JST)· HOURLY</div>' + hourChart +
+    '<div class="sub">アクセス元 IP(ページ表示・上位25)· BY IP</div>' +
+    '<table><thead><tr><th>IP</th><th style="text-align:right">回数</th><th>最終(JST)</th><th>User-Agent</th></tr></thead><tbody>' + ipRows + '</tbody></table>' +
+    '<div class="sub">User-Agent(上位15)· UA</div>' +
+    '<table><thead><tr><th style="text-align:right">回数</th><th>User-Agent</th></tr></thead><tbody>' + uaRows + '</tbody></table>' +
     '<div class="sub">流入元(リファラ)· REFERRERS</div>' +
     '<table><thead><tr><th style="text-align:right">件</th><th>ホスト</th></tr></thead><tbody>' + refRows + '</tbody></table>';
 }
