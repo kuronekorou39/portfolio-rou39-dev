@@ -38,7 +38,7 @@ import { parseArgs } from 'util';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(new URL('../../backend/', import.meta.url).href);
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '../..');
@@ -82,6 +82,10 @@ function fail(msg) {
 }
 
 if (!values.notes) fail('--notes は必須です（更新ダイアログに出る文言）');
+
+// Windows では引数に実際の改行を渡せない（渡すと1行目で切れる）。
+// 複数行にしたいときは "1行目\n2行目" のように \n を書いてもらう。
+const notes = values.notes.replace(/\\n/g, '\n');
 
 // バージョン未指定なら GitHub Release の最新を使う
 const version =
@@ -127,18 +131,31 @@ try {
     console.log('  [dry-run] PutObject');
   } else {
     const s3 = new S3Client({ region: REGION });
-    await s3.send(new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: `${PREFIX}/${apkName}`,
-      Body: body,
-      ContentType: APK_CONTENT_TYPE,
-    }));
-    console.log('      アップロード完了');
+    const key = `${PREFIX}/${apkName}`;
+    let already = false;
+    try {
+      const head = await s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }));
+      already = head.ContentLength === body.length;
+    } catch {
+      // 未アップロード。そのまま上げる
+    }
+    if (already) {
+      console.log('      同じものが既にあるのでスキップ');
+    } else {
+      await s3.send(new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+        Body: body,
+        ContentType: APK_CONTENT_TYPE,
+      }));
+      console.log('      アップロード完了');
+    }
   }
 
   console.log(`\n[3/5] update.json を更新（アプリ内の更新チェック）`);
-  const updateJson = { version, release_notes: values.notes, apk_url: apkUrl };
-  console.log(`      version=${version}  notes=${JSON.stringify(values.notes)}`);
+  const updateJson = { version, release_notes: notes, apk_url: apkUrl };
+  console.log(`      version=${version}`);
+  for (const line of notes.split('\n')) console.log(`      | ${line}`);
   if (!dryRun) writeFileSync(UPDATE_JSON, JSON.stringify(updateJson, null, 2) + '\n', 'utf-8');
 
   console.log(`\n[4/5] projects.json の downloads を更新（作品ページの DL ボタン）`);
