@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アクセス解析(ローカル)</title>
+<style>
+  :root {
+    --bg: #0b0b0e;
+    --panel: #121218;
+    --line: #2a2a33;
+    --line-soft: #1d1d24;
+    --text: #e7e7ec;
+    --muted: #9a9aa8;
+    --dim: #62626f;
+    --accent: #7ec8e3;
+    --warn: #ffb347;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    font-size: 14px; line-height: 1.6;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: .02em; }
+  .meta { color: var(--dim); font-size: 12px; margin-bottom: 20px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
+  select, button {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 12px; font-size: 13px; font-family: inherit;
+  }
+  button { cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  .card {
+    flex: 1 1 150px; background: var(--panel);
+    border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px 16px;
+  }
+  .card .label { font-size: 11px; color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
+  .card .value { font-size: 26px; font-weight: 700; line-height: 1.25; }
+  .card .note { font-size: 11px; color: var(--muted); }
+  .sub {
+    margin: 26px 0 8px; padding-top: 14px; border-top: 1px solid var(--line-soft);
+    font-size: 12px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line-soft); }
+  th { font-size: 11px; color: var(--dim); font-weight: 600; }
+  td.num { text-align: right; width: 64px; font-variant-numeric: tabular-nums; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .bot { color: var(--warn); font-size: 10px; border: 1px solid var(--warn); border-radius: 4px; padding: 0 4px; }
+  .ua { color: var(--dim); font-size: 11px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hint { color: var(--dim); font-size: 11px; margin-top: 20px; line-height: 1.8; }
+  .err { color: #ff6b6b; }
+  .muted { color: var(--muted); }
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>アクセス解析</h1>
+  <div class="meta" id="meta">CloudFront のアクセスログ(S3)を集計するローカル専用ツール</div>
+
+  <div class="controls">
+    <select id="site"></select>
+    <select id="days">
+      <option value="7">直近 7 日</option>
+      <option value="14">直近 14 日</option>
+      <option value="30">直近 30 日</option>
+      <option value="90">直近 90 日</option>
+    </select>
+    <button id="reload">更新</button>
+    <span class="muted" id="status"></span>
+  </div>
+
+  <div id="body"><div class="muted">「更新」で読み込みます(ログの取得と解凍に少しかかります)。</div></div>
+
+  <div class="hint">
+    ページ表示は「HTML が返ったリクエスト」で数えています(アセットと API は除外)。<br>
+    SPA は存在しないパスにも 200 とトップページを返すため、<b>実在するルートに一致しないものは「探索アクセス」として分離</b>し、日別・訪問者・リファラからは除いています。<br>
+    SPA の内部遷移はリクエストが飛ばないためログに残りません。<b>パス別は「入口ページ」</b>(直接アクセス・再読み込み・クローラ)の内訳です。<br>
+    IP と User-Agent はアクセス元の確認用に表示しています(このローカル画面のみ。ログ自体は 90 日で自動削除)。<br>
+    ログ配信には数分〜数時間の遅れがあります。時刻はすべて JST。
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// 単一系列の棒グラフ。data=[[label, value], ...]。棒ごとにホバーで数値を出す。
+// 軸は控えめ(上下線 + 0/最大のみ)。密なときは棒の上の数値を省く。
+function svgBars(data, opts = {}) {
+  if (!data.length) return '<div class="muted">データなし</div>';
+  const W = 880, H = opts.height || 160, padL = 34, padR = 8, padT = 14, padB = 20;
+  const n = data.length;
+  const max = Math.max(1, ...data.map((d) => d[1]));
+  const plotW = W - padL - padR, plotH = H - padT - padB, slot = plotW / n, gap = 2;
+  const bw = Math.max(1, slot - gap);
+  const labelEvery = opts.labelEvery || Math.ceil(n / 10);
+  const showVals = n <= 16;
+  let bars = '', labels = '', values = '';
+
+  data.forEach((d, i) => {
+    const x = padL + i * slot + gap / 2;
+    const h = Math.max(d[1] > 0 ? 1 : 0, Math.round((d[1] / max) * plotH));
+    const y = padT + plotH - h;
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}"`
+      + ` rx="${Math.min(3, bw / 2).toFixed(1)}" style="fill:var(--accent)">`
+      + `<title>${esc(d[0])} : ${d[1]}</title></rect>`;
+    if (showVals && d[1] > 0) {
+      values += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 4).toFixed(1)}" text-anchor="middle"`
+        + ` font-size="9" style="fill:var(--muted)">${d[1]}</text>`;
+    }
+    if (i % labelEvery === 0 || i === n - 1) {
+      const text = opts.xfmt ? opts.xfmt(d[0]) : d[0];
+      labels += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle"`
+        + ` font-size="9" style="fill:var(--dim)">${esc(text)}</text>`;
+    }
+  });
+
+  const axis = `<line x1="${padL}" y1="${padT}" x2="${W - padR}" y2="${padT}" style="stroke:var(--line-soft)"/>`
+    + `<line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" style="stroke:var(--line)"/>`
+    + `<text x="${padL - 6}" y="${padT + 4}" text-anchor="end" font-size="9" style="fill:var(--dim)">${max}</text>`
+    + `<text x="${padL - 6}" y="${padT + plotH}" text-anchor="end" font-size="9" style="fill:var(--dim)">0</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img"`
+    + ` class="mono" style="display:block">${axis}${bars}${values}${labels}</svg>`;
+}
+
+function card(label, value, note) {
+  return `<div class="card"><div class="label">${esc(label)}</div>`
+    + `<div class="value">${esc(value)}</div><div class="note">${esc(note)}</div></div>`;
+}
+
+function rows(list, render, cols) {
+  return list.length ? list.map(render).join('') : `<tr><td colspan="${cols}" class="muted">—</td></tr>`;
+}
+
+function render(d) {
+  $('meta').textContent = `${d.label} / バケット ${d.bucket} / ログ ${d.keysCount} 個 / 取得 ${new Date().toLocaleTimeString('ja-JP')}`;
+
+  if (!d.keysCount) {
+    $('body').innerHTML = '<div class="muted">この期間のログがまだありません(配信に数分〜数時間かかります)。</div>';
+    return;
+  }
+
+  const cards = '<div class="cards">'
+    + card('総リクエスト', d.total.toLocaleString(), 'アセット等を含む')
+    + card('ページ表示', d.pageViews.toLocaleString(), '実在するページ')
+    + card('ざっくり訪問者', d.uniqueIps.toLocaleString(), 'ユニーク IP')
+    + card('ボットっぽい', d.bots.toLocaleString(), 'ページ表示のうち')
+    + card('探索アクセス', d.probes.toLocaleString(), `実在しないパス / ${d.probeIps} IP`)
+    + '</div>';
+
+  const dayChart = svgBars(d.byDay, { xfmt: (s) => s.slice(5) });                          // MM-DD
+  const hourChart = svgBars(d.byHour.slice(-48), { labelEvery: 6, xfmt: (s) => s.slice(8) }); // HH
+
+  const pathRows = rows(d.paths, (x) =>
+    `<tr><td class="num">${x.count}</td><td class="mono">${esc(x.path)}</td></tr>`, 2);
+
+  const refRows = d.refs.length
+    ? d.refs.map(([host, n]) => `<tr><td class="num">${n}</td><td class="mono">${esc(host)}</td></tr>`).join('')
+    : '<tr><td colspan="2" class="muted">外部リファラなし(直アクセス / ブックマーク中心)</td></tr>';
+
+  const ipRows = rows(d.ips, (x) =>
+    `<tr><td class="mono">${esc(x.ip)}${x.bot ? ' <span class="bot">bot</span>' : ''}</td>`
+    + `<td class="num">${x.count}</td>`
+    + `<td class="mono" style="font-size:11px;color:var(--muted);white-space:nowrap">${esc(x.last)}</td>`
+    + `<td class="mono ua" title="${esc(x.ua)}">${esc(x.ua)}</td></tr>`, 4);
+
+  const uaRows = rows(d.uas, (x) =>
+    `<tr><td class="num">${x.count}</td>`
+    + `<td class="mono" style="font-size:11px;color:var(--muted);word-break:break-all">${esc(x.ua)}</td></tr>`, 2);
+
+  const probeSection = d.probePaths.length
+    ? '<div class="sub">探索アクセス先(上位15 / 集計対象外)· probes</div>'
+      + '<div class="table-scroll"><table><thead><tr><th class="num">回数</th><th>パス</th></tr></thead><tbody>'
+      + d.probePaths.map((x) => `<tr><td class="num">${x.count}</td><td class="mono" style="color:var(--warn)">${esc(x.path)}</td></tr>`).join('')
+      + '</tbody></table></div>'
+    : '';
+
+  $('body').innerHTML = cards
+    + '<div class="sub">日別ページ表示 · by day</div>' + dayChart
+    + '<div class="sub">時間別(直近48時間)· hourly</div>' + hourChart
+    + '<div class="sub">入口ページ(上位20)· entry paths</div>'
+    + `<div class="table-scroll"><table><thead><tr><th class="num">表示</th><th>パス</th></tr></thead><tbody>${pathRows}</tbody></table></div>`
+    + '<div class="sub">流入元(リファラ)· referrers</div>'
+    + `<table><thead><tr><th class="num">件</th><th>ホスト</th></tr></thead><tbody>${refRows}</tbody></table>`
+    + '<div class="sub">アクセス元 IP(上位25)· by ip</div>'
+    + `<div class="table-scroll"><table><thead><tr><th>IP</th><th class="num">回数</th><th>最終(JST)</th><th>User-Agent</th></tr></thead><tbody>${ipRows}</tbody></table></div>`
+    + '<div class="sub">User-Agent(上位15)· ua</div>'
+    + `<div class="table-scroll"><table><thead><tr><th class="num">回数</th><th>User-Agent</th></tr></thead><tbody>${uaRows}</tbody></table></div>`
+    + probeSection;
+}
+
+async function load() {
+  const btn = $('reload');
+  btn.disabled = true;
+  $('status').textContent = '集計中…';
+  try {
+    const res = await fetch(`/api/stats?site=${encodeURIComponent($('site').value)}&days=${$('days').value}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    render(data);
+    $('status').textContent = '';
+  } catch (e) {
+    $('body').innerHTML = `<div class="err">${esc(e.message)}</div>`;
+    $('status').textContent = '';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+(async function init() {
+  const sites = await fetch('/api/sites').then((r) => r.json());
+  $('site').innerHTML = sites.map((s) => `<option value="${esc(s.key)}">${esc(s.label)}</option>`).join('');
+  $('reload').addEventListener('click', load);
+  $('site').addEventListener('change', load);
+  $('days').addEventListener('change', load);
+  load();
+})();
+</script>
+</body>
+</html>
