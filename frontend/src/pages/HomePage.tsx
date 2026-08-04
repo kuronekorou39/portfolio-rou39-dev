@@ -11,12 +11,36 @@ import {
 } from 'framer-motion';
 import avatarImg from '@/assets/avatar.png';
 import underConstructionImg from '@/assets/under-construction.png';
-import { fetchContributions, type ContributionCalendar } from '@/lib/api';
+import { categoryLabel, categoryEmoji } from '@/data/mockProjects';
+import { fetchContributions, fetchProjects, type ContributionCalendar } from '@/lib/api';
+import type { Project } from '../../../shared/src/types';
 
 // ─── Data ──────────────────────────────────────────────────
-const projects = [
-  { id: 'local-port-board', title: 'Local PortBoard', desc: 'ローカル開発環境のポート監視・管理ツール', emoji: '🖥️', category: 'Desktop', color: '#7EC8E3', accent: '#2196F3' },
-];
+// トップに出す Featured の枠数
+const FEATURED_COUNT = 3;
+// updatedAt がこれ以内なら NEW バッジを出す
+const NEW_BADGE_DAYS = 30;
+
+// カードの配色。id から決まるので、アプリを足しても色を手で決めなくていい
+function accentPair(id: string): { color: string; accent: string } {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) % 360;
+  return { color: `hsl(${h} 70% 58%)`, accent: `hsl(${(h + 60) % 360} 65% 52%)` };
+}
+
+// featured を指定した順に優先し、足りない分は更新の新しい順で埋める。
+// 指定を忘れても放置で古くならず、出したいものは確実に出せる
+function pickFeatured(projects: Project[]): Project[] {
+  const byUpdated = [...projects].sort(
+    (a, b) => b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id)
+  );
+  const picked = byUpdated.filter((p) => p.featured);
+  for (const p of byUpdated) {
+    if (picked.length >= FEATURED_COUNT) break;
+    if (!p.featured) picked.push(p);
+  }
+  return picked.slice(0, FEATURED_COUNT);
+}
 
 // ═══════════════════════════════════════════════════════════
 // INTERACTIVE BACKGROUND TOYS
@@ -657,9 +681,17 @@ function StatsBar() {
 
 // ─── Featured projects — alternating scroll cards ──────────
 function FeaturedProjects() {
+  const [featured, setFeatured] = useState<Project[]>([]);
+
+  useEffect(() => {
+    fetchProjects()
+      .then((data) => setFeatured(pickFeatured(data)))
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="mx-auto max-w-5xl space-y-24 px-6 md:space-y-32">
-      {projects.map((project, i) => (
+      {featured.map((project, i) => (
         <ProjectShowcase key={project.id} project={project} index={i} />
       ))}
       <motion.div
@@ -680,7 +712,7 @@ function FeaturedProjects() {
   );
 }
 
-function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; index: number }) {
+function ProjectShowcase({ project, index }: { project: Project; index: number }) {
   const isEven = index % 2 === 0;
   const cardRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -688,6 +720,10 @@ function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; in
     offset: ['start end', 'end start'],
   });
   const y = useTransform(scrollYProgress, [0, 1], [60, -60]);
+  const { color, accent } = accentPair(project.id);
+  const screenshot = project.screenshots?.[0];
+  const updatedAt = Date.parse(project.updatedAt);
+  const isNew = Number.isFinite(updatedAt) && Date.now() - updatedAt <= NEW_BADGE_DAYS * 86_400_000;
 
   return (
     <motion.div
@@ -713,17 +749,37 @@ function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; in
             <div
               className="absolute inset-0 opacity-25 transition-opacity duration-700 group-hover:opacity-50"
               style={{
-                background: `radial-gradient(ellipse at 30% 20%, ${project.color}, transparent 60%), radial-gradient(ellipse at 70% 80%, ${project.accent}, transparent 60%)`,
+                background: `radial-gradient(ellipse at 30% 20%, ${color}, transparent 60%), radial-gradient(ellipse at 70% 80%, ${accent}, transparent 60%)`,
               }}
             />
-            {/* Emoji */}
-            <motion.span
-              className="relative z-10 text-8xl drop-shadow-lg md:text-9xl"
-              animate={{ y: [0, -10, 0], rotate: [0, 3, -3, 0] }}
-              transition={{ duration: 5, delay: index * 0.3, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              {project.emoji}
-            </motion.span>
+            {/* Screenshot → icon → emoji の順で使えるものを出す。
+                スクショは縦長 (スマホ) も横長 (デスクトップ) もあるので、
+                切り取らずに contain で収めて背景のグラデーションに載せる */}
+            {screenshot ? (
+              <img
+                src={screenshot}
+                alt={project.title}
+                className="relative z-10 h-full w-full object-contain p-6 drop-shadow-2xl md:p-8"
+                loading="lazy"
+              />
+            ) : project.icon ? (
+              <motion.img
+                src={project.icon}
+                alt=""
+                className="relative z-10 h-28 w-28 rounded-[26px] border border-white/10 object-cover shadow-2xl md:h-32 md:w-32"
+                animate={{ y: [0, -10, 0], rotate: [0, 3, -3, 0] }}
+                transition={{ duration: 5, delay: index * 0.3, repeat: Infinity, ease: 'easeInOut' }}
+                loading="lazy"
+              />
+            ) : (
+              <motion.span
+                className="relative z-10 text-8xl drop-shadow-lg md:text-9xl"
+                animate={{ y: [0, -10, 0], rotate: [0, 3, -3, 0] }}
+                transition={{ duration: 5, delay: index * 0.3, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                {categoryEmoji[project.category]}
+              </motion.span>
+            )}
             {/* Shine on hover */}
             <motion.div
               className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -738,16 +794,25 @@ function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; in
 
         {/* Text content */}
         <div className={`w-full md:w-1/2 ${isEven ? 'md:pl-8' : 'md:pr-8'}`}>
-          <motion.span
-            className="mb-3 inline-block rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]"
-            style={{ borderColor: `${project.accent}40`, color: project.accent }}
+          <motion.div
+            className="mb-3 flex flex-wrap items-center gap-2"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            {project.category}
-          </motion.span>
+            <span
+              className="inline-block rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]"
+              style={{ borderColor: `${accent}66`, color: accent }}
+            >
+              {categoryLabel[project.category]}
+            </span>
+            {isNew && (
+              <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-300">
+                New
+              </span>
+            )}
+          </motion.div>
           <motion.h3
             className="mb-3 text-3xl font-black tracking-tight text-white transition-colors group-hover:text-white/90 md:text-4xl"
             initial={{ opacity: 0, y: 10 }}
@@ -758,14 +823,27 @@ function ProjectShowcase({ project, index }: { project: (typeof projects)[0]; in
             {project.title}
           </motion.h3>
           <motion.p
-            className="mb-6 text-base leading-relaxed text-white/40 md:text-lg"
+            className="mb-5 text-base leading-relaxed text-white/40 md:text-lg"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
           >
-            {project.desc}
+            {project.subtitle}
           </motion.p>
+          <motion.div
+            className="mb-6 flex flex-wrap gap-1.5"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.45 }}
+          >
+            {project.tags.slice(0, 4).map((tag) => (
+              <span key={tag} className="rounded-full border border-white/[0.08] px-3 py-1 text-xs text-white/30">
+                {tag}
+              </span>
+            ))}
+          </motion.div>
           <motion.span
             className="inline-flex items-center gap-2 text-sm font-medium text-white/50 transition-colors group-hover:text-white/80"
             initial={{ opacity: 0 }}
