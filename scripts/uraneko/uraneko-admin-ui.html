@@ -446,7 +446,7 @@
       </h2>
       <div id="acx_cards" style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:6px"></div>
       <div id="acx_body"><div class="muted">「更新」で読み込みます(ログの取得+解凍に少しかかります)。</div></div>
-      <div class="hint">CloudFront のアクセスログ(S3)を集計。グラフの棒はホバーで数値。<b>IP・User-Agent はアクセス元の確認用に表示</b>(このローカル管理画面のみ。ログ自体は 90 日で自動削除)。SPA のためページ表示は /index.html に集約され、ページ別内訳は取れません。配信に数分〜数時間の遅延あり。時刻は JST。</div>
+      <div class="hint">CloudFront のアクセスログ(S3)を集計。グラフの棒はホバーで数値。<b>IP・User-Agent はアクセス元の確認用に表示</b>(このローカル管理画面のみ。ログ自体は 90 日で自動削除)。実在しないパスへのアクセスは<b>探索アクセス</b>として他の集計から分離しています。SPA の内部遷移はログに残らないため、パス別は取れません。配信に数分〜数時間の遅延あり。時刻は JST。サイト横断で見るときは <span class="mono">scripts/access/access-server.mjs</span>。</div>
     </section>
   </div>
 
@@ -1567,7 +1567,8 @@ function renderAccess(d) {
     accCard('総リクエスト', String(d.total), 'アセット等込み') +
     accCard('ページ表示', String(d.pageViews), '直近 ' + d.days + ' 日') +
     accCard('ざっくり訪問者', String(d.uniqueIps), 'ユニークIP') +
-    accCard('ボットっぽい', String(d.bots), 'ページ表示のうち');
+    accCard('ボットっぽい', String(d.bots), 'ページ表示のうち') +
+    accCard('探索アクセス', String(d.probes ?? 0), '実在しないパス / ' + (d.probeIps ?? 0) + ' IP');
 
   const dayChart = svgBars(d.byDay, { height: 150, xfmt: (s) => s.slice(5) });                       // MM-DD
   const hourChart = svgBars(d.byHour.slice(-48), { height: 150, labelEvery: 6, xfmt: (s) => s.slice(8) }); // HH

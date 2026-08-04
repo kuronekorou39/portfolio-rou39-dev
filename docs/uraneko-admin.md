@@ -57,8 +57,12 @@ node scripts/uraneko/uraneko-admin.mjs ingest --id <product_id> --file <local.mp
 
 サイトのアクセス数を「軽く」把握する用に、CloudFront の標準アクセスログを S3 に出している
 (`infra/lib/uraneko/frontend-stack.ts` で有効化)。集計は **管理 GUI の「アクセス」タブ**か、
-同じロジックのローカルスクリプトのどちらでも見られる(解析・集計は `access-stats.mjs` の
-`parseLog` / `summarize` / `collect` を GUI・CLI で共有)。
+同じロジックのローカルスクリプトのどちらでも見られる。
+
+集計の実体は rou39.com と共通の `scripts/lib/cf-access-stats.mjs`(`scripts/uraneko/access-stats.mjs`
+はそこにサイト設定を束ねるだけの薄い入口)。**サイトを横断して見たいときは
+[アクセス解析](access-stats.md) の GUI(`scripts/access/access-server.mjs`)を使う。**
+数え方の注意(探索アクセスの分離・「入口ページ」の意味)もそちらに書いてある。
 
 - **GUI**: 管理画面の「アクセス」タブ。日数(7/14/30)を選んで「更新」で取得。開くたびに読むと
   重いので初回表示時のみ自動読み込み。GUI サーバは S3 を読むだけ(書き込みなし)。
@@ -69,9 +73,13 @@ node scripts/uraneko/access-stats.mjs            # 直近7日
 node scripts/uraneko/access-stats.mjs --days=30  # 直近30日
 ```
 
-→ 総リクエスト・ページ表示・ざっくり訪問者(ユニークIP)・ボット割合・日別/時間別・流入元
-(リファラ)を表示する。バケットは `uraneko-access-logs-<account>`(自動検出、`URANEKO_LOG_BUCKET`
-で明示も可)。
+→ 総リクエスト・ページ表示・ざっくり訪問者(ユニークIP)・ボット割合・日別/時間別・入口ページ・
+流入元(リファラ)・アクセス元 IP / UA を表示する。バケットは `uraneko-access-logs-<account>`
+(自動検出、`URANEKO_LOG_BUCKET` で明示も可)。
+
+実在しないパスへの探索アクセスは集計から分離している(SPA は 404 にもトップページを 200 で
+返すため、分けないとスキャンがページ表示として数えられる)。ルートを増やしたら
+`scripts/lib/cf-access-stats.mjs` の `SITES.uraneko.routes` も更新すること。
 
 - **費用**: CloudFront のログ機能は無料。S3 保管は小規模なら月数円。ログは **90 日で自動削除**。
 - **注意**: ログには IP / User-Agent が含まれる(個人情報)。SPA のためページ表示はすべて
