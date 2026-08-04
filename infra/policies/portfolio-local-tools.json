@@ -1,0 +1,145 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyNotesData",
+      "Effect": "Deny",
+      "Action": "dynamodb:*",
+      "Resource": [
+        "arn:aws:dynamodb:ap-northeast-1:234080517105:table/notes-*",
+        "arn:aws:dynamodb:ap-northeast-1:234080517105:table/notes-*/index/*"
+      ]
+    },
+    {
+      "Sid": "DenyNotesSecretsAndLambdaLogs",
+      "Effect": "Deny",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:ap-northeast-1:234080517105:secret:notes/*",
+        "arn:aws:logs:ap-northeast-1:234080517105:log-group:/aws/lambda/Notes*",
+        "arn:aws:logs:ap-northeast-1:234080517105:log-group:/aws/lambda/Notes*:*"
+      ]
+    },
+    {
+      "Sid": "PortfolioProjectsSeed",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:Scan",
+        "dynamodb:Query"
+      ],
+      "Resource": "arn:aws:dynamodb:ap-northeast-1:234080517105:table/portfolio-projects"
+    },
+    {
+      "Sid": "UranekoAdminTables",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Scan",
+        "dynamodb:Query",
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:ap-northeast-1:234080517105:table/uraneko-*",
+        "arn:aws:dynamodb:ap-northeast-1:234080517105:table/uraneko-*/index/*"
+      ]
+    },
+    {
+      "Sid": "DynamoMetadata",
+      "Effect": "Allow",
+      "Action": ["dynamodb:ListTables", "dynamodb:DescribeTable"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SiteAndAssetBuckets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::rou39-site",
+        "arn:aws:s3:::rou39-site/*",
+        "arn:aws:s3:::uraneko-assets-234080517105",
+        "arn:aws:s3:::uraneko-assets-234080517105/*"
+      ]
+    },
+    {
+      "Sid": "AccessLogBucketsRead",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": [
+        "arn:aws:s3:::rou39-cloudfront-logs",
+        "arn:aws:s3:::rou39-cloudfront-logs/*",
+        "arn:aws:s3:::uraneko-access-logs-234080517105",
+        "arn:aws:s3:::uraneko-access-logs-234080517105/*",
+        "arn:aws:s3:::notes-access-logs-234080517105",
+        "arn:aws:s3:::notes-access-logs-234080517105/*"
+      ]
+    },
+    {
+      "Sid": "ListBuckets",
+      "Effect": "Allow",
+      "Action": "s3:ListAllMyBuckets",
+      "Resource": "*"
+    },
+    {
+      "Sid": "UranekoOrderSecret",
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "arn:aws:secretsmanager:ap-northeast-1:234080517105:secret:uraneko/order-access-secret*"
+    },
+    {
+      "Sid": "ReadOnlyDiagnostics",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "cloudfront:Get*",
+        "cloudfront:List*",
+        "cloudformation:Describe*",
+        "cloudformation:List*",
+        "cloudformation:GetTemplate*",
+        "lambda:Get*",
+        "lambda:List*",
+        "apigateway:GET",
+        "logs:Describe*",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:GetQueryResults",
+        "cloudwatch:Describe*",
+        "cloudwatch:Get*",
+        "cloudwatch:List*",
+        "iam:Get*",
+        "iam:List*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ManageOwnAccessKeys",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:UpdateAccessKey",
+        "iam:ListAccessKeys",
+        "iam:GetAccessKeyLastUsed"
+      ],
+      "Resource": "arn:aws:iam::234080517105:user/portfolio-deployer"
+    }
+  ]
+}
