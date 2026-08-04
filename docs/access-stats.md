@@ -14,7 +14,7 @@ node scripts/access/access-server.mjs
 ```
 
 → ブラウザで **http://127.0.0.1:4174** を開く。
-サイト(rou39 / uraneko)と期間(7〜90日)を選んで「更新」。
+サイト(rou39 / notes / uraneko)と期間(7〜90日)を選んで「更新」。
 
 uraneko の管理 GUI(4173)とはポートが別なので同時に起動できる。
 ポート変更: `ACCESS_UI_PORT=5000 node scripts/access/access-server.mjs`
@@ -26,7 +26,7 @@ Host 検証 + Origin 検証で DNS リバインディングと CSRF を防いで
 ```bash
 node scripts/access/access-stats.mjs                 # rou39.com / 直近7日
 node scripts/access/access-stats.mjs --days=30       # 期間を変える
-node scripts/access/access-stats.mjs --site=uraneko  # サイトを変える
+node scripts/access/access-stats.mjs --site=notes    # サイトを変える (rou39 / notes / uraneko)
 
 node scripts/uraneko/access-stats.mjs --days=30      # uraneko 専用の入口(従来どおり)
 ```
@@ -36,12 +36,20 @@ node scripts/uraneko/access-stats.mjs --days=30      # uraneko 専用の入口(�
 | サイト | バケット | 有効化している場所 |
 |---|---|---|
 | rou39.com | `rou39-cloudfront-logs` | `infra/lib/frontend-stack.ts` |
+| notes.rou39.com | `notes-access-logs-<account>` | `infra/lib/notes/frontend-stack.ts` |
 | uraneko.rou39.com | `uraneko-access-logs-<account>` | `infra/lib/uraneko/frontend-stack.ts` |
 
-どちらも prefix は `cf/`、90 日で自動削除。
-バケットを明示したいときは `ROU39_LOG_BUCKET` / `URANEKO_LOG_BUCKET` で上書きできる。
+いずれも prefix は `cf/`、90 日で自動削除。バケットを明示したいときは
+`ROU39_LOG_BUCKET` / `NOTES_LOG_BUCKET` / `URANEKO_LOG_BUCKET` で上書きできる。
 
-notes.rou39.com は CloudFront のアクセスログを出していないため対象外。
+### notes の秘密URLについて
+
+Stash Notes の共有トークンは `location.hash`(フラグメント)に載っている。
+フラグメントはサーバに送られないので、**アクセスログに残るのは `/m` まで**で、
+どのメモが開かれたかはログからは分からない。トークンが S3 に複製されることもない。
+
+メモ単位の閲覧履歴が見たいときは、notes 自身が DynamoDB に持っている
+アクセス記録(発行者・閲覧者が画面から見られるもの)を使う。こちらは別系統。
 
 ## 数え方(ここが要点)
 

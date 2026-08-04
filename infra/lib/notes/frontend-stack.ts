@@ -36,6 +36,22 @@ export class NotesFrontendStack extends cdk.Stack {
       lifecycleRules: [{ abortIncompleteMultipartUploadAfter: cdk.Duration.days(7) }],
     });
 
+    // CloudFront の標準アクセスログ。アクセス数をローカルから把握する用
+    // (scripts/access/access-server.mjs。rou39 / uraneko と同じ仕組み)。
+    // 秘密URLのトークンは location.hash にあるためサーバには送られず、ログには /m しか残らない。
+    // 90 日で自動削除。プライバシーポリシーの「技術情報=サーバーログ / 90日保存」の範囲。
+    // CloudFront ログ配信は ACL を使うので ObjectOwnership を
+    // BUCKET_OWNER_PREFERRED (ACL 有効) にする必要がある。
+    const logBucket = new s3.Bucket(this, 'NotesAccessLogs', {
+      bucketName: `notes-access-logs-${this.account}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      lifecycleRules: [{ expiration: cdk.Duration.days(90) }],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
     // CloudFront Function: /api/* の prefix を strip して API Gateway に送る
     const apiRewriteFn = new cloudfront.Function(this, 'NotesApiRewrite', {
       code: cloudfront.FunctionCode.fromInline(`
@@ -150,6 +166,10 @@ export class NotesFrontendStack extends cdk.Stack {
       domainNames: [props.subdomain],
       certificate: props.certificate,
       ...(props.webAclArn ? { webAclId: props.webAclArn } : {}),
+      enableLogging: true,
+      logBucket,
+      logFilePrefix: 'cf/',
+      logIncludesCookies: false,
       defaultRootObject: 'index.html',
     });
 
@@ -175,6 +195,7 @@ export class NotesFrontendStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'NotesSiteUrl', { value: `https://${props.subdomain}` });
+    new cdk.CfnOutput(this, 'NotesAccessLogBucket', { value: logBucket.bucketName });
     new cdk.CfnOutput(this, 'NotesDistributionUrl', {
       value: `https://${distribution.distributionDomainName}`,
     });

@@ -59,6 +59,24 @@ export const SITES = {
       /^\/_ogp\/[\w-]+\.html$/,
     ],
   },
+  notes: {
+    key: 'notes',
+    label: 'notes.rou39.com(Stash Notes)',
+    bucketPattern: /^notes-access-logs-/,
+    prefix: 'cf/',
+    selfHosts: ['notes.rou39.com'],
+    envBucket: 'NOTES_LOG_BUCKET',
+    excludePrefixes: ['/api'],
+    // 秘密URLのトークンは location.hash にあるためサーバには届かない。
+    // ログに残るのは /m までで、どのメモが開かれたかはここからは分からない
+    routes: [
+      /^\/$/,
+      /^\/m(\/.*)?$/,
+      /^\/privacy$/,
+      /^\/terms$/,
+      /^\/auth\/callback$/,
+    ],
+  },
   uraneko: {
     key: 'uraneko',
     label: 'uraneko.rou39.com(動画販売)',
