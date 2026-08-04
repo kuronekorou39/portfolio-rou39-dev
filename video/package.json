@@ -1,0 +1,27 @@
+{
+  "name": "stash-notes-video",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "comment": "SNS 宣伝用の 32 秒動画。ルート package.json の workspaces には意図的に入れていない (CI の build/deploy と lockfile を汚さないため)。ここで独立に npm install する。",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "node render.mjs",
+    "render:vertical": "remotion render StashNotes32-Vertical out/stash-notes-32s-9x16.mp4",
+    "render:landscape": "remotion render StashNotes32-Landscape out/stash-notes-32s-16x9.mp4",
+    "render:square": "remotion render StashNotes32-Square out/stash-notes-32s-1x1.mp4",
+    "still": "remotion still",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "remotion": "^4.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "~5.9.3"
+  }
+}

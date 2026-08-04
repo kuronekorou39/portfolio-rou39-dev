@@ -7,6 +7,9 @@ build/
 cdk.out/
 *.tsbuildinfo
 
+# 宣伝動画の書き出し先 (MP4/PNG は数十MB〜。素材はコードなので再生成できる)
+video/out/
+
 # Environment
 .env
 .env.local
