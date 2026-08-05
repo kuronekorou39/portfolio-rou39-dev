@@ -68,6 +68,25 @@ const certificate = new acm.Certificate(certStack, 'SiteCertificate', {
   validation: acm.CertificateValidation.fromDns(hostedZone),
 });
 
+// CAA: rou39.com の証明書を発行できる CA を Amazon (ACM) だけに限定する。
+// CAA が無いと任意の CA が発行できてしまい、DNS や BGP を乗っ取れる攻撃者が
+// ドメイン認証を通して「正規の」証明書を取得できる。そうなると TLS も HSTS も効かない。
+// 頂点に置けば CA は FQDN から辿って見つけるので、全サブドメインに効く。
+// iodef は違反(=発行を試みた形跡)の通知先。*@rou39.com は SES で Gmail に転送される。
+// issuewild は置かない — RFC 8659 では未指定なら issue がワイルドカードにも適用され、
+// *.rou39.com の SAN もこれで発行できる。
+//
+// 注意: 他社 CA (Let's Encrypt 等) に切り替えるときはここも更新しないと更新が失敗する。
+// 導入時点で全7サブドメイン (apex / www / notes / uraneko / notes-auth / auth / uraneko-auth)
+// が Amazon 発行であることを確認済み。
+new route53.CaaRecord(certStack, 'SiteCaaRecord', {
+  zone: hostedZone,
+  values: [
+    { flag: 0, tag: route53.CaaTag.ISSUE, value: 'amazon.com' },
+    { flag: 0, tag: route53.CaaTag.IODEF, value: 'mailto:contact@rou39.com' },
+  ],
+});
+
 // Auth stack with custom domain
 const authHostedZone = route53.HostedZone.fromHostedZoneAttributes(
   app, 'AuthHostedZone', {
