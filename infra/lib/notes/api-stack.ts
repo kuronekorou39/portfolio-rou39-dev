@@ -241,6 +241,16 @@ export class NotesApiStack extends cdk.Stack {
     });
     writeGrants(deleteTabFn, true);
 
+    const reorderTabsFn = new nodejs.NodejsFunction(this, 'ReorderTabsFn', {
+      runtime,
+      entry: path.join(handlerDir, 'reorder-tabs.ts'),
+      handler: 'handler',
+      environment: commonEnv,
+      bundling,
+      reservedConcurrentExecutions: 10,
+    });
+    writeGrants(reorderTabsFn, true); // position の一括更新に TransactWrite を使う
+
     const flushFn = new nodejs.NodejsFunction(this, 'FlushFn', {
       runtime,
       entry: path.join(handlerDir, 'flush.ts'),
@@ -304,6 +314,7 @@ export class NotesApiStack extends cdk.Stack {
     mTabs.addResource('save').addMethod('POST', new apigateway.LambdaIntegration(saveTabFn));
     mTabs.addResource('create').addMethod('POST', new apigateway.LambdaIntegration(createTabFn));
     mTabs.addResource('delete').addMethod('POST', new apigateway.LambdaIntegration(deleteTabFn));
+    mTabs.addResource('reorder').addMethod('POST', new apigateway.LambdaIntegration(reorderTabsFn));
     m.addResource('flush').addMethod('POST', new apigateway.LambdaIntegration(flushFn));
 
     new cdk.CfnOutput(this, 'NotesApiUrl', { value: this.api.url });

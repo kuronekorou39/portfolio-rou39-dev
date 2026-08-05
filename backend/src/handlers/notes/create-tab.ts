@@ -17,10 +17,23 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     } catch {
       return noStore(notFound());
     }
-    const { token, title, pin } = body as { token?: unknown; title?: unknown; pin?: unknown };
+    const { token, title, pin, tab_id, position } = body as {
+      token?: unknown; title?: unknown; pin?: unknown; tab_id?: unknown; position?: unknown;
+    };
     if (typeof token !== 'string' || !token) return noStore(notFound());
     const tabTitle = typeof title === 'string' ? title : '';
     if (tabTitle.length > 200) return noStore(badRequest('title_too_long'));
+
+    // クライアント採番の tab_id(楽観追加用)。UUID 形式だけ受ける。
+    // 未指定ならサーバが採番する(旧クライアント互換)。
+    let tabId: string | undefined;
+    if (tab_id !== undefined) {
+      if (typeof tab_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tab_id)) {
+        return noStore(badRequest('invalid_tab_id'));
+      }
+      tabId = tab_id;
+    }
+    const tabPosition = typeof position === 'number' && Number.isFinite(position) ? position : undefined;
 
     // 作成も書き込みなので保存と同じスロットル窓を消費する
     const resolved = await resolveTokenThrottled(token, 'last_save_ms', MIN_SAVE_INTERVAL_MS);
@@ -30,7 +43,12 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const pinResp = await pinGateResponse(resolved.token.memo_id, resolved.token.token_hash, resolved.token, pin);
     if (pinResp) return pinResp;
 
-    const result = await createTab({ memo_id: resolved.token.memo_id, title: tabTitle });
+    const result = await createTab({
+      memo_id: resolved.token.memo_id,
+      title: tabTitle,
+      tab_id: tabId,
+      position: tabPosition,
+    });
     if (result.kind === 'limit') return noStore(conflict('tab_limit_reached'));
     return noStore(ok({ tab: result.tab }));
   } catch (err) {

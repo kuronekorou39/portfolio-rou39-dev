@@ -1,44 +1,178 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, ApiError, PIN_MIN_LEN, type AccessLogEntry, type MemoData } from '../lib/api';
-import { useAutosave, type TabState } from '../lib/autosave';
+import {
+  useAutosave,
+  lastTabKey,
+  seenIpsKey,
+  MAX_TABS_PER_MEMO,
+  type TabState,
+} from '../lib/autosave';
 import { saveSnapshot, loadSnapshot, deleteSnapshot } from '../lib/offline';
 import ThemeToggle from '../components/ThemeToggle';
 import Loading from '../components/Loading';
 
-/** アクセス履歴(直近)。E2E暗号化しない代わりに「誰がいつ開いたか」を利用者に見せる。 */
-function AccessLogPanel({ entries }: { entries: AccessLogEntry[] }) {
+/** User-Agent を「OS / ブラウザ」に要約する。全文はクリックで開ける。 */
+function shortUa(ua: string): string {
+  if (!ua) return '不明';
+  const os = /iPhone|iPad|iPod/.test(ua)
+    ? 'iOS'
+    : /Android/.test(ua)
+      ? 'Android'
+      : /Windows/.test(ua)
+        ? 'Windows'
+        : /Mac OS X|Macintosh/.test(ua)
+          ? 'macOS'
+          : /Linux|X11/.test(ua)
+            ? 'Linux'
+            : null;
+  // 判定順が重要。Edge/Opera は Chrome を、Chrome は Safari を UA に含む
+  const browser = /Edg\//.test(ua)
+    ? 'Edge'
+    : /OPR\/|Opera/.test(ua)
+      ? 'Opera'
+      : /CriOS\//.test(ua)
+        ? 'Chrome'
+        : /Firefox\/|FxiOS\//.test(ua)
+          ? 'Firefox'
+          : /Chrome\//.test(ua)
+            ? 'Chrome'
+            : /Safari\//.test(ua)
+              ? 'Safari'
+              : null;
+  if (os && browser) return `${os} / ${browser}`;
+  if (os) return os;
+  if (browser) return browser;
+  return ua.length > 40 ? `${ua.slice(0, 40)}…` : ua; // bot 等
+}
+
+/** アクセス元の識別子。生IPが無い古い記録はハッシュで代用する。 */
+const ipOf = (e: AccessLogEntry) => e.ip || e.ip_hash;
+
+function readSeenIps(memoId: string | undefined): Set<string> {
+  if (!memoId) return new Set();
+  try {
+    const raw = localStorage.getItem(seenIpsKey(memoId));
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * アクセス履歴(直近)。E2E暗号化しない代わりに「誰がいつ開いたか」を利用者に見せる。
+ *
+ * 「新規」= この端末でまだ確認していないアクセス元(localStorage にメモ単位で記録)。
+ * サーバ側に初回フラグを持たせると閲覧記録のたびに過去ログを引くことになるので、
+ * 端末側で持つ。別の端末で開くと一度は全部が新規に見える。
+ */
+function AccessLogPanel({ entries, memoId }: { entries: AccessLogEntry[]; memoId?: string }) {
+  // 確認済みIPはマウント時に読む。開いている間に消えないよう、状態としても保持する
+  const [seen, setSeen] = useState<Set<string>>(() => readSeenIps(memoId));
+  const [expandedUa, setExpandedUa] = useState<number | null>(null);
+
+  const newIps = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of entries) if (!seen.has(ipOf(e))) s.add(ipOf(e));
+    return s;
+  }, [entries, seen]);
+
+  // 閉じたタイミングで既読にする(開いている間はハイライトを残して見えるようにする)
+  const acknowledge = useCallback(() => {
+    if (!memoId || newIps.size === 0) return;
+    const next = new Set([...seen, ...newIps]);
+    setSeen(next);
+    try {
+      localStorage.setItem(seenIpsKey(memoId), JSON.stringify([...next]));
+    } catch {
+      /* 容量超過等。ハイライトが出続けるだけで実害はない */
+    }
+  }, [memoId, newIps, seen]);
+
   if (entries.length === 0) return null;
+
   return (
-    <details style={{ marginTop: 24, fontSize: 12, color: 'var(--muted)' }}>
+    <details
+      style={{ marginTop: 24, fontSize: 12, color: 'var(--muted)' }}
+      onToggle={(e) => {
+        if (!(e.currentTarget as HTMLDetailsElement).open) acknowledge();
+      }}
+    >
       <summary style={{ cursor: 'pointer', userSelect: 'none' }}>
         アクセス履歴(直近 {entries.length} 件)
-      </summary>
-      <ul style={{ listStyle: 'none', padding: '8px 0 0', margin: 0 }}>
-        {entries.map((e, i) => (
-          <li
-            key={i}
+        {/* 閉じたままでも新規アクセスに気づけるようにバッジを出す */}
+        {newIps.size > 0 && (
+          <span
             style={{
-              display: 'flex',
-              gap: 12,
-              padding: '3px 0',
-              borderBottom: '1px solid var(--border)',
+              marginLeft: 8,
+              padding: '1px 7px',
+              borderRadius: 999,
+              background: 'var(--danger)',
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
             }}
           >
-            <span style={{ flexShrink: 0 }}>
-              {new Date(e.ts).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
-            </span>
-            <span style={{ fontFamily: 'var(--font-mono)', flexShrink: 0 }} title="アクセス元のIPアドレス">
-              {e.ip || e.ip_hash.slice(0, 8)}
-            </span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {e.ua}
-            </span>
-          </li>
-        ))}
+            新規 {newIps.size}
+          </span>
+        )}
+      </summary>
+      <ul style={{ listStyle: 'none', padding: '8px 0 0', margin: 0 }}>
+        {entries.map((e, i) => {
+          const isNew = newIps.has(ipOf(e));
+          return (
+            <li
+              key={i}
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'baseline',
+                flexWrap: 'wrap',
+                padding: '4px 6px',
+                borderBottom: '1px solid var(--border)',
+                background: isNew ? 'color-mix(in srgb, var(--danger) 12%, transparent)' : undefined,
+                borderRadius: isNew ? 4 : undefined,
+              }}
+            >
+              <span style={{ flexShrink: 0 }}>
+                {new Date(e.ts).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  flexShrink: 0,
+                  fontWeight: isNew ? 700 : undefined,
+                  color: isNew ? 'var(--danger)' : undefined,
+                }}
+                title="アクセス元のIPアドレス"
+              >
+                {ipOf(e)}
+                {isNew && ' ●'}
+              </span>
+              <button
+                onClick={() => setExpandedUa(expandedUa === i ? null : i)}
+                title="クリックで端末情報の全文"
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--muted)',
+                  font: 'inherit',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textAlign: 'left',
+                  textDecoration: 'underline dotted',
+                }}
+              >
+                {expandedUa === i ? e.ua || '不明' : shortUa(e.ua)}
+              </button>
+            </li>
+          );
+        })}
       </ul>
       <p style={{ margin: '8px 0 0' }}>
         ※ このURLを開いたアクセスの記録です(10分内の連続アクセスは1件にまとめられます)。
         アクセス元のIPアドレスと端末情報を記録し、90日で自動削除されます。
+        <br />
+        ※「新規」はこの端末でまだ確認していないアクセス元です(閉じると確認済みになります)。
       </p>
     </details>
   );
@@ -102,13 +236,113 @@ function saveLabel(tab: TabState | undefined): { text: string; color: string } {
       return { text: 'URLが無効', color: 'var(--danger)' };
     case 'auth':
       return { text: 'PINが変更', color: 'var(--danger)' };
+    case 'create_failed':
+      return { text: 'タブ未作成', color: 'var(--danger)' };
     default:
       return tab.dirty ? { text: '未保存', color: 'var(--muted)' } : { text: '保存済み', color: 'var(--muted)' };
   }
 }
 
-// backend limits.ts の MAX_TABS_PER_MEMO と一致させる(上限に達したら+ボタン自体を出さない)
-const MAX_TABS = 12;
+const MAX_TABS = MAX_TABS_PER_MEMO;
+
+/** 空行に1行分の高さを持たせるための埋め草。幅ゼロなので折り返しに影響しない。 */
+const ZERO_WIDTH_SPACE = '\u200b';
+
+/**
+ * 末尾の「改行だけの行」の開始行番号を返す(該当なしなら -1)。
+ * 最後に文字がある行より下の空行を、まとめてハイライトするために使う。
+ */
+function trailingBlankFrom(text: string): number {
+  const lines = text.split('\n');
+  let last = lines.length - 1;
+  while (last >= 0 && lines[last].trim() === '') last--;
+  return last === lines.length - 1 ? -1 : last + 1;
+}
+
+/**
+ * 本文エディタ。textarea は行単位で装飾できないので、同じテキストを描画した層を
+ * 背後に重ねて、末尾の空行だけ背景を付ける。
+ * 見た目がずれないよう、フォント・行間・パディング・折り返し規則を両者で共有する。
+ */
+function ContentEditor({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const lines = useMemo(() => value.split('\n'), [value]);
+  const blankFrom = useMemo(() => trailingBlankFrom(value), [value]);
+
+  // textarea と背面レイヤで必ず一致させる必要があるスタイル
+  const shared: React.CSSProperties = {
+    fontSize: 15,
+    lineHeight: 1.8,
+    fontFamily: 'inherit',
+    padding: '4px',
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+    letterSpacing: 'normal',
+    tabSize: 4,
+    border: 'none',
+    margin: 0,
+    // textarea 側にスクロールバーが出ると内容幅が縮み、背面レイヤと折り返し位置がずれる。
+    // 両方で溝を常に確保して幅を揃える(オーバーレイ型スクロールバーの環境では元々ずれない)。
+    scrollbarGutter: 'stable',
+  };
+
+  return (
+    <div style={{ position: 'relative', flex: 1, minHeight: '55dvh', display: 'flex' }}>
+      <div
+        ref={overlayRef}
+        aria-hidden
+        style={{
+          ...shared,
+          position: 'absolute',
+          inset: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          color: 'transparent',
+        }}
+      >
+        {lines.map((line, i) => (
+          <div
+            key={i}
+            style={{
+              background:
+                blankFrom >= 0 && i >= blankFrom
+                  ? 'color-mix(in srgb, var(--fg) 7%, transparent)'
+                  : 'transparent',
+            }}
+          >
+            {/* 空行にも1行分の高さを持たせる(ゼロ幅スペースなので折り返しに影響しない) */}
+            {line === '' ? ZERO_WIDTH_SPACE : line}
+          </div>
+        ))}
+      </div>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onScroll={(e) => {
+          // 背面レイヤを textarea のスクロールに追従させる
+          if (overlayRef.current) overlayRef.current.scrollTop = e.currentTarget.scrollTop;
+        }}
+        placeholder="ここに入力すると自動保存されます"
+        style={{
+          ...shared,
+          position: 'relative',
+          flex: 1,
+          width: '100%',
+          outline: 'none',
+          resize: 'none',
+          background: 'transparent',
+        }}
+      />
+    </div>
+  );
+}
 
 function Editor({
   token,
@@ -123,15 +357,29 @@ function Editor({
   /** PIN 保護メモの場合の PIN(書き込みに同送)。 */
   pin?: string;
 }) {
-  const { tabs, edit, saveNow, adoptServer, overwriteServer, addTab, removeTab } = useAutosave(
-    token,
-    data.tabs,
-    pin,
-  );
-  const [activeId, setActiveId] = useState<string>(data.tabs[0]?.tab_id ?? '');
-  const [adding, setAdding] = useState(false);
+  const { tabs, edit, saveNow, adoptServer, overwriteServer, addTab, retryCreate, removeTab, reorder, latest } =
+    useAutosave(token, data.tabs, pin);
+  const memoId = data.memo.memo_id;
+  // 前回このメモで見ていたタブを復元する(無ければ先頭)
+  const [activeId, setActiveId] = useState<string>(() => {
+    const remembered = memoId ? localStorage.getItem(lastTabKey(memoId)) : null;
+    return remembered && data.tabs.some((t) => t.tab_id === remembered)
+      ? remembered
+      : (data.tabs[0]?.tab_id ?? '');
+  });
   const [tabError, setTabError] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
   const active = tabs.find((t) => t.tab_id === activeId) ?? tabs[0];
+
+  // 表示中のタブを覚えておく。トークンは保存しない(メモIDとタブIDだけ)
+  useEffect(() => {
+    if (!memoId || !active) return;
+    try {
+      localStorage.setItem(lastTabKey(memoId), active.tab_id);
+    } catch {
+      /* 容量超過等。次回先頭に戻るだけ */
+    }
+  }, [memoId, active]);
 
   const switchTab = (id: string) => {
     // タブ切替時は前のタブを即時保存(debounce を待たない)
@@ -139,21 +387,29 @@ function Editor({
     setActiveId(id);
   };
 
-  const onAddTab = async () => {
-    if (adding) return; // 連打防止(処理中は無視)
-    setAdding(true);
+  // + は即座にタブを出す。サーバ作成は裏で走り、失敗したらそのタブに理由が出る
+  const onAddTab = () => {
     setTabError(null);
-    const r = await addTab();
-    if (r.ok) {
-      setActiveId(r.tab_id);
-    } else if (r.code === 'tab_limit_reached') {
+    const id = addTab();
+    if (!id) {
       setTabError(`タブは最大 ${MAX_TABS} 枚までです`);
-    } else if (r.code === 'save_throttled') {
-      setTabError('操作が早すぎます。1秒ほど待ってからもう一度どうぞ');
-    } else {
-      setTabError('タブを追加できませんでした。時間をおいて再試行してください');
+      return;
     }
-    setAdding(false);
+    setActiveId(id);
+  };
+
+  /** ドラッグ中のタブを、対象タブの位置へ差し込む。 */
+  const onDropTab = (targetId: string) => {
+    if (!dragId || dragId === targetId) return;
+    const ids = tabs.map((t) => t.tab_id);
+    const from = ids.indexOf(dragId);
+    const to = ids.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    ids.splice(to, 0, ...ids.splice(from, 1));
+    setTabError(null);
+    void reorder(ids).then((okReordered) => {
+      if (!okReordered) setTabError('並び順を保存できませんでした。次回開いたときは元の順序に戻ります');
+    });
   };
 
   const onRemoveTab = async (id: string) => {
@@ -213,7 +469,27 @@ function Editor({
         }}
       >
         {tabs.map((t, i) => (
-          <div key={t.tab_id} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <div
+            key={t.tab_id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+              opacity: dragId === t.tab_id ? 0.4 : 1,
+            }}
+            // 並べ替え: つかんで別のタブの上に落とすとそこへ差し込む
+            draggable
+            onDragStart={() => setDragId(t.tab_id)}
+            onDragEnd={() => setDragId(null)}
+            onDragOver={(e) => {
+              if (dragId && dragId !== t.tab_id) e.preventDefault(); // ドロップを許可
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              onDropTab(t.tab_id);
+              setDragId(null);
+            }}
+          >
             <button
               onClick={() => switchTab(t.tab_id)}
               style={{
@@ -227,10 +503,12 @@ function Editor({
                 background: 'transparent',
                 color: t.tab_id === active?.tab_id ? 'var(--fg)' : 'var(--muted)',
                 whiteSpace: 'nowrap',
+                cursor: dragId ? 'grabbing' : 'grab',
               }}
+              title="ドラッグで並べ替え"
             >
               {t.title || `タブ ${i + 1}`}
-              {t.dirty ? ' •' : ''}
+              {t.save === 'create_failed' ? ' ⚠' : t.dirty ? ' •' : ''}
             </button>
             {tabs.length > 1 && t.tab_id === active?.tab_id && (
               <button
@@ -251,20 +529,19 @@ function Editor({
         ))}
         {tabs.length < MAX_TABS && (
           <button
-            onClick={() => void onAddTab()}
-            disabled={adding}
+            onClick={onAddTab}
             title="タブを追加"
             style={{
               border: 'none',
               background: 'transparent',
-              color: adding ? 'var(--muted)' : 'var(--accent)',
+              color: 'var(--accent)',
               fontSize: 16,
               padding: '4px 10px',
               flexShrink: 0,
-              cursor: adding ? 'wait' : 'pointer',
+              cursor: 'pointer',
             }}
           >
-            {adding ? '…' : '+'}
+            +
           </button>
         )}
       </div>
@@ -341,6 +618,53 @@ function Editor({
         </p>
       )}
 
+      {/* タブ自体をサーバに作れなかった。入力内容は残っているので、作り直しを促す。 */}
+      {active?.save === 'create_failed' && (
+        <div
+          role="alert"
+          style={{
+            border: '1px solid var(--danger)',
+            borderRadius: 6,
+            padding: '10px 14px',
+            margin: '12px 0 0',
+            fontSize: 13,
+            color: 'var(--danger)',
+          }}
+        >
+          {active.createError === 'tab_limit_reached'
+            ? `タブは最大 ${MAX_TABS} 枚までです。このタブはサーバに作成されていません。`
+            : 'このタブをサーバに作成できませんでした。入力内容はこの画面に残っています。'}
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            {active.createError !== 'tab_limit_reached' && (
+              <button
+                onClick={() => retryCreate(active.tab_id)}
+                style={{
+                  padding: '6px 14px',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  borderRadius: 6,
+                  fontSize: 13,
+                }}
+              >
+                もう一度作成する
+              </button>
+            )}
+            <button
+              onClick={() => void onRemoveTab(active.tab_id)}
+              style={{
+                padding: '6px 14px',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                borderRadius: 6,
+                fontSize: 13,
+              }}
+            >
+              このタブを捨てる
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 終端状態(これ以上保存できない)。無限リトライさせず、復旧方法を案内する。 */}
       {(active?.save === 'revoked' || active?.save === 'auth') && (
         <div
@@ -379,27 +703,15 @@ function Editor({
               padding: '12px 4px 4px',
             }}
           />
-          <textarea
+          <ContentEditor
             value={active.content}
-            onChange={(e) => edit(active.tab_id, { content: e.target.value })}
-            placeholder="ここに入力すると自動保存されます"
-            style={{
-              flex: 1,
-              width: '100%',
-              minHeight: '55dvh',
-              border: 'none',
-              outline: 'none',
-              resize: 'none',
-              background: 'transparent',
-              fontSize: 15,
-              lineHeight: 1.8,
-              padding: '4px',
-            }}
+            onChange={(v) => edit(active.tab_id, { content: v })}
           />
         </>
       )}
 
-      <AccessLogPanel entries={data.access_log ?? []} />
+      {/* アクセス履歴は同期で取り直した最新版を優先する */}
+      <AccessLogPanel entries={latest?.access_log ?? data.access_log ?? []} memoId={memoId} />
       <MemoFooter />
     </main>
   );

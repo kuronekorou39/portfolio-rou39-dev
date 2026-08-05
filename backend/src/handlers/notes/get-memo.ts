@@ -87,7 +87,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     return noStore(
       ok({
-        memo: { title: memo.title, updated_at: memo.updated_at },
+        // memo_id はクライアントがメモ単位のローカル状態(最後に見ていたタブ・既読IP)を
+        // 保存するキーに使う。トークン保持者は既に全権限を持つので、これ自体は権限を増やさない。
+        memo: { memo_id: memo.memo_id, title: memo.title, updated_at: memo.updated_at },
         mode,
         has_pin: !!memo.pin_hash, // クライアントは書き込み時に PIN を同送する必要があるか判断
         tabs,

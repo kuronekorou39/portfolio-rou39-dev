@@ -71,13 +71,26 @@ export type CreateTabResult =
   | { kind: 'ok'; tab: Pick<Tab, 'tab_id' | 'title' | 'content' | 'version' | 'position'> }
   | { kind: 'limit' };
 
-/** タブ追加。memos.tab_count の条件付きカウンタで上限を原子的に強制する。 */
-export async function createTab(params: { memo_id: string; title: string }): Promise<CreateTabResult> {
+/**
+ * タブ追加。memos.tab_count の条件付きカウンタで上限を原子的に強制する。
+ *
+ * tab_id はクライアントが採番して送ってくる(UI を先に更新して裏で作る楽観追加のため。
+ * サーバ採番だと仮ID→実IDの差し替えが要り、dirty バッファや debounce タイマーの
+ * キーがずれる)。値は memo_id 配下でしか意味を持たず、アクセスはトークンで守られている
+ * ので、クライアント採番でも権限的な影響は無い。二重送信は Put の
+ * attribute_not_exists(tab_id) が弾く。
+ */
+export async function createTab(params: {
+  memo_id: string;
+  title: string;
+  tab_id?: string;
+  position?: number;
+}): Promise<CreateTabResult> {
   const { memo_id, title } = params;
-  const tab_id = randomUUID();
+  const tab_id = params.tab_id ?? randomUUID();
   const now = new Date().toISOString();
-  // 並び順は作成時刻ms。既存タブの後ろに付き、読み出し側は position 昇順で表示する
-  const position = Date.now();
+  // 並び順は既定で作成時刻ms。既存タブの後ろに付き、読み出し側は position 昇順で表示する
+  const position = typeof params.position === 'number' ? params.position : Date.now();
 
   try {
     await docClient.send(
@@ -126,6 +139,50 @@ export async function createTab(params: { memo_id: string; title: string }): Pro
   }
 
   return { kind: 'ok', tab: { tab_id, title, content: '', version: 0, position } };
+}
+
+export type ReorderTabsResult = { kind: 'ok' } | { kind: 'not_found' };
+
+/**
+ * タブの並べ替え。渡された tab_id の順に position を 0,1,2… で振り直す。
+ *
+ * 1タブずつ saveTab を呼ぶと per-token スロットル(1回/秒)で12枚に12秒かかるため、
+ * TransactWrite 1回でまとめて書く(スロットル消費も1回)。
+ * content には触らないので、編集中の楽観ロック(version)とは干渉しない。
+ * 存在しない tab_id が混ざっていたらトランザクションごと失敗させる(部分適用を作らない)。
+ */
+export async function reorderTabs(params: {
+  memo_id: string;
+  tab_ids: string[];
+}): Promise<ReorderTabsResult> {
+  const { memo_id, tab_ids } = params;
+  if (!tab_ids.length) return { kind: 'ok' };
+  const now = new Date().toISOString();
+
+  try {
+    await docClient.send(
+      new TransactWriteCommand({
+        TransactItems: tab_ids.map((tab_id, index) => ({
+          Update: {
+            TableName: TABS_TABLE,
+            Key: { memo_id, tab_id },
+            ConditionExpression: 'attribute_exists(tab_id)',
+            UpdateExpression: 'SET #p = :pos, updated_at = :now',
+            ExpressionAttributeNames: { '#p': 'position' },
+            ExpressionAttributeValues: { ':pos': index, ':now': now },
+          },
+        })),
+      }),
+    );
+  } catch (err: unknown) {
+    if ((err as { name?: string })?.name === 'TransactionCanceledException') {
+      return { kind: 'not_found' }; // 知らない tab_id が混ざっている(削除済み等)
+    }
+    throw err;
+  }
+
+  await touchMemo(memo_id, now);
+  return { kind: 'ok' };
 }
 
 export type DeleteTabResult = { kind: 'ok' } | { kind: 'last_tab' };

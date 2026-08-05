@@ -78,7 +78,8 @@ export interface AccessLogEntry {
 }
 
 export interface MemoData {
-  memo: { title: string; updated_at: string };
+  /** memo_id はメモ単位のローカル状態(最後に見ていたタブ・既読IP)の保存キーに使う。 */
+  memo: { memo_id?: string; title: string; updated_at: string };
   /** このURLの権限。'ro' なら閲覧専用(編集操作は 403 になる)。 */
   mode?: TokenMode;
   /** このメモが PIN 保護されているか(書き込み時に PIN を同送する必要がある)。 */
@@ -193,11 +194,29 @@ export const api = {
       cache: 'no-store',
     });
   },
-  createTab(token: string, title: string, pin?: string): Promise<{ tab: MemoData['tabs'][number] }> {
+  /**
+   * タブ追加。tab_id と position はクライアントが決めて送る(UI を先に更新して裏で作る
+   * 楽観追加のため。サーバ採番だと仮ID→実IDの差し替えが必要になり、dirty バッファや
+   * debounce タイマーのキーがずれる)。
+   */
+  createTab(
+    token: string,
+    params: { tab_id: string; title: string; position: number },
+    pin?: string,
+  ): Promise<{ tab: MemoData['tabs'][number] }> {
     return request<{ tab: MemoData['tabs'][number] }>('/m/tabs/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, title, pin }),
+      body: JSON.stringify({ token, pin, ...params }),
+      cache: 'no-store',
+    });
+  },
+  /** タブの並べ替え。渡した順に position が 0,1,2… で振り直される。 */
+  reorderTabs(token: string, tab_ids: string[], pin?: string): Promise<{ reordered: boolean }> {
+    return request<{ reordered: boolean }>('/m/tabs/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, tab_ids, pin }),
       cache: 'no-store',
     });
   },

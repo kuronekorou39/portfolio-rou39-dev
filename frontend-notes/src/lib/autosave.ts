@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ApiError } from './api';
+import { api, ApiError, type MemoData } from './api';
 
 /**
  * メモ画面の自動保存エンジン。
@@ -23,17 +23,51 @@ export interface TabState {
   position: number;
   dirty: boolean;
   /**
-   * 保存状態。'revoked'/'auth' は終端(=これ以上保存できない。リトライしない)。
-   * 'revoked'=URLが無効化/期限切れ/削除(404)、'auth'=PINが変更された(401)。
-   * どちらも dirty バッファは保持するので、新URL/新PINで開き直せば編集を復旧できる。
+   * 保存状態。'revoked'/'auth'/'create_failed' は終端(=これ以上保存できない。リトライしない)。
+   * 'revoked'=URLが無効化/期限切れ/削除(404)、'auth'=PINが変更された(401)、
+   * 'create_failed'=タブ自体をサーバに作れなかった。
+   * いずれも dirty バッファは保持するので、新URL/新PINで開き直せば編集を復旧できる。
    */
-  save: 'saved' | 'saving' | 'retrying' | 'conflict' | 'too_large' | 'revoked' | 'auth';
+  save: 'saved' | 'saving' | 'retrying' | 'conflict' | 'too_large' | 'revoked' | 'auth' | 'create_failed';
   /** 409 時のサーバ現在値(調停 UI 用)。 */
   conflictCurrent?: { title: string; content: string; version: number };
+  /**
+   * サーバへの作成がまだ完了していない(楽観追加中)。
+   * この間は本文保存を送らない(サーバにタブが無いので 404 になる)。作成完了後に送る。
+   */
+  pendingCreate?: boolean;
+  /** create_failed のときの理由コード(UI の文言出し分け用)。 */
+  createError?: string | null;
 }
 
 const DEBOUNCE_MS = 1300;
 const MAX_RETRY_DELAY_MS = 15_000;
+/** タブ作成の再試行回数(429 やネットワーク断のとき)。使い切ったら create_failed。 */
+const CREATE_MAX_RETRY = 3;
+/** backend limits.ts の MAX_TABS_PER_MEMO と一致させる。 */
+export const MAX_TABS_PER_MEMO = 12;
+/**
+ * サーバ側の変更を取り込む間隔。表示中のときだけ動かす。
+ * 短くするほど反映は速いが /m/get の読み取り回数がそのまま増える。
+ */
+const SYNC_INTERVAL_MS = 30_000;
+
+/** localStorage キー。メモ単位の状態はここに集約する(トークンは絶対に保存しない)。 */
+export const lastTabKey = (memoId: string) => `notes_last_tab_${memoId}`;
+export const seenIpsKey = (memoId: string) => `notes_seen_ips_${memoId}`;
+
+function newTabId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // randomUUID 非対応環境向けのフォールバック(サーバ側の UUID 形式チェックを満たす)
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
 
 interface DirtyBuffer {
   title: string;
@@ -116,10 +150,13 @@ export function useAutosave(
       if (
         !t ||
         !t.dirty ||
+        // 作成がまだサーバに届いていない間は送らない(404 になる)。作成完了時に送り直す
+        t.pendingCreate ||
         t.save === 'conflict' ||
         t.save === 'saving' ||
         t.save === 'revoked' ||
-        t.save === 'auth'
+        t.save === 'auth' ||
+        t.save === 'create_failed'
       )
         return;
 
@@ -184,10 +221,10 @@ export function useAutosave(
       if (!t) return;
       const next = { title: patch.title ?? t.title, content: patch.content ?? t.content };
       writeBuffer(tabId, { ...next, base_version: t.version, ts: Date.now() });
-      // 終端(revoked/auth)後は編集をローカルバッファに残すだけでサーバ保存は試みない。
+      // 終端(revoked/auth/create_failed)後は編集をローカルバッファに残すだけでサーバ保存は試みない。
       // 特に auth(PIN変更)で再送し続けると pin_fail_count を消費してトークンを自己ロックするため、
       // 入力があってもサーバ保存を再アームしない(復旧は新URL/新PINで開き直したとき)。
-      const terminal = t.save === 'revoked' || t.save === 'auth';
+      const terminal = t.save === 'revoked' || t.save === 'auth' || t.save === 'create_failed';
       patchTab(tabId, {
         ...next,
         dirty: true,
@@ -200,6 +237,8 @@ export function useAutosave(
               ? 'saving'
               : 'saved',
       });
+      // 作成中は debounce だけ張っておく(saveNow 側が pendingCreate を見て送信を見送り、
+      // 作成完了時に改めて送られる)。
       if (terminal) return;
       const existing = timersRef.current.get(tabId);
       if (existing) clearTimeout(existing);
@@ -212,9 +251,16 @@ export function useAutosave(
   /** 全 dirty タブの一括保存(タブ切替・離脱時)。1回のスロットル消費で送る。 */
   const flushAll = useCallback(
     (keepalive: boolean) => {
-      // 終端(revoked/auth)のタブは送らない(送っても 404/401 で無駄。auth は失敗回数も消費)。
+      // 終端(revoked/auth/create_failed)のタブと、まだサーバに作られていないタブは送らない
+      // (送っても 404/401 で無駄。auth は失敗回数も消費する)。
       const dirty = tabsRef.current.filter(
-        (t) => t.dirty && t.save !== 'conflict' && t.save !== 'revoked' && t.save !== 'auth',
+        (t) =>
+          t.dirty &&
+          !t.pendingCreate &&
+          t.save !== 'conflict' &&
+          t.save !== 'revoked' &&
+          t.save !== 'auth' &&
+          t.save !== 'create_failed',
       );
       if (dirty.length === 0) return;
       void api
@@ -307,28 +353,98 @@ export function useAutosave(
     [patchTab, saveNow],
   );
 
-  /** タブ追加。失敗時はエラーコードを返して UI に理由を表示させる。 */
-  const addTab = useCallback(async (): Promise<
-    { ok: true; tab_id: string } | { ok: false; code: string | null }
-  > => {
-    try {
-      const { tab } = await api.createTab(token, '', pin);
-      setTabs((prev) => [...prev, { ...tab, dirty: false, save: 'saved' as const }]);
-      return { ok: true, tab_id: tab.tab_id };
-    } catch (e) {
-      return { ok: false, code: e instanceof ApiError ? e.code : null };
-    }
-  }, [token, pin]);
-
-  /** タブ削除(最後の1枚はサーバ側で拒否される)。 */
-  const removeTab = useCallback(
-    async (tabId: string): Promise<boolean> => {
+  /**
+   * サーバへのタブ作成(裏で走る)。失敗は状態に落として UI に出す。
+   * 429 やネットワーク断は数回リトライし、使い切ったら create_failed で止める。
+   */
+  const createOnServer = useCallback(
+    async (tabId: string, position: number, attempt = 0): Promise<void> => {
       try {
-        await api.deleteTab(token, tabId, pin);
-        clearBuffer(tabId);
-        const timer = timersRef.current.get(tabId);
-        if (timer) clearTimeout(timer);
-        setTabs((prev) => prev.filter((t) => t.tab_id !== tabId));
+        await api.createTab(token, { tab_id: tabId, title: '', position }, pin);
+        patchTab(tabId, { pendingCreate: false, save: 'saved', createError: null });
+        // 作成待ちの間に入力されていたぶんを送る
+        const cur = tabsRef.current.find((x) => x.tab_id === tabId);
+        if (cur?.dirty) void saveNow(tabId);
+      } catch (e) {
+        const code = e instanceof ApiError ? e.code : null;
+        const status = e instanceof ApiError ? e.status : 0;
+        // 上限超過・URL無効・PIN変更はリトライしても通らない(PIN は失敗回数も消費する)
+        if (status === 409 || status === 404 || status === 401) {
+          patchTab(tabId, { pendingCreate: false, save: 'create_failed', createError: code });
+          return;
+        }
+        if (attempt >= CREATE_MAX_RETRY) {
+          patchTab(tabId, { pendingCreate: false, save: 'create_failed', createError: code });
+          return;
+        }
+        const delay = Math.min(1200 * 2 ** attempt, MAX_RETRY_DELAY_MS);
+        const timer = setTimeout(() => void createOnServer(tabId, position, attempt + 1), delay);
+        timersRef.current.set(`create_${tabId}`, timer);
+      }
+    },
+    [token, pin, patchTab, saveNow],
+  );
+
+  /**
+   * タブ追加。**UI には即座に出し、サーバ作成は裏で走らせる**(+ を押した瞬間に使えるように)。
+   * tab_id はここで採番して送るので、成功後に ID を差し替える必要がない
+   * (差し替えると dirty バッファや debounce タイマーのキーがずれる)。
+   * 戻り値は追加したタブの id。上限に達している場合は null。
+   */
+  const addTab = useCallback((): string | null => {
+    if (tabsRef.current.length >= MAX_TABS_PER_MEMO) return null;
+    const tabId = newTabId();
+    const position = Math.max(-1, ...tabsRef.current.map((t) => t.position)) + 1;
+    setTabs((prev) => [
+      ...prev,
+      {
+        tab_id: tabId,
+        title: '',
+        content: '',
+        version: 0,
+        position,
+        dirty: false,
+        save: 'saving',
+        pendingCreate: true,
+      },
+    ]);
+    void createOnServer(tabId, position);
+    return tabId;
+  }, [createOnServer]);
+
+  /** create_failed になったタブの作成をやり直す。 */
+  const retryCreate = useCallback(
+    (tabId: string) => {
+      const t = tabsRef.current.find((x) => x.tab_id === tabId);
+      if (!t || t.save !== 'create_failed') return;
+      patchTab(tabId, { pendingCreate: true, save: 'saving', createError: null });
+      void createOnServer(tabId, t.position);
+    },
+    [createOnServer, patchTab],
+  );
+
+  /**
+   * タブの並べ替え。UI は即座に入れ替え、サーバへは 1 リクエストで送る。
+   * 失敗しても本文は失われない(position だけの話)ので、次回取得時に元の順序へ戻る。
+   */
+  const reorder = useCallback(
+    async (orderedIds: string[]): Promise<boolean> => {
+      // 楽観適用: 渡された順に position を振り直す
+      setTabs((prev) => {
+        const byId = new Map(prev.map((t) => [t.tab_id, t]));
+        const next = orderedIds.map((id, i) => {
+          const t = byId.get(id);
+          return t ? { ...t, position: i } : t;
+        });
+        return next.filter((t): t is TabState => !!t);
+      });
+      // 作成が未完了のタブが混ざっていると 409 になるので、確定分だけ送る
+      const known = orderedIds.filter(
+        (id) => !tabsRef.current.find((t) => t.tab_id === id)?.pendingCreate,
+      );
+      if (known.length === 0) return true;
+      try {
+        await api.reorderTabs(token, known, pin);
         return true;
       } catch {
         return false;
@@ -337,5 +453,163 @@ export function useAutosave(
     [token, pin],
   );
 
-  return { tabs, edit, saveNow, flushAll, adoptServer, overwriteServer, addTab, removeTab };
+  /** タブ削除(最後の1枚はサーバ側で拒否される)。 */
+  const removeTab = useCallback(
+    async (tabId: string): Promise<boolean> => {
+      const dropLocal = () => {
+        clearBuffer(tabId);
+        for (const key of [tabId, `create_${tabId}`]) {
+          const timer = timersRef.current.get(key);
+          if (timer) clearTimeout(timer);
+          timersRef.current.delete(key);
+        }
+        setTabs((prev) => prev.filter((t) => t.tab_id !== tabId));
+      };
+
+      // 作成に失敗したタブはサーバに存在しないので、ローカルから消すだけでよい
+      if (tabsRef.current.find((t) => t.tab_id === tabId)?.save === 'create_failed') {
+        dropLocal();
+        return true;
+      }
+      try {
+        await api.deleteTab(token, tabId, pin);
+        dropLocal();
+        return true;
+      } catch (e) {
+        // 既にサーバに無い(別端末で削除済み等)なら、ローカルも合わせて消す
+        if (e instanceof ApiError && e.status === 404) {
+          dropLocal();
+          return true;
+        }
+        return false;
+      }
+    },
+    [token, pin],
+  );
+
+  // ---- サーバ側の変更の取り込み ----
+
+  /** 401/404 を観測したら以後の取得を止める。401 を叩き続けるとトークンを自己ロックするため。 */
+  const syncStoppedRef = useRef(false);
+  const [latest, setLatest] = useState<MemoData | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  /**
+   * サーバのタブ一覧をローカル状態に合流させる。
+   *
+   * - 未編集 かつ サーバの version が進んでいる → 黙って置き換える(これが本命)
+   * - 編集中 かつ サーバが進んでいる → 従来どおり競合 UI に載せる
+   * - 送信中/作成中/終端のタブは触らない(進行中の状態を壊さない)
+   *
+   * /m/get の読みは結果整合なので、古い版が返ることがある。version が進んでいるときしか
+   * 採用しないので、その場合は何も起きない(次回の取得で追いつく)。
+   */
+  const mergeServerTabs = useCallback((serverTabs: MemoData['tabs']) => {
+    setTabs((prev) => {
+      const prevById = new Map(prev.map((t) => [t.tab_id, t]));
+      const serverIds = new Set(serverTabs.map((t) => t.tab_id));
+      const merged: TabState[] = [];
+
+      for (const s of serverTabs) {
+        const local = prevById.get(s.tab_id);
+        if (!local) {
+          merged.push({ ...s, dirty: false, save: 'saved' }); // 別端末で増えたタブ
+          continue;
+        }
+        const busy =
+          local.pendingCreate ||
+          local.save === 'saving' ||
+          local.save === 'conflict' ||
+          local.save === 'revoked' ||
+          local.save === 'auth' ||
+          local.save === 'create_failed';
+        if (busy || s.version <= local.version) {
+          merged.push({ ...local, position: s.position });
+          continue;
+        }
+        if (!local.dirty) {
+          clearBuffer(s.tab_id);
+          merged.push({
+            ...local,
+            title: s.title,
+            content: s.content,
+            version: s.version,
+            position: s.position,
+            dirty: false,
+            save: 'saved',
+          });
+        } else {
+          merged.push({
+            ...local,
+            position: s.position,
+            save: 'conflict',
+            conflictCurrent: { title: s.title, content: s.content, version: s.version },
+          });
+        }
+      }
+
+      // サーバから消えたタブ。未編集なら消し、編集中・作成中のものは残す
+      // (残したものは保存時に 404 を踏んで revoked になり、バッファから復旧できる)
+      for (const t of prev) {
+        if (serverIds.has(t.tab_id)) continue;
+        if (t.dirty || t.pendingCreate || t.save === 'create_failed') merged.push(t);
+      }
+
+      return merged.sort((a, b) => a.position - b.position);
+    });
+  }, []);
+
+  const sync = useCallback(async (): Promise<'ok' | 'stopped' | 'error'> => {
+    if (syncStoppedRef.current) return 'stopped';
+    setSyncing(true);
+    try {
+      const data = await api.getMemo(token, pin);
+      setLatest(data);
+      mergeServerTabs(data.tabs);
+      return 'ok';
+    } catch (e) {
+      // PIN が変更された(401)/ URL が無効化された(404)。以後の取得を止める。
+      // 特に 401 のまま叩き続けると pin_fail_count を消費してトークンが自己ロックする。
+      if (e instanceof ApiError && (e.status === 401 || e.status === 404)) {
+        syncStoppedRef.current = true;
+        return 'stopped';
+      }
+      return 'error'; // 一時的な失敗。次の周期で取り直す
+    } finally {
+      setSyncing(false);
+    }
+  }, [token, pin, mergeServerTabs]);
+
+  // 画面に戻ったとき + 表示中は一定間隔で、サーバの変更を取り込む。
+  // 非表示のときは動かさない(裏で読み取りを撃ち続けない)。
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void sync();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    const interval = setInterval(onVisible, SYNC_INTERVAL_MS);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+      clearInterval(interval);
+    };
+  }, [sync]);
+
+  return {
+    tabs,
+    edit,
+    saveNow,
+    flushAll,
+    adoptServer,
+    overwriteServer,
+    addTab,
+    retryCreate,
+    removeTab,
+    reorder,
+    sync,
+    syncing,
+    /** 直近の取得結果(アクセス履歴の更新に使う)。まだ取得していなければ null。 */
+    latest,
+  };
 }
