@@ -51,6 +51,11 @@ export const MAX_TABS_PER_MEMO = 12;
  * 短くするほど反映は速いが /m/get の読み取り回数がそのまま増える。
  */
 const SYNC_INTERVAL_MS = 30_000;
+/**
+ * 自分の作成/削除がサーバの読みに反映されるまでの猶予。
+ * /m/get のタブ取得は結果整合なので、この間はサーバ側の欠落/存在を信用しない。
+ */
+const STALE_READ_GRACE_MS = 15_000;
 
 /** localStorage キー。メモ単位の状態はここに集約する(トークンは絶対に保存しない)。 */
 export const lastTabKey = (memoId: string) => `notes_last_tab_${memoId}`;
@@ -139,6 +144,18 @@ export function useAutosave(
 
   const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const retryCountRef = useRef(new Map<string, number>());
+
+  /**
+   * 直近で自分が作成/削除したタブ(tab_id → 猶予の期限)。
+   *
+   * /m/get のタブ取得は結果整合なので、書いた直後は反映前の一覧が返ることがある。
+   * それをそのまま合流させると「作ったばかりのタブが消える」「消したタブが復活する」
+   * が起きるため、この猶予の間はサーバ側の欠落/存在を信用しない。
+   */
+  const graceRef = useRef(new Map<string, { until: number; kind: 'created' | 'deleted' }>());
+  const markGrace = useCallback((tabId: string, kind: 'created' | 'deleted') => {
+    graceRef.current.set(tabId, { until: Date.now() + STALE_READ_GRACE_MS, kind });
+  }, []);
 
   const patchTab = useCallback((tabId: string, patch: Partial<TabState>) => {
     setTabs((prev) => prev.map((t) => (t.tab_id === tabId ? { ...t, ...patch } : t)));
@@ -361,6 +378,8 @@ export function useAutosave(
     async (tabId: string, position: number, attempt = 0): Promise<void> => {
       try {
         await api.createTab(token, { tab_id: tabId, title: '', position }, pin);
+        // 反映前の読みで欠けていても消さないよう猶予を張る
+        markGrace(tabId, 'created');
         patchTab(tabId, { pendingCreate: false, save: 'saved', createError: null });
         // 作成待ちの間に入力されていたぶんを送る
         const cur = tabsRef.current.find((x) => x.tab_id === tabId);
@@ -382,7 +401,7 @@ export function useAutosave(
         timersRef.current.set(`create_${tabId}`, timer);
       }
     },
-    [token, pin, patchTab, saveNow],
+    [token, pin, patchTab, saveNow, markGrace],
   );
 
   /**
@@ -457,6 +476,8 @@ export function useAutosave(
   const removeTab = useCallback(
     async (tabId: string): Promise<boolean> => {
       const dropLocal = () => {
+        // 反映前の読みで返ってきても復活させないよう猶予を張る
+        markGrace(tabId, 'deleted');
         clearBuffer(tabId);
         for (const key of [tabId, `create_${tabId}`]) {
           const timer = timersRef.current.get(key);
@@ -484,7 +505,7 @@ export function useAutosave(
         return false;
       }
     },
-    [token, pin],
+    [token, pin, markGrace],
   );
 
   // ---- サーバ側の変更の取り込み ----
@@ -506,11 +527,17 @@ export function useAutosave(
    */
   const mergeServerTabs = useCallback((serverTabs: MemoData['tabs']) => {
     setTabs((prev) => {
+      const now = Date.now();
+      for (const [id, g] of graceRef.current) if (g.until <= now) graceRef.current.delete(id);
+      const graceOf = (id: string) => graceRef.current.get(id);
+
       const prevById = new Map(prev.map((t) => [t.tab_id, t]));
       const serverIds = new Set(serverTabs.map((t) => t.tab_id));
       const merged: TabState[] = [];
 
       for (const s of serverTabs) {
+        // 自分が消したばかりのタブが反映前の読みで返ってきた。復活させない
+        if (graceOf(s.tab_id)?.kind === 'deleted') continue;
         const local = prevById.get(s.tab_id);
         if (!local) {
           merged.push({ ...s, dirty: false, save: 'saved' }); // 別端末で増えたタブ
@@ -548,11 +575,13 @@ export function useAutosave(
         }
       }
 
-      // サーバから消えたタブ。未編集なら消し、編集中・作成中のものは残す
-      // (残したものは保存時に 404 を踏んで revoked になり、バッファから復旧できる)
+      // サーバに無いタブ。未編集なら消し、編集中・作成中のものは残す
+      // (残したものは保存時に 404 を踏んで revoked になり、バッファから復旧できる)。
+      // 作ったばかりのタブは、反映前の読みで欠けているだけかもしれないので消さない。
       for (const t of prev) {
         if (serverIds.has(t.tab_id)) continue;
-        if (t.dirty || t.pendingCreate || t.save === 'create_failed') merged.push(t);
+        const justCreated = graceOf(t.tab_id)?.kind === 'created';
+        if (justCreated || t.dirty || t.pendingCreate || t.save === 'create_failed') merged.push(t);
       }
 
       return merged.sort((a, b) => a.position - b.position);
