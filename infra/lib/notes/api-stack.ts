@@ -127,6 +127,11 @@ export class NotesApiStack extends cdk.Stack {
       handler: 'handler',
       environment: commonEnv,
       bundling,
+      // notes で最も重い読み取りパス(秘密2件 + DynamoDB 最大6回)。デフォルトの 3秒/128MB では
+      // p99=2.8s がタイムアウトに接触し、散発的に失敗していた(2026-08-06)。Lambda の CPU は
+      // メモリに比例するため、512MB は実行時間が縮むぶん GB秒課金がほぼ相殺される。
+      memorySize: 512,
+      timeout: cdk.Duration.seconds(10),
       reservedConcurrentExecutions: 20,
     });
     // tokens は RW(アクセスログの coalesce マーク last_view_log_ms を条件付き更新するため)

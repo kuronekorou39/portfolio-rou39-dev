@@ -15,14 +15,34 @@ const SECRET_NAME = process.env.ORIGIN_VERIFY_SECRET; // secretName。未設定�
 const ENFORCE = process.env.ORIGIN_VERIFY_ENFORCE === 'true';
 
 const sm = new SecretsManagerClient({});
-let cached: string | null = null;
+// 値ではなく Promise をキャッシュする。取得中に来た並行リクエストが往復を重複させない。
+let cached: Promise<string> | null = null;
 
-async function expectedSecret(): Promise<string | null> {
-  if (!SECRET_NAME) return null;
-  if (cached !== null) return cached;
-  const res = await sm.send(new GetSecretValueCommand({ SecretId: SECRET_NAME }));
-  cached = res.SecretString ?? '';
+function expectedSecret(): Promise<string | null> {
+  if (!SECRET_NAME) return Promise.resolve(null);
+  if (!cached) {
+    const p = sm
+      .send(new GetSecretValueCommand({ SecretId: SECRET_NAME }))
+      .then((res) => res.SecretString ?? '');
+    // 失敗はキャッシュしない(次のリクエストで取り直せるようにする)。
+    // ここで catch を付けておかないと prefetch 時に unhandled rejection になる。
+    p.catch(() => {
+      if (cached === p) cached = null;
+    });
+    cached = p;
+  }
   return cached;
+}
+
+/**
+ * 秘密の取得をコールドスタートの init フェーズで開始する。
+ *
+ * ハンドラ内で初めて触ると Secrets Manager への往復がそのまま応答時間に乗る。
+ * モジュール読み込み時に先行させれば、ハンドラが await する頃には解決済みになる
+ * (init フェーズは課金対象の Duration に含まれない)。呼ばなくても動作は変わらない。
+ */
+export function prefetchOriginSecret(): void {
+  void expectedSecret().catch(() => {});
 }
 
 /** ヘッダ名は大文字小文字を問わず拾う(API Gateway/経路により casing が変わりうる)。 */

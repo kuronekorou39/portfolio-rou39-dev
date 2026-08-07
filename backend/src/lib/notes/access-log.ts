@@ -11,14 +11,26 @@ const ACCESS_LOGS_TABLE = process.env.ACCESS_LOGS_TABLE!;
 const IP_HASH_SECRET_NAME = process.env.IP_HASH_SECRET!;
 
 const sm = new SecretsManagerClient({});
-let cachedBaseKey: string | null = null;
+// 値ではなく Promise をキャッシュする(origin.ts と同じ理由)。
+let cachedBaseKey: Promise<string> | null = null;
 
-async function getBaseKey(): Promise<string> {
-  if (cachedBaseKey) return cachedBaseKey;
-  const res = await sm.send(new GetSecretValueCommand({ SecretId: IP_HASH_SECRET_NAME }));
-  if (!res.SecretString) throw new Error('ip-hash secret has no value');
-  cachedBaseKey = res.SecretString;
+function getBaseKey(): Promise<string> {
+  if (!cachedBaseKey) {
+    const p = sm.send(new GetSecretValueCommand({ SecretId: IP_HASH_SECRET_NAME })).then((res) => {
+      if (!res.SecretString) throw new Error('ip-hash secret has no value');
+      return res.SecretString;
+    });
+    p.catch(() => {
+      if (cachedBaseKey === p) cachedBaseKey = null;
+    });
+    cachedBaseKey = p;
+  }
   return cachedBaseKey;
+}
+
+/** IP ハッシュ鍵の取得を init フェーズで開始する(origin.ts の prefetchOriginSecret と同じ狙い)。 */
+export function prefetchIpHashKey(): void {
+  void getBaseKey().catch(() => {});
 }
 
 /**
