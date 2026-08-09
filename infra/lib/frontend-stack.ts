@@ -120,6 +120,11 @@ export class FrontendStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          // これが無いと CloudFront はクエリ文字列もヘッダーもオリジンに渡さない
+          // (キャッシュポリシーに載っているものだけが転送される。CACHING_DISABLED は空)。
+          // ?os= や ?mode= が落ちる・Cognito 認証の Authorization が届かない、という形で出る。
+          // Host は API Gateway が execute-api ドメインを期待するので除外する
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
           functionAssociations: [{
             function: apiRewriteFn,
             eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
