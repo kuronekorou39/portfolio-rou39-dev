@@ -458,13 +458,15 @@ function renderForm() {
       <div class="form-section">
         <h2>Downloads</h2>
         <span class="hint" style="display:block;margin-bottom:10px">
-          OS別のダウンロードURLを設定。1件なら直接DL、複数ならドロップダウンで表示されます
+          OS別のダウンロードURLを設定。1件なら直接DL、複数ならドロップダウンで表示されます。
+          <strong>os の値はプロジェクト内で重複させないこと</strong>（API は os で1件を引くため、重複すると先頭しか返りません）。
+          同じOSに複数形式があるときは windows-msi / mac-arm のようなサフィックス付きを使います
         </span>
         <div id="downloadsContainer" style="display:flex;flex-direction:column;gap:8px">
           ${(p.downloads || []).map((dl, i) => `
             <div style="display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card)">
-              <select onchange="updateDownload(${i},'os',this.value)" style="padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;width:80px">
-                ${['windows','mac','linux','android','ios','other'].map(o => `<option value="${o}" ${dl.os === o ? 'selected' : ''}>${o}</option>`).join('')}
+              <select onchange="updateDownload(${i},'os',this.value)" style="padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;width:106px">
+                ${['windows','windows-msi','windows-exe','mac','mac-arm','mac-intel','linux','android','ios','other'].map(o => `<option value="${o}" ${dl.os === o ? 'selected' : ''}>${o}</option>`).join('')}
               </select>
               <input value="${esc(dl.label)}" placeholder="Label (e.g. Windows x64 .msi)" onchange="updateDownload(${i},'label',this.value)"
                 style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px">

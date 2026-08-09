@@ -6,10 +6,20 @@ export interface ProjectLinks {
   download?: string;
 }
 
+/**
+ * ダウンロードの識別子。GET /downloads/{id}?os={os} はこの値で1件を引くため、
+ * 同一プロジェクト内で重複させてはいけない(重複すると先頭の1件しか返らない)。
+ * 同じOSに複数の配布形式がある場合は `mac-arm` のようにサフィックス付きを使う。
+ */
+export type DownloadOS =
+  | 'windows' | 'windows-msi' | 'windows-exe'
+  | 'mac' | 'mac-arm' | 'mac-intel'
+  | 'linux' | 'android' | 'ios' | 'other';
+
 export interface DownloadEntry {
   label: string;   // e.g. "Windows (x64)", "macOS (Apple Silicon)"
   url: string;
-  os: 'windows' | 'mac' | 'linux' | 'android' | 'ios' | 'other';
+  os: DownloadOS;
 }
 
 export type ProjectCategory = 'web' | 'mobile' | 'desktop' | 'chrome-ext' | 'burp-ext' | 'other';

@@ -34,7 +34,7 @@
         "os": "android"
       }
     ],
-    "status": "development",
+    "status": "active",
     "publishedAt": "2025-07-20",
     "updatedAt": "2026-08-05",
     "size": "large",
@@ -195,6 +195,148 @@
     "published": true
   },
   {
+    "id": "parallel-stream",
+    "title": "Parallel Stream",
+    "subtitle": "配信を1画面に並べて同時に見るマルチビュー拡張",
+    "description": "## 作った経緯\n\n同時に走っている配信を切り替えながら追うのが面倒だった。タブを行き来せず、見たい配信を1画面に好きなだけ並べて、音量だけ切り替えれば済むようにしたかった。\n\n## 対応サイト\n\nTwitch / YouTube / mellow-fan（旧 OPENREC）/ Kick\n\n## 主な機能\n\n- **枠を自由に配置** — 配信をいくつでも並べ、大きさと位置を枠ごとに決められる\n- **枠ごとの音量** — 個別にも、全部まとめても調整可能\n- **弾幕** — コメントを映像の上に流す\n- **レイアウト保存** — 並べ方に名前を付けて保存し、あとで呼び出す\n- **モバイル表示** — スマホでは縦に積んで見る\n\n## インストール前に\n\n配信サイトを並べるために、この拡張はブラウザに踏み込んだ変更をします。なかでも **Cookie の変更はブラウザ全体に残ります**（設定で元に戻せます）。何をどこまで変えるかは [ブラウザに与える影響](https://github.com/kuronekorou39/chrome-parallel-stream/blob/main/docs/browser-impact.md) に書いてあるので、読んでから入れてください。",
+    "howToUse": "## インストール\n\n1. このページの Download ボタンから ZIP をダウンロードし、右クリック →「すべて展開」でフォルダを取り出す\n2. アドレスバーに `chrome://extensions` と入れて開く\n3. 右上の「デベロッパー モード」を ON にする\n4. 「パッケージ化されていない拡張機能を読み込む」を押して、1 で展開したフォルダを選ぶ\n\n## 使い方\n\n1. Chrome 右上のパズルのアイコン → Parallel Stream →「マルチビューを開く」\n2. `≡` メニューから、サイトのボタンか URL で枠を追加\n3. 枠一覧で音量、配置パネルで整列\n4. 並べ方に名前を付けて保存しておくと、次回そのまま呼び出せる\n\n更新するときは新しい ZIP を落として、同じ手順でフォルダを選び直してください。",
+    "category": "chrome-ext",
+    "tags": [
+      "JavaScript",
+      "Chrome Extension",
+      "Manifest V3",
+      "hls.js"
+    ],
+    "platform": [
+      "Chrome"
+    ],
+    "icon": "/projects/parallel-stream/icon.png",
+    "screenshots": [
+      "/projects/parallel-stream/snap-01-empty.jpg",
+      "/projects/parallel-stream/snap-02-one.jpg",
+      "/projects/parallel-stream/snap-03-four.jpg",
+      "/projects/parallel-stream/snap-04-many.jpg"
+    ],
+    "links": {
+      "github": "https://github.com/kuronekorou39/chrome-parallel-stream"
+    },
+    "downloads": [
+      {
+        "label": "Chrome 拡張 (.zip)",
+        "url": "https://kuronekorou39.github.io/chrome-parallel-stream/dist/parallel-stream-latest.zip",
+        "os": "other"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-05-28",
+    "updatedAt": "2026-08-07",
+    "size": "medium",
+    "published": true
+  },
+  {
+    "id": "ad-skipper-twitch",
+    "title": "広告スキッパー for Twitch",
+    "subtitle": "Twitchの広告を自動で処理するChrome拡張",
+    "description": "# 広告スキッパー for Twitch\n\nTwitch の広告を自動で処理する Chrome 拡張機能。ライブ配信は本編に差し替え、それが無理なときは倍速で押し流す。\n\n## 主な機能\n\n- **広告スワップ**（ライブ）— 広告中に本編サブストリーム（低画質）をメイン表示に差し替え\n- **広告ミュート+倍速**（ライブ）— スワップ不可時に広告をミュート+倍速で早送り\n- **VOD広告スキップ**（アーカイブ）— 広告動画を倍速+ミュートで早送り\n- **ポイント自動取得** — チャンネルポイントボタンを自動クリック（**既定 OFF**）\n- **チャット維持** — チャット折り畳み時も PbyP プレイヤーを維持\n\n## プライバシー\n\n外部サーバーへ一切データを送信しません。解析ツールやテレメトリも含みません。保存するのはポップアップの設定値のみで、保存先は `chrome.storage.local`（あなたの Chrome の中）です。permissions は `storage`、host_permissions は `*://*.twitch.tv/*` のみ。\n\n## 免責事項\n\n- **自己責任でご利用ください。** 利用規約は広告の回避や自動操作を禁じている場合があり、アカウントに不利益が生じる可能性があります。\n- **ポイント自動取得は既定で OFF** です。自動クリックは規約に触れる可能性が高いため、内容を理解したうえで明示的に有効化してください。\n- Twitch は広告対策を継続的に更新するため、**ある日突然動かなくなることがあります**。",
+    "howToUse": "## インストール\n\n1. このページの Download ボタンから ZIP をダウンロードし、右クリック →「すべて展開」でフォルダを取り出す\n2. アドレスバーに `chrome://extensions` と入れて開く\n3. 右上の「デベロッパー モード」を ON にする\n4. 「パッケージ化されていない拡張機能を読み込む」を押して、1 で展開したフォルダを選ぶ\n\nnpm や開発環境は不要です。\n\n## 使い方\n\nインストールすれば Twitch を開くだけで動きます。ツールバーのアイコンからポップアップを開くと、機能ごとの ON/OFF と動作ログを確認できます。",
+    "category": "chrome-ext",
+    "tags": [
+      "TypeScript",
+      "Chrome Extension",
+      "Manifest V3"
+    ],
+    "platform": [
+      "Chrome"
+    ],
+    "icon": "/projects/ad-skipper-twitch/icon.png",
+    "screenshots": [],
+    "links": {
+      "github": "https://github.com/kuronekorou39/chrome-ad-skipper/tree/main/packages/extension-twitch"
+    },
+    "downloads": [
+      {
+        "label": "Chrome 拡張 (.zip)",
+        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/twitch-v0.10.1/ad-skipper-for-twitch-v0.10.1.zip",
+        "os": "other"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-02-13",
+    "updatedAt": "2026-08-04",
+    "size": "small",
+    "published": true
+  },
+  {
+    "id": "ad-skipper-prime",
+    "title": "広告スキッパー for Prime Video",
+    "subtitle": "Prime Videoの広告を倍速で早送りするChrome拡張",
+    "description": "# 広告スキッパー for Prime Video\n\nPrime Video の広告を自動スキップする Chrome 拡張機能。広告はミュート+倍速で早送りし、終わったら元の再生速度・音量に戻す。\n\n## 主な機能\n\n- **広告検出** — `atvwebplayersdk-ad` オーバーレイ + タイマー要素で判定\n- **倍速スキップ** — 広告中は 16x 倍速 + ミュートで早送り\n- **速度調整** — 残り時間に応じて段階的に減速（終了直前は 2x）\n- **自動復元** — 広告終了後に再生速度・音量を自動復元\n\n## プライバシー\n\n外部サーバーへ一切データを送信しません。解析ツールやテレメトリも含みません。保存するのはポップアップの設定値のみで、保存先は `chrome.storage.local`（あなたの Chrome の中）です。permissions は `storage` のみ。\n\n## 免責事項\n\n- **自己責任でご利用ください。** 利用規約は広告の回避や自動操作を禁じている場合があり、アカウントに不利益が生じる可能性があります。\n- 対象サイトは広告対策を継続的に更新するため、**ある日突然動かなくなることがあります**。",
+    "howToUse": "## インストール\n\n1. このページの Download ボタンから ZIP をダウンロードし、右クリック →「すべて展開」でフォルダを取り出す\n2. アドレスバーに `chrome://extensions` と入れて開く\n3. 右上の「デベロッパー モード」を ON にする\n4. 「パッケージ化されていない拡張機能を読み込む」を押して、1 で展開したフォルダを選ぶ\n\nnpm や開発環境は不要です。\n\n## 使い方\n\nインストールすれば Prime Video を開くだけで動きます。ツールバーのアイコンからポップアップを開くと、現在の状態・設定・動作ログを確認できます。",
+    "category": "chrome-ext",
+    "tags": [
+      "TypeScript",
+      "Chrome Extension",
+      "Manifest V3"
+    ],
+    "platform": [
+      "Chrome"
+    ],
+    "icon": "/projects/ad-skipper-prime/icon.png",
+    "screenshots": [
+      "/projects/ad-skipper-prime/snap-status.png",
+      "/projects/ad-skipper-prime/snap-settings.png",
+      "/projects/ad-skipper-prime/snap-log.png"
+    ],
+    "links": {
+      "github": "https://github.com/kuronekorou39/chrome-ad-skipper/tree/main/packages/extension-prime"
+    },
+    "downloads": [
+      {
+        "label": "Chrome 拡張 (.zip)",
+        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/prime-v0.6.0/ad-skipper-for-prime-video-v0.6.0.zip",
+        "os": "other"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-02-13",
+    "updatedAt": "2026-08-04",
+    "size": "small",
+    "published": true
+  },
+  {
+    "id": "ad-skipper-youtube",
+    "title": "広告スキッパー for YouTube",
+    "subtitle": "YouTubeのスキップボタンを自動で押すChrome拡張",
+    "description": "# 広告スキッパー for YouTube\n\nYouTube の広告を自動スキップする Chrome 拡張機能。スキップボタンが出たら押し、押せない広告はシークで飛ばす。\n\n## 主な機能\n\n- **広告検出** — `#movie_player` の `.ad-showing` クラスを監視\n- **自動スキップ** — スキップボタン出現時に MAIN world 経由でクリック\n- **シークスキップ** — スキップ不可広告は動画シークで早送り\n- **自動再生再開** — 広告終了後に `playVideo()` で再生を再開\n\n## プライバシー\n\n外部サーバーへ一切データを送信しません。解析ツールやテレメトリも含みません。保存するのはポップアップの設定値のみで、保存先は `chrome.storage.local`（あなたの Chrome の中）です。permissions は `storage`、host_permissions は `*://*.youtube.com/*` のみ。\n\n## 免責事項\n\n- **自己責任でご利用ください。** 利用規約は広告の回避や自動操作を禁じている場合があり、アカウントに不利益が生じる可能性があります。\n- YouTube は広告対策を継続的に更新するため、**ある日突然動かなくなることがあります**。",
+    "howToUse": "## インストール\n\n1. このページの Download ボタンから ZIP をダウンロードし、右クリック →「すべて展開」でフォルダを取り出す\n2. アドレスバーに `chrome://extensions` と入れて開く\n3. 右上の「デベロッパー モード」を ON にする\n4. 「パッケージ化されていない拡張機能を読み込む」を押して、1 で展開したフォルダを選ぶ\n\nnpm や開発環境は不要です。\n\n## 使い方\n\nインストールすれば YouTube を開くだけで動きます。ツールバーのアイコンからポップアップを開くと、機能ごとの ON/OFF と動作ログを確認できます。",
+    "category": "chrome-ext",
+    "tags": [
+      "TypeScript",
+      "Chrome Extension",
+      "Manifest V3"
+    ],
+    "platform": [
+      "Chrome"
+    ],
+    "icon": "/projects/ad-skipper-youtube/icon.png",
+    "screenshots": [],
+    "links": {
+      "github": "https://github.com/kuronekorou39/chrome-ad-skipper/tree/main/packages/extension-youtube"
+    },
+    "downloads": [
+      {
+        "label": "Chrome 拡張 (.zip)",
+        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/youtube-v0.3.0/ad-skipper-for-youtube-v0.3.0.zip",
+        "os": "other"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-02-13",
+    "updatedAt": "2026-08-04",
+    "size": "small",
+    "published": true
+  },
+  {
     "id": "local-port-board",
     "title": "Local PortBoard",
     "subtitle": "ローカル開発環境のポート監視・管理ツール",
@@ -226,22 +368,22 @@
       {
         "label": "Windows (x64) .msi",
         "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64_ja-JP.msi",
-        "os": "windows"
+        "os": "windows-msi"
       },
       {
         "label": "Windows (x64) .exe",
         "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64-setup.exe",
-        "os": "windows"
+        "os": "windows-exe"
       },
       {
         "label": "macOS (Apple Silicon) .dmg",
         "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_aarch64.dmg",
-        "os": "mac"
+        "os": "mac-arm"
       },
       {
         "label": "macOS (Intel) .dmg",
         "url": "https://github.com/kuronekorou39/local-port-board/releases/download/v2.1.1/port-board_2.1.1_x64.dmg",
-        "os": "mac"
+        "os": "mac-intel"
       }
     ],
     "status": "active",
@@ -442,31 +584,42 @@
   },
   {
     "id": "mobile-bex",
-    "title": "Mobile BEX",
-    "subtitle": "PC版Chrome拡張機能をスマホで動作させるモバイルブラウザ",
-    "description": "# Mobile BEX\n\nデスクトップ向けChrome拡張機能をAndroid/iOSで完全動作させるモバイルブラウザプラットフォーム。Manifest V2/V3の拡張機能API（Background Worker, Content Script, Storage, Tabs等）をサポート。\n\n## 特徴\n\n- Chrome拡張機能のモバイル実行\n- Manifest V2/V3 対応\n- 拡張機能管理UI\n- Background Worker / Content Script / Storage API\n- 開発者モード（unpacked拡張の読み込み）",
-    "howToUse": "## 使い方\n\n1. BEXアプリをインストール\n2. .crxまたは.zip形式で拡張機能を読み込む\n3. 拡張機能がツールバー/メニューに表示される\n4. 通常のChrome拡張と同じように動作\n5. 開発者モードでunpacked拡張もロード可能",
+    "title": "BEX",
+    "subtitle": "Chrome拡張機能が動くAndroidブラウザ",
+    "description": "## 作った経緯\n\nスマホのブラウザで拡張機能が使えないのが不便すぎた。提供元が用意した限定リストではなく、PC版と同じように「任意の拡張機能を自分で入れられる」ブラウザが欲しくて、Chromium 本体を改造して作った。\n\n## 主な機能\n\n- **任意の Manifest V3 拡張機能が動く** — 限定リスト方式ではない\n- **Chrome ウェブストア連携** — アプリ内から検索・インストール・削除\n- **フォルダから自作拡張を読み込み** — PCにつながず、スマホ上でそのままテストできる\n- **ホーム画面に拡張機能を置ける** — BEXのアイコン長押しで拡張機能が並び、ドラッグしてアプリのように直接起動\n- **モバイル向けの拡張機能UI** — ツールバーアイコン / 画面下から出るポップアップシート / サイドパネル / アドレスバーのキーワード検索\n- **アプリ内アップデート通知** — 新しい版が出ると三点メニューに「更新」が出る\n\nChrome / Chromium とは別パッケージ（`com.rou39.bex`）として共存できる。動作確認済み: uBlock Origin Lite ほか。\n\n## 実装\n\nChromium Android に `is_desktop_android = true` を効かせたうえで、UX最適化のパッチ36本（ツールバー・ポップアップ・sidePanel・omnibox 等）を当てている。パッチはすべて clean な Chromium への番号順フル適用で再現性を検証済み。\n\n## 注意\n\n**実験的なビルドです。常用は推奨しません。** Chromium のセキュリティ更新に同じ速度で追随することは保証されないため、パスワードや決済情報の入力には使わないでください。また画面録画に音を入れられるよう `allowAudioPlaybackCapture` を有効にしているため、再生中の音は他アプリから録音できます。",
+    "howToUse": "## インストール\n\n1. このページの Download ボタンから APK をダウンロード\n2. 「提供元不明のアプリ」を許可してインストール\n\n## 使い方\n\n1. 三点メニュー →「拡張機能」を開く\n2. Chrome ウェブストアから検索してインストール、またはフォルダを指定して自作拡張を読み込む\n3. ツールバーのアイコンから拡張機能を呼び出す（ポップアップは画面下からシートで出る）\n4. BEXのアイコンを長押し → 拡張機能をドラッグしてホーム画面に配置すると、アプリのように直接起動できる",
     "category": "mobile",
     "tags": [
       "Chromium",
-      "Kotlin",
+      "Android",
       "Java",
+      "C++",
       "Chrome Extension API"
     ],
     "platform": [
-      "Android",
-      "iOS"
+      "Android"
     ],
-    "icon": "",
-    "screenshots": [],
+    "icon": "/projects/mobile-bex/icon.png",
+    "screenshots": [
+      "/projects/mobile-bex/snap-extensions-page.png",
+      "/projects/mobile-bex/snap-extensions-menu.png",
+      "/projects/mobile-bex/snap-new-tab.png"
+    ],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/mobile-bex"
     },
-    "status": "coming-soon",
-    "publishedAt": "2025-11-05",
-    "updatedAt": "2026-03-04",
-    "size": "medium",
-    "published": false
+    "downloads": [
+      {
+        "label": "Android (.apk)",
+        "url": "https://github.com/kuronekorou39/mobile-bex/releases/download/v0.2.3/BEX-0.2.3.apk",
+        "os": "android"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-02-18",
+    "updatedAt": "2026-08-07",
+    "size": "large",
+    "published": true
   },
   {
     "id": "u2b-loop-web",

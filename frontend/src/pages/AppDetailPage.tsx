@@ -49,6 +49,11 @@ function dlUrl(projectId: string, os?: string): string {
 function DownloadButton({ projectId, downloads, compact = false }: { projectId: string; downloads: DownloadEntry[]; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const userOS = detectOS();
+  // os は `mac-arm` のようにサフィックスが付くことがある。同一OSに複数の配布形式が
+  // あるときは先頭の1件だけを推奨として出す(ブラウザからCPUの種別までは判別できない)
+  const recommendedIndex = downloads.findIndex(
+    dl => dl.os === userOS || dl.os.startsWith(`${userOS}-`)
+  );
 
   if (downloads.length === 1) {
     return (
@@ -74,7 +79,7 @@ function DownloadButton({ projectId, downloads, compact = false }: { projectId: 
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div className="absolute left-0 right-0 top-full z-40 mt-1 overflow-hidden rounded-xl border border-white/10 bg-[#161b22] shadow-xl">
             {downloads.map((dl, i) => {
-              const isRecommended = dl.os === userOS;
+              const isRecommended = i === recommendedIndex;
               return (
                 <a
                   key={i}
