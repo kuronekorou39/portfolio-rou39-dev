@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -9,6 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+import { LAMBDA_RUNTIME } from './lambda-runtime';
 
 interface ApiStackProps extends cdk.StackProps {
   projectsTable: dynamodb.Table;
@@ -68,7 +68,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Projects API ---
     const projectsFn = new nodejs.NodejsFunction(this, 'ProjectsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/projects.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -86,7 +86,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Reviews API ---
     const reviewsFn = new nodejs.NodejsFunction(this, 'ReviewsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/reviews.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -114,7 +114,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Downloads API ---
     const downloadsFn = new nodejs.NodejsFunction(this, 'DownloadsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/downloads.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -130,7 +130,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Page Views API ---
     const pageViewsFn = new nodejs.NodejsFunction(this, 'PageViewsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/page-views.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -145,7 +145,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Interests API ---
     const interestsFn = new nodejs.NodejsFunction(this, 'InterestsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/interests.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -167,7 +167,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Comments API ---
     const commentsFn = new nodejs.NodejsFunction(this, 'CommentsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/comments.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -198,7 +198,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Honeypot API (no auth) ---
     const honeypotFn = new nodejs.NodejsFunction(this, 'HoneypotFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/honeypot.ts'),
       handler: 'handler',
       environment: commonEnv,
@@ -212,7 +212,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Game Scores API (no auth — anyone can submit/view) ---
     const gameScoresFn = new nodejs.NodejsFunction(this, 'GameScoresFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/game-scores.ts'),
       handler: 'handler',
       environment: {
@@ -229,7 +229,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Clip API (text sharing, no auth) ---
     const clipFn = new nodejs.NodejsFunction(this, 'ClipFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/clip.ts'),
       handler: 'handler',
       environment: {
@@ -247,7 +247,7 @@ export class ApiStack extends cdk.Stack {
     // --- Contact API (inquiry form, no auth) ---
     const contactFromEmail = 'noreply@rou39.com';
     const contactFn = new nodejs.NodejsFunction(this, 'ContactFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/contact.ts'),
       handler: 'handler',
       environment: {
@@ -274,7 +274,7 @@ export class ApiStack extends cdk.Stack {
 
     // --- Contributions API (GitHub grass, cached) ---
     const contributionsFn = new nodejs.NodejsFunction(this, 'ContributionsFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/contributions.ts'),
       handler: 'handler',
       environment: {

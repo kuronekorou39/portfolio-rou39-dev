@@ -7,6 +7,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+import { LAMBDA_RUNTIME } from '../lambda-runtime';
 
 interface NotesApiStackProps extends cdk.StackProps {
   usersTable: dynamodb.ITable;
@@ -85,7 +86,7 @@ export class NotesApiStack extends cdk.Stack {
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
-    const runtime = lambda.Runtime.NODEJS_20_X;
+    const runtime = LAMBDA_RUNTIME;
     const handlerDir = path.join(__dirname, '../../../backend/src/handlers/notes');
 
     // --- issue memo (管理: メモURL 発行) ---

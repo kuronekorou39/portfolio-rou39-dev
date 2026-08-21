@@ -10,6 +10,7 @@ import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+import { LAMBDA_RUNTIME } from '../lambda-runtime';
 
 interface UranekoApiStackProps extends cdk.StackProps {
   productsTable: dynamodb.ITable;
@@ -68,7 +69,7 @@ export class UranekoApiStack extends cdk.Stack {
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
-    const runtime = lambda.Runtime.NODEJS_20_X;
+    const runtime = LAMBDA_RUNTIME;
     const handlerDir = path.join(__dirname, '../../../backend/src/handlers/uraneko');
 
     // SES 送信は uraneko の送信ドメイン identity に限定(resource:'*' の過剰付与を避ける)

@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -9,6 +8,7 @@ import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+import { LAMBDA_RUNTIME } from '../lambda-runtime';
 
 // uraneko 用 Google OAuth クライアント ID(Google Cloud Console で作成)。
 // SPA の Cognito Client ID と同様、ブラウザの認可リクエストに露出する公開値なので直書きする
@@ -71,7 +71,7 @@ export class UranekoAuthStack extends cdk.Stack {
 
     // Google ログインと email/password アカウントの自動リンク(本家と同じハンドラを共用)
     const preSignUpFn = new nodejs.NodejsFunction(this, 'PreSignUpFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../../backend/src/handlers/pre-signup.ts'),
       handler: 'handler',
       bundling: { externalModules: ['@aws-sdk/*'] },

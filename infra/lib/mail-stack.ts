@@ -2,13 +2,13 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ses from 'aws-cdk-lib/aws-ses';
 import * as sesActions from 'aws-cdk-lib/aws-ses-actions';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+import { LAMBDA_RUNTIME } from './lambda-runtime';
 
 interface MailStackProps extends cdk.StackProps {
   /** rou39.com */
@@ -59,7 +59,7 @@ export class MailStack extends cdk.Stack {
 
     // 2. 転送 Lambda
     const forwarder = new nodejs.NodejsFunction(this, 'MailForwarder', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/mail-forward.ts'),
       handler: 'handler',
       timeout: cdk.Duration.seconds(30),
@@ -70,10 +70,9 @@ export class MailStack extends cdk.Stack {
         MAIL_BUCKET: archive.bucketName,
       },
       bundling: {
-        // mailparser は重いので bundling で最適化
+        // mailparser は重いので bundling で最適化(esbuild の target はランタイムに追随)
         minify: true,
         sourceMap: false,
-        target: 'node20',
       },
     });
     archive.grantRead(forwarder);

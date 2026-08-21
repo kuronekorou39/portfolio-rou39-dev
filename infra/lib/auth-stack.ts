@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -9,6 +8,7 @@ import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 import * as path from 'path';
+import { LAMBDA_RUNTIME } from './lambda-runtime';
 
 // 本家用 Google OAuth クライアント ID。ブラウザの認可リクエストに露出する公開値なので
 // 直書きする(.env 経由だと CI に .env が無く PLACEHOLDER 上書き事故の温床になるため。
@@ -56,7 +56,7 @@ export class AuthStack extends cdk.Stack {
 
     // Pre Sign Up Lambda trigger for account linking
     const preSignUpFn = new nodejs.NodejsFunction(this, 'PreSignUpFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: LAMBDA_RUNTIME,
       entry: path.join(__dirname, '../../backend/src/handlers/pre-signup.ts'),
       handler: 'handler',
       bundling: { externalModules: ['@aws-sdk/*'] },
