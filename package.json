@@ -17,5 +17,8 @@
     "build:uraneko": "npm run build --workspace=frontend-uraneko",
     "build:notes": "npm run build --workspace=frontend-notes",
     "deploy:infra": "npm run deploy --workspace=infra"
+  },
+  "allowScripts": {
+    "esbuild": true
   }
 }

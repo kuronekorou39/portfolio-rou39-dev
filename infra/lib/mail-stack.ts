@@ -100,6 +100,8 @@ export class MailStack extends cdk.Stack {
 
     // 4. Receipt Rule Set を active にする (CFN は activation を直接サポートしない)
     new AwsCustomResource(this, 'ActivateRuleSet', {
+      // setActiveReceiptRuleSet は Lambda 組み込みの SDK にあるので、実行時の npm install(遅い・外部依存)は不要
+      installLatestAwsSdk: false,
       onCreate: {
         service: 'SES',
         action: 'setActiveReceiptRuleSet',
