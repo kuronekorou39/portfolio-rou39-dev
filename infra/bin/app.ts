@@ -194,7 +194,7 @@ const uranekoAuth = new UranekoAuthStack(app, 'UranekoAuth', {
   googleClientSecret: uranekoSecrets.googleOAuthClientSecret,
 });
 // UserPool の SES 送信設定は作成時に identity の検証状態を確認するため、Email スタックを先に
-uranekoAuth.addDependency(uranekoEmail);
+uranekoAuth.addStackDependency(uranekoEmail);
 
 new UranekoIngestIamStack(app, 'UranekoIngest', {
   env,

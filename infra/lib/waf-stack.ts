@@ -49,7 +49,7 @@ export class WafStack extends cdk.Stack {
     // Host = ユーザーがアクセスしたホスト名。大文字混じりで来ても拾えるよう小文字化する。
     const hostIs = (host: string): wafv2.CfnWebACL.StatementProperty => ({
       byteMatchStatement: {
-        fieldToMatch: { singleHeader: { name: 'host' } },
+        fieldToMatch: { singleHeader: { Name: 'host' } },
         positionalConstraint: 'EXACTLY',
         searchString: host,
         textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
