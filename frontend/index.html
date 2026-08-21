@@ -30,9 +30,57 @@
     <meta name="twitter:title" content="rou39 - Portfolio" />
     <meta name="twitter:description" content="Web・モバイル・拡張機能など、開発したアプリケーションを公開しています。" />
     <title>rou39 - Portfolio</title>
+    <!-- 旧ブラウザ向けフォールバック。
+         ビルドターゲット(Vite 既定 = Safari 16.4 / Chrome 111 相当)未満のブラウザでは
+         バンドルが構文エラーで一切実行されず React がマウントしないため、#root が空のまま真っ白になる。
+         CSP で inline script は禁止なので、CSS アニメーションの遅延だけで
+         「数秒経っても React に消されなければ案内を表示」を実現している。
+         React の createRoot は初回コミットで #root の子要素(script/style 以外)を消すので、
+         対応ブラウザでは通常は一瞬も表示されない(回線が遅く 3 秒以上かかった場合のみ一時的に見える)。 -->
+    <style>
+      .boot-fallback {
+        opacity: 0;
+        animation: boot-fallback-show 0.4s ease 3s forwards;
+        padding: 28vh 24px 24px;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+        font-size: 14px;
+        line-height: 1.8;
+        text-align: center;
+      }
+      /* ページ背景が白(旧ブラウザ)でも黒(JS 無効の対応ブラウザ)でも読めるようカード型にする */
+      .boot-fallback > div {
+        box-sizing: border-box;
+        max-width: 440px;
+        margin: 0 auto;
+        padding: 20px 24px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        color: #333;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+      .boot-fallback p {
+        margin: 0;
+      }
+      .boot-fallback p + p {
+        margin-top: 8px;
+      }
+      @keyframes boot-fallback-show {
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-fallback">
+        <div>
+          <p>ページが表示されない場合、お使いのブラウザが非対応か、JavaScript が無効になっている可能性があります。</p>
+          <p>iOS 16.4 以降の Safari、または最新の Chrome / Firefox / Edge でご覧ください。</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
