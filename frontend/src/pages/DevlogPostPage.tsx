@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { fetchProjects } from '@/lib/api';
 import { findPost, posts } from '@/lib/posts';
 import PageBackground from '@/components/PageBackground';
@@ -63,7 +64,7 @@ export default function DevlogPostPage() {
         </header>
 
         <div className="selectable md-content">
-          <Markdown>{post.body}</Markdown>
+          <Markdown remarkPlugins={[remarkGfm]}>{post.body}</Markdown>
         </div>
 
         {(newer || older) && (
