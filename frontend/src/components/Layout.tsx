@@ -29,6 +29,12 @@ export default function Layout() {
             >
               Apps
             </Link>
+            <Link
+              to="/devlog"
+              className="text-sm font-medium text-gray-400 transition-colors hover:text-gray-100"
+            >
+              Devlog
+            </Link>
             {!loading && (
               user ? (
                 <div className="flex items-center gap-3">

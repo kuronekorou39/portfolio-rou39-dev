@@ -7,6 +7,8 @@ import Layout from '@/components/Layout';
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const AppsPage = lazy(() => import('@/pages/AppsPage'));
 const AppDetailPage = lazy(() => import('@/pages/AppDetailPage'));
+const DevlogPage = lazy(() => import('@/pages/DevlogPage'));
+const DevlogPostPage = lazy(() => import('@/pages/DevlogPostPage'));
 const AuthPage = lazy(() => import('@/pages/AuthPage'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
@@ -44,6 +46,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/apps" element={<AppsPage />} />
           <Route path="/apps/:id" element={<AppDetailPage />} />
+          <Route path="/devlog" element={<DevlogPage />} />
+          <Route path="/devlog/:slug" element={<DevlogPostPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
