@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
 import { fetchProjects } from '@/lib/api';
 import type { Project, ProjectCategory } from '../../../shared/src/types';
+import PageBackground from '@/components/PageBackground';
 
 const categories: { key: 'all' | ProjectCategory; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -159,7 +160,8 @@ export default function AppsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white">
+    <div className="relative isolate min-h-screen bg-[#060608] text-white">
+      <PageBackground />
       <div className="mx-auto max-w-6xl px-6 py-20">
         {/* Header */}
         <motion.div

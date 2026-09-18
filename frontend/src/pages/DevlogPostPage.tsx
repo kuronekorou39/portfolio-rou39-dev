@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import { fetchProjects } from '@/lib/api';
 import { findPost, posts } from '@/lib/posts';
+import PageBackground from '@/components/PageBackground';
 
 export default function DevlogPostPage() {
   const { slug = '' } = useParams();
@@ -34,7 +35,8 @@ export default function DevlogPostPage() {
   const older = posts[index + 1];
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white">
+    <div className="relative isolate min-h-screen bg-[#060608] text-white">
+      <PageBackground />
       <article className="mx-auto max-w-3xl px-6 py-16">
         <Link to="/devlog" className="text-sm text-white/40 transition-colors hover:text-white/80">
           ← Devlog

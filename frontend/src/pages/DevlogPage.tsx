@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { posts } from '@/lib/posts';
+import PageBackground from '@/components/PageBackground';
 
 // 月ごとに区切る。日次で増えていくので、区切りが無いと日付の列が読みにくい
 function groupByMonth(): { month: string; items: typeof posts }[] {
@@ -17,7 +18,8 @@ export default function DevlogPage() {
   const groups = groupByMonth();
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white">
+    <div className="relative isolate min-h-screen bg-[#060608] text-white">
+      <PageBackground />
       <div className="mx-auto max-w-3xl px-6 py-20">
         <h1 className="mb-3 text-5xl font-black tracking-tight md:text-6xl">Devlog</h1>
         <p className="mb-14 text-lg text-white/40">開発の記録。1日1件、その日に進んだことを書く</p>

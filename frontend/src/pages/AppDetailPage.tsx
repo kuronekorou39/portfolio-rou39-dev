@@ -7,6 +7,7 @@ import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, i
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
 import type { Project, Review, Comment as ProjectComment } from '../../../shared/src/types';
+import PageBackground from '@/components/PageBackground';
 
 type Tab = 'about' | 'howto' | 'reviews' | 'feedback';
 
@@ -488,7 +489,8 @@ export default function AppDetailPage() {
       ];
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white">
+    <div className="relative isolate min-h-screen bg-[#060608] text-white">
+      <PageBackground />
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-12">
         {/* Back link */}
         <motion.div
