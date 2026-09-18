@@ -36,7 +36,7 @@
     ],
     "status": "active",
     "publishedAt": "2025-07-20",
-    "updatedAt": "2026-08-05",
+    "updatedAt": "2026-09-12",
     "size": "large",
     "published": true,
     "featured": true
@@ -66,7 +66,7 @@
     "links": {},
     "status": "development",
     "publishedAt": "2025-03-01",
-    "updatedAt": "2026-08-04",
+    "updatedAt": "2026-09-03",
     "size": "large",
     "published": true,
     "featured": true
@@ -96,18 +96,18 @@
     "downloads": [
       {
         "label": "Android (.apk)",
-        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-v1.39.1.apk",
+        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.69.0/u2b-loop-v1.69.0.apk",
         "os": "android"
       },
       {
         "label": "iOS (.ipa)",
-        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.39.1/u2b-loop-ios-v1.39.1.ipa",
+        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.64.5/u2b-loop-ios-v1.64.5.ipa",
         "os": "ios"
       }
     ],
     "status": "active",
     "publishedAt": "2025-01-15",
-    "updatedAt": "2026-04-10",
+    "updatedAt": "2026-09-11",
     "size": "medium",
     "published": true
   },
@@ -164,7 +164,7 @@
     },
     "status": "development",
     "publishedAt": "2025-10-01",
-    "updatedAt": "2026-03-28",
+    "updatedAt": "2026-05-16",
     "size": "medium",
     "published": true
   },
@@ -229,7 +229,7 @@
     ],
     "status": "active",
     "publishedAt": "2026-05-28",
-    "updatedAt": "2026-08-07",
+    "updatedAt": "2026-09-12",
     "size": "medium",
     "published": true
   },
@@ -256,13 +256,13 @@
     "downloads": [
       {
         "label": "Chrome 拡張 (.zip)",
-        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/twitch-v0.10.1/ad-skipper-for-twitch-v0.10.1.zip",
+        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/twitch-v0.10.2/ad-skipper-for-twitch-v0.10.2.zip",
         "os": "other"
       }
     ],
     "status": "active",
     "publishedAt": "2026-02-13",
-    "updatedAt": "2026-08-04",
+    "updatedAt": "2026-08-08",
     "size": "small",
     "published": true
   },
@@ -293,13 +293,13 @@
     "downloads": [
       {
         "label": "Chrome 拡張 (.zip)",
-        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/prime-v0.6.0/ad-skipper-for-prime-video-v0.6.0.zip",
+        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/prime-v0.6.2/ad-skipper-for-prime-video-v0.6.2.zip",
         "os": "other"
       }
     ],
     "status": "active",
     "publishedAt": "2026-02-13",
-    "updatedAt": "2026-08-04",
+    "updatedAt": "2026-08-08",
     "size": "small",
     "published": true
   },
@@ -326,13 +326,13 @@
     "downloads": [
       {
         "label": "Chrome 拡張 (.zip)",
-        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/youtube-v0.3.0/ad-skipper-for-youtube-v0.3.0.zip",
+        "url": "https://github.com/kuronekorou39/chrome-ad-skipper/releases/download/youtube-v0.3.1/ad-skipper-for-youtube-v0.3.1.zip",
         "os": "other"
       }
     ],
     "status": "active",
     "publishedAt": "2026-02-13",
-    "updatedAt": "2026-08-04",
+    "updatedAt": "2026-08-08",
     "size": "small",
     "published": true
   },
@@ -413,7 +413,7 @@
     "links": {},
     "status": "development",
     "publishedAt": "2026-01-01",
-    "updatedAt": "2026-04-01",
+    "updatedAt": "2026-04-04",
     "size": "medium",
     "published": true
   },
@@ -444,7 +444,7 @@
     },
     "status": "active",
     "publishedAt": "2025-08-01",
-    "updatedAt": "2026-01-31",
+    "updatedAt": "2026-04-29",
     "size": "small",
     "published": true
   },
@@ -525,7 +525,7 @@
     },
     "status": "development",
     "publishedAt": "2025-12-01",
-    "updatedAt": "2026-03-29",
+    "updatedAt": "2026-09-01",
     "size": "small",
     "published": true
   },
@@ -552,35 +552,48 @@
     },
     "status": "development",
     "publishedAt": "2025-12-01",
-    "updatedAt": "2026-03-29",
+    "updatedAt": "2026-09-01",
     "size": "small",
     "published": true
   },
   {
     "id": "domain-traffic-inspector",
     "title": "Domain Traffic Inspector",
-    "subtitle": "ドメインごとのネットワーク通信を可視化するChrome拡張",
-    "description": "# Domain Traffic Inspector\n\nブラウザのネットワーク通信をドメインごとに分類・可視化するChrome拡張機能。\n\n## 特徴\n\n- リアルタイムでトラフィックを監視\n- ドメインごとの通信量を円グラフで表示\n- サードパーティトラッカーの検出\n- エクスポート機能（CSV/JSON）",
-    "howToUse": "## 使い方\n\n1. Chrome拡張機能をインストール\n2. 任意のWebサイトを閲覧\n3. 拡張機能アイコンをクリックしてダッシュボードを表示\n4. ドメインごとの通信量を確認",
+    "subtitle": "タブの通信先をドメイン別に見て、その場で許可・ブロックできるChrome拡張",
+    "description": "## 概要\n\n開いているタブがどこと通信しているかを、サイドパネルにドメイン別で並べる Chrome 拡張機能。見るだけでなく、行ごとに許可・ブロックを切り替えられる。計測データとルールは端末内だけで処理し、外部には送らない。\n\nWeb 開発時の依存先の監査、プライバシー調査、壊れたサイトの原因切り分けに向いている。\n\n## 主な機能\n\n- **ドメイン別のリアルタイム表示** — リクエスト数とリソース種別（JS / 画像 / XHR など）\n- **個別ブロックと厳格モード** — 許可リスト方式で、許可したドメイン以外をすべて止められる\n- **サイト保護** — 閲覧サイトごとに独立したルール。依存先の5分間だけの一時許可もできる\n- **階層ルール** — 親ドメインの方針を継承し、サブドメインで上書き\n- **ルール管理** — メモ・タグ、検索、一括操作、JSON インポート／エクスポート",
+    "howToUse": "## インストール\n\nChrome 114 以降が必要。\n\n1. このページの Download から zip をダウンロードして展開（展開したフォルダが本体になるので消さない）\n2. `chrome://extensions` を開き、右上の「デベロッパーモード」をオン\n3. 「パッケージ化されていない拡張機能を読み込む」から展開したフォルダを選ぶ\n\n## 使い方\n\n1. ツールバーのアイコンからサイドパネルを開く\n2. 対象のページを開くと、通信先ドメインが一覧に出る\n3. 行ごとに許可／ブロックを切り替える。厳格モードにすると、許可したドメイン以外の通信が止まる",
     "category": "chrome-ext",
     "tags": [
       "Chrome Extension",
-      "TypeScript",
-      "Chart.js"
+      "Manifest V3",
+      "JavaScript",
+      "Side Panel API",
+      "declarativeNetRequest"
     ],
     "platform": [
       "Chrome"
     ],
     "icon": "",
-    "screenshots": [],
+    "screenshots": [
+      "/projects/domain-traffic-inspector/screenshot-main.png",
+      "/projects/domain-traffic-inspector/screenshot-traffic.png",
+      "/projects/domain-traffic-inspector/screenshot-rules.png"
+    ],
     "links": {
-      "github": "#"
+      "github": "https://github.com/kuronekorou39/chrome-domain-traffic-inspector"
     },
     "status": "active",
     "publishedAt": "2025-06-01",
-    "updatedAt": "2025-11-20",
+    "updatedAt": "2026-08-21",
     "size": "small",
-    "published": false
+    "published": true,
+    "downloads": [
+      {
+        "label": "Chrome 拡張 (.zip)",
+        "url": "https://github.com/kuronekorou39/chrome-domain-traffic-inspector/releases/download/v1.1.0/domain-traffic-inspector-v1.1.0.zip",
+        "os": "other"
+      }
+    ]
   },
   {
     "id": "mobile-bex",
@@ -611,13 +624,13 @@
     "downloads": [
       {
         "label": "Android (.apk)",
-        "url": "https://github.com/kuronekorou39/mobile-bex/releases/download/v0.2.3/BEX-0.2.3.apk",
+        "url": "https://github.com/kuronekorou39/mobile-bex/releases/download/v0.3.1/BEX-0.3.1.apk",
         "os": "android"
       }
     ],
     "status": "active",
     "publishedAt": "2026-02-18",
-    "updatedAt": "2026-08-07",
+    "updatedAt": "2026-09-03",
     "size": "large",
     "published": true
   },
@@ -649,5 +662,165 @@
     "updatedAt": "2025-12-27",
     "size": "small",
     "published": false
+  },
+  {
+    "id": "vloom",
+    "title": "Vloom",
+    "subtitle": "光だけでファイルを渡す — ネットワークもペアリングも要らない転送",
+    "description": "## 概要\n\n片方の画面にコードの動画ループを表示し、もう片方のカメラで撮り続けるだけでファイルが渡る。Wi-Fi も Bluetooth も、相手の連絡先も要らない。通信経路を一切介さない。\n\n## 仕組み\n\n- **Fountain code (RaptorQ)** — ペイロードをパケット列に符号化して循環表示する。十分な数が集まった時点で復元できるので、1枚も取りこぼさずに撮る必要がない。フレーム落ち・手ブレ・位置ズレに強く、送受信の fps を合わせる必要もない\n- **vcode** — 動画向けに作った独自の輝度ブロック格子。QR のファインダや誤り訂正領域を持たず、格子全体をデータに使う。ブロック単位の CRC で、フレームの一部が潰れても読めたブロックだけを積み上げられる\n- **受信ガイド** — 充填率・余白・px/セルを読み上げ、「近づけて / 離して」を誘導する\n\n## 実測\n\n1MB の転送（Pixel 9a で受信、13×18 / 1bit）\n\n- LCD モニタ @20fps: 131〜147 KB/s\n- iPhone 12 Pro (OLED) @30fps: **201〜207 KB/s**\n\n送信面は平面ディスプレイであること（曲面は射影変換が外れて読めない）。",
+    "howToUse": "## 試す\n\n- **Web** — インストール不要。まずはここから（このページの Web リンク）\n- **Android** — Download の APK。ネイティブの方が高速で、カメラ制御が細かい\n- **Windows（送信のみ）** — リポジトリの `desktop/`。フレーム間隔を正確に刻める\n\n## 使い方\n\n1. 送信側でファイルを選び、画面いっぱいにコードを表示する（輝度は最大）\n2. 受信側のカメラを向けて、ガイド枠に収める\n3. 格子（プリセット）は送受信で同じものを選ぶ",
+    "category": "mobile",
+    "tags": [
+      "Rust",
+      "RaptorQ",
+      "Flutter",
+      "WebAssembly",
+      "Computer Vision"
+    ],
+    "platform": [
+      "Android",
+      "iOS",
+      "Web",
+      "Windows"
+    ],
+    "icon": "/projects/vloom/icon.png",
+    "screenshots": [
+      "/projects/vloom/vcode-anatomy.png"
+    ],
+    "links": {
+      "web": "https://kuronekorou39.github.io/vloom/",
+      "github": "https://github.com/kuronekorou39/vloom"
+    },
+    "downloads": [
+      {
+        "label": "Android (.apk)",
+        "url": "https://github.com/kuronekorou39/vloom/releases/download/v0.3.4/app-release.apk",
+        "os": "android"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-05-28",
+    "updatedAt": "2026-09-15",
+    "size": "large",
+    "published": true
+  },
+  {
+    "id": "easy-blur",
+    "title": "Easy Blur",
+    "subtitle": "画像と動画にモザイク・ぼかしをかけるAndroidエディター",
+    "description": "## 概要\n\n画像と動画の両方に使える、モザイク・ぼかしのエディター。編集はすべて端末の中で処理し、素材を外に送らない。\n\n## 主な機能\n\n- **画像・動画の両対応**\n- **レイヤー** — ぼかしを重ねて個別に調整\n- **キーフレーム** — 動画の中で動く対象を追える\n- **Undo / Redo と自動保存**\n- **アプリ内の更新案内** — 新しいリリースが出るとホーム画面にリンクが出る\n\nリポジトリには、ブラウザで開くだけで使える簡易モザイクツールと画像結合ツールも同梱している。",
+    "howToUse": "## インストール\n\n1. このページの Download から APK をダウンロード\n2. 「提供元不明のアプリ」を許可してインストール\n\n## 使い方\n\n1. 画像か動画を選ぶ\n2. 隠したい範囲にぼかしのレイヤーを置く。動画ではキーフレームを打って位置を追わせる\n3. 書き出す",
+    "category": "mobile",
+    "tags": [
+      "Flutter",
+      "Dart",
+      "Android",
+      "動画編集"
+    ],
+    "platform": [
+      "Android"
+    ],
+    "icon": "/projects/easy-blur/icon.png",
+    "screenshots": [],
+    "links": {
+      "github": "https://github.com/kuronekorou39/easy-blur"
+    },
+    "downloads": [
+      {
+        "label": "Android (.apk)",
+        "url": "https://github.com/kuronekorou39/easy-blur/releases/download/v0.13.0/easy-blur-v0.13.0-arm64.apk",
+        "os": "android"
+      }
+    ],
+    "status": "active",
+    "publishedAt": "2026-04-01",
+    "updatedAt": "2026-09-03",
+    "size": "medium",
+    "published": true
+  },
+  {
+    "id": "hayabuzz",
+    "title": "Hayabuzz",
+    "subtitle": "スマホが早押しボタンになる、サーバレスP2Pクイズ",
+    "description": "## 概要\n\nGitHub Pages の静的配信だけで動く早押しクイズ。バックエンドを持たず、端末どうしが WebRTC DataChannel で直接つながる。\n\n## 仕組み\n\nシグナリングには WebTorrent トラッカーの WebSocket プロトコルを使う。部屋名のハッシュで announce し、そこに相乗りさせた offer / answer を同じ部屋の相手と交換する。トラッカーを通るのは接続情報だけで、つながったあとのゲームデータは端末間を直接流れる。P2P 層は外部ライブラリに頼らず自前で実装した。\n\n## 主な機能\n\n- **ルームコード / URL / QR で参加** — 途中参加もできる\n- **回答形式** — 早押し / ○×クイズ / 4択クイズ\n- **誤答後の進め方** — 次点へ / 全員に再開放 / 他チームに開放 / 正解者なしで終了\n- **チーム戦・得点・履歴・結果発表**\n- **復帰** — 出題者がリロードしても同じ部屋に戻れる。回答者は自動でつながり直す\n- **早押しボタンの見た目 9 種類と効果音**",
+    "howToUse": "## 遊び方\n\n1. 出題者がトップ画面から「出題者として部屋を作る」を選ぶ\n2. ルームコード / URL / QR コードを回答者に共有する\n3. 回答者はニックネームを入れて参加。画面の大半が早押しボタンになる\n4. 出題者は「問題を用意 → 出題・早押し → 判定」の3ステップで進める\n5. 最後に「結果発表」で全端末に最終ランキングを表示する",
+    "category": "web",
+    "tags": [
+      "WebRTC",
+      "P2P",
+      "JavaScript",
+      "GitHub Pages"
+    ],
+    "platform": [
+      "Web"
+    ],
+    "icon": "",
+    "screenshots": [
+      "/projects/hayabuzz/top.png"
+    ],
+    "links": {
+      "web": "https://kuronekorou39.github.io/hayabuzz/",
+      "github": "https://github.com/kuronekorou39/hayabuzz"
+    },
+    "status": "active",
+    "publishedAt": "2026-08-13",
+    "updatedAt": "2026-09-04",
+    "size": "medium",
+    "published": true
+  },
+  {
+    "id": "tapomaton",
+    "title": "tapomaton",
+    "subtitle": "Androidの画面を見て、判断して、代わりに操作する自動操作アプリ",
+    "description": "## 概要\n\n画面を一定間隔で観察し、「いまどういう状態か」を判定して、必要な場所をタップ・スワイプする自分用の自動操作アプリ。定型の繰り返し操作を任せるために作っている。\n\n## 仕組み\n\n- **AccessibilityService 一本** — 画面の取得、ノードツリーの取得、ジェスチャの注入をすべてここで行う\n- **ルール優先** — 判定はテキスト / ID の一致を第一に使う\n- **曖昧なときだけ端末内 LLM** — Gemma 4 E2B（LiteRT-LM、画像入力可）に「次に何を押すか」を JSON で答えさせる\n- **マクロ** — 単純な座標タップや、登録した操作の再現も用意する\n- **禁止ラベルの判定** — 押してはいけないボタンを先に弾く\n\n## 状態\n\n段階1「骨組み」まで。観察ループ、タップ / クリック / Back、端末内 LLM による判定が実機（Pixel 9a）で動くことを確認した。LLM の判定は GPU で 1 回 20 秒ほどかかるのが課題。",
+    "howToUse": "## ビルド\n\nまだ配布物は無い。リポジトリを clone して Android Studio か `./gradlew.bat assembleDebug` でビルドする。\n\n## 使い方\n\n1. オーバーレイ表示を許可する\n2. ユーザー補助で tapomaton を有効にする\n3. 出てきた操作パネルから観察・操作を始める",
+    "category": "mobile",
+    "tags": [
+      "Kotlin",
+      "Android",
+      "AccessibilityService",
+      "LiteRT-LM",
+      "Gemma"
+    ],
+    "platform": [
+      "Android"
+    ],
+    "icon": "",
+    "screenshots": [],
+    "links": {
+      "github": "https://github.com/kuronekorou39/tapomaton"
+    },
+    "status": "development",
+    "publishedAt": "2026-08-21",
+    "updatedAt": "2026-09-02",
+    "size": "small",
+    "published": true
+  },
+  {
+    "id": "window-resizer",
+    "title": "Window Resizer",
+    "subtitle": "ブラウザウィンドウを指定サイズに合わせる開発者向けChrome拡張",
+    "description": "## 概要\n\nブラウザのウィンドウを狙った寸法にリサイズし、いまのサイズをサイドパネルで見続けられる Chrome 拡張機能。レスポンシブの確認や、決まった解像度でのスクリーンショット撮影に使う。\n\n## 主な機能\n\n- **2つのサイズを同時に表示** — ウィンドウサイズ（外枠込み）とビューポートサイズ（コンテンツ領域）\n- **サイドパネル常駐** — 作業中も開いたまま。リサイズや移動に追従して更新\n- **自動補正** — ウィンドウ操作で出る 1〜2px のズレを直す\n- **プリセット** — デスクトップ / タブレット / モバイルの定番サイズ\n- **カスタムサイズと履歴** — 直近 5 件を記憶\n- **キーボードショートカット**",
+    "howToUse": "## インストール\n\n1. リポジトリを clone（または zip でダウンロード）\n2. `chrome://extensions` で「デベロッパーモード」をオン\n3. 「パッケージ化されていない拡張機能を読み込む」でフォルダを選ぶ\n\n## 使い方\n\n1. ツールバーのアイコンをクリックしてサイドパネルを開く\n2. プリセットを選ぶか、幅と高さを入力する\n3. `Ctrl+Shift+1` で 1920×1080、`Ctrl+Shift+2` で 1280×720 に一発で合わせられる",
+    "category": "chrome-ext",
+    "tags": [
+      "Chrome Extension",
+      "Manifest V3",
+      "JavaScript",
+      "Side Panel API"
+    ],
+    "platform": [
+      "Chrome"
+    ],
+    "icon": "/projects/window-resizer/icon.png",
+    "screenshots": [],
+    "links": {
+      "github": "https://github.com/kuronekorou39/chrome-window-resizer"
+    },
+    "status": "active",
+    "publishedAt": "2025-08-05",
+    "updatedAt": "2025-08-05",
+    "size": "small",
+    "published": true
   }
 ]
