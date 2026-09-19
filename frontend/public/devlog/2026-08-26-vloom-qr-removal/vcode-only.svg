@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 350" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowDim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="350" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">QR 経路を消し、送信側に Windows を足した</text>
+
+  <!-- 削除 -->
+  <rect x="24" y="60" width="672" height="56" rx="10" fill="#f87171" fill-opacity="0.06" stroke="#f87171" stroke-opacity="0.5" stroke-dasharray="6 4"/>
+  <text x="40" y="94" fill="#f87171" font-size="14" font-weight="700">削除: QR 経路</text>
+  <text x="680" y="94" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="end">約 15,000 行 / ML Kit と INTERNET 権限も消えた</text>
+
+  <!-- コア -->
+  <rect x="24" y="144" width="220" height="180" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="226" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">Rust のコア</text>
+  <text x="40" y="250" fill="#ffffff" fill-opacity="0.5" font-size="12">vcode + Fountain</text>
+
+  <!-- 利用側 -->
+  <g stroke-width="2">
+    <line x1="246" y1="170" x2="322" y2="170" stroke="#ffffff" stroke-opacity="0.4" marker-end="url(#arrowDim)"/>
+    <line x1="246" y1="234" x2="322" y2="234" stroke="#ffffff" stroke-opacity="0.4" marker-end="url(#arrowDim)"/>
+    <line x1="246" y1="298" x2="322" y2="298" stroke="#60a5fa" marker-end="url(#arrow)"/>
+  </g>
+  <g font-size="12" text-anchor="middle">
+    <text x="284" y="162" fill="#ffffff" fill-opacity="0.45">FFI</text>
+    <text x="284" y="226" fill="#ffffff" fill-opacity="0.45">WASM</text>
+    <text x="284" y="290" fill="#60a5fa" font-weight="700">PyO3</text>
+  </g>
+  <rect x="330" y="144" width="366" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="346" y="175" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">スマホアプリ</text>
+  <text x="680" y="175" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="end">5 タブ → 3 タブ</text>
+  <rect x="330" y="208" width="366" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="346" y="239" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">Web 版 (PWA)</text>
+  <rect x="330" y="272" width="366" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="346" y="303" fill="#60a5fa" font-size="13" font-weight="700">＋ Windows 送信アプリ</text>
+  <text x="680" y="303" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="end">PySide6 / 高精度タイマー</text>
+</svg>

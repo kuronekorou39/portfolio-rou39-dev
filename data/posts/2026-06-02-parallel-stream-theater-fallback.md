@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 配信を並べるには、各サイトのプレイヤーを画面いっぱいに広げたい。サイト自身のシアターモードを外から ON にする方法を、Twitch / YouTube / Kick / OPENREC の 4 サイトで確かめた。
 
+![シアターモードを ON にする 3 段のフォールバック](/devlog/2026-06-02-parallel-stream-theater-fallback/fallback.svg)
+
 | 順番 | 戦略 | 中身 |
 |---|---|---|
 | 1 | ボタンを click | Twitch は英語 UI の aria-label(Theatre / Theater)にも対応 |

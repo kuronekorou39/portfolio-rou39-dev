@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">いいね / ブックマークの一覧画面</text>
+
+  <!-- 入口 -->
+  <rect x="24" y="150" width="130" height="50" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="89" y="180" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">アカウント詳細</text>
+  <text x="24" y="224" fill="#ffffff" fill-opacity="0.4" font-size="11">X / Bluesky の両方</text>
+  <line x1="154" y1="175" x2="198" y2="175" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 画面 -->
+  <rect x="200" y="56" width="260" height="268" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="216" y="83" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">アカウント名</text>
+  <circle cx="410" cy="78" r="9" fill="#60a5fa" fill-opacity="0.5"/>
+  <circle cx="436" cy="78" r="9" fill="#60a5fa" fill-opacity="0.5"/>
+  <line x1="200" y1="98" x2="460" y2="98" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="265" y="120" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">いいね</text>
+  <text x="395" y="120" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">ブックマーク</text>
+  <line x1="200" y1="131" x2="330" y2="131" stroke="#60a5fa" stroke-width="2"/>
+  <line x1="330" y1="132" x2="460" y2="132" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g fill="#ffffff">
+    <circle cx="232" cy="166" r="12" fill-opacity="0.18"/>
+    <rect x="254" y="154" width="120" height="8" rx="3" fill-opacity="0.3"/>
+    <rect x="254" y="170" width="186" height="8" rx="3" fill-opacity="0.14"/>
+    <circle cx="232" cy="226" r="12" fill-opacity="0.18"/>
+    <rect x="254" y="214" width="96" height="8" rx="3" fill-opacity="0.3"/>
+    <rect x="254" y="230" width="186" height="8" rx="3" fill-opacity="0.14"/>
+    <circle cx="232" cy="286" r="12" fill-opacity="0.18"/>
+    <rect x="254" y="274" width="132" height="8" rx="3" fill-opacity="0.3"/>
+    <rect x="254" y="290" width="160" height="8" rx="3" fill-opacity="0.14"/>
+  </g>
+  <line x1="200" y1="196" x2="460" y2="196" stroke="#ffffff" stroke-opacity="0.08"/>
+  <line x1="200" y1="256" x2="460" y2="256" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- 切替の説明 -->
+  <line x1="448" y1="78" x2="512" y2="78" stroke="#ffffff" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="520" y="82" fill="#ffffff" fill-opacity="0.6" font-size="12">匿名 / センシティブの切替</text>
+  <text x="520" y="100" fill="#ffffff" fill-opacity="0.4" font-size="11">タイムラインの設定と同期</text>
+
+  <!-- タップ -->
+  <line x1="460" y1="175" x2="518" y2="175" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <text x="489" y="166" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">タップ</text>
+  <rect x="520" y="150" width="176" height="50" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="608" y="180" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">投稿詳細</text>
+  <text x="520" y="224" fill="#ffffff" fill-opacity="0.4" font-size="11">一覧は閲覧専用</text>
+</svg>

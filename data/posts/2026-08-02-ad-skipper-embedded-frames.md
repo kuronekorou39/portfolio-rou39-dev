@@ -6,6 +6,8 @@ projects: [ad-skipper-twitch, ad-skipper-youtube]
 
 content script は、既定では最上位のフレームにしか注入されない。そのため、他のページに埋め込まれた YouTube や Twitch のプレイヤーには届いていなかった。
 
+![content script を埋め込みフレームにも注入する](/devlog/2026-08-02-ad-skipper-embedded-frames/all-frames.svg)
+
 | 変更 | 中身 |
 |---|---|
 | all_frames | YouTube 版と Twitch 版の content script を、埋め込みフレームにも注入する |

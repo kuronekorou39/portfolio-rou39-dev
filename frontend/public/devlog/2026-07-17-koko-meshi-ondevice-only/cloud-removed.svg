@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">解析モード: 3 択から 2 択へ</text>
+
+  <!-- 前 -->
+  <rect x="24" y="60" width="316" height="206" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">v0.4.0 まで</text>
+  <g font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="40" y="102" width="80" height="40" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="80" y="127" fill="#ffffff" fill-opacity="0.85">オフ</text>
+    <rect x="130" y="102" width="90" height="40" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="175" y="127" fill="#ffffff" fill-opacity="0.85">端末内</text>
+    <rect x="230" y="102" width="94" height="40" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.7"/>
+    <text x="277" y="127" fill="#f87171">クラウド</text>
+  </g>
+  <line x1="277" y1="142" x2="277" y2="166" stroke="#f87171" stroke-opacity="0.6" stroke-width="2"/>
+  <g font-size="12" text-anchor="middle" fill="#f87171">
+    <rect x="212" y="166" width="112" height="34" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.4"/>
+    <text x="268" y="188">レート制限</text>
+    <rect x="212" y="210" width="112" height="34" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.4"/>
+    <text x="268" y="232">匿名サインイン</text>
+  </g>
+  <text x="40" y="210" fill="#ffffff" fill-opacity="0.4" font-size="11">赤が撤去した部分</text>
+
+  <line x1="344" y1="163" x2="372" y2="163" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 後 -->
+  <rect x="380" y="60" width="316" height="206" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="396" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">v0.5.0</text>
+  <g font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="396" y="102" width="80" height="40" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="436" y="127" fill="#ffffff" fill-opacity="0.85">オフ</text>
+    <rect x="486" y="102" width="90" height="40" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="531" y="127" fill="#ffffff" fill-opacity="0.85">端末内</text>
+  </g>
+  <text x="396" y="188" fill="#ffffff" fill-opacity="0.6" font-size="13">解析は端末内の Gemma だけ</text>
+  <text x="396" y="232" fill="#ffffff" fill-opacity="0.4" font-size="11">付随の仕組みもまとめて削除</text>
+</svg>

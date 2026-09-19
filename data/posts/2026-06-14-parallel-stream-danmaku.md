@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 複数の配信を並べると、チャット欄まで並べる場所が無い。コメントを各枠の映像の上に右から左へ流す弾幕機能を作った。対象は Twitch / YouTube / OPENREC のライブチャット。
 
+![チャットのコメントが映像の上を流れるまで](/devlog/2026-06-14-parallel-stream-danmaku/danmaku-flow.svg)
+
 | 部分 | 中身 |
 |---|---|
 | 取得 | 枠の中の content script がチャットの DOM を監視し、親へ postMessage。親は送り主から枠を特定する |

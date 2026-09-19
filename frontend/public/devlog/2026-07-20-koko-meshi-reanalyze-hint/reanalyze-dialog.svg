@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">キーワードを添えた再解析</text>
+
+  <!-- ダイアログ -->
+  <rect x="24" y="60" width="290" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="44" y="92" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">AIで再解析</text>
+  <text x="44" y="116" fill="#ffffff" fill-opacity="0.4" font-size="11">手動で直した値は消える</text>
+  <rect x="44" y="134" width="250" height="56" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="58" y="154" fill="#60a5fa" font-size="11" font-weight="700">キーワード(任意)</text>
+  <text x="58" y="178" fill="#ffffff" fill-opacity="0.85" font-size="14">ラーメン</text>
+  <text x="150" y="245" fill="#ffffff" fill-opacity="0.6" font-size="13">キャンセル</text>
+  <rect x="230" y="224" width="64" height="32" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="262" y="245" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">再解析</text>
+
+  <line x1="320" y1="162" x2="356" y2="162" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- プロンプト -->
+  <rect x="364" y="78" width="200" height="168" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="380" y="104" fill="#ffffff" fill-opacity="0.45" font-size="12">プロンプト</text>
+  <rect x="380" y="118" width="168" height="52" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="392" y="138" fill="#60a5fa" font-size="11" font-weight="700">最優先の手がかり</text>
+  <text x="392" y="159" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">ラーメン</text>
+  <rect x="380" y="180" width="168" height="48" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="392" y="209" fill="#ffffff" fill-opacity="0.6" font-size="12">写真 + いつもの指示</text>
+
+  <line x1="568" y1="162" x2="596" y2="162" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="604" y="130" width="92" height="64" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="650" y="158" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">新しい</text>
+  <text x="650" y="178" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">解析結果</text>
+</svg>

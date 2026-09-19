@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" font-family="system-ui, sans-serif">
+  <rect width="720" height="360" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">V受信の画面に足したもの</text>
+
+  <!-- 端末 -->
+  <rect x="24" y="60" width="250" height="280" rx="14" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="37" y="74" width="224" height="196" rx="6" fill="#ffffff" fill-opacity="0.05"/>
+  <!-- ガイド枠 -->
+  <rect x="59" y="92" width="180" height="160" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="8 5"/>
+  <!-- コード -->
+  <rect x="92" y="112" width="122" height="114" fill="#ffffff" fill-opacity="0.12"/>
+  <g fill="#60a5fa">
+    <rect x="88" y="108" width="12" height="12"/>
+    <rect x="206" y="108" width="12" height="12"/>
+    <rect x="88" y="218" width="12" height="12"/>
+    <rect x="206" y="218" width="12" height="12"/>
+  </g>
+  <!-- カバレッジ格子 -->
+  <g fill="#ffffff" fill-opacity="0.1">
+    <rect x="37" y="284" width="224" height="14"/>
+    <rect x="37" y="302" width="224" height="14"/>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.8">
+    <rect x="37" y="284" width="144" height="14"/>
+    <rect x="197" y="284" width="16" height="14"/>
+    <rect x="229" y="284" width="32" height="14"/>
+    <rect x="37" y="302" width="64" height="14"/>
+    <rect x="133" y="302" width="16" height="14"/>
+  </g>
+  <path d="M53 282V318M69 282V318M85 282V318M101 282V318M117 282V318M133 282V318M149 282V318M165 282V318M181 282V318M197 282V318M213 282V318M229 282V318M245 282V318" stroke="#0b0c10" stroke-width="2"/>
+
+  <!-- 注記 -->
+  <g stroke="#ffffff" stroke-opacity="0.3">
+    <line x1="239" y1="100" x2="312" y2="100"/>
+    <line x1="218" y1="170" x2="312" y2="170"/>
+    <line x1="261" y1="300" x2="312" y2="300"/>
+  </g>
+  <text x="322" y="98" fill="#60a5fa" font-size="14" font-weight="700">ガイド枠</text>
+  <text x="322" y="120" fill="#ffffff" fill-opacity="0.6" font-size="12">スキャナが探す範囲と一致。探索 ±32 → ±48px</text>
+  <text x="322" y="168" fill="#60a5fa" font-size="14" font-weight="700">位置合わせ (acquire)</text>
+  <text x="322" y="190" fill="#ffffff" fill-opacity="0.6" font-size="12">画面全体から四隅を 1 回だけ検出 → 追従の種</text>
+  <text x="322" y="212" fill="#ffffff" fill-opacity="0.4" font-size="12">90° 回転もここで拾う</text>
+  <text x="322" y="298" fill="#60a5fa" font-size="14" font-weight="700">カバレッジ格子</text>
+  <text x="322" y="320" fill="#ffffff" fill-opacity="0.6" font-size="12">届いたパケットのマス目</text>
+</svg>

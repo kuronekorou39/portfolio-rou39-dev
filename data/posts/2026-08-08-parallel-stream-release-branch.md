@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 UI のページは main から配信していたので、push した時点で公開になっていた。利用者の画面が作業のたびに変わり、版を上げるたびに「拡張機能が古い」が出て、作業途中の ZIP が配られる。
 
+![UI のページの配信元を release ブランチへ](/devlog/2026-08-08-parallel-stream-release-branch/release-branch.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 公開の切り出し | 配信元を release ブランチにした。URL は変わらない。公開するときだけ release を進める |

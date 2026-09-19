@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowDim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">送信データの先頭に、名前と種別を付ける</text>
+
+  <!-- 送信データ -->
+  <text x="24" y="74" fill="#ffffff" fill-opacity="0.45" font-size="12">送信データ</text>
+  <rect x="24" y="84" width="240" height="60" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.7"/>
+  <text x="40" y="110" fill="#60a5fa" font-size="13" font-weight="700">＋ 自己記述ヘッダ</text>
+  <text x="40" y="131" fill="#ffffff" fill-opacity="0.6" font-size="12">ファイル名 / MIME</text>
+  <rect x="268" y="84" width="428" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="284" y="119" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">本体(生のバイト列)</text>
+
+  <line x1="144" y1="148" x2="144" y2="190" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="534" y1="148" x2="534" y2="190" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowDim)"/>
+
+  <!-- 受信側 -->
+  <rect x="24" y="196" width="324" height="90" rx="10" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="40" y="222" fill="#ffffff" fill-opacity="0.45" font-size="12">ヘッダあり</text>
+  <text x="40" y="248" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">元の名前と種別で保存</text>
+  <text x="40" y="270" fill="#60a5fa" font-size="12" font-weight="700">docx は docx のまま</text>
+
+  <rect x="372" y="196" width="324" height="90" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="388" y="222" fill="#ffffff" fill-opacity="0.45" font-size="12">ヘッダなし(旧データ・これまで)</text>
+  <text x="388" y="248" fill="#ffffff" fill-opacity="0.6" font-size="14" font-weight="700">時刻の名前 + 中身から推測</text>
+  <text x="388" y="270" fill="#f87171" font-size="12" font-weight="700">docx が zip になる</text>
+</svg>

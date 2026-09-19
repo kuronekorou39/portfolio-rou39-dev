@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">広告判定: キーワード「ad」の照合のしかた</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">例: download.example.com</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="80" fill="#f87171" font-size="12" font-weight="700">直す前: ドメイン全体に部分一致</text>
+  <rect x="24" y="92" width="304" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="176" y="124" font-size="15" text-anchor="middle" fill="#ffffff" fill-opacity="0.7">downlo<tspan fill="#f87171" fill-opacity="1" font-weight="700">ad</tspan>.example.com</text>
+  <line x1="332" y1="118" x2="376" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <rect x="380" y="92" width="316" height="52" rx="8" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="538" y="123" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">広告と誤って判定</text>
+
+  <!-- 直した後 -->
+  <text x="24" y="188" fill="#60a5fa" font-size="12" font-weight="700">直した後: 「.」で区切ったパーツごとに完全一致</text>
+  <g font-size="15" text-anchor="middle" fill="#ffffff" fill-opacity="0.85">
+    <rect x="24" y="200" width="116" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="82" y="232">download</text>
+    <rect x="148" y="200" width="104" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="200" y="232">example</text>
+    <rect x="260" y="200" width="68" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="294" y="232">com</text>
+  </g>
+  <line x1="332" y1="226" x2="376" y2="226" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="380" y="200" width="316" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="538" y="231" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">どのパーツも「ad」ではない → 広告扱いしない</text>
+</svg>

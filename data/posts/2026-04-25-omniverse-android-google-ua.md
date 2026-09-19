@@ -6,6 +6,8 @@ projects: [omniverse]
 
 2 日前の iPad のクラッシュ対策で、Google ログインのポップアップ側の WebView から初期設定を丸ごと消した。その副作用が Android に出た。
 
+![Android: ポップアップの WebView が名乗る User-Agent](/devlog/2026-04-25-omniverse-android-google-ua/popup-ua.svg)
+
 | OS | ポップアップの設定を消した結果 | 対応 |
 |---|---|---|
 | iOS | もともと無視される仕様なので変化なし | 設定なしのまま(クラッシュを再発させない) |

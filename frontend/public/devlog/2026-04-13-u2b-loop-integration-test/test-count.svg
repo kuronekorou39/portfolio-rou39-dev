@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" font-family="system-ui, sans-serif">
+  <rect width="720" height="230" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">integration test の件数</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">実機で動かすテスト</text>
+  <g font-size="13">
+    <text x="24" y="85" fill="#ffffff" fill-opacity="0.6">前日の終わり</text>
+    <rect x="170" y="68" width="243" height="26" rx="4" fill="#ffffff" fill-opacity="0.18"/>
+    <text x="423" y="86" fill="#ffffff" fill-opacity="0.7">75</text>
+
+    <text x="24" y="135" fill="#ffffff" fill-opacity="0.6">画面操作を拡充</text>
+    <rect x="170" y="118" width="438" height="26" rx="4" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="618" y="136" fill="#ffffff" fill-opacity="0.7">135</text>
+
+    <text x="24" y="185" fill="#ffffff" fill-opacity="0.6">＋ セキュリティ 13 件</text>
+    <rect x="170" y="168" width="438" height="26" rx="4" fill="#60a5fa" fill-opacity="0.45"/>
+    <rect x="608" y="168" width="42" height="26" rx="4" fill="#60a5fa"/>
+    <text x="660" y="186" fill="#ffffff" font-weight="700">148</text>
+  </g>
+</svg>

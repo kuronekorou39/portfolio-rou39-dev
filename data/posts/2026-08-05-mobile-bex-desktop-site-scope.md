@@ -6,6 +6,8 @@ projects: [mobile-bex]
 
 ウェブストアだけ PC 表示にする変更(Patch 26)を入れたあと、Google の検索結果まで PC 版で出ていた。実機の設定ファイルを読むと、保存されていた例外はストアの URL ではなく `[*.]google.com` だった。Chromium の設定用の関数が、渡した URL を登録可能ドメインまで丸めていた。
 
+![PC 表示の例外をドメイン単位からホスト単位にした](/devlog/2026-08-05-mobile-bex-desktop-site-scope/exception-scope.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 例外の単位 | ドメインではなくホスト単位で張る。対象はウェブストアの新旧 2 つのホストだけ |

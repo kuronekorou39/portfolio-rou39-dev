@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">vcode 校正: 密度 5 段階のどこまで読めたか</text>
+
+  <text x="24" y="148" fill="#ffffff" fill-opacity="0.45" font-size="12">ゆるい</text>
+  <text x="696" y="148" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="end">きつい</text>
+
+  <g fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.7">
+    <rect x="88" y="96" width="96" height="96" rx="4"/>
+    <rect x="200" y="96" width="96" height="96" rx="4"/>
+    <rect x="312" y="96" width="96" height="96" rx="4"/>
+    <rect x="424" y="96" width="96" height="96" rx="4"/>
+  </g>
+  <rect x="536" y="96" width="96" height="96" rx="4" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.25"/>
+  <g fill="none" stroke="#60a5fa" stroke-opacity="0.7">
+    <path d="M120 96V192M152 96V192M88 144H184"/>
+    <path d="M224 96V192M248 96V192M272 96V192M200 128H296M200 160H296"/>
+    <path d="M331 96V192M350 96V192M370 96V192M389 96V192M312 120H408M312 144H408M312 168H408"/>
+    <path d="M440 96V192M456 96V192M472 96V192M488 96V192M504 96V192M424 115H520M424 134H520M424 154H520M424 173H520"/>
+  </g>
+  <path d="M550 96V192M563 96V192M577 96V192M591 96V192M605 96V192M618 96V192M536 112H632M536 128H632M536 144H632M536 160H632M536 176H632" fill="none" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <g font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff" fill-opacity="0.85">
+    <text x="136" y="216">3x2</text>
+    <text x="248" y="216">4x3</text>
+    <text x="360" y="216">5x4</text>
+    <text x="472" y="216">6x5</text>
+    <text x="584" y="216">7x6</text>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="#60a5fa" font-weight="700">
+    <text x="136" y="238">読めた</text>
+    <text x="248" y="238">読めた</text>
+    <text x="360" y="238">読めた</text>
+    <text x="472" y="238">読めた</text>
+  </g>
+  <text x="584" y="238" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">読めず</text>
+  <text x="24" y="270" fill="#ffffff" fill-opacity="0.4" font-size="11">「読めた」= ブロックの 8 割以上(印は例)</text>
+  <text x="24" y="76" fill="#ffffff" fill-opacity="0.45" font-size="12">送信側のテストパターン(ブロックの格子)</text>
+</svg>

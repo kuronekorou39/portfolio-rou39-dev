@@ -6,6 +6,8 @@ projects: [omniverse]
 
 複数のアカウントで同じ投稿を取得すると、どのアカウントがいいね済みなのか区別できなかった。状態の持ち方から変えた。
 
+![いいねの状態を、真偽値からアカウントの集合へ](/devlog/2026-04-12-omniverse-per-account-engagement/liked-by-set.svg)
+
 | 変更 | 中身 |
 |---|---|
 | データの形 | isLiked / isReposted(真偽値)を、アカウント ID の集合に変えた |

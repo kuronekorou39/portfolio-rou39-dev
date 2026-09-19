@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 350" font-family="system-ui, sans-serif">
+  <rect width="720" height="350" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">通知タブ: タブバーをアカウントチップの列に</text>
+
+  <!-- 画面 -->
+  <rect x="24" y="56" width="330" height="274" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <line x1="24" y1="152" x2="354" y2="152" stroke="#ffffff" stroke-opacity="0.12"/>
+  <line x1="24" y1="286" x2="354" y2="286" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <!-- チップ列 -->
+  <rect x="52" y="82" width="56" height="56" rx="12" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <text x="80" y="114" fill="#ffffff" fill-opacity="0.85" font-size="11" text-anchor="middle">すべて</text>
+  <rect x="132" y="82" width="56" height="56" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+  <circle cx="160" cy="110" r="16" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="212" y="82" width="56" height="56" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+  <circle cx="240" cy="110" r="16" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="292" y="82" width="56" height="56" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+  <circle cx="320" cy="110" r="16" fill="#ffffff" fill-opacity="0.18"/>
+  <!-- 件数バッジ(左上) -->
+  <rect x="40" y="72" width="30" height="18" rx="9" fill="#60a5fa"/>
+  <text x="55" y="85" fill="#0b0c10" font-size="10" font-weight="700" text-anchor="middle">15</text>
+  <rect x="120" y="72" width="30" height="18" rx="9" fill="#60a5fa"/>
+  <text x="135" y="85" fill="#0b0c10" font-size="10" font-weight="700" text-anchor="middle">12</text>
+  <rect x="200" y="72" width="30" height="18" rx="9" fill="#60a5fa"/>
+  <text x="215" y="85" fill="#0b0c10" font-size="10" font-weight="700" text-anchor="middle">3</text>
+  <!-- 成否のドット(左下) -->
+  <circle cx="136" cy="134" r="5" fill="#ffffff" fill-opacity="0.7" stroke="#0b0c10" stroke-width="2"/>
+  <circle cx="216" cy="134" r="5" fill="#ffffff" fill-opacity="0.7" stroke="#0b0c10" stroke-width="2"/>
+  <circle cx="296" cy="134" r="5" fill="#ffffff" fill-opacity="0.7" stroke="#0b0c10" stroke-width="2"/>
+
+  <!-- 通知の一覧 -->
+  <rect x="40" y="164" width="298" height="32" rx="6" fill="#60a5fa" fill-opacity="0.18"/>
+  <rect x="40" y="202" width="298" height="32" rx="6" fill="#60a5fa" fill-opacity="0.18"/>
+  <rect x="40" y="240" width="298" height="32" rx="6" fill="#ffffff" fill-opacity="0.05"/>
+  <rect x="56" y="176" width="180" height="8" rx="4" fill="#ffffff" fill-opacity="0.2"/>
+  <rect x="56" y="214" width="140" height="8" rx="4" fill="#ffffff" fill-opacity="0.2"/>
+  <rect x="56" y="252" width="160" height="8" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+
+  <!-- 下部のタブ -->
+  <circle cx="79" cy="308" r="9" fill="#ffffff" fill-opacity="0.15"/>
+  <circle cx="189" cy="308" r="9" fill="#ffffff" fill-opacity="0.15"/>
+  <circle cx="299" cy="308" r="9" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="304" y="292" width="30" height="18" rx="9" fill="#60a5fa"/>
+  <text x="319" y="305" fill="#0b0c10" font-size="10" font-weight="700" text-anchor="middle">15</text>
+
+  <!-- 引き出し線 -->
+  <g stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1" fill="none">
+    <path d="M215 72 L215 64 L384 64"/>
+    <path d="M301 134 L384 134"/>
+    <line x1="340" y1="200" x2="384" y2="200"/>
+    <line x1="336" y1="301" x2="384" y2="301"/>
+  </g>
+  <text x="392" y="68" fill="#60a5fa" font-size="13" font-weight="700">件数バッジ(左上)</text>
+  <text x="392" y="87" fill="#ffffff" fill-opacity="0.6" font-size="12">未読をドットでなく件数で。999+ まで</text>
+  <text x="392" y="138" fill="#60a5fa" font-size="13" font-weight="700">取得の成否のドット(左下)</text>
+  <text x="392" y="204" fill="#60a5fa" font-size="13" font-weight="700">未読をまとめて光らせる</text>
+  <text x="392" y="223" fill="#ffffff" fill-opacity="0.6" font-size="12">10 秒後にまとめて既読</text>
+  <text x="392" y="305" fill="#60a5fa" font-size="13" font-weight="700">ホーム下部のバッジも件数に</text>
+</svg>

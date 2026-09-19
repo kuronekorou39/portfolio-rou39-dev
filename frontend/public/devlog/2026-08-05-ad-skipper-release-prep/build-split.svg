@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">Twitch 版: 開発用の仕組みを配布ビルドから外した</text>
+
+  <!-- 開発ビルド -->
+  <rect x="24" y="60" width="324" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">開発ビルド</text>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.7">
+    <rect x="40" y="98" width="292" height="38" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="56" y="122">広告スキップの本体</text>
+    <rect x="40" y="144" width="292" height="38" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="56" y="168">DevTools パネル</text>
+    <rect x="40" y="190" width="292" height="38" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="56" y="214">通信ロガー</text>
+  </g>
+  <text x="40" y="256" fill="#ffffff" fill-opacity="0.4" font-size="12">開発中だけ使う</text>
+
+  <!-- 配布ビルド -->
+  <rect x="372" y="60" width="324" height="216" rx="10" fill="#60a5fa" fill-opacity="0.06" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="388" y="86" fill="#60a5fa" font-size="12" font-weight="700">配布ビルド</text>
+  <g font-size="13">
+    <rect x="388" y="98" width="292" height="38" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="404" y="122" fill="#ffffff" fill-opacity="0.85">広告スキップの本体</text>
+    <rect x="388" y="144" width="292" height="38" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-dasharray="5 4"/>
+    <text x="404" y="168" fill="#ffffff" fill-opacity="0.3">DevTools パネル</text>
+    <text x="664" y="168" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">含めない</text>
+    <rect x="388" y="190" width="292" height="38" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-dasharray="5 4"/>
+    <text x="404" y="214" fill="#ffffff" fill-opacity="0.3">通信ロガー</text>
+    <text x="664" y="214" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">含めない</text>
+  </g>
+  <text x="388" y="256" fill="#60a5fa" font-size="12" font-weight="700">権限は storage と twitch.tv だけ</text>
+</svg>

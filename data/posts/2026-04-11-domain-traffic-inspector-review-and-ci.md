@@ -6,6 +6,8 @@ projects: [domain-traffic-inspector]
 
 コードレビューで挙がった指摘を一括で直し、その後にテストと CI を足した。
 
+![広告判定: キーワード「ad」の照合のしかた](/devlog/2026-04-11-domain-traffic-inspector-review-and-ci/ad-match.svg)
+
 | 不具合 | 直し方 |
 |---|---|
 | 広告判定の誤検知 | ドメインをパーツ単位で照合する |

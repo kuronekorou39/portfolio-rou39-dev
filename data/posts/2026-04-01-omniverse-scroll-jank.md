@@ -6,6 +6,8 @@ projects: [omniverse]
 
 OmniVerse は、X と Bluesky のタイムラインを 1 つにまとめて読む Flutter 製の SNS クライアント。X の GraphQL 応答は約 650KB あり、解析のあいだメインスレッドが止まって、スクロールが 200〜500ms カクついていた。
 
+![JSON 解析を UI スレッドの外へ](/devlog/2026-04-01-omniverse-scroll-jank/isolate-lanes.svg)
+
 | 変更 | 中身 |
 |---|---|
 | JSON 解析を別 Isolate へ | compute() で json.decode を UI スレッドの外に出した |

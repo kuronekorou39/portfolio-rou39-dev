@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">UI のページの配信元を release ブランチへ</text>
+
+  <!-- 前 -->
+  <text x="24" y="70" fill="#ffffff" fill-opacity="0.45" font-size="12">前</text>
+  <rect x="24" y="80" width="150" height="52" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="111" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">main</text>
+  <line x1="180" y1="106" x2="480" y2="106" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="330" y="94" fill="#f87171" font-size="12" font-weight="700" text-anchor="middle">push した時点で公開</text>
+  <rect x="490" y="80" width="206" height="52" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="593" y="111" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">利用者が開く UI のページ</text>
+
+  <!-- 後 -->
+  <text x="24" y="182" fill="#ffffff" fill-opacity="0.45" font-size="12">後</text>
+  <rect x="24" y="192" width="150" height="52" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="223" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">main</text>
+  <line x1="180" y1="218" x2="292" y2="218" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="236" y="206" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">公開のときだけ</text>
+  <rect x="302" y="192" width="130" height="52" rx="10" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="367" y="223" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">release</text>
+  <line x1="438" y1="218" x2="480" y2="218" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="490" y="192" width="206" height="52" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="593" y="223" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">利用者が開く UI のページ</text>
+  <text x="593" y="266" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">URL は変わらない</text>
+  <text x="99" y="266" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">作業中の push は届かない</text>
+</svg>

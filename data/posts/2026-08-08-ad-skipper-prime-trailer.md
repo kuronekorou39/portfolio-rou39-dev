@@ -6,6 +6,8 @@ projects: [ad-skipper-prime, ad-skipper-twitch, ad-skipper-youtube]
 
 Prime Video 版で、広告が「たまにしかスキップされない」症状があった。
 
+![倍速をかける video の選び方](/devlog/2026-08-08-ad-skipper-prime-trailer/video-pick.svg)
+
 | 不具合 | 原因 | 直し方 |
 |---|---|---|
 | 広告がたまにしか送られない | 作品ページには予告編の video が同居し、DOM 順で先に現れる。倍速とミュートが予告編にかかっていた | 広告タイマーの要素から祖先を辿り、同じプレイヤー内の video を選ぶ |

@@ -6,6 +6,8 @@ projects: [mobile-bex]
 
 「シークレット モードでの実行を許可する」を付けた拡張機能が、シークレットでは使えなかった。原因は共通で、シークレット用のウィンドウに拡張機能用の window controller が登録されていなかった。上流にも、モバイルの複数プロファイルは未対応という TODO がある。
 
+![シークレットのウィンドウにも window controller を登録した](/devlog/2026-08-08-mobile-bex-incognito-extensions/window-controller.svg)
+
 | 拡張機能の作り | 壊れ方 |
 |---|---|
 | コンテンツスクリプトだけ | 動く(気づかない) |

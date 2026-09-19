@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.45"/>
+    </marker>
+  </defs>
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">X の DM の本文に、どこまで近づけたか</text>
+
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="84" width="116" height="84" rx="8"/>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="163" y="84" width="116" height="84" rx="8"/>
+    <rect x="302" y="84" width="116" height="84" rx="8"/>
+  </g>
+  <rect x="441" y="84" width="116" height="84" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="580" y="84" width="116" height="84" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-dasharray="5 5"/>
+
+  <g font-size="12" font-weight="700" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="82" y="120">旧 API</text>
+    <text x="221" y="120">XChat に切替</text>
+    <text x="360" y="120">Thrift を読む</text>
+    <text x="499" y="120">本文は暗号文</text>
+    <text x="638" y="120">鍵は PIN の先</text>
+  </g>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="82" y="144">会話が 1 件だけ</text>
+    <text x="221" y="144">197 件返る</text>
+    <text x="360" y="144">読み取り器を自作</text>
+    <text x="499" y="144">end-to-end</text>
+    <text x="638" y="144">預からないと決定</text>
+  </g>
+
+  <line x1="140" y1="126" x2="161" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="279" y1="126" x2="300" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="418" y1="126" x2="439" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="557" y1="126" x2="578" y2="126" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" marker-end="url(#g)"/>
+
+  <line x1="638" y1="168" x2="638" y2="204" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" marker-end="url(#g)"/>
+  <rect x="540" y="206" width="156" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.3"/>
+  <text x="618" y="235" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">DM 機能ごと削除</text>
+  <text x="24" y="235" fill="#ffffff" fill-opacity="0.4" font-size="11">青 = この日に実装して進んだところ</text>
+</svg>

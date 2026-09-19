@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">アップロード後の検査で落ちていた。直した場所は 4 つ</text>
+
+  <rect x="24" y="60" width="150" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="89" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">CI でビルド</text>
+  <line x1="178" y1="84" x2="206" y2="84" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowg)"/>
+  <rect x="214" y="60" width="150" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="289" y="89" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">アップロード</text>
+  <line x1="368" y1="84" x2="396" y2="84" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowg)"/>
+  <rect x="404" y="60" width="292" height="48" rx="8" fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.7"/>
+  <text x="550" y="89" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">App Store Connect: 12 個すべて失敗</text>
+
+  <line x1="99" y1="160" x2="99" y2="114" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="99" y1="160" x2="618" y2="160" stroke="#60a5fa" stroke-width="2"/>
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="272" y1="160" x2="272" y2="176"/>
+    <line x1="445" y1="160" x2="445" y2="176"/>
+    <line x1="618" y1="160" x2="618" y2="176"/>
+    <line x1="99" y1="160" x2="99" y2="176"/>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.8">
+    <rect x="24" y="176" width="150" height="84" rx="8"/>
+    <rect x="197" y="176" width="150" height="84" rx="8"/>
+    <rect x="370" y="176" width="150" height="84" rx="8"/>
+    <rect x="543" y="176" width="153" height="84" rx="8"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="#60a5fa">
+    <text x="38" y="204">Info.plist</text>
+    <text x="211" y="204">Privacy Manifest</text>
+    <text x="384" y="204">依存パッケージ</text>
+    <text x="557" y="204">CI の runner</text>
+  </g>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.6">
+    <text x="38" y="226">目的文字列を 4 つ</text>
+    <text x="211" y="226">アプリ本体に追加</text>
+    <text x="384" y="226">integration_test</text>
+    <text x="384" y="244">share_plus</text>
+    <text x="557" y="226">macos-26</text>
+    <text x="557" y="244">iOS 26 SDK</text>
+  </g>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+    <marker id="arrowr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">iPad だけ、WebView での JS の呼び方を分けた</text>
+
+  <rect x="24" y="122" width="170" height="64" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="109" y="150" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">ログイン後の</text>
+  <text x="109" y="170" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">ユーザー情報の取得</text>
+
+  <line x1="198" y1="140" x2="238" y2="104" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowg)"/>
+  <line x1="198" y1="168" x2="238" y2="204" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="246" y="76" width="150" height="44" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="321" y="103" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">iPhone / Android</text>
+  <rect x="246" y="188" width="150" height="44" rx="22" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <text x="321" y="215" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">iPad</text>
+
+  <line x1="400" y1="98" x2="448" y2="98" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowg)"/>
+  <line x1="400" y1="210" x2="448" y2="210" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="380" y1="186" x2="450" y2="126" stroke="#f87171" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrowr)"/>
+  <text x="432" y="172" fill="#f87171" font-size="12" font-weight="700">落ちる</text>
+
+  <rect x="456" y="68" width="240" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="472" y="94" fill="#ffffff" fill-opacity="0.85" font-size="13" font-family="ui-monospace, monospace">callAsyncJavaScript</text>
+  <text x="472" y="114" fill="#ffffff" fill-opacity="0.4" font-size="11">これまで通り</text>
+  <rect x="456" y="180" width="240" height="60" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <text x="472" y="206" fill="#60a5fa" font-size="13" font-weight="700" font-family="ui-monospace, monospace">evaluateJavascript</text>
+  <text x="472" y="226" fill="#ffffff" fill-opacity="0.6" font-size="11">+ ポーリングで結果を待つ</text>
+</svg>

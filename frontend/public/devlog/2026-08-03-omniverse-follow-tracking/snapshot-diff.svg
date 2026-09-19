@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="240" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">フォロー / フォロワーを取得して、前回との差を出す</text>
+
+  <!-- 取得 -->
+  <rect x="24" y="68" width="190" height="104" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="96" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">画面外の WebView</text>
+  <text x="40" y="124" fill="#ffffff" fill-opacity="0.6" font-size="11">X 自身が出すリクエスト</text>
+  <text x="40" y="144" fill="#ffffff" fill-opacity="0.6" font-size="11">をもとに一覧を取得</text>
+  <line x1="214" y1="120" x2="258" y2="120" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 保存 -->
+  <rect x="260" y="68" width="190" height="104" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="276" y="96" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">スナップショット</text>
+  <rect x="276" y="112" width="74" height="42" rx="6" fill="#ffffff" fill-opacity="0.08"/>
+  <text x="313" y="138" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">前回</text>
+  <rect x="360" y="112" width="74" height="42" rx="6" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="397" y="138" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700" text-anchor="middle">今回</text>
+  <line x1="450" y1="120" x2="494" y2="120" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 差分 -->
+  <rect x="496" y="68" width="200" height="104" rx="10" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="512" y="96" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">前回との差</text>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <rect x="512" y="116" width="44" height="26" rx="13" fill="#60a5fa" fill-opacity="0.3"/>
+    <text x="534" y="133">相互</text>
+    <rect x="562" y="116" width="54" height="26" rx="13" fill="#60a5fa" fill-opacity="0.3"/>
+    <text x="589" y="133">片思い</text>
+    <rect x="622" y="116" width="64" height="26" rx="13" fill="#60a5fa" fill-opacity="0.3"/>
+    <text x="654" y="133">片思われ</text>
+  </g>
+
+  <text x="24" y="200" fill="#ffffff" fill-opacity="0.4" font-size="11">15 分の枠: Followers 50 / Following 500</text>
+  <text x="260" y="200" fill="#ffffff" fill-opacity="0.4" font-size="11">古い世代は間引く</text>
+  <text x="496" y="200" fill="#ffffff" fill-opacity="0.4" font-size="11">世代間の増減も見る</text>
+</svg>

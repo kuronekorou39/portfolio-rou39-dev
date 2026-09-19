@@ -6,6 +6,8 @@ projects: [ad-skipper-twitch, ad-skipper-prime, ad-skipper-youtube]
 
 配布に向けて、配布物が要求する権限と、拡張が動く範囲を見直した。
 
+![Twitch 版: 開発用の仕組みを配布ビルドから外した](/devlog/2026-08-05-ad-skipper-release-prep/build-split.svg)
+
 | 変更 | 中身 |
 |---|---|
 | Twitch 版の権限 | 開発用の DevTools パネルと通信ロガーを開発ビルド限定に。配布ビルドの権限は storage と twitch.tv だけ |

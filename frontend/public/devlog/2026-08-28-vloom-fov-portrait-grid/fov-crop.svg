@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">解像度を下げると、写る範囲も狭くなる</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">三脚は動かさない / 模式図</text>
+
+  <!-- 最大解像度の画角 -->
+  <rect x="40" y="70" width="320" height="240" fill="#60a5fa" fill-opacity="0.06" stroke="#60a5fa" stroke-width="2"/>
+  <!-- コード -->
+  <rect x="94" y="90" width="212" height="200" fill="#ffffff" fill-opacity="0.12"/>
+  <g fill="#ffffff" fill-opacity="0.7">
+    <rect x="94" y="90" width="22" height="22"/>
+    <rect x="284" y="90" width="22" height="22"/>
+    <rect x="94" y="268" width="22" height="22"/>
+    <rect x="284" y="268" width="22" height="22"/>
+  </g>
+  <!-- 切り出し -->
+  <rect x="112" y="140" width="176" height="99" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="7 4"/>
+
+  <!-- 凡例 -->
+  <rect x="400" y="78" width="14" height="14" fill="none" stroke="#60a5fa" stroke-width="2"/>
+  <text x="424" y="90" fill="#60a5fa" font-size="14" font-weight="700">1600×1200</text>
+  <text x="424" y="112" fill="#ffffff" fill-opacity="0.6" font-size="12">コード全体が収まる</text>
+  <text x="424" y="132" fill="#ffffff" fill-opacity="0.6" font-size="12">37.4 KB/s</text>
+
+  <rect x="400" y="166" width="14" height="14" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="424" y="178" fill="#f87171" font-size="14" font-weight="700">1920×1080</text>
+  <text x="424" y="200" fill="#ffffff" fill-opacity="0.6" font-size="12">センサー中央の切り出し</text>
+  <text x="424" y="220" fill="#ffffff" fill-opacity="0.6" font-size="12">四隅のマーカーが写らない</text>
+  <text x="424" y="240" fill="#f87171" font-size="12" font-weight="700">検出 0/70</text>
+
+  <text x="400" y="296" fill="#60a5fa" font-size="13" font-weight="700">→ 全プリセットを最大解像度に統一</text>
+</svg>

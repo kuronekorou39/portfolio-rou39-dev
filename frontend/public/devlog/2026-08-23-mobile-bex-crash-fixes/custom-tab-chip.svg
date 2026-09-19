@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">「アプリで開く」チップの置き場は、通常タブにしか無い</text>
+
+  <!-- 通常タブ -->
+  <rect x="24" y="72" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="105" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">BEX の中のリンク</text>
+  <line x1="174" y1="100" x2="212" y2="100" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <rect x="216" y="72" width="130" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="281" y="105" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">通常タブ</text>
+  <line x1="346" y1="100" x2="384" y2="100" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <rect x="388" y="72" width="130" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="453" y="105" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">置き場あり</text>
+  <line x1="518" y1="100" x2="556" y2="100" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <rect x="560" y="72" width="136" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="628" y="105" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">チップを出す</text>
+
+  <!-- Custom Tab -->
+  <rect x="24" y="172" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="205" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">他のアプリのリンク</text>
+  <line x1="174" y1="200" x2="212" y2="200" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <rect x="216" y="172" width="130" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="281" y="205" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">Custom Tab</text>
+  <line x1="346" y1="200" x2="384" y2="200" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <rect x="388" y="172" width="130" height="56" rx="8" fill="#f87171" fill-opacity="0.15" stroke="#f87171" stroke-opacity="0.7"/>
+  <text x="453" y="205" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">置き場が null</text>
+  <line x1="518" y1="200" x2="556" y2="200" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="560" y="172" width="136" height="56" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="628" y="205" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">チップを作らない</text>
+
+  <text x="388" y="256" fill="#f87171" font-size="12">前: ここで落ちた(記録 28 件)</text>
+  <text x="696" y="276" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">Custom Tab ではメニューから「アプリで開く」</text>
+</svg>

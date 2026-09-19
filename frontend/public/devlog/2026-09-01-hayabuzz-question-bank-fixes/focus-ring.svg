@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">入力欄のフォーカスリング</text>
+
+  <!-- 前 -->
+  <rect x="24" y="64" width="324" height="196" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="90" fill="#f87171" font-size="12" font-weight="700">前: 外側に出したリング</text>
+  <rect x="64" y="112" width="244" height="92" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="4 4"/>
+  <rect x="64" y="138" width="244" height="40" rx="6" fill="#ffffff" fill-opacity="0.1"/>
+  <text x="78" y="163" fill="#ffffff" fill-opacity="0.45" font-size="12">入力欄</text>
+  <line x1="64" y1="136" x2="308" y2="136" stroke="#f87171" stroke-width="3"/>
+  <line x1="64" y1="180" x2="308" y2="180" stroke="#f87171" stroke-width="3"/>
+  <line x1="61" y1="136" x2="61" y2="180" stroke="#f87171" stroke-opacity="0.35" stroke-width="3" stroke-dasharray="3 3"/>
+  <line x1="311" y1="136" x2="311" y2="180" stroke="#f87171" stroke-opacity="0.35" stroke-width="3" stroke-dasharray="3 3"/>
+  <text x="64" y="224" fill="#ffffff" fill-opacity="0.4" font-size="11">点線 = overflow: hidden の箱</text>
+  <text x="64" y="244" fill="#f87171" font-size="12" font-weight="700">左右が切り取られる</text>
+
+  <!-- 後 -->
+  <rect x="372" y="64" width="324" height="196" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="388" y="90" fill="#60a5fa" font-size="12" font-weight="700">後: 内側の影(inset)</text>
+  <rect x="412" y="112" width="244" height="92" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="4 4"/>
+  <rect x="412" y="138" width="244" height="40" rx="6" fill="#ffffff" fill-opacity="0.1"/>
+  <rect x="413.500" y="139.500" width="241" height="37" rx="5" fill="none" stroke="#60a5fa" stroke-width="3"/>
+  <text x="428" y="163" fill="#ffffff" fill-opacity="0.45" font-size="12">入力欄</text>
+  <text x="412" y="244" fill="#60a5fa" font-size="12" font-weight="700">角丸に沿い、4 辺とも出る</text>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">優先度の高い不具合 7 件があった場所</text>
+  <text x="696" y="36" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="end">7 件すべて修正</text>
+
+  <g>
+    <rect x="24" y="60" width="208" height="100" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="40" y="88" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">詳細画面</text>
+    <circle cx="45" cy="112" r="4" fill="#f87171"/>
+    <text x="56" y="116" fill="#f87171" font-size="12">再生画面がすぐ閉じる</text>
+
+    <rect x="256" y="60" width="208" height="100" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="272" y="88" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">再生画面</text>
+    <circle cx="277" cy="112" r="4" fill="#f87171"/>
+    <text x="288" y="116" fill="#f87171" font-size="12">復帰時に勝手に再生</text>
+    <circle cx="277" cy="136" r="4" fill="#f87171"/>
+    <text x="288" y="140" fill="#f87171" font-size="12">前の曲の速度を引き継ぐ</text>
+
+    <rect x="488" y="60" width="208" height="100" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="504" y="88" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">ミニプレイヤー</text>
+    <circle cx="509" cy="112" r="4" fill="#f87171"/>
+    <text x="520" y="116" fill="#f87171" font-size="12">曲送りで二重再生</text>
+
+    <rect x="24" y="176" width="208" height="100" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="40" y="204" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">波形の表示</text>
+    <circle cx="45" cy="228" r="4" fill="#f87171"/>
+    <text x="56" y="232" fill="#f87171" font-size="12">リトライが無限に続く</text>
+
+    <rect x="256" y="176" width="208" height="100" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="272" y="204" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">プレイヤーの切り替え</text>
+    <circle cx="277" cy="228" r="4" fill="#f87171"/>
+    <text x="288" y="232" fill="#f87171" font-size="12">曲の終了を拾えない</text>
+
+    <rect x="488" y="176" width="208" height="100" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="504" y="204" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">設定画面</text>
+    <circle cx="509" cy="228" r="4" fill="#f87171"/>
+    <text x="520" y="232" fill="#f87171" font-size="12">ダイアログと一緒に閉じる</text>
+  </g>
+</svg>

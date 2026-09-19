@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">貼り付けた行の形式をどう決めるか</text>
+
+  <!-- 前 -->
+  <text x="24" y="105" fill="#f87171" font-size="12" font-weight="700">前</text>
+  <rect x="64" y="70" width="190" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="78" y="92" fill="#ffffff" fill-opacity="0.45" font-size="11">貼り付け</text>
+  <text x="78" y="116" fill="#ffffff" fill-opacity="0.85" font-size="13">問題文 / 答え「○」</text>
+  <line x1="260" y1="100" x2="288" y2="100" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <rect x="296" y="70" width="170" height="60" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="381" y="105" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">中身から形式を推測</text>
+  <line x1="472" y1="100" x2="500" y2="100" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <rect x="508" y="70" width="188" height="60" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="602" y="105" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">○× 問題になる(誤)</text>
+
+  <!-- 後 -->
+  <text x="24" y="205" fill="#60a5fa" font-size="12" font-weight="700">後</text>
+  <rect x="64" y="170" width="190" height="60" rx="8" fill="#0b0c10" stroke="#60a5fa"/>
+  <text x="78" y="192" fill="#ffffff" fill-opacity="0.45" font-size="11">先に形式を選ぶ</text>
+  <text x="78" y="216" fill="#60a5fa" font-size="13" font-weight="700">早押し</text>
+  <line x1="260" y1="200" x2="288" y2="200" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="296" y="170" width="170" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="310" y="192" fill="#ffffff" fill-opacity="0.45" font-size="11">貼り付け</text>
+  <text x="310" y="216" fill="#ffffff" fill-opacity="0.85" font-size="13">問題文 / 答え「○」</text>
+  <line x1="472" y1="200" x2="500" y2="200" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="508" y="170" width="188" height="60" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="602" y="205" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">早押し問題のまま</text>
+
+  <text x="64" y="264" fill="#ffffff" fill-opacity="0.4" font-size="11">列の並び・記入例・依頼文は、選んだ形式に連動する</text>
+</svg>

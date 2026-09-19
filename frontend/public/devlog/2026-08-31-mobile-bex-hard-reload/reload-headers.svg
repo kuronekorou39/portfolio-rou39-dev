@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">2 つの再読み込みが送るリクエストヘッダ</text>
+
+  <!-- BEX -->
+  <rect x="24" y="64" width="190" height="202" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">BEX(実機)</text>
+  <rect x="40" y="106" width="158" height="52" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="119" y="137" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">通常の再読み込み</text>
+  <rect x="40" y="190" width="158" height="52" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="119" y="221" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">ハードリロード</text>
+
+  <line x1="214" y1="132" x2="502" y2="132" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <text x="358" y="120" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">Cache-Control: max-age=0</text>
+  <line x1="214" y1="216" x2="502" y2="216" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="358" y="204" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">Cache-Control: no-cache</text>
+  <text x="358" y="240" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">サブリソースも取り直す</text>
+
+  <!-- サーバ -->
+  <rect x="506" y="64" width="190" height="202" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="522" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">PC に立てたサーバ</text>
+  <text x="601" y="164" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">キャッシュの効くページ</text>
+  <text x="601" y="188" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">届いたヘッダを見る</text>
+</svg>

@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 枠は長押ししないと動かせず、無操作のときに消えるものと残るものが混ざっていた。
 
+![右ドラッグでの移動と、弾幕設定のプリセット](/devlog/2026-06-16-parallel-stream-immersive-ui/right-drag-presets.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 枠の移動 | 右ドラッグで即つかんで移動。右クリックで最前面へ。枠内の右クリックメニューは抑止 |

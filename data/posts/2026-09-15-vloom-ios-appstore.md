@@ -6,6 +6,8 @@ projects: [vloom]
 
 iOS 版を App Store に出す下準備をした。Mac 無しの環境なので、署名から提出までを CI で行う組み立てにした。
 
+![タグの push から App Store Connect への提出までの CI の流れ](/devlog/2026-09-15-vloom-ios-appstore/ci-submit.svg)
+
 | 追加 | 中身 |
 |---|---|
 | CI の提出ジョブ | タグの push で署名・書き出しを行い、App Store Connect へ送る |

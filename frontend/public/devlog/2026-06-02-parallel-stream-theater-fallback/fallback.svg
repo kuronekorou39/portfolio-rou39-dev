@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8b8e"/>
+    </marker>
+  </defs>
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">シアターモードを ON にする 3 段のフォールバック</text>
+
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="64" width="180" height="84" rx="10"/>
+    <rect x="270" y="64" width="180" height="84" rx="10"/>
+    <rect x="516" y="64" width="180" height="84" rx="10"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.4">
+    <text x="40" y="88">1</text>
+    <text x="286" y="88">2</text>
+    <text x="532" y="88">3</text>
+  </g>
+  <g font-size="14" font-weight="700" fill="#ffffff" fill-opacity="0.85">
+    <text x="40" y="112">ボタンを click</text>
+    <text x="286" y="112">属性の書換</text>
+    <text x="532" y="112">キー送信</text>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6">
+    <text x="40" y="134">サイト自身のボタン</text>
+    <text x="286" y="134">サイト固有</text>
+    <text x="532" y="134">汎用</text>
+  </g>
+
+  <!-- 失敗したら次へ -->
+  <g stroke="#8a8b8e" stroke-width="2">
+    <line x1="208" y1="106" x2="264" y2="106" marker-end="url(#arrow-dim)"/>
+    <line x1="454" y1="106" x2="510" y2="106" marker-end="url(#arrow-dim)"/>
+  </g>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.4" text-anchor="middle">
+    <text x="236" y="94">失敗</text>
+    <text x="482" y="94">失敗</text>
+  </g>
+
+  <!-- 成功したら止める -->
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="114" y1="148" x2="114" y2="200" marker-end="url(#arrow)"/>
+    <line x1="360" y1="148" x2="360" y2="200" marker-end="url(#arrow)"/>
+    <line x1="606" y1="148" x2="606" y2="200" marker-end="url(#arrow)"/>
+  </g>
+  <g font-size="11" fill="#60a5fa">
+    <text x="124" y="178">成功</text>
+    <text x="370" y="178">成功</text>
+    <text x="616" y="178">成功</text>
+  </g>
+  <rect x="24" y="206" width="672" height="46" rx="10" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="360" y="234" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">そこで止め、成功した戦略を記録</text>
+</svg>

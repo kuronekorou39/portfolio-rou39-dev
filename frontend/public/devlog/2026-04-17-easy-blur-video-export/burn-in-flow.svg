@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">動画にモザイクを焼き込んで保存するまで</text>
+
+  <!-- レイヤー -->
+  <rect x="220" y="58" width="280" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="360" y="85" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">レイヤー: キーフレーム / 時間範囲 / 形</text>
+  <line x1="360" y1="102" x2="360" y2="128" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 元の動画 -->
+  <rect x="24" y="176" width="124" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="86" y="211" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">元の動画</text>
+  <line x1="148" y1="206" x2="196" y2="206" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ネイティブ処理 -->
+  <rect x="200" y="132" width="320" height="148" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="216" y="158" fill="#60a5fa" font-size="12" font-weight="700">Android のネイティブ処理</text>
+  <rect x="216" y="172" width="136" height="88" rx="8" fill="#60a5fa" fill-opacity="0.15"/>
+  <text x="284" y="212" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">MediaCodec</text>
+  <text x="284" y="234" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">動画の入出力</text>
+  <rect x="368" y="172" width="136" height="88" rx="8" fill="#60a5fa" fill-opacity="0.15"/>
+  <text x="436" y="212" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">OpenGL ES</text>
+  <text x="436" y="234" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">モザイクを描く</text>
+
+  <!-- 保存 -->
+  <line x1="520" y1="206" x2="560" y2="206" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="564" y="166" width="132" height="80" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="630" y="200" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">写真アプリ</text>
+  <text x="630" y="224" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">Easy Blur アルバム</text>
+</svg>

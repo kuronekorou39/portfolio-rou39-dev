@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 350" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="350" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">キャンバスを全画面にし、操作を上に重ねた</text>
+
+  <!-- 前 -->
+  <text x="40" y="66" fill="#ffffff" fill-opacity="0.45" font-size="12">前: 縦に並べる</text>
+  <rect x="40" y="78" width="180" height="248" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <rect x="50" y="88" width="160" height="32" rx="6" fill="#ffffff" fill-opacity="0.08"/>
+    <text x="130" y="109">上部のバー</text>
+    <rect x="50" y="126" width="160" height="120" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="130" y="190">キャンバス</text>
+    <rect x="50" y="252" width="160" height="64" rx="6" fill="#ffffff" fill-opacity="0.08"/>
+    <text x="130" y="288">パネル</text>
+  </g>
+
+  <line x1="232" y1="202" x2="272" y2="202" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 後 -->
+  <text x="284" y="66" fill="#ffffff" fill-opacity="0.45" font-size="12">後: 重ねる</text>
+  <rect x="284" y="78" width="180" height="248" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="294" y="88" width="160" height="228" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.2"/>
+  <g font-size="12" text-anchor="middle">
+    <text x="374" y="196" fill="#ffffff" fill-opacity="0.6">キャンバス</text>
+    <rect x="304" y="98" width="140" height="30" rx="15" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="374" y="118" fill="#ffffff" fill-opacity="0.85" font-weight="700">ツールバー</text>
+    <rect x="294" y="256" width="160" height="60" rx="6" fill="#60a5fa" fill-opacity="0.25"/>
+    <rect x="360" y="262" width="28" height="4" rx="2" fill="#ffffff" fill-opacity="0.4"/>
+    <text x="374" y="294" fill="#ffffff" fill-opacity="0.85" font-weight="700">ボトムシート</text>
+  </g>
+  <g stroke="#60a5fa" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="464" y1="146" x2="500" y2="146"/>
+    <line x1="464" y1="202" x2="500" y2="202"/>
+    <line x1="464" y1="256" x2="500" y2="256"/>
+  </g>
+  <text x="508" y="198" fill="#60a5fa" font-size="12" font-weight="700">3 段階で</text>
+  <text x="508" y="216" fill="#60a5fa" font-size="12" font-weight="700">止まる</text>
+
+  <!-- 操作 -->
+  <rect x="576" y="78" width="120" height="248" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="590" y="104" fill="#ffffff" fill-opacity="0.45" font-size="12">キャンバス</text>
+  <g font-size="12">
+    <text x="590" y="146" fill="#ffffff" fill-opacity="0.85" font-weight="700">ズーム</text>
+    <text x="590" y="164" fill="#ffffff" fill-opacity="0.6">ピンチ</text>
+    <text x="590" y="214" fill="#ffffff" fill-opacity="0.85" font-weight="700">パン</text>
+    <text x="590" y="266" fill="#ffffff" fill-opacity="0.85" font-weight="700">リセット</text>
+    <text x="590" y="284" fill="#ffffff" fill-opacity="0.6">ダブルタップ</text>
+  </g>
+</svg>

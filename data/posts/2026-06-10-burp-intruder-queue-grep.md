@@ -6,6 +6,8 @@ projects: [burp-intruder-queue]
 
 Intruder Queue は、Burp Suite の Intruder の実行を複数キューに積み、順に流す拡張機能。設定画面には grep の欄があったが、どこにも配線されておらず働いていなかった。v0.5.0 でこれを実装した。
 
+![grep の設定が結果の表に出るまで](/devlog/2026-06-10-burp-intruder-queue-grep/grep-column.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 判定 | レスポンス全体(ヘッダとボディ)に対して、指定した文字列をそのまま照合する。大文字と小文字は区別する |

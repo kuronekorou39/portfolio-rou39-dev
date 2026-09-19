@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">60Hz のパネルに、何 fps で送るか</text>
+
+  <text x="24" y="88" fill="#ffffff" fill-opacity="0.45" font-size="12">60Hz の書き換え</text>
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.2">
+    <rect x="120" y="70" width="48" height="26"/>
+    <rect x="168" y="70" width="48" height="26"/>
+    <rect x="216" y="70" width="48" height="26"/>
+    <rect x="264" y="70" width="48" height="26"/>
+    <rect x="312" y="70" width="48" height="26"/>
+    <rect x="360" y="70" width="48" height="26"/>
+    <rect x="408" y="70" width="48" height="26"/>
+    <rect x="456" y="70" width="48" height="26"/>
+    <rect x="504" y="70" width="48" height="26"/>
+    <rect x="552" y="70" width="48" height="26"/>
+    <rect x="600" y="70" width="48" height="26"/>
+    <rect x="648" y="70" width="48" height="26"/>
+  </g>
+
+  <text x="24" y="142" fill="#60a5fa" font-size="13" font-weight="700">送信 30fps</text>
+  <text x="24" y="162" fill="#60a5fa" font-size="11">201〜207 KB/s</text>
+  <g>
+    <rect x="121" y="124" width="94" height="40" rx="4" fill="#60a5fa" fill-opacity="0.7"/>
+    <rect x="217" y="124" width="94" height="40" rx="4" fill="#60a5fa" fill-opacity="0.35"/>
+    <rect x="313" y="124" width="94" height="40" rx="4" fill="#60a5fa" fill-opacity="0.7"/>
+    <rect x="409" y="124" width="94" height="40" rx="4" fill="#60a5fa" fill-opacity="0.35"/>
+    <rect x="505" y="124" width="94" height="40" rx="4" fill="#60a5fa" fill-opacity="0.7"/>
+    <rect x="601" y="124" width="94" height="40" rx="4" fill="#60a5fa" fill-opacity="0.35"/>
+  </g>
+  <text x="120" y="184" fill="#ffffff" fill-opacity="0.6" font-size="12">どのフレームも書き換え 2 回ぶん</text>
+
+  <text x="24" y="238" fill="#f87171" font-size="13" font-weight="700">送信 40fps</text>
+  <text x="24" y="258" fill="#f87171" font-size="11">100 KB/s</text>
+  <g>
+    <rect x="121" y="220" width="94" height="40" rx="4" fill="#f87171" fill-opacity="0.7"/>
+    <rect x="217" y="220" width="46" height="40" rx="4" fill="#f87171" fill-opacity="0.35"/>
+    <rect x="265" y="220" width="94" height="40" rx="4" fill="#f87171" fill-opacity="0.7"/>
+    <rect x="361" y="220" width="46" height="40" rx="4" fill="#f87171" fill-opacity="0.35"/>
+    <rect x="409" y="220" width="94" height="40" rx="4" fill="#f87171" fill-opacity="0.7"/>
+    <rect x="505" y="220" width="46" height="40" rx="4" fill="#f87171" fill-opacity="0.35"/>
+    <rect x="553" y="220" width="94" height="40" rx="4" fill="#f87171" fill-opacity="0.7"/>
+    <rect x="649" y="220" width="46" height="40" rx="4" fill="#f87171" fill-opacity="0.35"/>
+  </g>
+  <text x="120" y="280" fill="#ffffff" fill-opacity="0.6" font-size="12">非整数比: 表示の長さが 2 回ぶんと 1 回ぶんで不揃い</text>
+</svg>

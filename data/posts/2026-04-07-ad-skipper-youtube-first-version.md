@@ -6,6 +6,8 @@ projects: [ad-skipper-youtube]
 
 広告スキッパー for YouTube は、動画の広告を検出して自動で送る Chrome 拡張。Twitch 版・Prime Video 版と同じリポジトリに、3 つ目の拡張として追加した(20 ファイル、1,257 行)。
 
+![広告を検出してから送るまで](/devlog/2026-04-07-ad-skipper-youtube-first-version/skip-branch.svg)
+
 | 部分 | 中身 |
 |---|---|
 | 検出 | MutationObserver とポーリングで、プレイヤー要素の ad-showing クラスを見る |

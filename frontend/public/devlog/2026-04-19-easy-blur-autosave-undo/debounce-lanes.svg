@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">1 回の編集が、保存と履歴の 2 本に流れる</text>
+
+  <rect x="24" y="130" width="120" height="70" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="84" y="170" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">編集の操作</text>
+
+  <g stroke="#60a5fa" stroke-width="2" fill="none">
+    <path d="M144 150 L176 150 L176 100 L200 100" marker-end="url(#arrow)"/>
+    <path d="M144 180 L176 180 L176 230 L200 230" marker-end="url(#arrow)"/>
+    <line x1="344" y1="100" x2="376" y2="100" marker-end="url(#arrow)"/>
+    <line x1="344" y1="230" x2="376" y2="230" marker-end="url(#arrow)"/>
+    <line x1="520" y1="100" x2="552" y2="100" marker-end="url(#arrow)"/>
+    <line x1="520" y1="230" x2="552" y2="230" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- 保存の列 -->
+  <rect x="204" y="72" width="140" height="56" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-dasharray="4 4"/>
+  <text x="274" y="105" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">500ms 止まる</text>
+  <rect x="380" y="72" width="140" height="56" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="450" y="105" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">自動保存</text>
+  <rect x="556" y="72" width="140" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="626" y="97" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">ホーム</text>
+  <text x="626" y="116" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">続きから再開</text>
+
+  <!-- 履歴の列 -->
+  <rect x="204" y="202" width="140" height="56" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-dasharray="4 4"/>
+  <text x="274" y="235" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">400ms 止まる</text>
+  <rect x="380" y="202" width="140" height="56" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="450" y="227" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">履歴に積む</text>
+  <text x="450" y="246" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">最大 50 段</text>
+  <rect x="556" y="202" width="140" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="626" y="235" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">Undo / Redo</text>
+</svg>

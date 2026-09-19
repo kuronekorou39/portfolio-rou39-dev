@@ -6,6 +6,8 @@ projects: [koko-meshi]
 
 iOS 版を App Store の審査に出すために、必要なものを揃えた。データは端末内で完結するので、収集するデータの宣言は空になる。
 
+![マニフェストの入れ忘れを CI で止める](/devlog/2026-08-04-koko-meshi-ios-submission/manifest-gate.svg)
+
 | 用意したもの | 中身 |
 |---|---|
 | プライバシーマニフェスト | 収集データは無し。理由の宣言が要る API は 4 つ(UserDefaults / ファイルの時刻 / ディスク容量 / 起動時刻) |

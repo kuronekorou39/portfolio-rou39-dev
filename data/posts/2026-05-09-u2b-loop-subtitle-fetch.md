@@ -6,6 +6,8 @@ projects: [u2b-loop]
 
 5 月 2 日に入れた字幕が取得できず、原因を 1 週間追った。取得の各段階を SnackBar に出して絞り込んだ。
 
+![字幕の取得経路: ライブラリ任せから自前へ](/devlog/2026-05-09-u2b-loop-subtitle-fetch/fetch-path.svg)
+
 | バージョン | 分かったこと・対応 |
 |---|---|
 | v1.52.3 | 再生画面がクラッシュしていた。ref.listen を initState に置いていたのが原因 |

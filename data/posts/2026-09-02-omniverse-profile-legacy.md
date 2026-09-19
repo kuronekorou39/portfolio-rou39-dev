@@ -6,6 +6,8 @@ projects: [omniverse]
 
 プロフィール画面で、自己紹介文とヘッダ画像だけが出ないアカウントがあった。フォロー数などは普通に出るので、画像の読み込みや端末の問題に見えていた。
 
+![X のユーザー情報を legacy と新しい入れ物の両方から読む](/devlog/2026-09-02-omniverse-profile-legacy/read-both.svg)
+
 | 項目 | 状況 |
 |---|---|
 | 原因 | X がユーザーの項目を legacy から新しい入れ物(core / avatar / banner / profile_bio など)へ移している。移し終えたアカウントでは legacy が空で返る |

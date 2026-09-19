@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">リリース CI: 成果物の中継をやめた</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="78" fill="#f87171" font-size="12" font-weight="700">直す前</text>
+  <rect x="24" y="90" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">ビルドジョブ</text>
+  <text x="99" y="133" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">APK / IPA</text>
+  <line x1="174" y1="118" x2="218" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#r)"/>
+  <rect x="220" y="90" width="170" height="56" rx="8" fill="#f87171" fill-opacity="0.08" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="305" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">成果物の保管枠</text>
+  <text x="305" y="133" fill="#f87171" font-size="11" text-anchor="middle">1 回 98MB・上限で失敗</text>
+  <line x1="390" y1="118" x2="434" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#r)"/>
+  <rect x="436" y="90" width="110" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="491" y="123" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">中継ジョブ</text>
+  <line x1="546" y1="118" x2="590" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#r)"/>
+  <rect x="592" y="90" width="104" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="644" y="123" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">リリース</text>
+
+  <!-- 直した後 -->
+  <text x="24" y="198" fill="#60a5fa" font-size="12" font-weight="700">直した後</text>
+  <rect x="24" y="210" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="234" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">ビルドジョブ</text>
+  <text x="99" y="253" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">APK / IPA</text>
+  <line x1="174" y1="238" x2="590" y2="238" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <text x="382" y="226" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">リリースへ直接添付</text>
+  <text x="382" y="260" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">中継用のジョブは削除</text>
+  <rect x="592" y="210" width="104" height="56" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="644" y="243" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">リリース</text>
+</svg>

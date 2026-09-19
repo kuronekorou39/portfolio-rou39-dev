@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="260" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">マニフェストの入れ忘れを CI で止める</text>
+
+  <rect x="24" y="80" width="196" height="120" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="108" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">プライバシーマニフェスト</text>
+  <text x="40" y="140" fill="#ffffff" fill-opacity="0.6" font-size="12">収集データ: 無し</text>
+  <text x="40" y="164" fill="#ffffff" fill-opacity="0.6" font-size="12">理由の要る API: 4 つ</text>
+
+  <line x1="224" y1="140" x2="252" y2="140" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="260" y="104" width="124" height="72" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="322" y="145" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">iOS ビルド</text>
+  <text x="322" y="200" fill="#f87171" font-size="12" text-anchor="middle">登録が漏れても通る</text>
+
+  <line x1="388" y1="140" x2="416" y2="140" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="424" y="92" width="140" height="96" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="494" y="120" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">CI の確認</text>
+  <text x="494" y="146" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">アプリの中に</text>
+  <text x="494" y="166" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">入っているか</text>
+
+  <line x1="568" y1="124" x2="596" y2="108" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="568" y1="156" x2="596" y2="174" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="604" y="80" width="92" height="44" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="650" y="107" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">あれば続行</text>
+  <rect x="604" y="156" width="92" height="44" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="650" y="183" fill="#f87171" font-size="12" text-anchor="middle">無ければ失敗</text>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">4 本のプローブと、結果の出し方</text>
+
+  <!-- プローブ -->
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="60" width="340" height="44" rx="8"/>
+    <rect x="24" y="114" width="340" height="44" rx="8"/>
+    <rect x="24" y="168" width="340" height="44" rx="8"/>
+    <rect x="24" y="222" width="340" height="44" rx="8"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="#ffffff" fill-opacity="0.85">
+    <text x="40" y="87">api-surface</text>
+    <text x="40" y="141">windows-probe</text>
+    <text x="40" y="195">fullscreen-probe</text>
+    <text x="40" y="249">webview-probe</text>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6">
+    <text x="186" y="87">chrome.* を全列挙</text>
+    <text x="186" y="141">別ウィンドウが並ぶか</text>
+    <text x="186" y="195">全画面とシアター</text>
+    <text x="186" y="249">独自の名前空間</text>
+  </g>
+
+  <!-- 集約 -->
+  <g stroke="#60a5fa" stroke-width="2" fill="none">
+    <path d="M364 82 H388 M364 136 H388 M364 190 H388 M364 244 H388 M388 82 V244"/>
+    <line x1="388" y1="163" x2="444" y2="163" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- ポップアップ -->
+  <rect x="454" y="76" width="242" height="176" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="470" y="102" fill="#ffffff" fill-opacity="0.45" font-size="12">拡張のポップアップ</text>
+  <g fill="#ffffff" fill-opacity="0.14">
+    <rect x="470" y="116" width="210" height="14" rx="3"/>
+    <rect x="470" y="138" width="170" height="14" rx="3"/>
+    <rect x="470" y="160" width="194" height="14" rx="3"/>
+    <rect x="470" y="182" width="150" height="14" rx="3"/>
+  </g>
+  <rect x="470" y="208" width="210" height="30" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="575" y="228" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700" text-anchor="middle">Markdown でコピー</text>
+</svg>

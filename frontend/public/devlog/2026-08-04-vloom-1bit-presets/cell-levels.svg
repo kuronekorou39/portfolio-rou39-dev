@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">1 セルに載せる情報: 輝度 4 値から白黒へ</text>
+
+  <rect x="24" y="60" width="324" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">2bit / セル(輝度 4 値)</text>
+  <rect x="40" y="100" width="168" height="96" fill="#000000"/>
+  <rect x="40" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="64" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="112" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.58"/>
+  <rect x="136" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="184" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="64" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.58"/>
+  <rect x="88" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="112" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="160" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="184" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.58"/>
+  <rect x="40" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="64" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="136" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.58"/>
+  <rect x="160" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="184" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="40" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.58"/>
+  <rect x="88" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="112" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="136" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.3"/>
+  <rect x="160" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.58"/>
+  <text x="224" y="124" fill="#ffffff" fill-opacity="0.6" font-size="12">容量は 2 倍</text>
+  <text x="224" y="158" fill="#f87171" font-size="15" font-weight="700">回収 0/42</text>
+  <text x="224" y="184" fill="#f87171" font-size="12">20 分でも未完</text>
+  <text x="40" y="228" fill="#ffffff" fill-opacity="0.4" font-size="12">LCD の残像とローリングシャッターで</text>
+  <text x="40" y="248" fill="#ffffff" fill-opacity="0.4" font-size="12">前後のフレームが混ざる</text>
+
+  <rect x="372" y="60" width="324" height="216" rx="10" fill="#60a5fa" fill-opacity="0.06" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="388" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">1bit / セル(白黒)= 新しいプリセット</text>
+  <rect x="388" y="100" width="168" height="96" fill="#000000"/>
+  <rect x="388" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="460" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="484" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="532" y="100" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="412" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="436" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="508" y="124" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="388" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="412" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="484" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="532" y="148" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="436" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="460" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="508" y="172" width="24" height="24" fill="#ffffff" fill-opacity="0.9"/>
+  <text x="572" y="124" fill="#ffffff" fill-opacity="0.6" font-size="12">100KB</text>
+  <text x="572" y="158" fill="#60a5fa" font-size="15" font-weight="700">15.8 秒</text>
+  <text x="572" y="184" fill="#60a5fa" font-size="12">6.3 KB/s</text>
+  <text x="388" y="228" fill="#ffffff" fill-opacity="0.4" font-size="12">容量は階調ではなく格子で稼ぐ</text>
+  <text x="388" y="248" fill="#ffffff" fill-opacity="0.4" font-size="12">0.76 bit/セル(QR の最大は 0.75)</text>
+</svg>

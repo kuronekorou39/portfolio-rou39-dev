@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">V受信の映像が、親要素からはみ出していた</text>
+
+  <!-- 直す前 -->
+  <rect x="24" y="60" width="324" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">直す前</text>
+  <text x="40" y="112" fill="#ffffff" fill-opacity="0.6" font-size="12">親 720px</text>
+  <text x="296" y="112" fill="#f87171" font-size="12" text-anchor="end">映像 1280px</text>
+  <rect x="40" y="120" width="256" height="128" fill="none" stroke="#f87171" stroke-opacity="0.6" stroke-dasharray="6 4"/>
+  <rect x="40" y="120" width="144" height="128" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.5"/>
+  <rect x="117" y="133" width="102" height="102" fill="none" stroke="#f87171" stroke-width="2"/>
+  <text x="40" y="272" fill="#f87171" font-size="13" font-weight="700">ガイド枠が右端で見切れる</text>
+
+  <!-- 直した後 -->
+  <rect x="372" y="60" width="324" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="388" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">直した後</text>
+  <text x="388" y="112" fill="#ffffff" fill-opacity="0.6" font-size="12">映像 = 親の幅 100%</text>
+  <rect x="388" y="120" width="256" height="128" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.5"/>
+  <rect x="465" y="133" width="102" height="102" fill="none" stroke="#60a5fa" stroke-width="2"/>
+  <text x="388" y="272" fill="#60a5fa" font-size="13" font-weight="700">ガイド枠が中央に収まる</text>
+</svg>

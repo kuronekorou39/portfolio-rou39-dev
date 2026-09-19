@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">字幕モード: メインとサブの 2 言語を同時に出す</text>
+
+  <!-- 再生画面 -->
+  <rect x="24" y="60" width="330" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">再生画面</text>
+  <rect x="40" y="98" width="298" height="96" rx="8" fill="#ffffff" fill-opacity="0.06"/>
+  <text x="189" y="151" fill="#ffffff" fill-opacity="0.4" font-size="13" text-anchor="middle">動画</text>
+  <rect x="40" y="202" width="298" height="62" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="189" y="228" fill="#ffffff" fill-opacity="0.9" font-size="14" font-weight="700" text-anchor="middle">メインの字幕 (14px)</text>
+  <text x="189" y="251" fill="#60a5fa" font-size="11" text-anchor="middle">サブの字幕 (11px)</text>
+
+  <line x1="396" y1="233" x2="346" y2="233" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 言語選択シート -->
+  <rect x="400" y="60" width="296" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="416" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">言語選択シート</text>
+  <rect x="416" y="98" width="264" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="432" y="125" fill="#ffffff" fill-opacity="0.85" font-size="13">メイン</text>
+  <rect x="590" y="108" width="78" height="24" rx="12" fill="#ffffff" fill-opacity="0.08"/>
+  <text x="629" y="125" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">言語を選ぶ</text>
+  <rect x="416" y="150" width="264" height="44" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="432" y="177" fill="#60a5fa" font-size="13" font-weight="700">サブ</text>
+  <rect x="590" y="160" width="78" height="24" rx="12" fill="#60a5fa" fill-opacity="0.2"/>
+  <text x="629" y="177" fill="#60a5fa" font-size="12" text-anchor="middle">言語を選ぶ</text>
+  <text x="416" y="226" fill="#ffffff" fill-opacity="0.6" font-size="12">メインとサブを別々に選ぶ</text>
+  <text x="416" y="250" fill="#ffffff" fill-opacity="0.4" font-size="11">曲の切替時と全画面でも表示</text>
+</svg>

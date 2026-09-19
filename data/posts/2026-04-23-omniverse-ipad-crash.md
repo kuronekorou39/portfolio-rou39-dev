@@ -6,6 +6,8 @@ projects: [omniverse]
 
 iPad(iPadOS 17.7.10)でだけ、X へのログイン後と Google ログインのポップアップでアプリが落ちた。ネイティブ側のクラッシュで Dart からは見えないため、まず未処理例外をログに残す仕組みと、1 行単位の通過ログを入れた。
 
+![iPad だけ、WebView での JS の呼び方を分けた](/devlog/2026-04-23-omniverse-ipad-crash/ipad-branch.svg)
+
 | 試したこと | 結果 |
 |---|---|
 | ユーザー情報の取得を JS ブリッジから HTTP 直叩きに | Android のログインが壊れ、戻した |

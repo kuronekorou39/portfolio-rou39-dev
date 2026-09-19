@@ -6,6 +6,8 @@ projects: [u2b-loop]
 
 コード全体をレビューし、指摘をすべて直した(v1.37.0)。flutter analyze の指摘は 0 件になった。
 
+![直した指摘の数](/devlog/2026-04-07-u2b-loop-code-review/findings.svg)
+
 | 重要度 | 直したもの |
 |---|---|
 | Critical | 詳細画面の数値パースを null 安全に(クラッシュ防止)。Loop ON/OFF ボタンのラベル色 |

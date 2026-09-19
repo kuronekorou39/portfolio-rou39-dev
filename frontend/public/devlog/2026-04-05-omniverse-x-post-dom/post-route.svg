@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">X への投稿の経路</text>
+
+  <!-- 変える前 -->
+  <text x="24" y="74" fill="#f87171" font-size="12" font-weight="700">変える前</text>
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="86" width="110" height="48" rx="8"/>
+    <rect x="170" y="86" width="316" height="48" rx="8"/>
+  </g>
+  <rect x="522" y="86" width="174" height="48" rx="8" fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.7"/>
+  <text x="79" y="115" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">アプリ</text>
+  <text x="186" y="115" fill="#ffffff" fill-opacity="0.85" font-size="13">WebView から自前の fetch</text>
+  <text x="609" y="115" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">226 エラー</text>
+  <line x1="138" y1="110" x2="164" y2="110" stroke="#f87171" stroke-width="2" marker-end="url(#arrowr)"/>
+  <line x1="490" y1="110" x2="516" y2="110" stroke="#f87171" stroke-width="2" marker-end="url(#arrowr)"/>
+
+  <!-- 変えた後 -->
+  <text x="24" y="178" fill="#60a5fa" font-size="12" font-weight="700">変えた後</text>
+  <rect x="24" y="206" width="110" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="79" y="235" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">アプリ</text>
+  <rect x="170" y="190" width="316" height="86" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="186" y="214" fill="#ffffff" fill-opacity="0.6" font-size="12">WebView で公式の投稿画面を開く</text>
+  <rect x="186" y="228" width="130" height="34" rx="8" fill="#60a5fa" fill-opacity="0.2"/>
+  <text x="251" y="250" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">本文を入れる</text>
+  <rect x="340" y="228" width="130" height="34" rx="8" fill="#60a5fa" fill-opacity="0.2"/>
+  <text x="405" y="250" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">投稿ボタンを押す</text>
+  <line x1="319" y1="245" x2="336" y2="245" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="522" y="206" width="174" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="609" y="235" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">X に投稿</text>
+  <line x1="138" y1="230" x2="164" y2="230" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="490" y1="230" x2="516" y2="230" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 弾幕を入れた翌日に、3 件を直した。
 
+![同じサイトの最初の枠を閉じたとき](/devlog/2026-06-15-parallel-stream-vod-danmaku/silent-frames.svg)
+
 | 不具合 | 原因 | 直し方 |
 |---|---|---|
 | Twitch のアーカイブで弾幕が流れない | チャットリプレイの DOM がライブと違う | VOD 用のセレクタを足し、監視を subtree まで広げた |

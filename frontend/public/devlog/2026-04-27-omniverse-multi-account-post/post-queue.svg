@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">複数アカウントへの投稿は、裏のキューで順に送る</text>
+
+  <!-- 投稿画面 -->
+  <rect x="24" y="60" width="220" height="236" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">投稿画面</text>
+  <rect x="40" y="100" width="40" height="40" rx="6" fill="#60a5fa" fill-opacity="0.3" stroke="#60a5fa"/>
+  <rect x="88" y="100" width="40" height="40" rx="6" fill="#60a5fa" fill-opacity="0.3" stroke="#60a5fa"/>
+  <rect x="136" y="100" width="40" height="40" rx="6" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="184" y="100" width="40" height="40" rx="6" fill="#60a5fa" fill-opacity="0.3" stroke="#60a5fa"/>
+  <text x="40" y="160" fill="#60a5fa" font-size="11" font-weight="700">アカウントを複数選択</text>
+  <rect x="40" y="174" width="188" height="64" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="52" y="198" fill="#ffffff" fill-opacity="0.4" font-size="12">本文</text>
+  <rect x="148" y="250" width="80" height="32" rx="16" fill="#60a5fa"/>
+  <text x="188" y="271" fill="#0b0c10" font-size="12" font-weight="700" text-anchor="middle">投稿</text>
+
+  <line x1="248" y1="178" x2="292" y2="178" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="270" y="166" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">閉じる</text>
+
+  <!-- キュー -->
+  <rect x="300" y="60" width="190" height="236" rx="10" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <text x="316" y="86" fill="#60a5fa" font-size="12" font-weight="700">裏のキュー(上から順)</text>
+  <g fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="316" y="104" width="158" height="48" rx="8"/>
+    <rect x="316" y="164" width="158" height="48" rx="8"/>
+  </g>
+  <rect x="316" y="224" width="158" height="48" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.7"/>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.85">
+    <text x="330" y="133">アカウント 1</text>
+    <text x="330" y="193">アカウント 2</text>
+    <text x="330" y="253">アカウント 3</text>
+  </g>
+  <text x="462" y="133" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="end">成功</text>
+  <text x="462" y="193" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="end">成功</text>
+  <text x="462" y="253" fill="#f87171" font-size="12" font-weight="700" text-anchor="end">失敗</text>
+
+  <!-- 結果 -->
+  <line x1="494" y1="128" x2="538" y2="128" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="494" y1="248" x2="538" y2="248" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="546" y="96" width="150" height="64" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="562" y="123" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">下部のバナー</text>
+  <text x="562" y="144" fill="#ffffff" fill-opacity="0.6" font-size="12">進捗を表示</text>
+  <rect x="546" y="206" width="150" height="84" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="562" y="233" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">失敗したとき</text>
+  <text x="562" y="254" fill="#ffffff" fill-opacity="0.6" font-size="12">本文を下書きに保存</text>
+  <text x="562" y="274" fill="#ffffff" fill-opacity="0.6" font-size="12">失敗分だけ再投稿</text>
+</svg>

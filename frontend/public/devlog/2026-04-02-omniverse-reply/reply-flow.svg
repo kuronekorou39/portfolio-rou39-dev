@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">返信ボタンから送信まで</text>
+
+  <!-- 入口 -->
+  <text x="24" y="76" fill="#ffffff" fill-opacity="0.4" font-size="11">返信ボタンのある場所</text>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85">
+    <rect x="24" y="88" width="160" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="40" y="113">タイムライン</text>
+    <rect x="24" y="140" width="160" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="40" y="165">投稿詳細</text>
+    <rect x="24" y="192" width="160" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="40" y="217">リプライのカード</text>
+  </g>
+  <line x1="190" y1="108" x2="246" y2="140" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="190" y1="160" x2="246" y2="160" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="190" y1="212" x2="246" y2="180" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 投稿画面 -->
+  <rect x="254" y="64" width="200" height="192" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="270" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">投稿画面</text>
+  <rect x="270" y="104" width="168" height="48" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="282" y="133" fill="#60a5fa" font-size="12" font-weight="700">返信先のプレビュー</text>
+  <rect x="270" y="164" width="168" height="76" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="282" y="190" fill="#ffffff" fill-opacity="0.4" font-size="12">本文</text>
+
+  <!-- 送信先 -->
+  <line x1="460" y1="134" x2="516" y2="112" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="460" y1="186" x2="516" y2="208" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="524" y="64" width="172" height="88" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="540" y="90" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">X</text>
+  <text x="540" y="112" fill="#ffffff" fill-opacity="0.6" font-size="12">CreateTweet</text>
+  <text x="540" y="134" fill="#60a5fa" font-size="11" font-weight="700">+ in_reply_to_tweet_id</text>
+  <rect x="524" y="168" width="172" height="88" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="540" y="194" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">Bluesky</text>
+  <text x="540" y="216" fill="#ffffff" fill-opacity="0.6" font-size="12">createPost</text>
+  <text x="540" y="238" fill="#60a5fa" font-size="11" font-weight="700">+ reply(root / parent)</text>
+</svg>

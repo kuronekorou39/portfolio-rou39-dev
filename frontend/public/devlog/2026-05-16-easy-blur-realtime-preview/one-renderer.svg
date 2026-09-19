@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">編集中の表示と保存を、同じ描画処理にまとめた</text>
+
+  <!-- 前 -->
+  <rect x="24" y="58" width="324" height="218" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="84" fill="#f87171" font-size="12" font-weight="700">前: 描画が 2 つ</text>
+  <rect x="40" y="100" width="72" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="76" y="170" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">レイヤー</text>
+  <g stroke="#ffffff" stroke-opacity="0.4" stroke-width="2">
+    <line x1="112" y1="122" x2="136" y2="122" marker-end="url(#gray)"/>
+    <line x1="112" y1="208" x2="136" y2="208" marker-end="url(#gray)"/>
+    <line x1="252" y1="122" x2="272" y2="122" marker-end="url(#gray)"/>
+    <line x1="252" y1="208" x2="272" y2="208" marker-end="url(#gray)"/>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="#ffffff" fill-opacity="0.6">
+    <rect x="140" y="100" width="112" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="196" y="127">編集用の描画</text>
+    <rect x="140" y="186" width="112" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="196" y="213">保存用の描画</text>
+    <rect x="276" y="100" width="56" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="304" y="127">画面</text>
+    <rect x="276" y="186" width="56" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="304" y="213">PNG</text>
+  </g>
+  <text x="304" y="172" fill="#f87171" font-size="16" font-weight="700" text-anchor="middle">≠</text>
+  <text x="40" y="260" fill="#f87171" font-size="12">表示と保存で見た目が違う</text>
+
+  <!-- 後 -->
+  <rect x="372" y="58" width="324" height="218" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="388" y="84" fill="#60a5fa" font-size="12" font-weight="700">後: 描画は 1 つ</text>
+  <rect x="388" y="100" width="72" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="424" y="170" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">レイヤー</text>
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="460" y1="165" x2="484" y2="165" marker-end="url(#arrow)"/>
+    <line x1="600" y1="122" x2="620" y2="122" marker-end="url(#arrow)"/>
+    <line x1="600" y1="208" x2="620" y2="208" marker-end="url(#arrow)"/>
+  </g>
+  <rect x="488" y="100" width="112" height="130" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="544" y="170" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700" text-anchor="middle">同じ描画処理</text>
+  <g font-size="12" text-anchor="middle" fill="#ffffff" fill-opacity="0.6">
+    <rect x="624" y="100" width="56" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="652" y="127">画面</text>
+    <rect x="624" y="186" width="56" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="652" y="213">PNG</text>
+  </g>
+  <text x="652" y="172" fill="#60a5fa" font-size="16" font-weight="700" text-anchor="middle">=</text>
+  <text x="388" y="260" fill="#ffffff" fill-opacity="0.6" font-size="12">プレビューボタンは廃止</text>
+</svg>

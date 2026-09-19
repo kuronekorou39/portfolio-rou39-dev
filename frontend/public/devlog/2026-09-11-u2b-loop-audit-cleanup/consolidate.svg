@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <pattern id="dots" x="24" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect x="0" y="2" width="10" height="10" rx="2" fill="#ffffff" fill-opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">コピペで散らばった記述を、共通の部品へ</text>
+
+  <!-- SnackBar -->
+  <text x="24" y="78" fill="#ffffff" fill-opacity="0.6" font-size="12">SnackBar 52 箇所</text>
+  <rect x="24" y="84" width="182" height="56" fill="url(#dots)"/>
+  <line x1="222" y1="112" x2="270" y2="112" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="284" y="78" fill="#60a5fa" font-size="12" font-weight="700">用途別の 5 種</text>
+  <g fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="284" y="90" width="76" height="44" rx="8"/>
+    <rect x="368" y="90" width="76" height="44" rx="8"/>
+    <rect x="452" y="90" width="76" height="44" rx="8"/>
+    <rect x="536" y="90" width="76" height="44" rx="8"/>
+    <rect x="620" y="90" width="76" height="44" rx="8"/>
+  </g>
+
+  <!-- ダイアログ -->
+  <text x="24" y="190" fill="#ffffff" fill-opacity="0.6" font-size="12">入力・確認ダイアログ 16 箇所</text>
+  <rect x="24" y="196" width="112" height="28" fill="url(#dots)"/>
+  <line x1="222" y1="212" x2="270" y2="212" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="284" y="178" fill="#60a5fa" font-size="12" font-weight="700">共通のダイアログ 3 種</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="284" y="190" width="132" height="44" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="350" y="217" fill="#ffffff" fill-opacity="0.85">名前入力</text>
+    <rect x="424" y="190" width="132" height="44" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="490" y="217" fill="#ffffff" fill-opacity="0.85">削除確認</text>
+    <rect x="564" y="190" width="132" height="44" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="630" y="217" fill="#ffffff" fill-opacity="0.85">破棄確認</text>
+  </g>
+</svg>

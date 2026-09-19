@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="270" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">タグフィルターの 3 状態</text>
+
+  <!-- 含む -->
+  <rect x="40" y="76" width="180" height="96" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <path d="M60 110 L68 118 L82 102" stroke="#ffffff" stroke-opacity="0.85" stroke-width="3" fill="none"/>
+  <text x="96" y="116" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">含む</text>
+  <text x="56" y="150" fill="#ffffff" fill-opacity="0.6" font-size="12">そのタグの曲を表示</text>
+
+  <line x1="228" y1="124" x2="262" y2="124" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 除外 -->
+  <rect x="270" y="76" width="180" height="96" rx="10" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <path d="M292 102 L308 118 M308 102 L292 118" stroke="#60a5fa" stroke-width="3" fill="none"/>
+  <text x="326" y="116" fill="#60a5fa" font-size="14" font-weight="700">除外(今回)</text>
+  <text x="286" y="150" fill="#ffffff" fill-opacity="0.6" font-size="12">該当する曲を外す</text>
+
+  <line x1="458" y1="124" x2="492" y2="124" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- なし -->
+  <rect x="500" y="76" width="180" height="96" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <circle cx="530" cy="110" r="9" stroke="#ffffff" stroke-opacity="0.4" stroke-width="3" fill="none"/>
+  <text x="556" y="116" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">なし</text>
+  <text x="516" y="150" fill="#ffffff" fill-opacity="0.6" font-size="12">条件に使わない</text>
+
+  <!-- 一周 -->
+  <path d="M590 178 V214 H130 V182" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="360" y="242" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">タップするたびに順に切り替わる</text>
+</svg>

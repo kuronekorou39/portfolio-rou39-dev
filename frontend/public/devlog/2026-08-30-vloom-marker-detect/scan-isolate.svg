@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" font-family="system-ui, sans-serif">
+  <rect width="720" height="330" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">スキャンを UI の外へ出す</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">1MB の定常: 平均 95 → 138 KB/s</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="76" fill="#ffffff" fill-opacity="0.45" font-size="12">出発点: スキャンの完了通知が描画待ちに掛かる</text>
+  <rect x="24" y="86" width="672" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="121" fill="#ffffff" fill-opacity="0.6" font-size="12">UI の isolate</text>
+  <g text-anchor="middle" font-size="12" fill="#ffffff" fill-opacity="0.85">
+    <rect x="170" y="98" width="150" height="36" rx="5" fill="#f87171" fill-opacity="0.3"/>
+    <text x="245" y="121">スキャン</text>
+    <rect x="324" y="98" width="90" height="36" rx="5" fill="#ffffff" fill-opacity="0.12"/>
+    <text x="369" y="121">描画</text>
+    <rect x="418" y="98" width="150" height="36" rx="5" fill="#f87171" fill-opacity="0.3"/>
+    <text x="493" y="121">スキャン</text>
+    <rect x="572" y="98" width="90" height="36" rx="5" fill="#ffffff" fill-opacity="0.12"/>
+    <text x="617" y="121">描画</text>
+  </g>
+
+  <!-- 直した後 -->
+  <text x="24" y="186" fill="#ffffff" fill-opacity="0.45" font-size="12">直した後: 並んで進む</text>
+  <rect x="24" y="196" width="672" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="227" fill="#ffffff" fill-opacity="0.6" font-size="12">UI の isolate</text>
+  <g text-anchor="middle" font-size="12" fill="#ffffff" fill-opacity="0.85">
+    <rect x="170" y="206" width="90" height="32" rx="5" fill="#ffffff" fill-opacity="0.12"/>
+    <text x="215" y="227">描画</text>
+    <rect x="264" y="206" width="90" height="32" rx="5" fill="#ffffff" fill-opacity="0.12"/>
+    <text x="309" y="227">描画</text>
+    <rect x="358" y="206" width="90" height="32" rx="5" fill="#ffffff" fill-opacity="0.12"/>
+    <text x="403" y="227">描画</text>
+    <rect x="452" y="206" width="90" height="32" rx="5" fill="#ffffff" fill-opacity="0.12"/>
+    <text x="497" y="227">描画</text>
+  </g>
+  <rect x="24" y="256" width="672" height="52" rx="8" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="40" y="287" fill="#60a5fa" font-size="12" font-weight="700">別の isolate</text>
+  <g text-anchor="middle" font-size="12" fill="#ffffff" fill-opacity="0.9">
+    <rect x="170" y="266" width="100" height="32" rx="5" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="220" y="287">スキャン</text>
+    <rect x="274" y="266" width="100" height="32" rx="5" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="324" y="287">スキャン</text>
+    <rect x="378" y="266" width="100" height="32" rx="5" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="428" y="287">スキャン</text>
+    <rect x="482" y="266" width="100" height="32" rx="5" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="532" y="287">スキャン</text>
+  </g>
+  <text x="684" y="287" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="end">毎秒 22 枚</text>
+</svg>

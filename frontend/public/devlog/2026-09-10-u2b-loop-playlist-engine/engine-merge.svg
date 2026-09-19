@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">プレイリストの遷移処理を 1 つにまとめた</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="76" fill="#f87171" font-size="12" font-weight="700">直す前</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="24" y="90" width="130" height="50" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="89" y="120" fill="#ffffff" fill-opacity="0.7">再生画面</text>
+    <line x1="158" y1="115" x2="196" y2="115" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+    <rect x="200" y="90" width="130" height="50" rx="8" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="265" y="120" fill="#f87171">遷移処理</text>
+
+    <text x="265" y="170" fill="#f87171" font-size="12">片方だけ直る</text>
+
+    <rect x="24" y="190" width="130" height="50" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="89" y="220" fill="#ffffff" fill-opacity="0.7">ミニプレイヤー</text>
+    <line x1="158" y1="215" x2="196" y2="215" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+    <rect x="200" y="190" width="130" height="50" rx="8" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="265" y="220" fill="#f87171">遷移処理</text>
+  </g>
+
+  <line x1="360" y1="64" x2="360" y2="252" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <!-- 直した後 -->
+  <text x="390" y="76" fill="#60a5fa" font-size="12" font-weight="700">直した後 (v1.66.0)</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="390" y="90" width="130" height="50" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="455" y="120" fill="#ffffff" fill-opacity="0.7">再生画面</text>
+    <rect x="390" y="190" width="130" height="50" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="455" y="220" fill="#ffffff" fill-opacity="0.7">ミニプレイヤー</text>
+    <line x1="524" y1="115" x2="560" y2="146" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="524" y1="215" x2="560" y2="184" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="564" y="120" width="132" height="90" rx="10" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="630" y="160" fill="#60a5fa" font-weight="700">PlaylistEngine</text>
+    <text x="630" y="184" fill="#ffffff" fill-opacity="0.6" font-size="12">遷移処理は 1 つ</text>
+  </g>
+</svg>

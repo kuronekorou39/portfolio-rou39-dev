@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.5"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">重い動画では、ドラッグ中のシークを省く</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">シークの実測が 350ms 超の動画</text>
+
+  <!-- 前 -->
+  <text x="24" y="112" fill="#f87171" font-size="13" font-weight="700">前</text>
+  <rect x="80" y="100" width="616" height="8" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+  <line x1="150" y1="82" x2="610" y2="82" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" marker-end="url(#gray)"/>
+  <text x="150" y="72" fill="#ffffff" fill-opacity="0.6" font-size="12">つまみをドラッグ</text>
+  <g fill="#f87171">
+    <rect x="148" y="94" width="4" height="20"/><rect x="206" y="94" width="4" height="20"/>
+    <rect x="264" y="94" width="4" height="20"/><rect x="322" y="94" width="4" height="20"/>
+    <rect x="380" y="94" width="4" height="20"/><rect x="438" y="94" width="4" height="20"/>
+    <rect x="496" y="94" width="4" height="20"/><rect x="554" y="94" width="4" height="20"/>
+    <rect x="612" y="94" width="4" height="20"/>
+  </g>
+  <text x="150" y="138" fill="#f87171" font-size="12">動かすたびにシーク → 数十秒固まる</text>
+
+  <!-- 後 -->
+  <text x="24" y="222" fill="#60a5fa" font-size="13" font-weight="700">後</text>
+  <rect x="80" y="210" width="616" height="8" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+  <line x1="150" y1="192" x2="610" y2="192" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" marker-end="url(#gray)"/>
+  <rect x="612" y="202" width="4" height="24" fill="#60a5fa"/>
+  <circle cx="614" cy="214" r="9" fill="none" stroke="#60a5fa" stroke-width="2"/>
+  <text x="630" y="250" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="end">指を離したときの 1 回だけ</text>
+</svg>

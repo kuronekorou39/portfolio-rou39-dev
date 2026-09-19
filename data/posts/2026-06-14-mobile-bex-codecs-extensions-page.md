@@ -6,6 +6,8 @@ projects: [mobile-bex]
 
 Twitch や YouTube のライブ配信がエラーで再生できなかった。実機で MediaSource.isTypeSupported('avc1,mp4a') が false を返しており、ビルドに H.264 / AAC が入っていないのが原因だった。拡張機能の管理ページも PC の幅のまま縮小表示され、ボタンが見切れていた。
 
+![ライブ配信の H.264 と AAC をデコードする経路](/devlog/2026-06-14-mobile-bex-codecs-extensions-page/codec-path.svg)
+
 | 変更 | 中身 |
 |---|---|
 | コーデックの同梱 | ビルド設定に proprietary_codecs と ffmpeg_branding を追加。H.264 は Android の MediaCodec、AAC は同梱の ffmpeg でデコードする |

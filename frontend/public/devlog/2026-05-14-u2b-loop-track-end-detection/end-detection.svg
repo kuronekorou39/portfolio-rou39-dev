@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.35"/>
+    </marker>
+  </defs>
+  <rect width="720" height="270" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">曲の終了を 2 つの経路で検知する</text>
+
+  <rect x="24" y="80" width="150" height="150" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="160" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700" text-anchor="middle">プレイヤー</text>
+
+  <rect x="546" y="80" width="150" height="150" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="621" y="152" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700" text-anchor="middle">曲の終了</text>
+  <text x="621" y="176" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">次の曲へ進む</text>
+
+  <!-- 追加した経路 -->
+  <text x="360" y="104" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">completed イベント</text>
+  <line x1="182" y1="116" x2="538" y2="116" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="360" y="138" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">v1.56.0 で追加</text>
+
+  <!-- 従来の経路 -->
+  <text x="360" y="186" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">100ms ごとのポーリング</text>
+  <line x1="182" y1="198" x2="538" y2="198" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow-dim)"/>
+  <text x="360" y="220" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">従来からの検知</text>
+</svg>

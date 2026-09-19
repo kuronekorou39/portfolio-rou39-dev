@@ -6,6 +6,8 @@ projects: [omniverse]
 
 通知の同じ項目が二重三重に出ていた。鍵アカウントなど通知の多いアカウントで目立つ。1 日で 7 回直した。
 
+![別々の ID で届く通知を「同じ出来事」で束ねる](/devlog/2026-04-21-omniverse-notification-dedup/event-key.svg)
+
 | 原因 | 直し方 |
 |---|---|
 | REST と GraphQL で同じ通知の ID が違う | 対象の投稿 ID で突き合わせ、REST を優先して統合 |

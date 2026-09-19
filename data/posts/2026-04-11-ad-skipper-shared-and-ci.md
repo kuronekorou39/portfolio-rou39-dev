@@ -6,6 +6,8 @@ projects: [ad-skipper-twitch, ad-skipper-prime, ad-skipper-youtube]
 
 3 つの拡張が同じコードを個別に持っており、lint もテストの自動実行も無かった。
 
+![3 つの拡張が別々に持っていたコードを shared へ](/devlog/2026-04-11-ad-skipper-shared-and-ci/shared-package.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 共通化 | 広告中のオーバーレイと、ポップアップの UI 関数群を shared パッケージへ。20 ファイルで 877 行を削除 |

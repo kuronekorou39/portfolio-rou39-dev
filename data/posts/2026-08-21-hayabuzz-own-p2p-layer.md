@@ -6,6 +6,8 @@ projects: [hayabuzz]
 
 P2P 通信を Trystero に任せていたが、依存を外して自前の実装に置き換えた。WebTorrent トラッカーの WebSocket プロトコルと、RTCPeerConnection / DataChannel の管理を自分で書いた。同じ日に、遊び方のルールもまとめて足している。
 
+![自前の P2P 層: シグナリングから直結まで](/devlog/2026-08-21-hayabuzz-own-p2p-layer/signaling-flow.svg)
+
 | 変更 | 中身 |
 |---|---|
 | シグナリング | announce に offer / answer を相乗りさせて交換。複数トラッカーに並行でつなぎ、重複したシグナルは捨てる |

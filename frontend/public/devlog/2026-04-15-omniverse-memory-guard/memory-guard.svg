@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">同時に走る数を絞り、メモリに 2 段の線を引いた</text>
+
+  <rect x="24" y="60" width="330" height="76" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="88" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">画像のプリキャッシュ</text>
+  <text x="40" y="114" fill="#60a5fa" font-size="12" font-weight="700">キューで 1 投稿ずつ、画像も 1 枚ずつ</text>
+  <rect x="366" y="60" width="330" height="76" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="382" y="88" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">JS バンドルのダウンロード</text>
+  <text x="382" y="114" fill="#60a5fa" font-size="12" font-weight="700">queryId 用は最大 5 / Bearer 用は最大 3</text>
+
+  <!-- メモリガード -->
+  <text x="24" y="180" fill="#ffffff" fill-opacity="0.45" font-size="12">メモリガード(使用量)</text>
+  <rect x="24" y="210" width="448" height="24" fill="#ffffff" fill-opacity="0.12"/>
+  <rect x="472" y="210" width="112" height="24" fill="#60a5fa" fill-opacity="0.45"/>
+  <rect x="584" y="210" width="112" height="24" fill="#60a5fa"/>
+  <line x1="472" y1="198" x2="472" y2="240" stroke="#60a5fa" stroke-width="2"/>
+  <line x1="584" y1="198" x2="584" y2="240" stroke="#60a5fa" stroke-width="2"/>
+  <text x="472" y="190" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700" text-anchor="middle">800MB</text>
+  <text x="584" y="190" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700" text-anchor="middle">1000MB</text>
+  <text x="528" y="260" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">警告</text>
+  <text x="640" y="260" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">緊急の自動制御</text>
+  <text x="248" y="260" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">通常</text>
+</svg>

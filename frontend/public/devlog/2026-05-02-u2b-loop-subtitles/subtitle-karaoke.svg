@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">字幕を取得して、動画のすぐ下に出す</text>
+
+  <!-- 取得の順 -->
+  <rect x="24" y="60" width="200" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">字幕を探す順</text>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.7">
+    <rect x="40" y="100" width="168" height="32" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="121">1  指定した言語</text>
+    <rect x="40" y="140" width="168" height="32" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="161">2  日本語</text>
+    <rect x="40" y="180" width="168" height="32" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="201">3  英語</text>
+    <rect x="40" y="220" width="168" height="32" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="241">4  最初のトラック</text>
+  </g>
+
+  <line x1="234" y1="168" x2="300" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="267" y="154" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">裏で取得</text>
+
+  <!-- 再生画面 -->
+  <rect x="310" y="60" width="386" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="326" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">再生画面</text>
+  <rect x="326" y="98" width="354" height="30" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="340" y="118" fill="#ffffff" fill-opacity="0.4" font-size="12">AppBar</text>
+  <rect x="598" y="103" width="72" height="20" rx="10" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="634" y="117" fill="#60a5fa" font-size="11" font-weight="700" text-anchor="middle">字幕 ON</text>
+  <rect x="326" y="136" width="354" height="84" rx="8" fill="#ffffff" fill-opacity="0.06"/>
+  <text x="503" y="183" fill="#ffffff" fill-opacity="0.4" font-size="13" text-anchor="middle">動画</text>
+  <rect x="326" y="228" width="354" height="36" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="503" y="251" font-size="14" font-weight="700" text-anchor="middle"><tspan fill="#60a5fa">再生位置まで</tspan><tspan fill="#ffffff" fill-opacity="0.45">色が進む字幕</tspan></text>
+</svg>

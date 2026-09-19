@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">フォルダから拡張機能を読み込む経路</text>
+
+  <rect x="24" y="120" width="150" height="80" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="156" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">選んだフォルダ</text>
+  <text x="99" y="178" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">端末のストレージ</text>
+
+  <!-- 前 -->
+  <path d="M174 140 L210 140 L210 94 L516 94" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#red)"/>
+  <text x="364" y="82" fill="#f87171" font-size="12" text-anchor="middle">前: 直接読む → パスの整合が崩れる</text>
+  <rect x="520" y="68" width="176" height="52" rx="8" fill="#f87171" fill-opacity="0.15"/>
+  <text x="608" y="99" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">_locales の検証で落ちる</text>
+
+  <!-- 後 -->
+  <path d="M174 180 L210 180 L210 222 L246 222" fill="none" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="250" y="192" width="220" height="60" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="360" y="218" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">プロファイル配下にコピー</text>
+  <text x="360" y="238" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">後: いったん写す</text>
+  <line x1="470" y1="222" x2="516" y2="222" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="520" y="192" width="176" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="608" y="227" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">読み込める</text>
+</svg>

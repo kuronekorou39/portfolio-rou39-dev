@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ルールタブ: スクロール位置の保持とタグの候補</text>
+
+  <!-- ルール一覧 -->
+  <rect x="24" y="60" width="320" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">ルールの一覧</text>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.4">
+    <rect x="40" y="98" width="272" height="30" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="118">ルール</text>
+    <rect x="40" y="136" width="272" height="30" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="156">ルール</text>
+    <rect x="40" y="174" width="272" height="30" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="54" y="194">ルール</text>
+  </g>
+  <rect x="322" y="98" width="6" height="106" rx="3" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="322" y="140" width="6" height="40" rx="3" fill="#60a5fa"/>
+  <text x="40" y="236" fill="#60a5fa" font-size="12" font-weight="700">通信で描き直しても位置を保つ</text>
+  <text x="40" y="258" fill="#ffffff" fill-opacity="0.4" font-size="11">以前は先頭へ戻っていた</text>
+
+  <!-- タグ入力 -->
+  <rect x="376" y="60" width="320" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="392" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">タグの入力</text>
+  <rect x="392" y="98" width="288" height="34" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.3"/>
+  <text x="406" y="120" fill="#ffffff" fill-opacity="0.6" font-size="13">入力中の文字</text>
+  <rect x="392" y="138" width="288" height="122" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="664" y="160" fill="#60a5fa" font-size="11" font-weight="700" text-anchor="end">候補</text>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85">
+    <text x="406" y="168">既存のタグ</text>
+    <text x="406" y="204">既存のタグ</text>
+    <text x="406" y="240">既存のタグ</text>
+  </g>
+  <line x1="406" y1="180" x2="666" y2="180" stroke="#ffffff" stroke-opacity="0.12"/>
+  <line x1="406" y1="216" x2="666" y2="216" stroke="#ffffff" stroke-opacity="0.12"/>
+</svg>

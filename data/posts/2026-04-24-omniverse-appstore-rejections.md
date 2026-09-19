@@ -6,6 +6,8 @@ projects: [omniverse]
 
 App Store Connect に上げたビルドが、過去 12 個すべて「失敗」で止まっていた。届いたエラーコードを 1 つずつ解消した。
 
+![アップロード後の検査で落ちていた。直した場所は 4 つ](/devlog/2026-04-24-omniverse-appstore-rejections/fix-places.svg)
+
 | エラー | 原因 | 直し方 |
 |---|---|---|
 | ITMS-90683 | 写真・カメラ・マイクの目的文字列が無い | Info.plist に 4 つ追加 |

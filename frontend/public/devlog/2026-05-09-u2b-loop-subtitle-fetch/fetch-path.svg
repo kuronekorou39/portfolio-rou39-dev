@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">字幕の取得経路: ライブラリ任せから自前へ</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="78" fill="#f87171" font-size="12" font-weight="700">直す前</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="24" y="90" width="144" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="96" y="121" fill="#ffffff" fill-opacity="0.7">取得ライブラリ</text>
+    <line x1="172" y1="116" x2="196" y2="116" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+    <rect x="200" y="90" width="144" height="52" rx="8" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="272" y="121" fill="#f87171" font-weight="700">字幕 URL が空</text>
+    <line x1="348" y1="116" x2="372" y2="116" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+    <rect x="376" y="90" width="144" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="448" y="121" fill="#ffffff" fill-opacity="0.5">字幕が出ない</text>
+  </g>
+
+  <!-- 直した後 -->
+  <text x="24" y="190" fill="#60a5fa" font-size="12" font-weight="700">直した後 (v1.53.0)</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="24" y="202" width="144" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="96" y="233" fill="#ffffff" fill-opacity="0.85">プレイヤー情報</text>
+    <line x1="172" y1="228" x2="196" y2="228" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="200" y="202" width="144" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="272" y="233" fill="#ffffff" fill-opacity="0.85">字幕の URL</text>
+    <line x1="348" y1="228" x2="372" y2="228" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="376" y="202" width="144" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="448" y="233" fill="#ffffff" fill-opacity="0.85">XML を自前で解析</text>
+    <line x1="524" y1="228" x2="548" y2="228" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="552" y="202" width="144" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="624" y="233" fill="#ffffff" fill-opacity="0.85">字幕を表示</text>
+  </g>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="270" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">広告を検出してから送るまで</text>
+
+  <rect x="24" y="108" width="170" height="96" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="109" y="150" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700" text-anchor="middle">広告を検出</text>
+  <text x="109" y="176" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">ad-showing クラス</text>
+
+  <line x1="198" y1="140" x2="250" y2="102" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="198" y1="172" x2="250" y2="210" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g font-size="13" text-anchor="middle">
+    <rect x="256" y="70" width="176" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="344" y="103" fill="#ffffff" fill-opacity="0.7">スキップできる広告</text>
+    <line x1="436" y1="98" x2="482" y2="98" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="486" y="70" width="210" height="56" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="591" y="103" fill="#60a5fa" font-weight="700">スキップボタンを自動で押す</text>
+
+    <rect x="256" y="186" width="176" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="344" y="219" fill="#ffffff" fill-opacity="0.7">スキップできない広告</text>
+    <line x1="436" y1="214" x2="482" y2="214" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="486" y="186" width="210" height="56" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="591" y="210" fill="#60a5fa" font-weight="700">16 倍速 + ミュート</text>
+    <text x="591" y="230" fill="#ffffff" fill-opacity="0.6" font-size="12">オーバーレイで覆う</text>
+  </g>
+</svg>

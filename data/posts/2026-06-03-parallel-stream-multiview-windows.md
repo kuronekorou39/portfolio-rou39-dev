@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 調査の次の段階として、マルチビューの最初の版を作った。ポップアップで最大 4 つの配信 URL を受け取り、独立した popup ウィンドウを 1〜4 分割のタイル座標で開き、各タブにスクリプトを注入してシアターモードを自動で ON にする。同じ日に、レビューで確定した欠陥を直した。
 
+![配信 URL から、タイル配置の popup ウィンドウへ](/devlog/2026-06-03-parallel-stream-multiview-windows/tile-windows.svg)
+
 | 欠陥 | 直し方 |
 |---|---|
 | service worker が idle で終了すると注入が失われる | トップレベルに登録するリスナと、storage に持つ保留マップに作り直した |

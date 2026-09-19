@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">縦持ちで撮った写真の向き</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">矢印は料理の上方向</text>
+
+  <!-- 保存された写真 -->
+  <rect x="24" y="112" width="170" height="140" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="136" fill="#ffffff" fill-opacity="0.45" font-size="12">保存されたファイル</text>
+  <rect x="64" y="148" width="90" height="56" rx="4" fill="#ffffff" fill-opacity="0.18"/>
+  <path d="M128 176 L92 176 M102 166 L92 176 L102 186" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2"/>
+  <text x="109" y="226" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">画素は横向き</text>
+  <text x="109" y="242" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">向きは EXIF だけ</text>
+
+  <line x1="198" y1="160" x2="246" y2="104" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="198" y1="182" x2="246" y2="182" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="198" y1="204" x2="246" y2="262" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 画面の表示 -->
+  <rect x="254" y="60" width="442" height="76" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="270" y="103" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">画面の表示</text>
+  <rect x="432" y="68" width="40" height="60" rx="4" fill="#ffffff" fill-opacity="0.18"/>
+  <path d="M452 116 L452 82 M442 92 L452 82 L462 92" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2"/>
+  <text x="500" y="103" fill="#ffffff" fill-opacity="0.6" font-size="12">回転を適用。正しく見える</text>
+
+  <!-- 解析: 前 -->
+  <rect x="254" y="146" width="442" height="76" rx="10" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="270" y="180" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">解析に渡す画像</text>
+  <text x="270" y="200" fill="#f87171" font-size="12">直す前</text>
+  <rect x="422" y="164" width="60" height="40" rx="4" fill="#f87171" fill-opacity="0.25"/>
+  <path d="M468 184 L436 184 M446 174 L436 184 L446 194" fill="none" stroke="#f87171" stroke-width="2"/>
+  <text x="500" y="189" fill="#f87171" font-size="12" font-weight="700">90 度倒れたまま</text>
+
+  <!-- 解析: 後 -->
+  <rect x="254" y="232" width="442" height="76" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="270" y="266" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">解析に渡す画像</text>
+  <text x="270" y="286" fill="#60a5fa" font-size="12">直した後</text>
+  <rect x="432" y="240" width="40" height="60" rx="4" fill="#60a5fa" fill-opacity="0.45"/>
+  <path d="M452 288 L452 254 M442 264 L452 254 L462 264" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2"/>
+  <text x="500" y="275" fill="#60a5fa" font-size="12" font-weight="700">縮小の前に回転を焼き込む</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="330" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">DM の見る専画面: 一覧からスレッドへ</text>
+
+  <!-- アカウント詳細 -->
+  <rect x="24" y="60" width="150" height="210" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="84" fill="#ffffff" fill-opacity="0.45" font-size="12">アカウント詳細</text>
+  <g fill="#ffffff" fill-opacity="0.1">
+    <rect x="40" y="98" width="118" height="26" rx="6"/>
+    <rect x="40" y="130" width="118" height="26" rx="6"/>
+    <rect x="40" y="194" width="118" height="26" rx="6"/>
+  </g>
+  <rect x="40" y="162" width="118" height="26" rx="6" fill="#60a5fa" fill-opacity="0.3"/>
+  <text x="52" y="180" fill="#ffffff" fill-opacity="0.9" font-size="12" font-weight="700">DM</text>
+  <line x1="174" y1="175" x2="228" y2="175" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 会話一覧 -->
+  <rect x="230" y="60" width="210" height="210" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="246" y="84" fill="#60a5fa" font-size="12" font-weight="700">会話一覧</text>
+  <rect x="246" y="96" width="178" height="28" rx="14" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="260" y="115" fill="#ffffff" fill-opacity="0.4" font-size="11">名前と ID で検索</text>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.7" text-anchor="middle">
+    <rect x="246" y="134" width="40" height="22" rx="11" fill="#ffffff" fill-opacity="0.1"/>
+    <text x="266" y="149">未読</text>
+    <rect x="292" y="134" width="70" height="22" rx="11" fill="#ffffff" fill-opacity="0.1"/>
+    <text x="327" y="149">リクエスト</text>
+    <rect x="368" y="134" width="56" height="22" rx="11" fill="#ffffff" fill-opacity="0.1"/>
+    <text x="396" y="149">グループ</text>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="260" cy="188" r="11" fill-opacity="0.18"/>
+    <rect x="280" y="178" width="90" height="7" rx="3" fill-opacity="0.3"/>
+    <rect x="280" y="192" width="140" height="7" rx="3" fill-opacity="0.14"/>
+    <circle cx="260" cy="234" r="11" fill-opacity="0.18"/>
+    <rect x="280" y="224" width="70" height="7" rx="3" fill-opacity="0.3"/>
+    <rect x="280" y="238" width="120" height="7" rx="3" fill-opacity="0.14"/>
+  </g>
+  <line x1="440" y1="175" x2="494" y2="175" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- スレッド -->
+  <rect x="496" y="60" width="200" height="210" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="512" y="84" fill="#60a5fa" font-size="12" font-weight="700">スレッド</text>
+  <rect x="512" y="96" width="168" height="24" rx="6" fill="#60a5fa" fill-opacity="0.2"/>
+  <text x="596" y="113" fill="#60a5fa" font-size="11" font-weight="700" text-anchor="middle">読み取り専用</text>
+  <g fill="#ffffff">
+    <rect x="512" y="132" width="110" height="24" rx="10" fill-opacity="0.12"/>
+    <rect x="570" y="164" width="110" height="24" rx="10" fill-opacity="0.2"/>
+    <rect x="512" y="196" width="90" height="24" rx="10" fill-opacity="0.12"/>
+  </g>
+  <rect x="512" y="232" width="168" height="26" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-dasharray="4 4"/>
+  <text x="596" y="250" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">送信欄は無い</text>
+
+  <text x="24" y="306" fill="#60a5fa" font-size="12" font-weight="700">取得は GET だけ</text>
+  <text x="140" y="306" fill="#ffffff" fill-opacity="0.6" font-size="12">既読をつける書き込み API は呼ばない</text>
+</svg>

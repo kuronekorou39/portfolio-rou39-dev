@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">新しい版の知らせが一覧に出るまで</text>
+
+  <!-- 一覧の画面 -->
+  <rect x="24" y="60" width="270" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="84" fill="#ffffff" fill-opacity="0.45" font-size="12">一覧の画面</text>
+  <rect x="40" y="96" width="238" height="38" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="52" y="120" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700">新しいバージョン v0.9.1 があります</text>
+  <text x="262" y="120" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">×</text>
+  <rect x="40" y="144" width="238" height="58" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="40" y="212" width="238" height="58" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="159" y="178" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">食事のカード</text>
+
+  <!-- 問い合わせ -->
+  <text x="398" y="92" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">12 時間に 1 回だけ</text>
+  <line x1="300" y1="104" x2="490" y2="104" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="496" y1="130" x2="306" y2="130" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="398" y="152" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">最新のタグ</text>
+
+  <rect x="500" y="76" width="196" height="84" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="598" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">GitHub Releases</text>
+  <text x="598" y="138" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">APK の配布元</text>
+
+  <text x="320" y="214" fill="#ffffff" fill-opacity="0.85" font-size="13">自分の版より新しければ出す</text>
+  <text x="320" y="244" fill="#ffffff" fill-opacity="0.6" font-size="13">× で閉じたら、その版では出さない</text>
+</svg>

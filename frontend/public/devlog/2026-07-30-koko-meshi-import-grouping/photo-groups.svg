@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">まとめて取り込んだ 6 枚の分け方</text>
+
+  <!-- 直す前: 全部で 1 件 -->
+  <rect x="24" y="60" width="500" height="92" rx="10" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <g fill="#ffffff" fill-opacity="0.18">
+    <rect x="36" y="72" width="48" height="44" rx="4"/>
+    <rect x="100" y="72" width="48" height="44" rx="4"/>
+    <rect x="196" y="72" width="48" height="44" rx="4"/>
+    <rect x="260" y="72" width="48" height="44" rx="4"/>
+    <rect x="360" y="72" width="48" height="44" rx="4"/>
+    <rect x="460" y="72" width="48" height="44" rx="4"/>
+  </g>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="60" y="138">店 A</text>
+    <text x="124" y="138">店 A</text>
+    <text x="220" y="138">店 B</text>
+    <text x="284" y="138">店 B</text>
+    <text x="384" y="138">日時なし</text>
+    <text x="484" y="138">日時なし</text>
+  </g>
+  <text x="544" y="102" fill="#f87171" font-size="13" font-weight="700">直す前</text>
+  <text x="544" y="124" fill="#f87171" font-size="12">必ず 1 件の記録</text>
+
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="92" y1="156" x2="92" y2="180" marker-end="url(#arrow)"/>
+    <line x1="252" y1="156" x2="252" y2="180" marker-end="url(#arrow)"/>
+    <line x1="384" y1="156" x2="384" y2="180" marker-end="url(#arrow)"/>
+    <line x1="484" y1="156" x2="484" y2="180" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- 後: 組ごと -->
+  <g fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="24" y="188" width="136" height="98" rx="10"/>
+    <rect x="184" y="188" width="136" height="98" rx="10"/>
+    <rect x="344" y="188" width="80" height="98" rx="10"/>
+    <rect x="444" y="188" width="80" height="98" rx="10"/>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.45">
+    <rect x="36" y="200" width="48" height="44" rx="4"/>
+    <rect x="100" y="200" width="48" height="44" rx="4"/>
+    <rect x="196" y="200" width="48" height="44" rx="4"/>
+    <rect x="260" y="200" width="48" height="44" rx="4"/>
+    <rect x="360" y="200" width="48" height="44" rx="4"/>
+    <rect x="460" y="200" width="48" height="44" rx="4"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="92" y="270">1 件</text>
+    <text x="252" y="270">1 件</text>
+    <text x="384" y="270">1 件</text>
+    <text x="484" y="270">1 件</text>
+  </g>
+  <text x="544" y="222" fill="#60a5fa" font-size="13" font-weight="700">直した後</text>
+  <text x="544" y="244" fill="#ffffff" fill-opacity="0.6" font-size="12">撮影日時と場所で分ける</text>
+  <text x="544" y="266" fill="#ffffff" fill-opacity="0.6" font-size="12">日時なしは 1 枚ずつ</text>
+</svg>

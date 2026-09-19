@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 枠の中身は別オリジンの iframe なので、タップは親に届かない。フォーカスの移動で拾っていたが、タッチでは移らないことが多く、枠の縁を狙わないと選べなかった。
 
+![スマホで、枠を選べる範囲](/devlog/2026-08-07-parallel-stream-touch-polish/tap-area.svg)
+
 | 変更 | 中身 |
 |---|---|
 | タップの通知 | 枠の中の content script が押下ごとに 1 通だけ親へ送る。入れ子のフレームからも中継する |

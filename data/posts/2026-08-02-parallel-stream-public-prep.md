@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 リポジトリを public にした。同梱コードのライセンス表示が欠けており、拡張がブラウザに与える影響の範囲も広かったので、公開に耐える形に直した。
 
+![UI を通常のページへ移し、chrome.* は橋渡しで中継](/devlog/2026-08-02-parallel-stream-public-prep/page-bridge.svg)
+
 | 変更 | 中身 |
 |---|---|
 | ライセンス | MIT の LICENSE を追加。hls.js(Apache-2.0)の全文と、除去されていたバナーを復元 |

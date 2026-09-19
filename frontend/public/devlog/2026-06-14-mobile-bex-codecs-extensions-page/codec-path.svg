@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ライブ配信の映像と音を、どこでデコードするか</text>
+
+  <rect x="24" y="92" width="130" height="96" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="89" y="136" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">ライブ配信</text>
+  <text x="89" y="158" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">H.264 / AAC</text>
+
+  <g stroke="#60a5fa" stroke-width="2" fill="none">
+    <path d="M154 120 L178 120 L178 98 L248 98" marker-end="url(#arrow)"/>
+    <path d="M154 160 L178 160 L178 182 L248 182" marker-end="url(#arrow)"/>
+    <line x1="472" y1="98" x2="540" y2="126" marker-end="url(#arrow)"/>
+    <line x1="472" y1="182" x2="540" y2="154" marker-end="url(#arrow)"/>
+  </g>
+  <text x="212" y="88" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">映像</text>
+  <text x="212" y="204" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">音</text>
+
+  <rect x="252" y="68" width="220" height="60" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="362" y="94" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">H.264</text>
+  <text x="362" y="114" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">Android の MediaCodec</text>
+
+  <rect x="252" y="152" width="220" height="60" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="362" y="178" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">AAC</text>
+  <text x="362" y="198" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">同梱の ffmpeg</text>
+
+  <rect x="544" y="100" width="152" height="80" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="620" y="145" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">再生できる</text>
+
+  <!-- 元から -->
+  <rect x="252" y="236" width="220" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="362" y="261" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">VP9 / AV1 は元から対応</text>
+  <path d="M472 256 L620 256 L620 186" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+</svg>

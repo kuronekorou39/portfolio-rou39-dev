@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">同じ 4 枠を「整列」と「音量順」で並べる</text>
+
+  <!-- 整列 -->
+  <text x="24" y="72" fill="#ffffff" fill-opacity="0.45" font-size="12">整列: 均等</text>
+  <rect x="24" y="84" width="320" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g fill="#15161a" stroke="#ffffff" stroke-opacity="0.25">
+    <rect x="34" y="98" width="146" height="82" rx="4"/>
+    <rect x="188" y="98" width="146" height="82" rx="4"/>
+    <rect x="34" y="188" width="146" height="82" rx="4"/>
+    <rect x="188" y="188" width="146" height="82" rx="4"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="107" y="144">音量 大</text>
+    <text x="261" y="144">中</text>
+    <text x="107" y="234">小</text>
+    <text x="261" y="234">小</text>
+  </g>
+
+  <!-- 音量順 -->
+  <text x="376" y="72" fill="#60a5fa" font-size="12" font-weight="700">音量順: 面積を音量に比例</text>
+  <rect x="376" y="84" width="320" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="382" y="106" width="176" height="99" rx="4" fill="#60a5fa" fill-opacity="0.35" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <rect x="566" y="120" width="124" height="70" rx="4" fill="#60a5fa" fill-opacity="0.22" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <rect x="444" y="213" width="88" height="50" rx="4" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <rect x="540" y="213" width="88" height="50" rx="4" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="470" y="160">音量 大</text>
+    <text x="628" y="160">中</text>
+    <text x="488" y="243">小</text>
+    <text x="584" y="243">小</text>
+  </g>
+  <text x="376" y="304" fill="#ffffff" fill-opacity="0.4" font-size="11">どの枠も 16:9 のまま。余りは中央寄せの余白</text>
+</svg>

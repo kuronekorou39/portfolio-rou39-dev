@@ -6,6 +6,8 @@ projects: [mobile-bex]
 
 BEX は、Chromium を改造して PC 版の Chrome 拡張機能をスマホで動かす Android ブラウザ。拡張機能が持てる UI の形を 10 種類のテスト拡張に分け、Pixel 9a(Chromium 147)で 1 つずつ確認した。あわせて、拡張機能メニューの各行にアイコンを出すパッチ(Patch 13)を足した。
 
+![拡張機能の UI 10 種類の実機での結果](/devlog/2026-05-30-mobile-bex-device-test/ui-matrix.svg)
+
 | 結果 | 対象 | 中身 |
 |---|---|---|
 | PASS 7 | コンテンツスクリプト、ポップアップ、サイドパネル、全画面タブ、設定ページ、通知、新規タブの差し替え | 設定ページは openOptionsPage を新しいタブで開く実装を入れて通った |

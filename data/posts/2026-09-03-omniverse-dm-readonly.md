@@ -6,6 +6,8 @@ projects: [omniverse]
 
 自分のアカウントの DM を、読み取り専用で表示する画面を 2 日で入れた。X も Bluesky も、「既読をつける」のは読み取りとは別の書き込み API になっている。この機能はそれを呼ばないので、開いても相手に既読はつかず、自分の未読も未読のまま残る。
 
+![DM の見る専画面の遷移](/devlog/2026-09-03-omniverse-dm-readonly/readonly-screens.svg)
+
 | 項目 | 中身 |
 |---|---|
 | 取得 | X も Bluesky も GET だけ。テストで「POST を一切呼ばない」ことを検証している |

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="250" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">定期取得 1 回の道のりと、止めた場所</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">赤 = 直す前 / 青 = 直し方</text>
+
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="28" y="70" width="112" height="60" rx="8"/>
+    <rect x="166" y="70" width="112" height="60" rx="8"/>
+    <rect x="304" y="70" width="112" height="60" rx="8"/>
+    <rect x="442" y="70" width="112" height="60" rx="8"/>
+    <rect x="580" y="70" width="112" height="60" rx="8"/>
+  </g>
+  <g stroke="#ffffff" stroke-opacity="0.4" stroke-width="2">
+    <line x1="143" y1="100" x2="162" y2="100" marker-end="url(#arrowg)"/>
+    <line x1="281" y1="100" x2="300" y2="100" marker-end="url(#arrowg)"/>
+    <line x1="419" y1="100" x2="438" y2="100" marker-end="url(#arrowg)"/>
+    <line x1="557" y1="100" x2="576" y2="100" marker-end="url(#arrowg)"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="84" y="105">定期取得</text>
+    <text x="222" y="96">解析・パース</text>
+    <text x="360" y="96">state 更新</text>
+    <text x="498" y="96">フィルタ</text>
+    <text x="636" y="96">一覧の構築</text>
+  </g>
+  <g font-size="11" fill="#f87171" text-anchor="middle">
+    <text x="222" y="117">メインスレッド</text>
+    <text x="360" y="117">1 回で 2 度</text>
+    <text x="498" y="117">毎回 500 件</text>
+    <text x="636" y="117">毎回作り直す</text>
+  </g>
+
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="222" y1="134" x2="222" y2="160" marker-end="url(#arrow)"/>
+    <line x1="360" y1="134" x2="360" y2="160" marker-end="url(#arrow)"/>
+    <line x1="498" y1="134" x2="498" y2="160" marker-end="url(#arrow)"/>
+    <line x1="636" y1="134" x2="636" y2="160" marker-end="url(#arrow)"/>
+  </g>
+  <g font-size="12" font-weight="700" fill="#60a5fa" text-anchor="middle">
+    <text x="222" y="182">別 Isolate へ</text>
+    <text x="360" y="182">回数を減らす</text>
+    <text x="498" y="182">結果をメモ化</text>
+    <text x="636" y="182">同じなら据え置き</text>
+  </g>
+  <text x="24" y="224" fill="#ffffff" fill-opacity="0.4" font-size="11">一覧の構築: 長さと先頭 ID が同じなら posts を更新しない</text>
+</svg>

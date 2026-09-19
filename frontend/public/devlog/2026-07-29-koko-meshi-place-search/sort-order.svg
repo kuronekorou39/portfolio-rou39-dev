@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">20 件で切られるとき、どの店が残るか</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">模式図</text>
+
+  <!-- 人気順 -->
+  <rect x="24" y="60" width="324" height="256" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">人気順(API の既定)</text>
+  <circle cx="186" cy="186" r="80" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+  <rect x="181" y="181" width="10" height="10" fill="#ffffff" fill-opacity="0.85"/>
+  <g fill="none" stroke="#f87171" stroke-width="2">
+    <circle cx="164" cy="170" r="6"/>
+    <circle cx="206" cy="166" r="6"/>
+    <circle cx="212" cy="204" r="6"/>
+    <circle cx="170" cy="210" r="6"/>
+    <circle cx="188" cy="150" r="6"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.7">
+    <circle cx="130" cy="140" r="6"/>
+    <circle cx="244" cy="146" r="6"/>
+    <circle cx="252" cy="212" r="6"/>
+    <circle cx="124" cy="216" r="6"/>
+    <circle cx="186" cy="252" r="6"/>
+    <circle cx="150" cy="122" r="6"/>
+    <circle cx="224" cy="240" r="6"/>
+  </g>
+  <text x="186" y="298" fill="#f87171" font-size="12" font-weight="700" text-anchor="middle">近くの個人店からこぼれる</text>
+
+  <!-- 距離順 -->
+  <rect x="372" y="60" width="324" height="256" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="388" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">距離順(今回の既定)</text>
+  <circle cx="534" cy="186" r="80" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+  <rect x="529" y="181" width="10" height="10" fill="#ffffff" fill-opacity="0.85"/>
+  <g fill="#60a5fa">
+    <circle cx="512" cy="170" r="6"/>
+    <circle cx="554" cy="166" r="6"/>
+    <circle cx="560" cy="204" r="6"/>
+    <circle cx="518" cy="210" r="6"/>
+    <circle cx="536" cy="150" r="6"/>
+    <circle cx="478" cy="140" r="6"/>
+    <circle cx="592" cy="146" r="6"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2">
+    <circle cx="600" cy="212" r="6"/>
+    <circle cx="472" cy="216" r="6"/>
+    <circle cx="534" cy="252" r="6"/>
+    <circle cx="498" cy="122" r="6"/>
+    <circle cx="572" cy="240" r="6"/>
+  </g>
+  <text x="534" y="298" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">近い店から順に残る</text>
+
+  <text x="388" y="106" fill="#ffffff" fill-opacity="0.4" font-size="11">● 取得できた店 / ○ こぼれた店</text>
+  <text x="40" y="106" fill="#ffffff" fill-opacity="0.4" font-size="11">□ 現在地</text>
+</svg>

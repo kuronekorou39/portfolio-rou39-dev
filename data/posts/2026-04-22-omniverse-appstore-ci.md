@@ -6,6 +6,8 @@ projects: [omniverse]
 
 iOS 版を App Store に出すため、CI でビルドしてそのままアップロードする経路を足した。これまでの Ad Hoc ビルドは残し、並行して走らせる。この日は 3 か所でつまずいた。
 
+![CI に App Store 行きの経路を足した](/devlog/2026-04-22-omniverse-appstore-ci/upload-lane.svg)
+
 | つまずき | 原因 | 直し方 |
 |---|---|---|
 | archive が失敗 | flutter build ipa は Development 証明書を求める。CI には Distribution しか無い | xcodebuild を直接呼び、手動署名で archive と export |

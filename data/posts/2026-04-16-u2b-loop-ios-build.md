@@ -6,6 +6,8 @@ projects: [u2b-loop]
 
 iOS でもビルドできるようにした。CI の iOS ビルドを有効に戻し、IPA をリリースに添付する。
 
+![iOS 版で足した部分](/devlog/2026-04-16-u2b-loop-ios-build/ios-waveform.svg)
+
 | バージョン | 内容 |
 |---|---|
 | v1.43.0 | Xcode の設定を修正(Swift 5.9、iOS 16.0 以上)。波形抽出を AVAssetReader でネイティブ実装 |

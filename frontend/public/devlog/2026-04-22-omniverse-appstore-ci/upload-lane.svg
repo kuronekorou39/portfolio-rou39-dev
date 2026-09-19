@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">CI に App Store 行きの経路を足した</text>
+
+  <rect x="24" y="116" width="120" height="64" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="84" y="144" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">CI</text>
+  <text x="84" y="164" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">iOS のビルド</text>
+
+  <line x1="148" y1="134" x2="182" y2="96" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowg)"/>
+  <line x1="148" y1="162" x2="182" y2="200" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- これまで -->
+  <rect x="190" y="64" width="506" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="206" y="93" fill="#ffffff" fill-opacity="0.6" font-size="13">Ad Hoc ビルド(これまで通り、並行で走る)</text>
+
+  <!-- 追加 -->
+  <g fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.8">
+    <rect x="190" y="172" width="160" height="60" rx="8"/>
+    <rect x="374" y="172" width="80" height="60" rx="8"/>
+    <rect x="478" y="172" width="90" height="60" rx="8"/>
+  </g>
+  <rect x="592" y="172" width="104" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="352" y1="202" x2="370" y2="202" marker-end="url(#arrow)"/>
+    <line x1="456" y1="202" x2="474" y2="202" marker-end="url(#arrow)"/>
+    <line x1="570" y1="202" x2="588" y2="202" marker-end="url(#arrow)"/>
+  </g>
+  <text x="270" y="198" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">xcodebuild archive</text>
+  <text x="270" y="218" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">手動署名</text>
+  <text x="414" y="207" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">export</text>
+  <text x="523" y="198" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">altool</text>
+  <text x="523" y="218" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">アップロード</text>
+  <text x="644" y="198" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">App Store</text>
+  <text x="644" y="216" fill="#ffffff" fill-opacity="0.85" font-size="12" text-anchor="middle">Connect</text>
+  <text x="190" y="262" fill="#ffffff" fill-opacity="0.4" font-size="11">CI にあるのは Distribution 証明書だけ。Pod の署名は post_install で無効化</text>
+</svg>

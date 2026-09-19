@@ -6,6 +6,8 @@ projects: [ad-skipper-twitch]
 
 ユーザーがページを操作する前に video.muted = false にすると、Chrome の自動再生ポリシーによって動画が一時停止される。広告中に副映像の音を戻す処理がこれに当たり、再生が止まっていた。
 
+![safeUnmute(): 解除に失敗したらミュートに戻す](/devlog/2026-04-12-ad-skipper-twitch-safe-unmute/safe-unmute.svg)
+
 | 解除の結果 | 動作 |
 |---|---|
 | 再生が続いている | 保存していた音量でそのまま鳴らす |

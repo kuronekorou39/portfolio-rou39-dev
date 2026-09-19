@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">進捗が変わるたびに再ビルドされる範囲</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="78" fill="#f87171" font-size="12" font-weight="700">直す前: setState</text>
+  <rect x="24" y="90" width="320" height="200" rx="10" fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="40" y="114" fill="#ffffff" fill-opacity="0.45" font-size="12">再生画面</text>
+  <g fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.6">
+    <rect x="40" y="126" width="288" height="44" rx="8"/>
+    <rect x="40" y="178" width="288" height="44" rx="8"/>
+    <rect x="40" y="230" width="288" height="44" rx="8"/>
+  </g>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="184" y="153">アニメーション</text>
+    <text x="184" y="205">進捗表示</text>
+    <text x="184" y="257">そのほかの部品</text>
+  </g>
+  <text x="184" y="316" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">画面全体を再ビルド → カクつく</text>
+
+  <!-- 直した後 -->
+  <text x="376" y="78" fill="#60a5fa" font-size="12" font-weight="700">直した後: ValueNotifier</text>
+  <rect x="376" y="90" width="320" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="392" y="114" fill="#ffffff" fill-opacity="0.45" font-size="12">再生画面</text>
+  <rect x="392" y="126" width="288" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="392" y="178" width="288" height="44" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <rect x="392" y="230" width="288" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g font-size="13" text-anchor="middle">
+    <text x="536" y="153" fill="#ffffff" fill-opacity="0.6">アニメーション</text>
+    <text x="536" y="205" fill="#60a5fa" font-weight="700">進捗表示</text>
+    <text x="536" y="257" fill="#ffffff" fill-opacity="0.6">そのほかの部品</text>
+  </g>
+  <text x="536" y="316" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">進捗表示だけを再ビルド</text>
+</svg>

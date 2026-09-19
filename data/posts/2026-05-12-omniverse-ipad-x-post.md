@@ -6,6 +6,8 @@ projects: [omniverse]
 
 X への投稿は、公式の投稿画面を WebView 上で操作している。iPad だけ、エディタが見つからない・画像を渡せない・アプリごと落ちる、が続いた。5 月 10 日から 12 日の記録。
 
+![X 投稿の画像の渡し方を iOS だけ分けた](/devlog/2026-05-12-omniverse-ipad-x-post/image-path-split.svg)
+
 | 試したこと | 結果 |
 |---|---|
 | WebView をモバイル表示に強制(iPad にはデスクトップ版 UI が返るため) | まだエディタが見つからない |

@@ -6,6 +6,8 @@ projects: [vloom]
 
 13x18 の格子で、1MB の定常スループットを平均 95 → 138 KB/s に上げた。受信 1 枚あたりの処理時間を削った結果。
 
+![スキャンを UI の isolate から別の isolate へ出す](/devlog/2026-08-30-vloom-marker-detect/scan-isolate.svg)
+
 | やったこと | 1MB の実効 (KB/s) | 中身 |
 |---|---|---|
 | (出発点) | 82〜107 | — |

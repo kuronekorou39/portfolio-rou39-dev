@@ -6,6 +6,8 @@ projects: [easy-blur]
 
 5 月 21 日以来の更新。リリースまわりを整え、入っている版と、新しい版が出ているかをアプリから確認できるようにした。
 
+![版がタグからアプリに入り、Releases と見比べる流れ](/devlog/2026-08-12-easy-blur-release-prep/version-flow.svg)
+
 | 変更 | 中身 |
 |---|---|
 | バージョン表示と更新確認 | ホーム画面に版を出す。GitHub Releases を見て、更新があればリンクを出す |

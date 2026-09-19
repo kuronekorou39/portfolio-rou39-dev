@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">カードの状態ごとの表示</text>
+  <text x="300" y="76" fill="#ffffff" fill-opacity="0.45" font-size="12">直す前</text>
+  <text x="510" y="76" fill="#ffffff" fill-opacity="0.45" font-size="12">v0.9.1</text>
+
+  <!-- 順番待ち -->
+  <rect x="24" y="88" width="672" height="42" rx="8" fill="#ffffff" fill-opacity="0.04"/>
+  <text x="40" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13">順番待ち</text>
+  <circle cx="310" cy="109" r="8" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="2.5" stroke-dasharray="36 14"/>
+  <text x="330" y="114" fill="#ffffff" fill-opacity="0.6" font-size="13">回る</text>
+  <circle cx="520" cy="109" r="8" fill="none" stroke="#60a5fa" stroke-width="2"/>
+  <circle cx="520" cy="109" r="2.5" fill="#60a5fa"/>
+  <text x="540" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13">静止した記号</text>
+
+  <!-- AI オフ -->
+  <rect x="24" y="138" width="672" height="42" rx="8" fill="#ffffff" fill-opacity="0.04"/>
+  <text x="40" y="164" fill="#ffffff" fill-opacity="0.85" font-size="13">AI がオフ</text>
+  <circle cx="310" cy="159" r="8" fill="none" stroke="#f87171" stroke-width="2.5" stroke-dasharray="36 14"/>
+  <text x="330" y="164" fill="#f87171" font-size="13">永久に回る</text>
+  <circle cx="520" cy="159" r="8" fill="none" stroke="#60a5fa" stroke-width="2"/>
+  <circle cx="520" cy="159" r="2.5" fill="#60a5fa"/>
+  <text x="540" y="164" fill="#ffffff" fill-opacity="0.85" font-size="13">静止した記号</text>
+
+  <!-- 未 DL -->
+  <rect x="24" y="188" width="672" height="42" rx="8" fill="#ffffff" fill-opacity="0.04"/>
+  <text x="40" y="214" fill="#ffffff" fill-opacity="0.85" font-size="13">モデルが未ダウンロード</text>
+  <circle cx="310" cy="209" r="8" fill="none" stroke="#f87171" stroke-width="2.5" stroke-dasharray="36 14"/>
+  <text x="330" y="214" fill="#f87171" font-size="13">永久に回る</text>
+  <circle cx="520" cy="209" r="8" fill="none" stroke="#60a5fa" stroke-width="2"/>
+  <circle cx="520" cy="209" r="2.5" fill="#60a5fa"/>
+  <text x="540" y="214" fill="#ffffff" fill-opacity="0.85" font-size="13">静止した記号</text>
+
+  <!-- 解析中 -->
+  <rect x="24" y="238" width="672" height="42" rx="8" fill="#ffffff" fill-opacity="0.04"/>
+  <text x="40" y="264" fill="#ffffff" fill-opacity="0.85" font-size="13">モデルが動いている</text>
+  <text x="300" y="264" fill="#f87171" font-size="13">スピナーが消える</text>
+  <circle cx="520" cy="259" r="8" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-dasharray="36 14"/>
+  <text x="540" y="264" fill="#60a5fa" font-size="13" font-weight="700">ここだけ回る</text>
+</svg>

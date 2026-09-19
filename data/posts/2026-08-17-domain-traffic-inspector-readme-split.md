@@ -6,6 +6,8 @@ projects: [domain-traffic-inspector]
 
 README に使い方の詳細まで入っていて長かった。あわせて依存関係の保守をした。
 
+![README を 2 つに分け、ZIP にも同梱する](/devlog/2026-08-17-domain-traffic-inspector-readme-split/readme-split.svg)
+
 | 変更 | 中身 |
 |---|---|
 | README | 簡潔にし、詳細な使い方を docs/USAGE.md へ分離した |

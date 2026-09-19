@@ -6,6 +6,8 @@ projects: [u2b-loop]
 
 スリープ中も再生が続くようにした。5 月 15 日の wakelock から始め、この日に Foreground Service と MediaSession まで入れた。
 
+![画面を消しても再生を続ける 3 つの仕組み](/devlog/2026-05-18-u2b-loop-background-playback/keep-playing.svg)
+
 | バージョン | 内容 |
 |---|---|
 | v1.59.0 | 再生中は wakelock で CPU のスリープを防ぐ。ヘッドホンや Bluetooth が切れたら自動で一時停止 |

@@ -6,6 +6,8 @@ projects: [omniverse]
 
 通知タブでリストをスクロールすると、ヘッダーがうっすら色づく。前日に作り直した通知ハイライトと紛らわしく、「ヘッダー全体がハイライトされる」ように見えていた。
 
+![スクロールでヘッダーが色づくのを止めた](/devlog/2026-04-30-omniverse-appbar-tint/appbar-tint.svg)
+
 | 試したこと | 結果 |
 |---|---|
 | AppBar の scrolledUnderElevation を 0、surfaceTintColor を透明に | まだ薄く光る |

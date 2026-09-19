@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">右下マーカーの模様: 市松から塊へ</text>
+
+  <rect x="24" y="60" width="324" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">v1: 内側 4x4 が市松</text>
+  <rect x="62" y="124" width="132" height="132" fill="#000000"/>
+  <rect x="84" y="146" width="88" height="88" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="84" y="146" width="22" height="22" fill="#000000"/>
+  <rect x="128" y="146" width="22" height="22" fill="#000000"/>
+  <rect x="106" y="168" width="22" height="22" fill="#000000"/>
+  <rect x="150" y="168" width="22" height="22" fill="#000000"/>
+  <rect x="84" y="190" width="22" height="22" fill="#000000"/>
+  <rect x="128" y="190" width="22" height="22" fill="#000000"/>
+  <rect x="106" y="212" width="22" height="22" fill="#000000"/>
+  <rect x="150" y="212" width="22" height="22" fill="#000000"/>
+  <text x="214" y="160" fill="#ffffff" fill-opacity="0.6" font-size="12">半セルずれの一致率</text>
+  <text x="214" y="196" fill="#f87171" font-size="24" font-weight="700">0.78</text>
+  <text x="214" y="224" fill="#f87171" font-size="12">閾値 0.85 に届かない</text>
+
+  <rect x="372" y="60" width="324" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="388" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">v2: 下 2 行の塊 + 白セパレータ</text>
+  <rect x="388" y="102" width="154" height="154" fill="#ffffff" fill-opacity="0.9" stroke="#60a5fa" stroke-width="2"/>
+  <rect x="410" y="124" width="132" height="132" fill="#000000"/>
+  <rect x="432" y="146" width="88" height="88" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="432" y="190" width="88" height="44" fill="#000000"/>
+  <text x="562" y="160" fill="#ffffff" fill-opacity="0.6" font-size="12">半セルずれの一致率</text>
+  <text x="562" y="196" fill="#60a5fa" font-size="24" font-weight="700">1.00</text>
+  <text x="562" y="224" fill="#60a5fa" font-size="12">白 1 セルで境界を守る</text>
+</svg>

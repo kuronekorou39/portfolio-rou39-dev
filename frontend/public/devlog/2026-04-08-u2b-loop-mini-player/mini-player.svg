@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 370" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="370" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">戻っても再生が続くミニプレイヤー</text>
+
+  <!-- 再生画面 -->
+  <text x="150" y="78" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="middle">再生画面</text>
+  <rect x="60" y="90" width="180" height="256" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="72" y="102" width="156" height="88" rx="8" fill="#ffffff" fill-opacity="0.12"/>
+  <path d="M142 132 L162 146 L142 160 z" fill="#ffffff" fill-opacity="0.6"/>
+  <rect x="72" y="202" width="156" height="12" rx="4" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="72" y="226" width="156" height="40" rx="8" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="72" y="278" width="156" height="56" rx="8" fill="#ffffff" fill-opacity="0.08"/>
+
+  <!-- 戻る -->
+  <line x1="256" y1="218" x2="334" y2="218" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="295" y="204" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">戻るボタン</text>
+
+  <!-- 一覧 + ミニバー -->
+  <text x="440" y="78" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="middle">曲リスト</text>
+  <rect x="350" y="90" width="180" height="256" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="362" y="102" width="156" height="34" rx="8" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="362" y="144" width="156" height="34" rx="8" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="362" y="186" width="156" height="34" rx="8" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="362" y="228" width="156" height="34" rx="8" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="358" y="292" width="164" height="46" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <rect x="364" y="298" width="54" height="34" rx="4" fill="#60a5fa" fill-opacity="0.45"/>
+  <path d="M386 307 L398 315 L386 323 z" fill="#ffffff" fill-opacity="0.85"/>
+  <rect x="428" y="311" width="40" height="8" rx="4" fill="#ffffff" fill-opacity="0.6"/>
+  <rect x="480" y="308" width="4" height="14" fill="#ffffff" fill-opacity="0.85"/>
+  <rect x="488" y="308" width="4" height="14" fill="#ffffff" fill-opacity="0.85"/>
+  <path d="M502 309 L512 321 M512 309 L502 321" stroke="#ffffff" stroke-opacity="0.6" stroke-width="2"/>
+
+  <!-- 注記 -->
+  <line x1="530" y1="315" x2="556" y2="315" stroke="#60a5fa" stroke-opacity="0.6" stroke-width="2"/>
+  <text x="564" y="300" fill="#60a5fa" font-size="13" font-weight="700">ミニバー</text>
+  <text x="564" y="322" fill="#ffffff" fill-opacity="0.6" font-size="12">映像 / タイトル</text>
+  <text x="564" y="342" fill="#ffffff" fill-opacity="0.6" font-size="12">再生・停止 / 閉じる</text>
+</svg>

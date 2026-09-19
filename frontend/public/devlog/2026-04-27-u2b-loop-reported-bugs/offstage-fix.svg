@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">動画を非表示にしても次の曲へ進むようにする</text>
+
+  <!-- 操作 -->
+  <rect x="24" y="130" width="150" height="64" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="99" y="167" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">動画を非表示</text>
+
+  <line x1="182" y1="148" x2="218" y2="110" stroke="#f87171" stroke-width="2" marker-end="url(#arrowr)"/>
+  <line x1="182" y1="176" x2="218" y2="214" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 直す前 -->
+  <text x="226" y="70" fill="#f87171" font-size="12" font-weight="700">直す前</text>
+  <rect x="226" y="80" width="150" height="52" rx="8" fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="301" y="111" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">ツリーから外す</text>
+  <line x1="382" y1="106" x2="400" y2="106" stroke="#f87171" stroke-width="2" marker-end="url(#arrowr)"/>
+  <rect x="406" y="80" width="140" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="476" y="111" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">状態更新が止まる</text>
+  <line x1="552" y1="106" x2="570" y2="106" stroke="#f87171" stroke-width="2" marker-end="url(#arrowr)"/>
+  <rect x="576" y="80" width="120" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="636" y="111" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">次へ進まない</text>
+
+  <!-- 直した後 -->
+  <text x="226" y="262" fill="#60a5fa" font-size="12" font-weight="700">直した後</text>
+  <rect x="226" y="192" width="150" height="52" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="301" y="223" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">Offstage で隠す</text>
+  <line x1="382" y1="218" x2="400" y2="218" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="406" y="192" width="140" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="476" y="223" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">状態更新は続く</text>
+  <line x1="552" y1="218" x2="570" y2="218" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="576" y="192" width="120" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="636" y="223" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">次の曲へ</text>
+</svg>

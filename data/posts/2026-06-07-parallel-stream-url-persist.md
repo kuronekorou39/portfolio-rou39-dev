@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 枠の中で別の配信ページへ移動しても、保存されるのは最初に入れた URL のままで、開き直すと元に戻っていた。
 
+![枠の中で移動した先の URL が保存されるまで](/devlog/2026-06-07-parallel-stream-url-persist/url-report.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 移動先 URL の保存 | 別オリジンの iframe は親から URL を読めない。枠の中の content script が読込時と SPA 遷移時に URL を親へ送り、親が送り主から枠を特定して保存する |

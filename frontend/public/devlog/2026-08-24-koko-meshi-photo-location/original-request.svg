@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">取り込みで位置情報が届くまで</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">Android 10 以降</text>
+
+  <!-- 原本 -->
+  <rect x="24" y="116" width="164" height="110" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="144" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">ライブラリの原本</text>
+  <text x="40" y="174" fill="#ffffff" fill-opacity="0.6" font-size="12">EXIF: 日時</text>
+  <text x="40" y="198" fill="#ffffff" fill-opacity="0.6" font-size="12">EXIF: 座標</text>
+
+  <!-- 前 -->
+  <line x1="192" y1="146" x2="244" y2="110" stroke="#f87171" stroke-opacity="0.8" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="252" y="64" fill="#f87171" font-size="12">直す前</text>
+  <rect x="252" y="72" width="210" height="64" rx="10" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="357" y="109" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">OS が座標だけ削って渡す</text>
+  <line x1="466" y1="104" x2="508" y2="104" stroke="#f87171" stroke-opacity="0.8" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <rect x="516" y="72" width="180" height="64" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="532" y="100" fill="#ffffff" fill-opacity="0.45" font-size="12">アプリに届くもの</text>
+  <text x="532" y="122" fill="#f87171" font-size="13" font-weight="700">日時だけ</text>
+
+  <!-- 後 -->
+  <line x1="192" y1="196" x2="244" y2="232" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="252" y="196" fill="#60a5fa" font-size="12">直した後</text>
+  <rect x="252" y="204" width="210" height="64" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="357" y="232" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">位置情報の権限を取り</text>
+  <text x="357" y="252" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">原本を要求する</text>
+  <line x1="466" y1="236" x2="508" y2="236" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="516" y="204" width="180" height="64" rx="10" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="532" y="232" fill="#ffffff" fill-opacity="0.6" font-size="12">アプリに届くもの</text>
+  <text x="532" y="254" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">日時 + 座標</text>
+</svg>

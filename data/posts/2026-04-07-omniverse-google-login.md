@@ -6,6 +6,8 @@ projects: [omniverse]
 
 アカウント追加は、アプリ内の WebView でログインしてもらう方式。ここで「Google でログイン」を選ぶと白画面になっていた。前日から 2 日かけて直した。
 
+![Google 認証のポップアップを、別の WebView で受ける](/devlog/2026-04-07-omniverse-google-login/popup-webview.svg)
+
 | 試したこと | 結果 |
 |---|---|
 | User-Agent の Chrome を 120 から 131 に | 直らず |

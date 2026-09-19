@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.45"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">つながり調査のまわりに足したもの</text>
+
+  <rect x="24" y="130" width="160" height="72" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="104" y="162" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">つながり調査</text>
+  <text x="104" y="183" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">数時間〜数日</text>
+
+  <!-- 専用ログ -->
+  <line x1="184" y1="148" x2="268" y2="98" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="270" y="64" width="200" height="60" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="286" y="90" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">調査専用のログ</text>
+  <text x="286" y="110" fill="#ffffff" fill-opacity="0.6" font-size="11">1 件 1 行・常に書く</text>
+  <text x="490" y="90" fill="#ffffff" fill-opacity="0.6" font-size="12">2MB で 2 万件近く残る</text>
+  <text x="490" y="110" fill="#f87171" font-size="11">通信ログは 40 分ぶんだった</text>
+
+  <!-- CSV -->
+  <line x1="184" y1="166" x2="268" y2="166" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" marker-end="url(#g)"/>
+  <rect x="270" y="142" width="200" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="370" y="171" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">アプリ内の SQLite</text>
+  <line x1="470" y1="166" x2="524" y2="166" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="526" y="142" width="170" height="48" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="611" y="171" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">CSV に書き出し</text>
+  <text x="611" y="210" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">500 件ずつ / BOM 付き</text>
+
+  <!-- 自動取得 -->
+  <line x1="184" y1="184" x2="268" y2="254" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="270" y="236" width="200" height="48" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="370" y="265" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">タイムラインの自動取得</text>
+  <text x="490" y="265" fill="#60a5fa" font-size="12" font-weight="700">調査中は止める</text>
+</svg>

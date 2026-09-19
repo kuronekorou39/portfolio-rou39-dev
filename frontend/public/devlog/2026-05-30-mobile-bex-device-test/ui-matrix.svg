@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" font-family="system-ui, sans-serif">
+  <rect width="720" height="260" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">拡張機能の UI 10 種類: 実機での結果</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">Pixel 9a / Chromium 147</text>
+
+  <g font-size="11" text-anchor="middle">
+    <!-- 1 段目 -->
+    <rect x="24" y="64" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="87" y="96" fill="#ffffff" fill-opacity="0.85">コンテンツスクリプト</text>
+    <rect x="160" y="64" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="223" y="96" fill="#ffffff" fill-opacity="0.85">ポップアップ</text>
+    <rect x="296" y="64" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="359" y="96" fill="#ffffff" fill-opacity="0.85">サイドパネル</text>
+    <rect x="432" y="64" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="495" y="96" fill="#ffffff" fill-opacity="0.85">全画面タブ</text>
+    <rect x="568" y="64" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="631" y="96" fill="#ffffff" fill-opacity="0.85">設定ページ</text>
+    <!-- 2 段目 -->
+    <rect x="24" y="152" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="87" y="184" fill="#ffffff" fill-opacity="0.85">通知</text>
+    <rect x="160" y="152" width="126" height="76" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="223" y="184" fill="#ffffff" fill-opacity="0.85">新規タブの差し替え</text>
+    <rect x="296" y="152" width="126" height="76" rx="8" fill="none" stroke="#60a5fa" stroke-opacity="0.6" stroke-dasharray="4 4"/>
+    <text x="359" y="184" fill="#ffffff" fill-opacity="0.85">コンテキストメニュー</text>
+    <rect x="432" y="152" width="126" height="76" rx="8" fill="#f87171" fill-opacity="0.18"/>
+    <text x="495" y="184" fill="#ffffff" fill-opacity="0.85">DevTools パネル</text>
+    <rect x="568" y="152" width="126" height="76" rx="8" fill="#f87171" fill-opacity="0.18"/>
+    <text x="631" y="184" fill="#ffffff" fill-opacity="0.85">アドレスバー</text>
+  </g>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <text x="87" y="120" fill="#60a5fa">PASS</text>
+    <text x="223" y="120" fill="#60a5fa">PASS</text>
+    <text x="359" y="120" fill="#60a5fa">PASS</text>
+    <text x="495" y="120" fill="#60a5fa">PASS</text>
+    <text x="631" y="120" fill="#60a5fa">PASS</text>
+    <text x="87" y="208" fill="#60a5fa">PASS</text>
+    <text x="223" y="208" fill="#60a5fa">PASS</text>
+    <text x="359" y="208" fill="#60a5fa">部分</text>
+    <text x="495" y="208" fill="#f87171">FAIL</text>
+    <text x="631" y="208" fill="#f87171">FAIL</text>
+  </g>
+</svg>

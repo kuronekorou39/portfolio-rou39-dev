@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowDim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">同じ vcode のコアを、アプリと Web 版で使う</text>
+
+  <!-- コア -->
+  <rect x="24" y="112" width="220" height="108" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="140" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">vcode のコア</text>
+  <text x="40" y="164" fill="#ffffff" fill-opacity="0.45" font-size="12">pure Rust / 依存ゼロ</text>
+  <text x="40" y="190" fill="#ffffff" fill-opacity="0.6" font-size="12">フレーム生成・回転</text>
+  <text x="40" y="208" fill="#ffffff" fill-opacity="0.6" font-size="12">全探索スキャン</text>
+
+  <!-- 矢印 -->
+  <line x1="254" y1="146" x2="430" y2="106" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowDim)"/>
+  <text x="330" y="112" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="middle">FFI</text>
+  <line x1="254" y1="186" x2="430" y2="226" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="330" y="234" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">WASM</text>
+
+  <!-- アプリ -->
+  <rect x="440" y="64" width="256" height="84" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="456" y="92" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">スマホアプリ</text>
+  <text x="456" y="124" fill="#ffffff" fill-opacity="0.6" font-size="12">V送信 / V受信</text>
+
+  <!-- PWA -->
+  <rect x="440" y="176" width="256" height="100" rx="10" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="456" y="204" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">Web 版 (PWA)</text>
+  <text x="456" y="232" fill="#ffffff" fill-opacity="0.6" font-size="12">送信 / 受信 (QR)</text>
+  <text x="456" y="258" fill="#60a5fa" font-size="12" font-weight="700">＋ V送信 / V受信</text>
+</svg>

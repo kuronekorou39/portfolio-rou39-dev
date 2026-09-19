@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 枠の移動とリサイズがマウス専用で、タッチやリモートデスクトップ越しでは動かせなかった。操作を Pointer Events に置き換え、あわせて枠ごとの見た目の調整を足した。
 
+![整形モードと、枠ごとの不透明度・画質調整](/devlog/2026-06-05-parallel-stream-pointer-events/shape-mode.svg)
+
 | 変更 | 中身 |
 |---|---|
 | Pointer Events 化 | ポインタを捕捉するので iframe の上でもドラッグが追従する。覆い用のシールドは撤去 |

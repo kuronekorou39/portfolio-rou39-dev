@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8b8e"/>
+    </marker>
+  </defs>
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">音量の書き合いと、350ms の無視</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">下へ向かって時間が進む</text>
+
+  <!-- 前 -->
+  <rect x="24" y="56" width="316" height="260" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">前</text>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="90" y="106">拡張</text>
+    <text x="274" y="106">サイト</text>
+  </g>
+  <g stroke="#ffffff" stroke-opacity="0.2" stroke-width="2">
+    <line x1="90" y1="116" x2="90" y2="272"/>
+    <line x1="274" y1="116" x2="274" y2="272"/>
+  </g>
+  <g stroke="#f87171" stroke-width="2">
+    <line x1="94" y1="130" x2="268" y2="150" marker-end="url(#arrow-red)"/>
+    <line x1="270" y1="164" x2="96" y2="184" marker-end="url(#arrow-red)"/>
+    <line x1="94" y1="198" x2="268" y2="218" marker-end="url(#arrow-red)"/>
+    <line x1="270" y1="232" x2="96" y2="252" marker-end="url(#arrow-red)"/>
+  </g>
+  <text x="182" y="300" fill="#f87171" font-size="12" font-weight="700" text-anchor="middle">当て直しと戻しが続き、枠がカクつく</text>
+
+  <!-- 後 -->
+  <rect x="380" y="56" width="316" height="260" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="396" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">後</text>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="446" y="106">拡張</text>
+    <text x="630" y="106">サイト</text>
+  </g>
+  <g stroke="#ffffff" stroke-opacity="0.2" stroke-width="2">
+    <line x1="446" y1="116" x2="446" y2="272"/>
+    <line x1="630" y1="116" x2="630" y2="272"/>
+  </g>
+  <rect x="436" y="130" width="20" height="92" rx="4" fill="#60a5fa" fill-opacity="0.5"/>
+  <line x1="458" y1="130" x2="624" y2="150" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="626" y1="164" x2="462" y2="184" stroke="#8a8b8e" stroke-width="2" marker-end="url(#arrow-dim)"/>
+  <text x="470" y="212" fill="#60a5fa" font-size="12" font-weight="700">書いた直後 350ms は無視</text>
+  <text x="538" y="300" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">書き合いにならない</text>
+</svg>

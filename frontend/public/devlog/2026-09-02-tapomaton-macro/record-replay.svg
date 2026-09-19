@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="330" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">マクロ: 座標だけでなく「何を押したか」も残す</text>
+
+  <!-- 記録 -->
+  <text x="24" y="76" fill="#ffffff" fill-opacity="0.45" font-size="12">記録</text>
+  <rect x="24" y="86" width="160" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="104" y="125" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">手本のタップ</text>
+  <rect x="232" y="86" width="210" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="337" y="115" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">透明なオーバーレイ</text>
+  <text x="337" y="137" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">拾って、アプリへ流し直す</text>
+  <rect x="490" y="86" width="206" height="68" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="593" y="115" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">1 手の記録</text>
+  <text x="593" y="137" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">座標 ＋ ノードの id / テキスト</text>
+
+  <!-- 再生 -->
+  <text x="24" y="206" fill="#ffffff" fill-opacity="0.45" font-size="12">再生</text>
+  <rect x="24" y="216" width="160" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="104" y="255" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">記録の 1 手</text>
+  <rect x="232" y="216" width="210" height="68" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="337" y="245" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">いまの画面から探し直す</text>
+  <text x="337" y="267" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">id / テキストで照合</text>
+  <rect x="490" y="190" width="206" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="506" y="221" fill="#ffffff" fill-opacity="0.85" font-size="13">あり → そのノードを押す</text>
+  <rect x="490" y="258" width="206" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="506" y="289" fill="#ffffff" fill-opacity="0.6" font-size="13">無し → 記録座標を押す</text>
+
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="188" y1="120" x2="224" y2="120" marker-end="url(#arrow)"/>
+    <line x1="446" y1="120" x2="482" y2="120" marker-end="url(#arrow)"/>
+    <line x1="188" y1="250" x2="224" y2="250" marker-end="url(#arrow)"/>
+    <line x1="446" y1="240" x2="482" y2="220" marker-end="url(#arrow)"/>
+    <line x1="446" y1="260" x2="482" y2="280" marker-end="url(#arrow)"/>
+  </g>
+</svg>

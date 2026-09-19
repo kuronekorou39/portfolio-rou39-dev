@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 296" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="296" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">出題者が旧 Safari に渡す ICE 候補</text>
+
+  <!-- 直す前 -->
+  <rect x="24" y="64" width="324" height="190" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="90" fill="#f87171" font-size="12" font-weight="700">直す前</text>
+  <rect x="40" y="104" width="292" height="36" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="186" y="127" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">候補は .local(mDNS)</text>
+  <line x1="186" y1="142" x2="186" y2="162" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <rect x="40" y="166" width="292" height="36" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="186" y="189" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">旧 Safari は解決できない</text>
+  <text x="186" y="234" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">ICE が checking のまま</text>
+
+  <!-- 互換モード -->
+  <rect x="372" y="64" width="324" height="190" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="388" y="90" fill="#60a5fa" font-size="12" font-weight="700">互換モード</text>
+  <rect x="388" y="104" width="292" height="36" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="534" y="127" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">マイク許可を一度取る</text>
+  <line x1="534" y1="142" x2="534" y2="162" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="388" y="166" width="292" height="36" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="534" y="189" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">実 IP の候補で offer を作り直す</text>
+  <text x="534" y="234" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">旧 Safari が解決できる</text>
+
+  <text x="372" y="278" fill="#ffffff" fill-opacity="0.4" font-size="11">マイクの音声は使わない</text>
+</svg>

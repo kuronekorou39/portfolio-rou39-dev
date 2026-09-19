@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">4択の選択肢が回答者のボタンに出るまで</text>
+
+  <!-- 出題者 -->
+  <rect x="24" y="64" width="250" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">出題者の端末</text>
+  <rect x="40" y="104" width="218" height="140" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="54" y="128" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">問題データ</text>
+  <text x="54" y="154" fill="#ffffff" fill-opacity="0.6" font-size="12">問題文 / 答え</text>
+  <text x="54" y="180" fill="#60a5fa" font-size="12" font-weight="700">＋ 形式(早押し / ○× / 4択)</text>
+  <text x="54" y="204" fill="#60a5fa" font-size="12" font-weight="700">＋ 選択肢 A〜D</text>
+  <text x="54" y="230" fill="#ffffff" fill-opacity="0.4" font-size="11">青字が今回足した項目</text>
+
+  <!-- 配信 -->
+  <line x1="284" y1="164" x2="426" y2="164" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="355" y="150" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">全員に配信</text>
+  <text x="355" y="186" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">P2P / プロトコル v5</text>
+
+  <!-- 回答者 -->
+  <rect x="436" y="64" width="260" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="452" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">回答者の画面</text>
+  <g font-size="13" font-weight="700" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <rect x="452" y="104" width="108" height="62" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="506" y="140">A</text>
+    <rect x="572" y="104" width="108" height="62" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="626" y="140">B</text>
+    <rect x="452" y="178" width="108" height="62" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="506" y="214">C</text>
+    <rect x="572" y="178" width="108" height="62" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="626" y="214">D</text>
+  </g>
+</svg>

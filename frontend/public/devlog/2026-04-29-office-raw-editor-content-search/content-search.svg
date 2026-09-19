@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ファイルツリー: 内容検索・件数・サイズの濃淡</text>
+
+  <rect x="24" y="60" width="672" height="236" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <!-- 検索欄 -->
+  <rect x="40" y="76" width="640" height="34" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="54" y="98" fill="#60a5fa" font-size="13" font-weight="700">ファイルの内容を検索</text>
+  <text x="666" y="98" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">Ctrl+Shift+F</text>
+
+  <!-- 見出し -->
+  <text x="54" y="136" fill="#ffffff" fill-opacity="0.4" font-size="11">ファイル</text>
+  <text x="520" y="136" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">サイズ</text>
+  <text x="666" y="136" fill="#60a5fa" font-size="11" font-weight="700" text-anchor="end">ヒット件数</text>
+  <line x1="40" y1="144" x2="680" y2="144" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <!-- 行 -->
+  <rect x="40" y="150" width="640" height="30" rx="6" fill="#60a5fa" fill-opacity="0.12"/>
+  <text x="54" y="170" fill="#ffffff" fill-opacity="0.9" font-size="13" font-weight="700">document.xml</text>
+  <rect x="440" y="154" width="90" height="22" rx="4" fill="#60a5fa" fill-opacity="0.6"/>
+  <rect x="610" y="154" width="60" height="22" rx="11" fill="#60a5fa" fill-opacity="0.3"/>
+  <text x="640" y="170" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">件数</text>
+
+  <text x="54" y="204" fill="#ffffff" fill-opacity="0.5" font-size="13">styles.xml</text>
+  <rect x="440" y="188" width="90" height="22" rx="4" fill="#60a5fa" fill-opacity="0.25"/>
+
+  <rect x="40" y="218" width="640" height="30" rx="6" fill="#60a5fa" fill-opacity="0.12"/>
+  <text x="54" y="238" fill="#ffffff" fill-opacity="0.5" font-size="13">settings.xml</text>
+  <rect x="440" y="222" width="90" height="22" rx="4" fill="#60a5fa" fill-opacity="0.1"/>
+  <rect x="610" y="222" width="60" height="22" rx="11" fill="#60a5fa" fill-opacity="0.3"/>
+  <text x="640" y="238" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">件数</text>
+
+  <!-- ステータスバー -->
+  <line x1="40" y1="258" x2="680" y2="258" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="54" y="280" fill="#ffffff" fill-opacity="0.4" font-size="11">ステータスバー</text>
+  <text x="666" y="280" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="end">ヒットの合計</text>
+  <text x="240" y="170" fill="#ffffff" fill-opacity="0.4" font-size="11">主要ファイルは太字</text>
+  <text x="426" y="204" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">大きいほど濃い</text>
+</svg>

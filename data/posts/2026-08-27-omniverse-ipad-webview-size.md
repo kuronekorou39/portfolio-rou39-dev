@@ -6,6 +6,8 @@ projects: [omniverse]
 
 iPad で X の投稿画面がロゴのまま止まり、「エディタが見つからない」で失敗していた。Safari では同じ URL が普通に開くので、X 側の仕様変更ではない。
 
+![投稿用 WebView の大きさの比較](/devlog/2026-08-27-omniverse-ipad-webview-size/webview-size.svg)
+
 | 端末 | 見えない WebView のサイズ | UA | 結果 |
 |---|---|---|---|
 | iPhone | 約 393x852(未指定だと画面サイズになる) | iPhone | 釣り合う |

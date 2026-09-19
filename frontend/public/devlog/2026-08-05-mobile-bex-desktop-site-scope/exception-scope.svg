@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">PC 表示にする例外の範囲</text>
+
+  <!-- 前 -->
+  <text x="24" y="70" fill="#f87171" font-size="12" font-weight="700">前: ドメイン単位</text>
+  <rect x="24" y="82" width="324" height="204" rx="10" fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.7"/>
+  <text x="40" y="108" fill="#f87171" font-size="13" font-weight="700">[*.]google.com = PC 表示</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="40" y="124" width="292" height="44" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.7"/>
+    <text x="186" y="151" fill="#f87171" font-weight="700">Google 検索まで PC 版</text>
+    <rect x="40" y="178" width="292" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="186" y="205" fill="#ffffff" fill-opacity="0.85">ウェブストア(新)</text>
+    <rect x="40" y="232" width="292" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="186" y="259" fill="#ffffff" fill-opacity="0.85">ウェブストア(旧)</text>
+  </g>
+
+  <!-- 後 -->
+  <text x="372" y="70" fill="#60a5fa" font-size="12" font-weight="700">後: ホスト単位</text>
+  <rect x="372" y="82" width="324" height="204" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="388" y="108" fill="#ffffff" fill-opacity="0.45" font-size="13">google.com</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="388" y="124" width="292" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+    <text x="534" y="151" fill="#ffffff" fill-opacity="0.85">Google 検索はモバイル表示</text>
+    <rect x="388" y="178" width="292" height="44" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa"/>
+    <text x="534" y="205" fill="#ffffff" fill-opacity="0.85" font-weight="700">ウェブストア(新)= PC 表示</text>
+    <rect x="388" y="232" width="292" height="44" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa"/>
+    <text x="534" y="259" fill="#ffffff" fill-opacity="0.85" font-weight="700">ウェブストア(旧)= PC 表示</text>
+  </g>
+</svg>

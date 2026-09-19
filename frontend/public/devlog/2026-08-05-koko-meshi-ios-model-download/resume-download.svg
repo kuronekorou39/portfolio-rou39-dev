@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">iOS でのモデル(2.4GB)のダウンロード</text>
+
+  <!-- 前 -->
+  <text x="24" y="78" fill="#ffffff" fill-opacity="0.6" font-size="13">直す前: iOS のバックグラウンド転送</text>
+  <rect x="24" y="90" width="480" height="30" rx="4" fill="#ffffff" fill-opacity="0.18"/>
+  <text x="38" y="110" fill="#ffffff" fill-opacity="0.85" font-size="12">2.4GB を落としきる</text>
+  <rect x="516" y="86" width="180" height="38" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="606" y="110" fill="#f87171" font-size="12" font-weight="700" text-anchor="middle">ファイルを作れず失敗</text>
+  <path d="M606 124 L606 140 L40 140 L40 124" fill="none" stroke="#f87171" stroke-opacity="0.7" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="24" y="162" fill="#f87171" font-size="12">失敗のたびに最初から。4 回・約 10GB</text>
+
+  <!-- 後 -->
+  <text x="24" y="210" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">直した後: iOS だけ自前のダウンロード</text>
+  <rect x="24" y="222" width="256" height="30" rx="4" fill="#60a5fa" fill-opacity="0.45"/>
+  <rect x="288" y="222" width="216" height="30" rx="4" fill="#60a5fa" fill-opacity="0.45"/>
+  <text x="38" y="242" fill="#ffffff" fill-opacity="0.85" font-size="12">一時ファイルに書く</text>
+  <rect x="516" y="218" width="180" height="38" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="606" y="242" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">完了時にリネーム</text>
+  <line x1="284" y1="214" x2="284" y2="260" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="4 5"/>
+  <text x="284" y="278" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">中断しても続きから</text>
+  <text x="696" y="278" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">90 秒無音なら打ち切る</text>
+</svg>

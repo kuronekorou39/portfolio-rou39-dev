@@ -6,6 +6,8 @@ projects: [hayabuzz]
 
 iPhone 6(iOS 12 の Safari)が部屋に入れなかった。失敗の原因を画面で特定できるよう、トラッカーの接続、offer / answer の送受信、ICE の状態遷移、握りつぶしていた例外を時系列で記録し、接続失敗の画面に出すようにした。
 
+![出題者が旧 Safari に渡す ICE 候補](/devlog/2026-08-22-hayabuzz-ios12-connection/ice-candidates.svg)
+
 | 不具合 | 原因 | 直し方 |
 |---|---|---|
 | シグナリング後に ICE が checking のまま | 旧 WebRTC は mDNS(.local)の候補を解決できない | 出題者側でマイク許可を一度取り、実 IP の候補で offer を作り直す互換モード |

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="270" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">safeUnmute(): 解除に失敗したらミュートに戻す</text>
+
+  <g font-size="13" text-anchor="middle">
+    <rect x="24" y="116" width="134" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="91" y="147" fill="#ffffff" fill-opacity="0.7">再生中かを記憶</text>
+    <line x1="162" y1="142" x2="186" y2="142" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow-dim)"/>
+    <rect x="190" y="116" width="120" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="250" y="147" fill="#ffffff" fill-opacity="0.7">ミュート解除</text>
+    <line x1="314" y1="142" x2="338" y2="142" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow-dim)"/>
+    <rect x="342" y="116" width="134" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.3"/>
+    <text x="409" y="147" fill="#ffffff" fill-opacity="0.85" font-weight="700">直後に paused ?</text>
+
+    <line x1="480" y1="130" x2="524" y2="102" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow-dim)"/>
+    <text x="490" y="98" fill="#ffffff" fill-opacity="0.5" font-size="12">いいえ</text>
+    <rect x="530" y="68" width="166" height="52" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="613" y="99" fill="#ffffff" fill-opacity="0.7">保存した音量で鳴らす</text>
+
+    <line x1="480" y1="154" x2="524" y2="184" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="490" y="200" fill="#60a5fa" font-size="12" font-weight="700">はい</text>
+    <rect x="530" y="164" width="166" height="60" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="613" y="190" fill="#60a5fa" font-weight="700">ミュートに戻して</text>
+    <text x="613" y="210" fill="#60a5fa" font-weight="700">再生を再開</text>
+  </g>
+  <text x="696" y="248" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">音は出ないが、映像は止まらない</text>
+</svg>

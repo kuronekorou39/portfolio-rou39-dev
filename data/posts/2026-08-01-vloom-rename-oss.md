@@ -6,6 +6,8 @@ projects: [vloom]
 
 リポジトリ名を beyond-qr から vloom に変え、公開の準備をした。bloom の b を v に替えた名前で、v-loom (織機) とも読める。光の断片を織り上げて元のファイルに戻す動きを表す。
 
+![beyond-qr から Vloom へ。名前を変えた範囲](/devlog/2026-08-01-vloom-rename-oss/rename.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 改称 | 表示名・アイコンに加え、Rust クレート・Dart パッケージ・アプリ ID も Vloom に統一 |

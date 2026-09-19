@@ -6,6 +6,8 @@ projects: [office-raw-editor]
 
 Office Raw Editor は、Word / Excel / PowerPoint のファイルを開いて内部の XML を直接編集する GUI ツール。前日から 2 日で、中身の文字列で探す機能とツリーの見やすさに手を入れた。
 
+![ファイルツリー: 内容検索・件数・サイズの濃淡](/devlog/2026-04-29-office-raw-editor-content-search/content-search.svg)
+
 | 変更 | 中身 |
 |---|---|
 | ファイル内容検索 | 指定した文字列を含むファイルをスキャンし、ツリー上でハイライトまたはフィルタ表示する。Ctrl+Shift+F で検索欄へ移る |

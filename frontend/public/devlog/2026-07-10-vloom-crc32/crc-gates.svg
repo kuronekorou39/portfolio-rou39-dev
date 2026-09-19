@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ゴミのパケットを止める関門</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="74" fill="#ffffff" fill-opacity="0.45" font-size="12">直す前 (vcode v0)</text>
+  <g text-anchor="middle">
+    <rect x="24" y="84" width="150" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="99" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">ゴミのパケット</text>
+    <text x="99" y="136" fill="#ffffff" fill-opacity="0.45" font-size="11">25 通り × 長時間</text>
+    <rect x="198" y="84" width="150" height="68" rx="8" fill="#f87171" fill-opacity="0.08" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="273" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">ブロック CRC-16</text>
+    <text x="273" y="136" fill="#f87171" font-size="11" font-weight="700">1/65536 ですり抜け</text>
+    <rect x="372" y="84" width="150" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="447" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">RaptorQ の復元</text>
+    <text x="447" y="136" fill="#f87171" font-size="11" font-weight="700">汚染</text>
+    <rect x="546" y="84" width="150" height="68" rx="8" fill="#f87171" fill-opacity="0.08" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="621" y="114" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">壊れたファイル</text>
+    <text x="621" y="136" fill="#f87171" font-size="11" font-weight="700">そのまま保存</text>
+  </g>
+  <g stroke="#f87171" stroke-width="2">
+    <line x1="176" y1="118" x2="194" y2="118" marker-end="url(#arrowRed)"/>
+    <line x1="350" y1="118" x2="368" y2="118" marker-end="url(#arrowRed)"/>
+    <line x1="524" y1="118" x2="542" y2="118" marker-end="url(#arrowRed)"/>
+  </g>
+
+  <!-- 直した後 -->
+  <text x="24" y="202" fill="#ffffff" fill-opacity="0.45" font-size="12">直した後 (vcode v1)</text>
+  <g text-anchor="middle">
+    <rect x="24" y="212" width="150" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="99" y="251" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">ゴミのパケット</text>
+    <rect x="198" y="212" width="150" height="68" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="273" y="242" fill="#60a5fa" font-size="13" font-weight="700">ブロック CRC-32</text>
+    <text x="273" y="264" fill="#ffffff" fill-opacity="0.6" font-size="11">ここで棄却</text>
+    <rect x="372" y="212" width="150" height="68" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="447" y="251" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">RaptorQ の復元</text>
+    <rect x="546" y="212" width="150" height="68" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="621" y="242" fill="#60a5fa" font-size="13" font-weight="700">全体の CRC-32</text>
+    <text x="621" y="264" fill="#ffffff" fill-opacity="0.6" font-size="11">不一致なら保存しない</text>
+  </g>
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="176" y1="246" x2="194" y2="246" marker-end="url(#arrow)"/>
+    <line x1="350" y1="246" x2="368" y2="246" marker-end="url(#arrow)"/>
+    <line x1="524" y1="246" x2="542" y2="246" marker-end="url(#arrow)"/>
+  </g>
+</svg>

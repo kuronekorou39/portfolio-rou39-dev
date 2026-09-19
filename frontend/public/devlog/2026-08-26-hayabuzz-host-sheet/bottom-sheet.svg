@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="400" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">出題者画面の参加者シート</text>
+
+  <!-- 閉じているとき -->
+  <rect x="90" y="56" width="200" height="300" rx="16" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="104" y="76" width="172" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="190" y="146" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="middle">出題カード</text>
+  <rect x="98" y="308" width="184" height="40" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <rect x="174" y="314" width="32" height="4" rx="2" fill="#60a5fa"/>
+  <text x="190" y="338" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">参加者 3 人</text>
+  <text x="190" y="382" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">閉じているとき</text>
+
+  <!-- 開閉 -->
+  <line x1="306" y1="206" x2="414" y2="206" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="360" y="192" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">取っ手をタップ</text>
+  <text x="360" y="228" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">0.28 秒のスライド</text>
+
+  <!-- 開いたとき -->
+  <rect x="430" y="56" width="200" height="300" rx="16" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="444" y="76" width="172" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="530" y="120" fill="#ffffff" fill-opacity="0.3" font-size="12" text-anchor="middle">出題カード</text>
+  <rect x="438" y="150" width="184" height="198" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <rect x="514" y="156" width="32" height="4" rx="2" fill="#60a5fa"/>
+  <text x="530" y="180" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">参加者 3 人</text>
+  <g font-size="12">
+    <rect x="450" y="192" width="160" height="28" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <text x="462" y="211" fill="#ffffff" fill-opacity="0.85">A さん</text>
+    <text x="598" y="211" fill="#ffffff" fill-opacity="0.85" font-weight="700" text-anchor="end">3</text>
+    <rect x="450" y="226" width="160" height="28" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <text x="462" y="245" fill="#ffffff" fill-opacity="0.85">B さん</text>
+    <text x="598" y="245" fill="#ffffff" fill-opacity="0.85" font-weight="700" text-anchor="end">1</text>
+    <rect x="450" y="260" width="160" height="28" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <text x="462" y="279" fill="#ffffff" fill-opacity="0.85">C さん</text>
+    <text x="598" y="279" fill="#ffffff" fill-opacity="0.85" font-weight="700" text-anchor="end">5</text>
+  </g>
+  <text x="530" y="316" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">履歴 / 結果発表 / リセット</text>
+  <text x="530" y="382" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">開いたとき</text>
+</svg>

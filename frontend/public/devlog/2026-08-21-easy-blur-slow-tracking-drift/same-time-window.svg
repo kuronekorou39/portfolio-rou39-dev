@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">経路の点を「同じ時刻」とみなす幅</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">0.1 倍速では 200ms = 実時間 2 秒</text>
+
+  <!-- 前 -->
+  <text x="24" y="98" fill="#f87171" font-size="13" font-weight="700">前 200ms</text>
+  <g fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.7">
+    <rect x="150" y="72" width="160" height="40" rx="6"/>
+    <rect x="310" y="72" width="160" height="40" rx="6"/>
+    <rect x="470" y="72" width="160" height="40" rx="6"/>
+  </g>
+  <g fill="#f87171">
+    <circle cx="230" cy="92" r="5"/><circle cx="390" cy="92" r="5"/><circle cx="550" cy="92" r="5"/>
+  </g>
+  <text x="150" y="134" fill="#f87171" font-size="12">2 秒ぶんのドラッグが 1 点に潰れる</text>
+
+  <!-- 後 -->
+  <text x="24" y="198" fill="#60a5fa" font-size="13" font-weight="700">後 60ms</text>
+  <g fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.7">
+    <rect x="150" y="172" width="48" height="40" rx="6"/><rect x="198" y="172" width="48" height="40" rx="6"/>
+    <rect x="246" y="172" width="48" height="40" rx="6"/><rect x="294" y="172" width="48" height="40" rx="6"/>
+    <rect x="342" y="172" width="48" height="40" rx="6"/><rect x="390" y="172" width="48" height="40" rx="6"/>
+    <rect x="438" y="172" width="48" height="40" rx="6"/><rect x="486" y="172" width="48" height="40" rx="6"/>
+    <rect x="534" y="172" width="48" height="40" rx="6"/><rect x="582" y="172" width="48" height="40" rx="6"/>
+  </g>
+  <g fill="#60a5fa">
+    <circle cx="174" cy="192" r="4"/><circle cx="222" cy="192" r="4"/><circle cx="270" cy="192" r="4"/>
+    <circle cx="318" cy="192" r="4"/><circle cx="366" cy="192" r="4"/><circle cx="414" cy="192" r="4"/>
+    <circle cx="462" cy="192" r="4"/><circle cx="510" cy="192" r="4"/><circle cx="558" cy="192" r="4"/>
+    <circle cx="606" cy="192" r="4"/>
+  </g>
+  <text x="150" y="234" fill="#ffffff" fill-opacity="0.6" font-size="12">約 2 フレームごとに点が残る</text>
+
+  <!-- 軸 -->
+  <line x1="150" y1="256" x2="630" y2="256" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2"/>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.4" text-anchor="middle">
+    <text x="150" y="278">0</text>
+    <text x="310" y="278">200</text>
+    <text x="470" y="278">400</text>
+    <text x="630" y="278">600ms</text>
+  </g>
+  <text x="696" y="260" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">動画の時刻</text>
+</svg>

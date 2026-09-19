@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">「1番だけ」モード: 波形から切断点を探す</text>
+
+  <!-- 探す範囲 50〜100 秒 -->
+  <rect x="240" y="92" width="200" height="136" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="340" y="82" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">探す範囲 50〜100 秒</text>
+
+  <!-- 波形 -->
+  <path d="M40 148V172M48 147V173M56 146V174M64 150V170M72 126V194M80 132V188M88 116V204M96 120V200M104 110V210M112 125V195M120 130V190M128 144V176M136 146V174M144 143V177M152 142V178M160 134V186M168 146V174M176 144V176M184 157V163M192 148V172M200 150V170M208 131V189M216 128V192M224 121V199M232 126V194M240 130V190M248 128V192M256 129V191M264 114V206M272 118V202M280 110V210M288 129V191M296 130V190M304 147V173M312 142V178M320 143V177M328 137V183M336 138V182M344 147V173M352 151V169M360 157V163M368 157V163M376 157V163" stroke="#ffffff" stroke-opacity="0.6" stroke-width="4" fill="none"/>
+  <path d="M384 154V166M392 146V174M400 131V189M408 134V186M416 130V190M424 131V189M432 124V196M440 114V206M448 115V205M456 113V207M464 131V189M472 132V188M480 148V172M488 138V182M496 143V177M504 133V187M512 141V179M520 145V175M528 153V167M536 157V163M544 148V172M552 144V176M560 126V194M568 130V190M576 121V199M584 135V185M592 128V192M600 132V188M608 119V201M616 115V205M624 112V208M632 117V203M640 131V189M648 135V185M656 147V173M664 136V184M672 142V178M680 131V189" stroke="#ffffff" stroke-opacity="0.15" stroke-width="4" fill="none"/>
+
+  <!-- 切断点 -->
+  <line x1="376" y1="100" x2="376" y2="238" stroke="#60a5fa" stroke-width="2"/>
+  <text x="376" y="258" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">切断点 = 音量が最小の地点</text>
+  <line x1="388" y1="116" x2="452" y2="116" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="462" y="120" fill="#ffffff" fill-opacity="0.85" font-size="12">次の曲へ</text>
+
+  <text x="40" y="258" fill="#ffffff" fill-opacity="0.4" font-size="11">0 秒</text>
+  <text x="680" y="258" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">3 秒前からフェードアウト</text>
+</svg>

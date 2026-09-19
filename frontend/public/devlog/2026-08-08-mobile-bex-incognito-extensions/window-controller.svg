@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">拡張機能がウィンドウに届くまで</text>
+
+  <rect x="24" y="120" width="170" height="84" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="109" y="156" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">拡張機能</text>
+  <text x="109" y="180" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">chrome.tabs.query()</text>
+
+  <path d="M194 146 L222 146 L222 98 L258 98" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <path d="M194 178 L222 178 L222 226 L258 226" fill="none" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="456" y1="98" x2="494" y2="98" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#gray)"/>
+  <line x1="456" y1="226" x2="494" y2="226" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 通常 -->
+  <rect x="262" y="68" width="194" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="359" y="94" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">window controller</text>
+  <text x="359" y="114" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">元から登録済み</text>
+  <rect x="498" y="68" width="198" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="597" y="103" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">通常のウィンドウ</text>
+
+  <!-- シークレット -->
+  <rect x="262" y="196" width="194" height="60" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa"/>
+  <text x="359" y="222" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">window controller</text>
+  <text x="359" y="242" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">登録を追加</text>
+  <rect x="498" y="196" width="198" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="597" y="231" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">シークレットのウィンドウ</text>
+
+  <text x="359" y="168" fill="#f87171" font-size="12" text-anchor="middle">前: ここが無く、問い合わせで落ちた</text>
+  <line x1="359" y1="176" x2="359" y2="192" stroke="#f87171" stroke-width="2"/>
+</svg>

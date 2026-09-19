@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">表示範囲の前後にも、モザイクをかけ続ける</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">横軸は動画の時刻</text>
+
+  <!-- モザイクがかかる時間 -->
+  <text x="24" y="116" fill="#ffffff" fill-opacity="0.6" font-size="12">モザイク</text>
+  <line x1="110" y1="112" x2="690" y2="112" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+  <rect x="240" y="92" width="260" height="40" fill="#ffffff" fill-opacity="0.14"/>
+  <rect x="204" y="92" width="36" height="40" rx="4" fill="#60a5fa" fill-opacity="0.6"/>
+  <rect x="500" y="92" width="36" height="40" rx="4" fill="#60a5fa" fill-opacity="0.6"/>
+  <text x="370" y="117" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">表示範囲</text>
+  <g font-size="12" font-weight="700" fill="#60a5fa" text-anchor="middle">
+    <text x="222" y="80">100ms</text>
+    <text x="518" y="80">100ms</text>
+  </g>
+  <text x="556" y="117" fill="#60a5fa" font-size="12">安全マージン</text>
+
+  <g stroke="#ffffff" stroke-opacity="0.25" stroke-dasharray="4 4">
+    <line x1="240" y1="92" x2="240" y2="236"/>
+    <line x1="500" y1="92" x2="500" y2="236"/>
+  </g>
+
+  <!-- 経路 -->
+  <text x="24" y="186" fill="#ffffff" fill-opacity="0.6" font-size="12">経路</text>
+  <line x1="110" y1="182" x2="690" y2="182" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+  <g fill="#ffffff" fill-opacity="0.45">
+    <circle cx="300" cy="182" r="4"/><circle cx="350" cy="182" r="4"/><circle cx="410" cy="182" r="4"/><circle cx="640" cy="182" r="4"/>
+  </g>
+  <circle cx="240" cy="182" r="6" fill="#60a5fa"/>
+  <circle cx="500" cy="182" r="6" fill="#60a5fa"/>
+
+  <!-- 基準 -->
+  <text x="24" y="232" fill="#ffffff" fill-opacity="0.6" font-size="12">基準</text>
+  <line x1="110" y1="228" x2="690" y2="228" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+  <path d="M370 221 L377 228 L370 235 L363 228 z" fill="#ffffff" fill-opacity="0.45"/>
+  <g fill="#60a5fa">
+    <path d="M240 219 L249 228 L240 237 L231 228 z"/>
+    <path d="M500 219 L509 228 L500 237 L491 228 z"/>
+  </g>
+  <text x="370" y="272" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">開始 / 終了を決めた時刻に、点を置く</text>
+</svg>

@@ -6,6 +6,8 @@ projects: [omniverse]
 
 Android 専用だった OmniVerse を iOS でも動くようにした。iOS のプロジェクトを作り、パッケージ ID を両 OS で揃え、GitHub Actions を Android / iOS の並列ビルドにした。オーバーレイ表示は Android の機能なので、iOS では隠している。出してみると、Android 前提のコードが順に引っかかった。
 
+![1 つのコードから Android と iOS を並列にビルド](/devlog/2026-04-16-omniverse-ios-support/parallel-build.svg)
+
 | 版 | 不具合 | 直し方 |
 |---|---|---|
 | v1.13.1 | WebView を開くとクラッシュ | Android 専用の WebStorage 削除を OS で分岐 |

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ループ再生で「1 回」を数える仕組み</text>
+
+  <!-- 区間の繰り返し -->
+  <text x="24" y="92" fill="#ffffff" fill-opacity="0.6" font-size="13">区間のループ</text>
+  <g fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="150" y="70" width="84" height="34" rx="8"/>
+    <rect x="246" y="70" width="84" height="34" rx="8"/>
+    <rect x="342" y="70" width="84" height="34" rx="8"/>
+    <rect x="438" y="70" width="84" height="34" rx="8"/>
+    <rect x="534" y="70" width="84" height="34" rx="8"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">
+    <text x="192" y="92">A → B</text>
+    <text x="288" y="92">A → B</text>
+    <text x="384" y="92">A → B</text>
+    <text x="480" y="92">A → B</text>
+    <text x="576" y="92">A → B</text>
+  </g>
+
+  <line x1="384" y1="110" x2="384" y2="136" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="396" y="128" fill="#ffffff" fill-opacity="0.4" font-size="11">100ms ごとに加算</text>
+
+  <!-- 累積 -->
+  <text x="24" y="162" fill="#ffffff" fill-opacity="0.6" font-size="13">累積再生時間</text>
+  <rect x="150" y="144" width="468" height="26" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+  <rect x="150" y="144" width="350" height="26" rx="4" fill="#60a5fa" fill-opacity="0.65"/>
+  <line x1="618" y1="136" x2="618" y2="178" stroke="#60a5fa" stroke-width="2"/>
+  <text x="630" y="162" fill="#60a5fa" font-size="12" font-weight="700">しきい値</text>
+
+  <line x1="618" y1="182" x2="618" y2="210" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 結果 -->
+  <rect x="476" y="216" width="220" height="56" rx="10" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="586" y="240" fill="#60a5fa" font-size="14" font-weight="700" text-anchor="middle">再生回数 +1</text>
+  <text x="586" y="260" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">累積を戻して数え直す</text>
+
+  <text x="24" y="250" fill="#ffffff" fill-opacity="0.4" font-size="11">終了に備えて 5 秒ごとに保存</text>
+</svg>

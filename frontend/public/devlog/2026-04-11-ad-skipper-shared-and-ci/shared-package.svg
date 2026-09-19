@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">3 つの拡張が別々に持っていたコードを shared へ</text>
+
+  <!-- 直す前 -->
+  <text x="24" y="76" fill="#f87171" font-size="12" font-weight="700">直す前: 同じコードが 3 つ</text>
+  <g text-anchor="middle">
+    <rect x="24" y="90" width="96" height="176" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="72" y="116" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700">Twitch 版</text>
+    <rect x="132" y="90" width="96" height="176" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="180" y="116" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700">Prime 版</text>
+    <rect x="240" y="90" width="96" height="176" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="288" y="116" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700">YouTube 版</text>
+    <g font-size="11" fill="#f87171">
+      <rect x="32" y="132" width="80" height="50" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.5"/>
+      <text x="72" y="161">オーバーレイ</text>
+      <rect x="32" y="192" width="80" height="50" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.5"/>
+      <text x="72" y="221">ポップアップ</text>
+      <rect x="140" y="132" width="80" height="50" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.5"/>
+      <text x="180" y="161">オーバーレイ</text>
+      <rect x="140" y="192" width="80" height="50" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.5"/>
+      <text x="180" y="221">ポップアップ</text>
+      <rect x="248" y="132" width="80" height="50" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.5"/>
+      <text x="288" y="161">オーバーレイ</text>
+      <rect x="248" y="192" width="80" height="50" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.5"/>
+      <text x="288" y="221">ポップアップ</text>
+    </g>
+  </g>
+
+  <line x1="360" y1="64" x2="360" y2="270" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <!-- 直した後 -->
+  <text x="384" y="76" fill="#60a5fa" font-size="12" font-weight="700">直した後: 877 行を削除</text>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff" fill-opacity="0.85">
+    <rect x="384" y="90" width="96" height="44" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="432" y="117">Twitch 版</text>
+    <rect x="492" y="90" width="96" height="44" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="540" y="117">Prime 版</text>
+    <rect x="600" y="90" width="96" height="44" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="648" y="117">YouTube 版</text>
+  </g>
+  <line x1="432" y1="138" x2="432" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="540" y1="138" x2="540" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="648" y1="138" x2="648" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="384" y="172" width="312" height="94" rx="10" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="540" y="198" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">shared パッケージ</text>
+  <text x="540" y="224" fill="#ffffff" fill-opacity="0.7" font-size="12" text-anchor="middle">オーバーレイ / ポップアップの UI</text>
+  <text x="540" y="246" fill="#ffffff" fill-opacity="0.7" font-size="12" text-anchor="middle">広告の残り時間の解析 / 速度の調整</text>
+</svg>

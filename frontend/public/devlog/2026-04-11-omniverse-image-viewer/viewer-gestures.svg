@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">画像ビューアに足した操作</text>
+
+  <!-- ビューア -->
+  <rect x="24" y="56" width="300" height="264" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <line x1="24" y1="100" x2="324" y2="100" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="84" fill="#60a5fa" font-size="13" font-weight="700">120%</text>
+  <rect x="276" y="64" width="32" height="28" rx="6" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <path d="M292 70 L292 82 M286 77 L292 83 L298 77 M285 87 L299 87" stroke="#60a5fa" stroke-width="2" fill="none"/>
+  <rect x="64" y="160" width="220" height="110" rx="4" fill="#ffffff" fill-opacity="0.1"/>
+  <text x="174" y="220" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">画像</text>
+  <line x1="174" y1="154" x2="174" y2="128" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="174" y1="276" x2="174" y2="304" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 引き出し線 -->
+  <g stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1" fill="none">
+    <line x1="310" y1="70" x2="352" y2="70"/>
+    <path d="M56 92 L56 118 L352 118"/>
+    <line x1="286" y1="207" x2="352" y2="207"/>
+    <line x1="184" y1="282" x2="352" y2="282"/>
+  </g>
+  <text x="360" y="74" fill="#60a5fa" font-size="13" font-weight="700">保存ボタン</text>
+  <text x="360" y="93" fill="#ffffff" fill-opacity="0.6" font-size="12">Pictures/OmniVerse へ。保存先は設定で変更可</text>
+  <text x="360" y="122" fill="#60a5fa" font-size="13" font-weight="700">拡大率を表示</text>
+  <text x="360" y="141" fill="#ffffff" fill-opacity="0.6" font-size="12">5% 刻み</text>
+  <text x="360" y="211" fill="#60a5fa" font-size="13" font-weight="700">ダブルタップ</text>
+  <text x="360" y="230" fill="#ffffff" fill-opacity="0.6" font-size="12">拡大と 100% 戻し</text>
+  <text x="360" y="286" fill="#60a5fa" font-size="13" font-weight="700">上下スワイプで閉じる</text>
+  <text x="360" y="305" fill="#ffffff" fill-opacity="0.6" font-size="12">指に追従し、背景がフェード</text>
+  <text x="360" y="324" fill="#ffffff" fill-opacity="0.4" font-size="11">左右の端でさらに払っても閉じる</text>
+</svg>

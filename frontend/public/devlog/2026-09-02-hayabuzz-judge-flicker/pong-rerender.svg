@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.5"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="260" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">押下順の行がちらつくまでの経路</text>
+
+  <g font-size="13" text-anchor="middle">
+    <rect x="24" y="116" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="99" y="140" fill="#ffffff" fill-opacity="0.45" font-size="11">時刻同期</text>
+    <text x="99" y="160" fill="#ffffff" fill-opacity="0.85">pong を受信</text>
+
+    <rect x="206" y="116" width="110" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="261" y="149" fill="#ffffff" fill-opacity="0.85">再描画</text>
+
+    <rect x="348" y="116" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="423" y="149" fill="#ffffff" fill-opacity="0.85">全行を作り直す</text>
+  </g>
+  <line x1="178" y1="144" x2="200" y2="144" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" marker-end="url(#arrow-dim)"/>
+  <line x1="320" y1="144" x2="342" y2="144" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" marker-end="url(#arrow-dim)"/>
+
+  <!-- 前 -->
+  <line x1="502" y1="134" x2="534" y2="104" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="540" y="70" fill="#f87171" font-size="12" font-weight="700">前: 毎回ちらつく</text>
+  <rect x="540" y="78" width="156" height="48" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="618" y="107" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">全行で出現アニメ</text>
+
+  <!-- 後 -->
+  <line x1="502" y1="154" x2="534" y2="184" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="540" y="162" width="156" height="48" rx="8" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="618" y="191" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">新しい行だけアニメ</text>
+  <text x="540" y="230" fill="#60a5fa" font-size="12" font-weight="700">後: ちらつかない</text>
+</svg>

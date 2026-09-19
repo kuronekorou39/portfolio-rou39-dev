@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">右ドラッグでの移動と、弾幕設定のプリセット</text>
+
+  <!-- 枠の移動 -->
+  <rect x="24" y="64" width="200" height="112" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="5 4"/>
+  <rect x="176" y="160" width="220" height="124" rx="6" fill="#15161a" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <line x1="124" y1="120" x2="276" y2="214" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="286" y="240" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">右ドラッグで即移動</text>
+  <text x="286" y="262" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">長押し不要</text>
+  <text x="24" y="312" fill="#ffffff" fill-opacity="0.6" font-size="12">右クリック: 最前面へ</text>
+
+  <!-- 弾幕設定 -->
+  <rect x="452" y="64" width="244" height="252" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="468" y="90" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">弾幕設定</text>
+  <text x="468" y="120" fill="#ffffff" fill-opacity="0.6" font-size="12">適用先</text>
+  <rect x="528" y="104" width="152" height="24" rx="6" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="540" y="121" fill="#ffffff" fill-opacity="0.85" font-size="12">全体 / 各枠</text>
+
+  <rect x="468" y="140" width="212" height="84" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="480" y="160" fill="#ffffff" fill-opacity="0.4" font-size="11">種類別のグループ</text>
+  <g stroke="#ffffff" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round">
+    <line x1="480" y1="178" x2="668" y2="178"/>
+    <line x1="480" y1="194" x2="668" y2="194"/>
+    <line x1="480" y1="210" x2="668" y2="210"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.6">
+    <circle cx="600" cy="178" r="4"/>
+    <circle cx="540" cy="194" r="4"/>
+    <circle cx="630" cy="210" r="4"/>
+  </g>
+
+  <text x="468" y="250" fill="#60a5fa" font-size="12" font-weight="700">プリセット</text>
+  <g fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="468" y="262" width="64" height="28" rx="6"/>
+    <rect x="542" y="262" width="64" height="28" rx="6"/>
+    <rect x="616" y="262" width="64" height="28" rx="6"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="500" y="281">保存</text>
+    <text x="574" y="281">適用</text>
+    <text x="648" y="281">削除</text>
+  </g>
+</svg>

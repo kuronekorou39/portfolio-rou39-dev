@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.45"/>
+    </marker>
+  </defs>
+  <rect width="720" height="330" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">Bluesky の画像投稿: 401 が返ったあと</text>
+
+  <!-- アップロード -->
+  <rect x="24" y="126" width="180" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="114" y="159" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">画像をアップロード</text>
+  <line x1="204" y1="154" x2="250" y2="154" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" marker-end="url(#g)"/>
+
+  <!-- 401 -->
+  <rect x="252" y="126" width="150" height="56" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="327" y="150" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700" text-anchor="middle">401</text>
+  <text x="327" y="170" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">トークン期限切れ</text>
+
+  <!-- 直す前 -->
+  <line x1="402" y1="140" x2="466" y2="100" stroke="#f87171" stroke-width="2" marker-end="url(#r)"/>
+  <rect x="468" y="64" width="228" height="56" rx="8" fill="#f87171" fill-opacity="0.08" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="484" y="86" fill="#f87171" font-size="11" font-weight="700">直す前</text>
+  <text x="484" y="107" fill="#ffffff" fill-opacity="0.85" font-size="13">そのまま投稿が失敗</text>
+
+  <!-- 今回 -->
+  <line x1="402" y1="168" x2="466" y2="208" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="468" y="188" width="228" height="56" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="484" y="210" fill="#60a5fa" font-size="11" font-weight="700">今回</text>
+  <text x="484" y="231" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">セッションを更新して再試行</text>
+
+  <line x1="582" y1="244" x2="582" y2="264" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="468" y="266" width="228" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="484" y="293" fill="#ffffff" fill-opacity="0.6" font-size="12">残りの画像と本文も新しい認証で</text>
+</svg>

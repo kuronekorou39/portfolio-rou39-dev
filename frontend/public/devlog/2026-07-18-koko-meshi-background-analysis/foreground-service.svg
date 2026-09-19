@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 296" font-family="system-ui, sans-serif">
+  <rect width="720" height="296" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">解析の途中でホームへ戻ったとき</text>
+
+  <!-- ホームへ戻る位置 -->
+  <line x1="300" y1="78" x2="300" y2="232" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="4 5"/>
+  <text x="300" y="68" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">ホームへ戻る</text>
+
+  <!-- 前 -->
+  <text x="24" y="109" fill="#ffffff" fill-opacity="0.6" font-size="13">v0.5.0 まで</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="170" y="84" width="56" height="40" rx="8" fill="#ffffff" fill-opacity="0.18"/>
+    <text x="198" y="109" fill="#ffffff" fill-opacity="0.85">1</text>
+    <rect x="238" y="84" width="56" height="40" rx="8" fill="#ffffff" fill-opacity="0.18"/>
+    <text x="266" y="109" fill="#ffffff" fill-opacity="0.85">2</text>
+    <rect x="306" y="84" width="56" height="40" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="334" y="109" fill="#f87171">3</text>
+    <rect x="374" y="84" width="56" height="40" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="402" y="109" fill="#f87171">4</text>
+    <rect x="442" y="84" width="56" height="40" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="470" y="109" fill="#f87171">5</text>
+    <rect x="510" y="84" width="56" height="40" rx="8" fill="#0b0c10" stroke="#f87171" stroke-opacity="0.6"/>
+    <text x="538" y="109" fill="#f87171">6</text>
+  </g>
+  <text x="590" y="109" fill="#f87171" font-size="13" font-weight="700">途中で止まる</text>
+
+  <!-- 後 -->
+  <text x="24" y="201" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">v0.5.1</text>
+  <text x="24" y="220" fill="#60a5fa" font-size="11">フォアグラウンドサービス</text>
+  <g font-size="13" text-anchor="middle" fill="#ffffff" fill-opacity="0.85">
+    <rect x="170" y="184" width="56" height="40" rx="8" fill="#ffffff" fill-opacity="0.18"/>
+    <text x="198" y="209">1</text>
+    <rect x="238" y="184" width="56" height="40" rx="8" fill="#ffffff" fill-opacity="0.18"/>
+    <text x="266" y="209">2</text>
+    <rect x="306" y="184" width="56" height="40" rx="8" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="334" y="209">3</text>
+    <rect x="374" y="184" width="56" height="40" rx="8" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="402" y="209">4</text>
+    <rect x="442" y="184" width="56" height="40" rx="8" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="470" y="209">5</text>
+    <rect x="510" y="184" width="56" height="40" rx="8" fill="#60a5fa" fill-opacity="0.45"/>
+    <text x="538" y="209">6</text>
+  </g>
+  <text x="590" y="209" fill="#60a5fa" font-size="13" font-weight="700">最後まで走る</text>
+
+  <rect x="306" y="244" width="260" height="32" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="436" y="265" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">通知バー: AI解析中 (n/総数)</text>
+</svg>

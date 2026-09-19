@@ -6,6 +6,8 @@ projects: [hayabuzz]
 
 Hayabuzz は、スマホが早押しボタンになる早押しクイズ。バックエンドを持たず、出題者と回答者の端末が WebRTC で直接つながる。初回実装として、部屋を作って QR で招待し、押した順を判定して得点を付けるところまでを作った。
 
+![出題者を中心にしたスター型の P2P](/devlog/2026-08-13-hayabuzz-first-release/star-topology.svg)
+
 | 作ったもの | 中身 |
 |---|---|
 | P2P 通信 | Trystero(BitTorrent トラッカー経由)。出題者を中心にしたスター型で、判定は出題者の端末が持つ |

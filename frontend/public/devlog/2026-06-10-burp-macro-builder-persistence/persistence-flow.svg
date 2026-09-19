@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">マクロと設定を保存し、起動時に復元する</text>
+
+  <g font-size="13" text-anchor="middle">
+    <rect x="24" y="80" width="150" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="99" y="115" fill="#ffffff" fill-opacity="0.7">マクロや設定の変更</text>
+    <line x1="178" y1="110" x2="212" y2="110" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="216" y="80" width="140" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="286" y="106" fill="#ffffff" fill-opacity="0.85">400ms 待つ</text>
+    <text x="286" y="126" fill="#ffffff" fill-opacity="0.4" font-size="11">デバウンス</text>
+    <line x1="360" y1="110" x2="394" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="216" y="190" width="140" height="60" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="286" y="216" fill="#ffffff" fill-opacity="0.85">アンロード時</text>
+    <text x="286" y="236" fill="#ffffff" fill-opacity="0.4" font-size="11">最終保存</text>
+    <line x1="360" y1="220" x2="394" y2="204" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="398" y="110" width="170" height="110" rx="10" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="483" y="146" fill="#ffffff" fill-opacity="0.5" font-size="12">Burp の</text>
+    <text x="483" y="170" fill="#60a5fa" font-size="14" font-weight="700">拡張データ領域</text>
+    <text x="483" y="196" fill="#ffffff" fill-opacity="0.6" font-size="11">リクエストは Base64</text>
+
+    <line x1="572" y1="165" x2="598" y2="165" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="602" y="135" width="94" height="60" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="649" y="161" fill="#60a5fa" font-weight="700">起動時に</text>
+    <text x="649" y="181" fill="#60a5fa" font-weight="700">復元</text>
+  </g>
+</svg>

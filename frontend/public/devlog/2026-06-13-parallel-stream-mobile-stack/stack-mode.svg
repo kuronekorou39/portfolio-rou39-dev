@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" font-family="system-ui, sans-serif">
+  <rect width="720" height="400" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">PC は自由配置、スマホは縦積み</text>
+
+  <!-- PC -->
+  <text x="24" y="72" fill="#ffffff" fill-opacity="0.45" font-size="12">PC: 自由配置とリサイズ</text>
+  <rect x="24" y="84" width="400" height="240" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g fill="#15161a" stroke="#ffffff" stroke-opacity="0.25">
+    <rect x="40" y="100" width="220" height="124" rx="6"/>
+    <rect x="276" y="112" width="132" height="74" rx="6"/>
+    <rect x="200" y="200" width="176" height="99" rx="6"/>
+  </g>
+  <rect x="36" y="288" width="92" height="26" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.3"/>
+  <text x="82" y="306" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">≡ メニュー</text>
+  <text x="24" y="352" fill="#ffffff" fill-opacity="0.6" font-size="12">UI は共通: ≡ メニュー、枠ごとの ⋮ と ×</text>
+
+  <!-- スマホ -->
+  <text x="500" y="72" fill="#ffffff" fill-opacity="0.45" font-size="12">スマホ: 縦積み</text>
+  <rect x="500" y="84" width="176" height="296" rx="18" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.25"/>
+  <g fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="510" y="104" width="156" height="88" rx="4"/>
+    <rect x="510" y="198" width="156" height="88" rx="4"/>
+    <rect x="510" y="292" width="76" height="43" rx="4"/>
+    <rect x="590" y="292" width="76" height="43" rx="4"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="588" y="153">全幅 16:9</text>
+    <text x="588" y="247">全幅 16:9</text>
+    <text x="548" y="318">50%</text>
+    <text x="628" y="318">50%</text>
+  </g>
+  <text x="588" y="362" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">長押しで並び替え</text>
+</svg>

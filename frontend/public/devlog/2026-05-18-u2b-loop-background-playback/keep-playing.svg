@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">画面を消しても再生を続ける 3 つの仕組み</text>
+
+  <rect x="24" y="60" width="672" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="360" y="85" fill="#ffffff" fill-opacity="0.7" font-size="13" text-anchor="middle">再生中に画面オフ</text>
+
+  <line x1="128" y1="104" x2="128" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="360" y1="104" x2="360" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="592" y1="104" x2="592" y2="126" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g text-anchor="middle">
+    <rect x="24" y="130" width="208" height="110" rx="10" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="128" y="164" fill="#60a5fa" font-size="14" font-weight="700">wakelock</text>
+    <text x="128" y="192" fill="#ffffff" fill-opacity="0.7" font-size="12">CPU を眠らせない</text>
+    <text x="128" y="220" fill="#ffffff" fill-opacity="0.4" font-size="11">v1.59.0</text>
+
+    <rect x="256" y="130" width="208" height="110" rx="10" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="360" y="164" fill="#60a5fa" font-size="14" font-weight="700">Foreground Service</text>
+    <text x="360" y="192" fill="#ffffff" fill-opacity="0.7" font-size="12">プロセスを止めさせない</text>
+    <text x="360" y="220" fill="#ffffff" fill-opacity="0.4" font-size="11">v1.59.1</text>
+
+    <rect x="488" y="130" width="208" height="110" rx="10" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.6"/>
+    <text x="592" y="164" fill="#60a5fa" font-size="14" font-weight="700">MediaSession</text>
+    <text x="592" y="192" fill="#ffffff" fill-opacity="0.7" font-size="12">ロック画面と通知から操作</text>
+    <text x="592" y="220" fill="#ffffff" fill-opacity="0.4" font-size="11">v1.60.0</text>
+  </g>
+
+  <text x="24" y="272" fill="#ffffff" fill-opacity="0.4" font-size="12">サービス: 再生開始で起動 → 画面を閉じたら停止</text>
+</svg>

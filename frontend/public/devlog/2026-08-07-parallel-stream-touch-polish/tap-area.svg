@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="330" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">スマホで、枠を選べる範囲</text>
+
+  <!-- 前 -->
+  <text x="40" y="72" fill="#ffffff" fill-opacity="0.45" font-size="12">前: フォーカスの移動で検知</text>
+  <rect x="40" y="84" width="290" height="150" rx="6" fill="#f87171" fill-opacity="0.5"/>
+  <rect x="50" y="94" width="270" height="130" rx="4" fill="#0b0c10"/>
+  <rect x="50" y="94" width="270" height="130" rx="4" fill="#ffffff" fill-opacity="0.04"/>
+  <text x="185" y="156" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">縁を狙わないと選べない</text>
+  <text x="185" y="178" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">中は別オリジンの iframe</text>
+
+  <!-- 後 -->
+  <text x="390" y="72" fill="#ffffff" fill-opacity="0.45" font-size="12">後: 枠の中から親へ知らせる</text>
+  <rect x="390" y="84" width="290" height="150" rx="6" fill="#60a5fa" fill-opacity="0.3" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <text x="535" y="165" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">どこを触っても選べる</text>
+
+  <!-- 流れ -->
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="262" width="130" height="44" rx="8"/>
+    <rect x="556" y="262" width="140" height="44" rx="8"/>
+  </g>
+  <rect x="206" y="262" width="298" height="44" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="89" y="289">枠の中をタップ</text>
+    <text x="355" y="289" font-weight="700">content script が 1 通だけ送る</text>
+    <text x="626" y="289">親が枠を選ぶ</text>
+  </g>
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="158" y1="284" x2="200" y2="284" marker-end="url(#arrow)"/>
+    <line x1="508" y1="284" x2="550" y2="284" marker-end="url(#arrow)"/>
+  </g>
+</svg>

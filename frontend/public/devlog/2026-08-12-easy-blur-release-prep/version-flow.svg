@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">版はタグから入り、アプリが Releases と見比べる</text>
+
+  <rect x="24" y="84" width="112" height="72" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="80" y="116" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">タグ</text>
+  <text x="80" y="138" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">0.7.0</text>
+  <line x1="136" y1="120" x2="172" y2="120" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="176" y="84" width="132" height="72" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="242" y="116" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">CI のビルド</text>
+  <text x="242" y="138" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">版を注入</text>
+  <line x1="308" y1="120" x2="344" y2="120" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="348" y="84" width="140" height="72" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="418" y="125" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">GitHub Releases</text>
+
+  <!-- ホーム画面 -->
+  <rect x="540" y="60" width="156" height="216" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="556" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">ホーム画面</text>
+  <rect x="556" y="100" width="124" height="84" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="618" y="146" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">続きから</text>
+  <rect x="556" y="196" width="124" height="28" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+  <text x="618" y="215" fill="#ffffff" fill-opacity="0.85" font-size="12" font-weight="700" text-anchor="middle">更新あり → リンク</text>
+  <text x="618" y="254" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">版の表示</text>
+
+  <path d="M418 156 L418 210 L536 210" fill="none" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="430" y="234" fill="#ffffff" fill-opacity="0.6" font-size="12">最新の版を確認</text>
+  <path d="M242 156 L242 250 L536 250" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="254" y="272" fill="#ffffff" fill-opacity="0.4" font-size="12">入っている版</text>
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ツールバーの置き場所と、無操作で隠す流れ</text>
+
+  <!-- 4 つの配置 -->
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="60" width="150" height="94" rx="8"/>
+    <rect x="198" y="60" width="150" height="94" rx="8"/>
+    <rect x="372" y="60" width="150" height="94" rx="8"/>
+    <rect x="546" y="60" width="150" height="94" rx="8"/>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.8">
+    <rect x="30" y="66" width="138" height="12" rx="3"/>
+    <rect x="204" y="136" width="138" height="12" rx="3"/>
+    <rect x="378" y="66" width="12" height="82" rx="3"/>
+    <rect x="678" y="66" width="12" height="82" rx="3"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="99" y="176">上</text>
+    <text x="273" y="176">下</text>
+    <text x="447" y="176">左(縦バー)</text>
+    <text x="621" y="176">右(縦バー)</text>
+  </g>
+
+  <!-- 隠す流れ -->
+  <g fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12">
+    <rect x="24" y="208" width="170" height="46" rx="8"/>
+    <rect x="516" y="208" width="180" height="46" rx="8"/>
+  </g>
+  <rect x="246" y="208" width="218" height="46" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="109" y="236">ポインタが 3 秒静止</text>
+    <text x="355" y="236" font-weight="700">カーソルとバーを隠す</text>
+    <text x="606" y="236">≡ メニューから復帰</text>
+  </g>
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="198" y1="231" x2="240" y2="231" marker-end="url(#arrow)"/>
+    <line x1="468" y1="231" x2="510" y2="231" marker-end="url(#arrow)"/>
+  </g>
+</svg>

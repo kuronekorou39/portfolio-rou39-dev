@@ -6,6 +6,8 @@ projects: [koko-meshi]
 
 手元は Windows で Xcode を持っていない。iOS 版を App Store に出すには、署名も書き出しもアップロードも CI でやるしかないので、その流れを組んだ。
 
+![App Store への提出を CI だけで通す](/devlog/2026-09-03-koko-meshi-appstore-ci/submit-pipeline.svg)
+
 | 決めたこと | 理由 |
 |---|---|
 | macOS のランナーの版を固定する | 提出には iOS 26 SDK が要る。latest 指定だと、世代交代で黙って古い SDK になりうる |

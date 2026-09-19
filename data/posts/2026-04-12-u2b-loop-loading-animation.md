@@ -6,6 +6,8 @@ projects: [u2b-loop]
 
 ローディング画面にアニメーションを付けた。付けてみるとアニメーション自体がカクついたので、計測の仕組みを作って原因を潰した。
 
+![進捗が変わるたびに再ビルドされる範囲](/devlog/2026-04-12-u2b-loop-loading-animation/rebuild-scope.svg)
+
 | バージョン | 内容 |
 |---|---|
 | v1.39.23〜24 | 波形アニメーションを追加し、Wave / Mystify / Starfield / Particles の 4 種に。設定でランダムか固定を選ぶ |

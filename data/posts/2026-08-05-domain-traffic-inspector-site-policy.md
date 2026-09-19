@@ -6,6 +6,8 @@ projects: [domain-traffic-inspector]
 
 v1.1.0 として公開できる品質に上げ、続けてサイト単位のポリシーを足した。主な 2 コミットで 6,920 行の追加になった。
 
+![サイト専用ポリシーと一時許可: 通信先ごとの扱い](/devlog/2026-08-05-domain-traffic-inspector-site-policy/site-policy.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 厳格モード | 全ドメインを既定でブロックし、許可リストで通す方式に統一 |

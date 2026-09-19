@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" font-family="system-ui, sans-serif">
+  <rect width="720" height="230" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">送信側: 整数画素は効かず、コードの大きさが効く</text>
+  <text x="696" y="62" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">13x18 / 3 本の中央値 KB/s</text>
+  <g font-size="13">
+    <text x="24" y="101" fill="#ffffff" fill-opacity="0.6">セル幅に端数あり</text>
+    <rect x="170" y="84" width="426" height="26" rx="4" fill="#ffffff" fill-opacity="0.18"/>
+    <text x="606" y="102" fill="#ffffff" fill-opacity="0.7">133.2</text>
+
+    <text x="24" y="149" fill="#ffffff" fill-opacity="0.6">--snap(整数画素)</text>
+    <rect x="170" y="132" width="426" height="26" rx="4" fill="#60a5fa" fill-opacity="0.55"/>
+    <text x="606" y="150" fill="#ffffff" fill-opacity="0.7">133.0</text>
+
+    <text x="24" y="197" fill="#ffffff" fill-opacity="0.6">zoom 0.92 → 0.82</text>
+    <rect x="170" y="180" width="252" height="26" rx="4" fill="#60a5fa"/>
+    <text x="432" y="198" fill="#ffffff" font-weight="700">78.7</text>
+  </g>
+</svg>

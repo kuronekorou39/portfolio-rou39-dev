@@ -6,6 +6,8 @@ projects: [omniverse]
 
 X への投稿が、アカウントによって失敗していた。WebView から自前の fetch で送る方式のまま直そうとしたが、226 エラー(自動化の検知)が消えず、方式ごと変えた。
 
+![X への投稿の経路](/devlog/2026-04-05-omniverse-x-post-dom/post-route.svg)
+
 | 試したこと | 結果 |
 |---|---|
 | CSRF トークンを WebView の cookie から読み直す | ヘッダーと cookie がずれて検証に落ちる件は直った |

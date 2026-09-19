@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 Parallel Stream は、複数のライブ配信を 1 画面に並べて見る Chrome 拡張。最初は動く製品ではなく、Android の Chromium 系ブラウザで、拡張機能だけでマルチビューを作れるかを実機で確かめる調査用の拡張(プローブ)として作った。
 
+![4 本のプローブと、結果の出し方](/devlog/2026-05-29-parallel-stream-capability-probe/probes.svg)
+
 | プローブ | 調べること |
 |---|---|
 | api-surface | chrome.* を全列挙し、標準 API の一覧に無いものに印を付ける |

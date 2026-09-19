@@ -6,6 +6,8 @@ projects: [tapomaton]
 
 tapomaton は、Android の画面を見て判断し、代わりに操作する自分用のアプリ。定型の繰り返し操作を任せるために作っている。この日が最初のコミットで、骨組みからシナリオの実行までを入れた。
 
+![画面・AccessibilityService・シナリオエンジン・端末内 LLM の分担](/devlog/2026-08-22-tapomaton-first-commit/parts.svg)
+
 | 部品 | 中身 |
 |---|---|
 | AccessibilityService | 画面の取得・ノードツリーの取得・タップやスワイプの注入をここに集約 |

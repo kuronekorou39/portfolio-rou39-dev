@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">レイヤーで選べるもの</text>
+  <text x="696" y="36" fill="#60a5fa" font-size="12" text-anchor="end">青が今回の変更</text>
+
+  <!-- 効果 -->
+  <text x="24" y="95" fill="#ffffff" fill-opacity="0.45" font-size="12">効果</text>
+  <g font-size="13" text-anchor="middle" fill="#ffffff" fill-opacity="0.85">
+    <rect x="96" y="68" width="138" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="165" y="95">ピクセレート</text>
+    <rect x="250" y="68" width="138" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="319" y="95">ぼかし</text>
+    <rect x="404" y="68" width="138" height="44" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="473" y="95" font-weight="700">塗り</text>
+    <rect x="558" y="68" width="138" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="627" y="95">ノイズ</text>
+  </g>
+  <text x="473" y="132" fill="#60a5fa" font-size="11" text-anchor="middle">黒塗り・白塗りを統合</text>
+  <text x="473" y="148" fill="#60a5fa" font-size="11" text-anchor="middle">8 色から選ぶ</text>
+
+  <!-- 形 -->
+  <text x="24" y="206" fill="#ffffff" fill-opacity="0.45" font-size="12">形</text>
+  <g fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2">
+    <rect x="137" y="172" width="56" height="40" rx="2"/>
+    <ellipse cx="319" cy="192" rx="30" ry="20"/>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa" stroke-width="2" stroke-linejoin="round">
+    <path d="M473 170 L501 212 L445 212 z"/>
+    <path d="M627 214 C591 190 611 160 627 180 C643 160 663 190 627 214 z"/>
+  </g>
+  <g font-size="12" text-anchor="middle">
+    <text x="165" y="236" fill="#ffffff" fill-opacity="0.6">矩形</text>
+    <text x="319" y="236" fill="#ffffff" fill-opacity="0.6">楕円</text>
+    <text x="473" y="236" fill="#60a5fa" font-weight="700">三角</text>
+    <text x="627" y="236" fill="#60a5fa" font-weight="700">ハート</text>
+  </g>
+
+  <!-- 回転 -->
+  <text x="24" y="292" fill="#ffffff" fill-opacity="0.45" font-size="12">回転</text>
+  <line x1="137" y1="288" x2="501" y2="288" stroke="#ffffff" stroke-opacity="0.2" stroke-width="4" stroke-linecap="round"/>
+  <line x1="319" y1="288" x2="400" y2="288" stroke="#60a5fa" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="400" cy="288" r="8" fill="#60a5fa"/>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.4" text-anchor="middle">
+    <text x="137" y="316">-180°</text>
+    <text x="319" y="316">0°</text>
+    <text x="501" y="316">180°</text>
+  </g>
+  <text x="627" y="292" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">1 度単位</text>
+</svg>

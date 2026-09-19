@@ -6,6 +6,8 @@ projects: [domain-traffic-inspector]
 
 ルールタブを見ている最中に通信が起きると、リストが描き直されてスクロール位置がリセットされていた。タグは毎回手で打つしかなかった。
 
+![ルールタブ: スクロール位置の保持とタグの候補](/devlog/2026-04-07-domain-traffic-inspector-tag-suggest/tag-suggest.svg)
+
 | 変更 | 中身 |
 |---|---|
 | スクロール位置の保持 | 通信によるリストの再描画でも、位置をリセットしない |

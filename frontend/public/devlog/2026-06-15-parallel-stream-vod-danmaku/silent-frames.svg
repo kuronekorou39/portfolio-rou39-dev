@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">同じサイトの最初の枠を閉じたとき</text>
+
+  <!-- 前 -->
+  <rect x="24" y="56" width="316" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">対処前</text>
+  <rect x="40" y="100" width="88" height="84" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="5 4"/>
+  <g fill="#0b0c10" stroke="#f87171" stroke-opacity="0.7">
+    <rect x="138" y="100" width="88" height="84" rx="6"/>
+    <rect x="236" y="100" width="88" height="84" rx="6"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="84" y="136">枠 1</text>
+    <text x="182" y="136">枠 2</text>
+    <text x="280" y="136">枠 3</text>
+  </g>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <text x="84" y="160" fill="#ffffff" fill-opacity="0.4">閉じる</text>
+    <text x="182" y="160" fill="#f87171">無音</text>
+    <text x="280" y="160" fill="#f87171">無音</text>
+  </g>
+  <text x="40" y="226" fill="#f87171" font-size="12">残りの枠の音が出なくなる</text>
+  <text x="40" y="244" fill="#ffffff" fill-opacity="0.4" font-size="11">Chromium の不具合</text>
+
+  <line x1="346" y1="142" x2="372" y2="142" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 後 -->
+  <rect x="380" y="56" width="316" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="396" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">対処後</text>
+  <rect x="396" y="100" width="88" height="84" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="5 4"/>
+  <g fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.7">
+    <rect x="494" y="100" width="88" height="84" rx="6"/>
+    <rect x="592" y="100" width="88" height="84" rx="6"/>
+  </g>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6" text-anchor="middle">
+    <text x="440" y="136">枠 1</text>
+    <text x="538" y="136">枠 2</text>
+    <text x="636" y="136">枠 3</text>
+  </g>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <text x="440" y="160" fill="#ffffff" fill-opacity="0.4">閉じる</text>
+    <text x="538" y="160" fill="#60a5fa">作り直す</text>
+    <text x="636" y="160" fill="#60a5fa">作り直す</text>
+  </g>
+  <text x="396" y="226" fill="#60a5fa" font-size="12">同じサイトの残りだけ作り直す</text>
+  <text x="396" y="244" fill="#ffffff" fill-opacity="0.4" font-size="11">音が戻る</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="260" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">高解像度のオフライン保存: 別々に取って端末で結合</text>
+
+  <rect x="24" y="100" width="110" height="120" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="79" y="165" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700" text-anchor="middle">YouTube</text>
+
+  <text x="245" y="84" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="middle">別々に取得</text>
+  <line x1="138" y1="142" x2="186" y2="122" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="138" y1="178" x2="186" y2="198" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="190" y="98" width="110" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="245" y="125" fill="#ffffff" fill-opacity="0.7" font-size="13" text-anchor="middle">映像</text>
+  <rect x="190" y="178" width="110" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="245" y="205" fill="#ffffff" fill-opacity="0.7" font-size="13" text-anchor="middle">音声</text>
+
+  <line x1="304" y1="122" x2="352" y2="146" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="304" y1="198" x2="352" y2="174" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="356" y="100" width="150" height="120" rx="10" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="431" y="138" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">端末側で</text>
+  <text x="431" y="164" fill="#60a5fa" font-size="14" font-weight="700" text-anchor="middle">1 つの MP4 に結合</text>
+  <text x="431" y="190" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">再エンコードなし</text>
+
+  <line x1="510" y1="160" x2="554" y2="160" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="558" y="100" width="138" height="120" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="627" y="138" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">端末に保存</text>
+  <text x="627" y="164" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">動画 + 字幕 (SRT)</text>
+  <text x="627" y="190" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">通信なしで再生</text>
+</svg>

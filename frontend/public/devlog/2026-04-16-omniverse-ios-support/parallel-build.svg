@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">1 つのコードから Android と iOS を並列にビルド</text>
+
+  <rect x="24" y="112" width="176" height="80" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="144" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">Flutter のコード</text>
+  <text x="40" y="168" fill="#60a5fa" font-size="12" font-weight="700">パッケージ ID を統一</text>
+
+  <line x1="204" y1="140" x2="278" y2="124" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrowg)"/>
+  <line x1="204" y1="164" x2="278" y2="196" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="262" y="60" width="434" height="184" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="680" y="84" fill="#ffffff" fill-opacity="0.45" font-size="12" text-anchor="end">GitHub Actions(並列)</text>
+  <rect x="286" y="94" width="394" height="60" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="302" y="130" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">Android ビルド</text>
+  <text x="664" y="130" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="end">オーバーレイ表示あり</text>
+  <rect x="286" y="166" width="394" height="60" rx="8" fill="#60a5fa" fill-opacity="0.1" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <text x="302" y="202" fill="#60a5fa" font-size="13" font-weight="700">iOS ビルド</text>
+  <text x="664" y="202" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="end">オーバーレイは隠す</text>
+
+  <text x="24" y="270" fill="#ffffff" fill-opacity="0.4" font-size="11">Android 前提だった箇所は、OS で分岐させて直した</text>
+</svg>

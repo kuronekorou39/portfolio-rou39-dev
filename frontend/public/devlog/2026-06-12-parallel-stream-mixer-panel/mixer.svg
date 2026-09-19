@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">重なった枠と、枠一覧 / ミキサーのパネル</text>
+
+  <!-- 枠 -->
+  <rect x="24" y="64" width="230" height="130" rx="6" fill="#15161a" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="38" y="86" fill="#ffffff" fill-opacity="0.6" font-size="12">枠 1</text>
+  <rect x="100" y="116" width="230" height="130" rx="6" fill="#15161a" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="114" y="138" fill="#ffffff" fill-opacity="0.6" font-size="12">枠 2</text>
+  <rect x="236" y="214" width="180" height="100" rx="6" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="5 4"/>
+  <text x="326" y="290" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">枠 3: 非表示でミュート</text>
+
+  <!-- パネル -->
+  <rect x="452" y="64" width="244" height="250" rx="10" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="468" y="90" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">枠一覧 / ミキサー</text>
+  <line x1="452" y1="102" x2="696" y2="102" stroke="#60a5fa" stroke-opacity="0.3"/>
+  <g font-size="12" fill="#ffffff" fill-opacity="0.6">
+    <text x="468" y="130">マスタ</text>
+    <text x="468" y="170">枠 1</text>
+    <text x="468" y="206">枠 2</text>
+  </g>
+  <text x="468" y="242" fill="#ffffff" fill-opacity="0.3" font-size="12">枠 3</text>
+  <!-- 目 -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="1.5">
+    <ellipse cx="526" cy="166" rx="9" ry="5.5"/>
+    <ellipse cx="526" cy="202" rx="9" ry="5.5"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.6">
+    <circle cx="526" cy="166" r="2.5"/>
+    <circle cx="526" cy="202" r="2.5"/>
+  </g>
+  <ellipse cx="526" cy="238" rx="9" ry="5.5" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1.5"/>
+  <line x1="517" y1="246" x2="535" y2="230" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
+  <!-- つまみ -->
+  <g stroke-width="3" stroke-linecap="round">
+    <line x1="528" y1="126" x2="680" y2="126" stroke="#60a5fa" stroke-opacity="0.7"/>
+    <line x1="552" y1="166" x2="680" y2="166" stroke="#60a5fa" stroke-opacity="0.7"/>
+    <line x1="552" y1="202" x2="680" y2="202" stroke="#60a5fa" stroke-opacity="0.7"/>
+    <line x1="552" y1="238" x2="680" y2="238" stroke="#ffffff" stroke-opacity="0.15"/>
+  </g>
+  <g fill="#60a5fa">
+    <circle cx="640" cy="126" r="5"/>
+    <circle cx="660" cy="166" r="5"/>
+    <circle cx="600" cy="202" r="5"/>
+  </g>
+  <line x1="452" y1="262" x2="696" y2="262" stroke="#60a5fa" stroke-opacity="0.3"/>
+  <g font-size="11" fill="#ffffff" fill-opacity="0.4">
+    <text x="468" y="282">ラベル: 最前面へ</text>
+    <text x="468" y="300">目: 表示 / 非表示</text>
+  </g>
+</svg>

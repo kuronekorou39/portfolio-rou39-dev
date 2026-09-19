@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">別ウィンドウ方式から、ページ内の枠へ</text>
+
+  <!-- 前 -->
+  <rect x="24" y="56" width="316" height="240" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">前: 別ウィンドウを並べる</text>
+  <g fill="#0b0c10" stroke="#f87171" stroke-opacity="0.7">
+    <rect x="40" y="98" width="136" height="84" rx="6"/>
+    <rect x="188" y="98" width="136" height="84" rx="6"/>
+  </g>
+  <rect x="114" y="196" width="136" height="84" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.35"/>
+  <g font-size="12" text-anchor="middle">
+    <text x="108" y="145" fill="#f87171">描画されない</text>
+    <text x="256" y="145" fill="#f87171">描画されない</text>
+    <text x="182" y="243" fill="#ffffff" fill-opacity="0.6">前面だけ再生</text>
+  </g>
+
+  <line x1="346" y1="176" x2="372" y2="176" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 後 -->
+  <rect x="380" y="56" width="316" height="240" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="396" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">後: 1 つのページに枠を並べる</text>
+  <g fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="396" y="98" width="138" height="84" rx="6"/>
+    <rect x="542" y="98" width="138" height="84" rx="6"/>
+    <rect x="396" y="196" width="284" height="84" rx="6"/>
+  </g>
+  <line x1="580" y1="196" x2="580" y2="280" stroke="#60a5fa" stroke-opacity="0.4"/>
+  <g font-size="12" text-anchor="middle" fill="#ffffff" fill-opacity="0.6">
+    <text x="465" y="145">iframe</text>
+    <text x="611" y="145">iframe</text>
+    <text x="630" y="243">チャット</text>
+  </g>
+  <text x="488" y="234" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">Kick: video + hls.js</text>
+  <text x="488" y="256" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">iframe を使わない</text>
+</svg>

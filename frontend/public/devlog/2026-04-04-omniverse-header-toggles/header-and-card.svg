@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ヘッダーの切替ボタンと、カードの配置</text>
+
+  <!-- 画面 -->
+  <rect x="24" y="56" width="400" height="264" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <line x1="24" y1="108" x2="424" y2="108" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="40" y="70" width="96" height="24" rx="4" fill="#ffffff" fill-opacity="0.1"/>
+  <text x="88" y="87" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">ロゴ画像</text>
+  <rect x="320" y="62" width="40" height="40" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.8"/>
+  <rect x="368" y="62" width="40" height="40" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.8"/>
+
+  <!-- 投稿カード -->
+  <rect x="40" y="124" width="368" height="180" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <circle cx="80" cy="164" r="20" fill="#ffffff" fill-opacity="0.12"/>
+  <circle cx="62" cy="146" r="9" fill="#60a5fa"/>
+  <rect x="112" y="150" width="120" height="10" rx="5" fill="#ffffff" fill-opacity="0.25"/>
+  <rect x="112" y="176" width="272" height="8" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+  <rect x="112" y="194" width="272" height="8" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+  <rect x="112" y="212" width="180" height="8" rx="4" fill="#ffffff" fill-opacity="0.12"/>
+  <circle cx="62" cy="272" r="10" fill="#60a5fa"/>
+  <rect x="112" y="266" width="44" height="12" rx="6" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="192" y="266" width="44" height="12" rx="6" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="272" y="266" width="44" height="12" rx="6" fill="#ffffff" fill-opacity="0.18"/>
+
+  <!-- 引き出し線 -->
+  <g stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1">
+    <line x1="410" y1="82" x2="452" y2="82"/>
+    <line x1="72" y1="140" x2="452" y2="140"/>
+    <line x1="74" y1="284" x2="452" y2="284"/>
+  </g>
+  <text x="460" y="80" fill="#60a5fa" font-size="13" font-weight="700">切替ボタン(設定で選ぶ)</text>
+  <text x="460" y="100" fill="#ffffff" fill-opacity="0.6" font-size="12">センシティブ表示 / 匿名モード</text>
+  <text x="460" y="144" fill="#60a5fa" font-size="13" font-weight="700">SNS バッジ</text>
+  <text x="460" y="164" fill="#ffffff" fill-opacity="0.6" font-size="12">ユーザーアイコンの左上</text>
+  <text x="460" y="268" fill="#60a5fa" font-size="13" font-weight="700">取得元アカウント</text>
+  <text x="460" y="288" fill="#ffffff" fill-opacity="0.6" font-size="12">リアクション行の左端</text>
+  <text x="460" y="316" fill="#ffffff" fill-opacity="0.4" font-size="11">5 回動かして決めた通常モードの形</text>
+</svg>

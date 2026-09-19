@@ -6,6 +6,8 @@ projects: [u2b-loop]
 
 前日から書いていた integration test を広げ、あわせて外から入ってくるデータの検証を固めた。
 
+![integration test の件数](/devlog/2026-04-13-u2b-loop-integration-test/test-count.svg)
+
 | バージョン | 内容 |
 |---|---|
 | v1.39.36〜40 | テストを 135 件に。ループ状態、プレイリスト操作、ミニプレイヤー、設定の永続化など |

@@ -6,6 +6,8 @@ projects: [vloom]
 
 vcode は生のバイト列しか運ばないので、受信側はファイル名を時刻から作り、種別を中身から推測していた。元の名前は失われ、中身が ZIP の docx / xlsx / pptx は zip と判定されていた。
 
+![送信データの先頭にファイル名と MIME のヘッダを付ける](/devlog/2026-07-15-vloom-file-meta/self-describing.svg)
+
 | 変更 | 中身 |
 |---|---|
 | 自己記述ヘッダ | 送信データの先頭にファイル名と MIME を付ける。アプリと PWA の全経路で対応 |

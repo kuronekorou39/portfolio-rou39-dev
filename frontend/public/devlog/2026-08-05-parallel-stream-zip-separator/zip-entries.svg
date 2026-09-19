@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">ZIP の中の名前と、Android での展開結果</text>
+
+  <!-- 前 -->
+  <rect x="24" y="56" width="336" height="220" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">前: フォルダごと固めた ZIP</text>
+  <rect x="40" y="96" width="304" height="34" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text x="52" y="118" font-family="ui-monospace, Consolas, monospace" font-size="12" fill="#ffffff" fill-opacity="0.85">parallel-stream-0.9.11<tspan fill="#f87171" font-weight="700">\</tspan>manifest.json</text>
+  <line x1="192" y1="134" x2="192" y2="176" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="204" y="160" fill="#ffffff" fill-opacity="0.6" font-size="12">Android で展開</text>
+  <rect x="40" y="182" width="304" height="34" rx="6" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-opacity="0.7"/>
+  <text x="192" y="204" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">全体が 1 つのファイル名になる</text>
+  <text x="40" y="250" fill="#ffffff" fill-opacity="0.4" font-size="11">区切りと解釈されず、manifest が見つからない</text>
+
+  <!-- 後 -->
+  <rect x="384" y="56" width="312" height="220" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="400" y="82" fill="#ffffff" fill-opacity="0.45" font-size="12">後: 中身を平置き</text>
+  <g fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6">
+    <rect x="400" y="96" width="280" height="28" rx="6"/>
+    <rect x="400" y="130" width="280" height="28" rx="6"/>
+    <rect x="400" y="164" width="280" height="28" rx="6"/>
+  </g>
+  <g font-family="ui-monospace, Consolas, monospace" font-size="12" fill="#ffffff" fill-opacity="0.85">
+    <text x="412" y="115">manifest.json</text>
+    <text x="412" y="149">background.js</text>
+    <text x="412" y="183">multiview.html</text>
+  </g>
+  <rect x="400" y="212" width="280" height="44" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="540" y="239" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">リリース時に ZIP を開いて検査</text>
+</svg>

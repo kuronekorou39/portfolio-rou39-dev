@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 よく使う 2 つの操作が、≡ メニューを開かないと押せなかった。
 
+![右下の丸ボタン: 整列と追加](/devlog/2026-09-12-parallel-stream-quick-buttons/quick-buttons.svg)
+
 | 変更 | 版 | 中身 |
 |---|---|---|
 | 丸ボタン | 0.9.60 | 右下に「追加」と「整列」。無操作で消え、全画面中は出さない。縦積みでは ＋ だけ |

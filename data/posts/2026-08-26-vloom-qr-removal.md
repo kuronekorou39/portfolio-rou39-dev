@@ -6,6 +6,8 @@ projects: [vloom]
 
 実機で vcode が QR 経路の 4 倍 (26.8 対 6.7 KB/s) に達し、比較対象としての役目が終わったので、QR 経路を消して vcode 一本にした。
 
+![QR 経路を削除し、Rust のコアを使う送信側に Windows アプリを追加](/devlog/2026-08-26-vloom-qr-removal/vcode-only.svg)
+
 | 変更 | 中身 |
 |---|---|
 | QR 経路の削除 | アプリは 5 タブ → 3 タブ。34 ファイル・約 15,000 行を削除 |

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="system-ui, sans-serif">
+  <rect width="720" height="320" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">右パネルをタブ式に組み替えた</text>
+
+  <!-- 左: 編集エリア -->
+  <rect x="24" y="60" width="290" height="236" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">編集中の画像</text>
+  <rect x="99" y="108" width="140" height="140" rx="24" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.2" stroke-dasharray="5 4"/>
+  <text x="169" y="183" fill="#ffffff" fill-opacity="0.4" font-size="13" text-anchor="middle">アイコン</text>
+
+  <!-- 右パネル -->
+  <rect x="338" y="60" width="358" height="236" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <g font-size="12" text-anchor="middle">
+    <text x="384" y="90" fill="#ffffff" fill-opacity="0.6">エフェクト</text>
+    <rect x="426" y="70" width="56" height="30" rx="8" fill="#60a5fa" fill-opacity="0.2"/>
+    <text x="454" y="90" fill="#60a5fa" font-weight="700">色キー</text>
+    <text x="518" y="90" fill="#ffffff" fill-opacity="0.6">クロップ</text>
+    <text x="582" y="90" fill="#ffffff" fill-opacity="0.6">フレーム</text>
+    <text x="649" y="90" fill="#ffffff" fill-opacity="0.6">キャンバス</text>
+  </g>
+  <line x1="354" y1="108" x2="680" y2="108" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <text x="354" y="136" fill="#60a5fa" font-size="13" font-weight="700">色キー除去</text>
+  <rect x="354" y="150" width="326" height="40" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="366" y="160" width="20" height="20" rx="4" fill="#ffffff" fill-opacity="0.5"/>
+  <text x="398" y="175" fill="#ffffff" fill-opacity="0.7" font-size="13">透過にする色を指定</text>
+  <rect x="354" y="200" width="326" height="80" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="517" y="245" fill="#ffffff" fill-opacity="0.4" font-size="13" text-anchor="middle">プレビュー</text>
+</svg>

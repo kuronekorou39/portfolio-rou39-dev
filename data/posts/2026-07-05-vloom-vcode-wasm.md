@@ -6,6 +6,8 @@ projects: [vloom]
 
 PC の Web 版 (PWA) は QR の送受信しかできなかった。vcode のコアは依存ゼロの pure Rust なので、そのまま WASM にして PWA に載せた。
 
+![同じ vcode のコアを FFI と WASM でアプリと Web 版に載せる](/devlog/2026-07-05-vloom-vcode-wasm/one-core.svg)
+
 | 変更 | 中身 |
 |---|---|
 | WASM 公開 | フレーム生成・回転・全探索スキャンを、スマホアプリと同一のロジックで公開 |

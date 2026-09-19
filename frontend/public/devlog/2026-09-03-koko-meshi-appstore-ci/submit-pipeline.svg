@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">App Store への提出を CI だけで通す</text>
+
+  <rect x="24" y="130" width="116" height="76" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="82" y="164" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">手元の PC</text>
+  <text x="82" y="186" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">Xcode なし</text>
+
+  <line x1="144" y1="168" x2="172" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- CI -->
+  <rect x="180" y="60" width="376" height="220" rx="10" fill="#0b0c10" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="196" y="86" fill="#60a5fa" font-size="12" font-weight="700">CI: macOS のランナー(版を固定)</text>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85">
+    <rect x="196" y="100" width="344" height="34" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="212" y="122">1  証明書とプロファイルを置く</text>
+    <rect x="196" y="142" width="344" height="34" rx="8" fill="#60a5fa" fill-opacity="0.25"/>
+    <text x="212" y="164">2  署名なしでビルド(プラグイン統合)</text>
+    <rect x="196" y="184" width="344" height="34" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="212" y="206">3  署名して IPA を書き出す</text>
+    <rect x="196" y="226" width="344" height="34" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="212" y="248">4  アップロード</text>
+  </g>
+
+  <line x1="560" y1="168" x2="588" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="596" y="130" width="100" height="76" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="646" y="164" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">App Store</text>
+  <text x="646" y="184" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">Connect</text>
+</svg>

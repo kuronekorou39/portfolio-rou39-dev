@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">受信したファイル名が通る 2 つの関門</text>
+
+  <!-- 入力 -->
+  <rect x="24" y="104" width="196" height="132" rx="10" fill="#f87171" fill-opacity="0.06" stroke="#f87171" stroke-opacity="0.5"/>
+  <text x="40" y="132" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700">相手の画面</text>
+  <text x="40" y="158" fill="#f87171" font-size="12" font-weight="700">攻撃者が選べる</text>
+  <text x="40" y="190" fill="#ffffff" fill-opacity="0.6" font-size="12">ファイル名 / MIME</text>
+  <text x="40" y="210" fill="#ffffff" fill-opacity="0.6" font-size="12">本文</text>
+
+  <g stroke="#60a5fa" stroke-width="2">
+    <line x1="222" y1="150" x2="280" y2="112" marker-end="url(#arrow)"/>
+    <line x1="222" y1="190" x2="280" y2="228" marker-end="url(#arrow)"/>
+    <line x1="422" y1="106" x2="462" y2="106" marker-end="url(#arrow)"/>
+    <line x1="422" y1="234" x2="462" y2="234" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- 関門 -->
+  <g text-anchor="middle">
+    <rect x="288" y="76" width="132" height="60" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.7"/>
+    <text x="354" y="111" fill="#60a5fa" font-size="14" font-weight="700">＋ エスケープ</text>
+    <rect x="288" y="204" width="132" height="60" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.7"/>
+    <text x="354" y="239" fill="#60a5fa" font-size="14" font-weight="700">＋ サニタイズ</text>
+  </g>
+
+  <!-- 行き先 -->
+  <rect x="470" y="64" width="226" height="84" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="486" y="92" fill="#ffffff" fill-opacity="0.45" font-size="12">Web 版</text>
+  <text x="486" y="116" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">HTML に表示</text>
+  <text x="486" y="136" fill="#ffffff" fill-opacity="0.5" font-size="11">防ぐもの: スクリプトの実行</text>
+
+  <rect x="470" y="192" width="226" height="84" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="486" y="220" fill="#ffffff" fill-opacity="0.45" font-size="12">アプリ</text>
+  <text x="486" y="244" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700">一時ファイルのパス</text>
+  <text x="486" y="264" fill="#ffffff" fill-opacity="0.5" font-size="11">防ぐもの: 別ファイルの書き換え</text>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8b8e"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">枠の中で移動した先の URL が保存されるまで</text>
+
+  <!-- 枠 -->
+  <rect x="24" y="64" width="330" height="208" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">枠(別オリジンの iframe)</text>
+  <g fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.25">
+    <rect x="40" y="106" width="120" height="56" rx="6"/>
+    <rect x="218" y="106" width="120" height="56" rx="6"/>
+  </g>
+  <g font-size="13" fill="#ffffff" fill-opacity="0.85" text-anchor="middle">
+    <text x="100" y="139">配信 A</text>
+    <text x="278" y="139">配信 B</text>
+  </g>
+  <line x1="166" y1="134" x2="212" y2="134" stroke="#8a8b8e" stroke-width="2" marker-end="url(#arrow-dim)"/>
+  <text x="189" y="122" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">移動</text>
+  <rect x="40" y="186" width="298" height="66" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="56" y="213" fill="#60a5fa" font-size="13" font-weight="700">content script</text>
+  <text x="56" y="236" fill="#ffffff" fill-opacity="0.6" font-size="12">読込時と SPA 遷移時に URL を読む</text>
+
+  <!-- 送る -->
+  <line x1="344" y1="219" x2="466" y2="219" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="412" y="205" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">URL を送る</text>
+
+  <!-- 親 -->
+  <rect x="476" y="64" width="220" height="208" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="492" y="90" fill="#ffffff" fill-opacity="0.45" font-size="12">親ページ</text>
+  <rect x="492" y="106" width="188" height="56" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="586" y="139" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">枠の URL を保存</text>
+  <line x1="586" y1="186" x2="586" y2="168" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="492" y="186" width="188" height="66" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text x="586" y="224" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">送り主から枠を特定</text>
+</svg>

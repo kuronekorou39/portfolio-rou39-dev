@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">実機なしで、手持ちの劣化を 1 つずつ掛ける</text>
+
+  <rect x="24" y="104" width="140" height="76" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="94" y="138" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">送信フレーム</text>
+  <text x="94" y="160" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">13x18</text>
+
+  <line x1="168" y1="142" x2="190" y2="142" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 計測台 -->
+  <rect x="198" y="64" width="300" height="156" rx="10" fill="#60a5fa" fill-opacity="0.06" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="214" y="92" fill="#60a5fa" font-size="13" font-weight="700">＋ 合成の計測台</text>
+  <g text-anchor="middle" font-size="12">
+    <rect x="214" y="106" width="130" height="40" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.15"/>
+    <text x="279" y="131" fill="#ffffff" fill-opacity="0.7">手振れ</text>
+    <rect x="352" y="106" width="130" height="40" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.15"/>
+    <text x="417" y="131" fill="#ffffff" fill-opacity="0.7">レンズ歪曲</text>
+    <rect x="214" y="156" width="130" height="40" rx="6" fill="#60a5fa" fill-opacity="0.35" stroke="#60a5fa"/>
+    <text x="279" y="181" fill="#ffffff" font-weight="700">ボケ</text>
+    <rect x="352" y="156" width="130" height="40" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.15"/>
+    <text x="417" y="181" fill="#ffffff" fill-opacity="0.7" font-size="11">ローリングシャッター</text>
+  </g>
+
+  <line x1="502" y1="142" x2="524" y2="142" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="532" y="104" width="164" height="76" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="614" y="138" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">スキャナ</text>
+  <text x="614" y="160" fill="#ffffff" fill-opacity="0.5" font-size="12" text-anchor="middle">回収ブロックを数える</text>
+
+  <text x="24" y="252" fill="#ffffff" fill-opacity="0.6" font-size="12">追従: 14px / 0.7° 振っても外れない</text>
+  <text x="24" y="276" fill="#60a5fa" font-size="13" font-weight="700">効いていたのはボケ(ピント)</text>
+</svg>

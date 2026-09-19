@@ -6,6 +6,8 @@ projects: [parallel-stream]
 
 この日は 22 コミット。実機で見つかった不具合を順に潰した。
 
+![ZIP の中の名前と、Android での展開結果](/devlog/2026-08-05-parallel-stream-zip-separator/zip-entries.svg)
+
 | 不具合 | 原因 | 直し方 |
 |---|---|---|
 | Android で拡張を読み込めない | Compress-Archive がパス区切りに \ を書き、フォルダ名ごと 1 つのファイル名として展開された | 中身を平置きに戻し、リリース時に ZIP を開いて検査する |

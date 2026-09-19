@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="310" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">校正と本番の受信画面を 1 つの部品に</text>
+
+  <!-- 直す前 -->
+  <rect x="24" y="60" width="324" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="40" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">直す前: 別々の画面</text>
+  <text x="108" y="116" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">校正</text>
+  <rect x="40" y="128" width="136" height="104" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <rect x="47" y="133" width="122" height="94" fill="none" stroke="#f87171" stroke-width="2"/>
+  <text x="108" y="258" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">枠 0.9 = ゆるい</text>
+  <text x="264" y="116" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">本番</text>
+  <rect x="196" y="128" width="136" height="104" rx="6" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <rect x="210" y="138" width="108" height="84" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="2"/>
+  <text x="264" y="258" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">枠 0.8</text>
+
+  <!-- 直した後 -->
+  <rect x="372" y="60" width="324" height="226" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="388" y="86" fill="#ffffff" fill-opacity="0.45" font-size="12">直した後: 共有部品</text>
+  <rect x="388" y="176" width="292" height="92" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="404" y="204" fill="#60a5fa" font-size="14" font-weight="700">受信の共有部品</text>
+  <text x="404" y="228" fill="#ffffff" fill-opacity="0.6" font-size="12">ガイド枠 0.8 / カメラ描画</text>
+  <text x="404" y="250" fill="#ffffff" fill-opacity="0.6" font-size="12">カメラは選択中のタブだけ</text>
+  <rect x="388" y="100" width="136" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="456" y="127" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">校正</text>
+  <rect x="544" y="100" width="136" height="44" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <text x="612" y="127" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">本番</text>
+  <line x1="456" y1="146" x2="456" y2="170" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="612" y1="146" x2="612" y2="170" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" font-family="system-ui, sans-serif">
+  <rect width="720" height="400" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">投稿用 WebView の大きさ(同じ縮尺)</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">UA はどれも iPhone</text>
+
+  <!-- iPhone -->
+  <rect x="60" y="170" width="79" height="170" rx="8" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.3"/>
+  <text x="100" y="260" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">釣り合う</text>
+  <text x="100" y="364" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">iPhone</text>
+  <text x="100" y="382" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">約 393 × 852</text>
+
+  <!-- iPad 直す前 -->
+  <rect x="230" y="67" width="205" height="273" rx="8" fill="#f87171" fill-opacity="0.08" stroke="#f87171" stroke-opacity="0.6"/>
+  <text x="332" y="200" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">X に弾かれる</text>
+  <text x="332" y="222" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">サイズ未指定 = 画面サイズ</text>
+  <text x="332" y="364" fill="#f87171" font-size="13" font-weight="700" text-anchor="middle">iPad(直す前)</text>
+  <text x="332" y="382" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">約 1024 × 1366</text>
+
+  <!-- iPad 修正後 -->
+  <rect x="488" y="67" width="205" height="273" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-dasharray="5 5"/>
+  <text x="590" y="94" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">iPad の画面</text>
+  <rect x="549" y="157" width="82" height="183" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa"/>
+  <text x="590" y="254" fill="#ffffff" fill-opacity="0.85" font-size="11" text-anchor="middle">釣り合う</text>
+  <text x="590" y="364" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">iPad(修正後)</text>
+  <text x="590" y="382" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">iOS だけ 412 × 915 を明示</text>
+</svg>

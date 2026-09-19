@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" font-family="system-ui, sans-serif">
+  <rect width="720" height="290" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">マスタ音量を当て直すタイミング</text>
+  <text x="696" y="36" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="end">横軸は時間</text>
+
+  <!-- プレイヤーが上書きした瞬間 -->
+  <line x1="300" y1="78" x2="300" y2="256" stroke="#ffffff" stroke-opacity="0.35" stroke-dasharray="4 4"/>
+  <text x="300" y="70" fill="#ffffff" fill-opacity="0.6" font-size="11" text-anchor="middle">プレイヤーが音量を上書き</text>
+
+  <!-- 3: 500ms ごと -->
+  <text x="24" y="104" fill="#ffffff" fill-opacity="0.6" font-size="13">方式 3: 500ms ごと</text>
+  <line x1="24" y1="134" x2="696" y2="134" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2"/>
+  <g fill="#f87171" fill-opacity="0.8">
+    <circle cx="48" cy="134" r="5"/><circle cx="96" cy="134" r="5"/><circle cx="144" cy="134" r="5"/>
+    <circle cx="192" cy="134" r="5"/><circle cx="240" cy="134" r="5"/><circle cx="288" cy="134" r="5"/>
+    <circle cx="336" cy="134" r="5"/><circle cx="384" cy="134" r="5"/><circle cx="432" cy="134" r="5"/>
+    <circle cx="480" cy="134" r="5"/><circle cx="528" cy="134" r="5"/><circle cx="576" cy="134" r="5"/>
+    <circle cx="624" cy="134" r="5"/><circle cx="672" cy="134" r="5"/>
+  </g>
+  <text x="696" y="162" fill="#f87171" font-size="11" text-anchor="end">変化が無くても動き続ける</text>
+
+  <!-- 4: volumechange -->
+  <text x="24" y="204" fill="#ffffff" fill-opacity="0.6" font-size="13">方式 4: volumechange が契機</text>
+  <line x1="24" y1="234" x2="696" y2="234" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2"/>
+  <circle cx="308" cy="234" r="7" fill="#60a5fa"/>
+  <text x="326" y="222" fill="#60a5fa" font-size="12" font-weight="700">変えられた瞬間だけ戻す</text>
+  <text x="696" y="262" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">採用</text>
+</svg>

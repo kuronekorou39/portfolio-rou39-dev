@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="400" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">設定画面: 1 枚の長い一覧から、メニュー + 詳細へ</text>
+
+  <!-- 直す前 -->
+  <rect x="24" y="56" width="190" height="324" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#f87171" stroke-opacity="0.5"/>
+  <text x="40" y="80" fill="#f87171" font-size="12" font-weight="700">直す前</text>
+  <text x="40" y="98" fill="#ffffff" fill-opacity="0.6" font-size="11">1 画面に約 23 項目</text>
+  <path stroke="#ffffff" stroke-opacity="0.16" stroke-width="7" stroke-linecap="round" d="M44 116h150M44 127h150M44 138h150M44 149h150M44 160h150M44 171h150M44 182h150M44 193h150M44 204h150M44 215h150M44 226h150M44 237h150M44 248h150M44 259h150M44 270h150M44 281h150M44 292h150M44 303h150M44 314h150M44 325h150M44 336h150M44 347h150M44 358h150"/>
+  <line x1="214" y1="218" x2="262" y2="218" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 設定トップ -->
+  <rect x="264" y="56" width="236" height="324" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="280" y="80" fill="#60a5fa" font-size="12" font-weight="700">設定トップ</text>
+  <text x="484" y="80" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="end">青 = 現在の値</text>
+  <g fill="#ffffff" fill-opacity="0.06">
+    <rect x="280" y="92" width="204" height="34" rx="6"/>
+    <rect x="280" y="132" width="204" height="34" rx="6"/>
+    <rect x="280" y="172" width="204" height="34" rx="6"/>
+    <rect x="280" y="212" width="204" height="34" rx="6"/>
+    <rect x="280" y="252" width="204" height="34" rx="6"/>
+    <rect x="280" y="292" width="204" height="34" rx="6"/>
+    <rect x="280" y="332" width="204" height="34" rx="6"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.85" font-size="12">
+    <text x="292" y="107">外観</text>
+    <text x="292" y="147">投稿の表示</text>
+    <text x="292" y="187">タイムライン</text>
+    <text x="292" y="227">ボタン配置</text>
+    <text x="292" y="267">一般</text>
+    <text x="292" y="307">アプリ情報</text>
+    <text x="292" y="347">デバッグ</text>
+  </g>
+  <g fill="#60a5fa" fill-opacity="0.8">
+    <rect x="292" y="113" width="44" height="5" rx="2"/>
+    <rect x="292" y="153" width="60" height="5" rx="2"/>
+    <rect x="292" y="193" width="96" height="5" rx="2"/>
+    <rect x="292" y="233" width="70" height="5" rx="2"/>
+    <rect x="292" y="273" width="84" height="5" rx="2"/>
+    <rect x="292" y="313" width="52" height="5" rx="2"/>
+    <rect x="292" y="353" width="56" height="5" rx="2"/>
+  </g>
+  <path fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5" d="M466 104l5 5l-5 5M466 144l5 5l-5 5M466 184l5 5l-5 5M466 224l5 5l-5 5M466 264l5 5l-5 5M466 304l5 5l-5 5M466 344l5 5l-5 5"/>
+  <line x1="500" y1="218" x2="548" y2="218" stroke="#60a5fa" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 詳細画面 -->
+  <rect x="566" y="146" width="130" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="558" y="154" width="130" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.2"/>
+  <rect x="550" y="162" width="130" height="130" rx="8" fill="#0b0c10" stroke="#ffffff" stroke-opacity="0.3"/>
+  <text x="615" y="222" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">詳細画面</text>
+  <text x="615" y="244" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">× 7</text>
+</svg>
