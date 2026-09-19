@@ -21,6 +21,7 @@ describe('parsePost', () => {
       date: '2026-09-18',
       summary: '5件追加した',
       projects: ['vloom', 'hayabuzz'],
+      image: null,
       body: '本文の1行目。\n\n## 見出し',
     });
   });
@@ -41,6 +42,12 @@ describe('parsePost', () => {
     expect(post?.title).toBe('Vloom: 光で渡す');
   });
 
+  it('本文の最初の画像を見出し画像として拾う', () => {
+    const source = '---\ntitle: t\n---\n文\n\n![図1](/devlog/a/one.svg)\n\n![図2](/devlog/a/two.png)';
+    const post = parsePost('data/posts/2026-09-18-a.md', source);
+    expect(post?.image).toBe('/devlog/a/one.svg');
+  });
+
   it('ファイル名が形式に合わない・frontmatter が無い・title が無いものは記事にしない', () => {
     expect(parsePost('data/posts/README.md', SOURCE)).toBeNull();
     expect(parsePost('data/posts/2026-09-18-a.md', '本文だけ')).toBeNull();
@@ -50,7 +57,7 @@ describe('parsePost', () => {
 
 describe('sortPosts', () => {
   it('新しい順に並べ、同じ日付は slug で固定する', () => {
-    const make = (slug: string, date: string) => ({ slug, date, title: '', summary: '', projects: [], body: '' });
+    const make = (slug: string, date: string) => ({ slug, date, title: '', summary: '', projects: [], image: null, body: '' });
     const sorted = sortPosts([make('b', '2026-09-17'), make('z', '2026-09-18'), make('a', '2026-09-18')]);
     expect(sorted.map((p) => p.slug)).toEqual(['a', 'z', 'b']);
   });

@@ -10,6 +10,8 @@ export interface Post {
   summary: string;
   /** 関連する作品の id (data/projects.json の id) */
   projects: string[];
+  /** 本文の最初の画像。一覧の見出し画像に使う。無ければ null */
+  image: string | null;
   body: string;
 }
 
@@ -47,6 +49,8 @@ export function parsePost(path: string, source: string): Post | null {
   const title = meta.title;
   if (typeof title !== 'string' || !title) return null;
 
+  const body = text.slice(fm[0].length).trim();
+
   return {
     slug: path.replace(/\\/g, '/').split('/').pop()!.replace(/\.md$/, ''),
     title,
@@ -54,7 +58,8 @@ export function parsePost(path: string, source: string): Post | null {
     date: file[1],
     summary: typeof meta.summary === 'string' ? meta.summary : '',
     projects: Array.isArray(meta.projects) ? meta.projects : [],
-    body: text.slice(fm[0].length).trim(),
+    image: /!\[[^\]]*\]\(([^)\s]+)\)/.exec(body)?.[1] ?? null,
+    body,
   };
 }
 
