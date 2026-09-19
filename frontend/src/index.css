@@ -26,7 +26,9 @@ html {
 body {
   user-select: none;
   -webkit-user-select: none;
-  overflow-x: hidden;
+  /* hidden ではなく clip。html と body の両方が hidden だと body がスクロール領域になり、
+     中の position: sticky(ヘッダーなど)が一切効かなくなる */
+  overflow-x: clip;
 }
 
 /* Allow selection on specific elements */

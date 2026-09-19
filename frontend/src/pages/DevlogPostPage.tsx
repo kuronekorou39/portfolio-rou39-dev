@@ -9,7 +9,7 @@ import PageBackground from '@/components/PageBackground';
 export default function DevlogPostPage() {
   const { slug = '' } = useParams();
   const post = findPost(slug);
-  // 関連作品は id で持っているので、表示名だけ API から引く。引けなくても id で出せる
+  // 関連アプリは id で持っているので、表示名だけ API から引く。引けなくても id で出せる
   const [titles, setTitles] = useState<Record<string, string>>({});
 
   useEffect(() => {

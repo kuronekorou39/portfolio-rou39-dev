@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parsePost, sortPosts } from './posts';
 
 const SOURCE = `---
-title: 作品一覧を現状に合わせた
+title: アプリ一覧を現状に合わせた
 summary: 5件追加した
 projects: [vloom, "hayabuzz"]
 ---
@@ -17,7 +17,7 @@ describe('parsePost', () => {
     const post = parsePost('../../../data/posts/2026-09-18-apps-refresh.md', SOURCE);
     expect(post).toEqual({
       slug: '2026-09-18-apps-refresh',
-      title: '作品一覧を現状に合わせた',
+      title: 'アプリ一覧を現状に合わせた',
       date: '2026-09-18',
       summary: '5件追加した',
       projects: ['vloom', 'hayabuzz'],
@@ -28,7 +28,7 @@ describe('parsePost', () => {
 
   it('CRLF の改行でも読める', () => {
     const post = parsePost('data/posts/2026-09-18-a.md', SOURCE.replace(/\n/g, '\r\n'));
-    expect(post?.title).toBe('作品一覧を現状に合わせた');
+    expect(post?.title).toBe('アプリ一覧を現状に合わせた');
     expect(post?.body).toBe('本文の1行目。\n\n## 見出し');
   });
 

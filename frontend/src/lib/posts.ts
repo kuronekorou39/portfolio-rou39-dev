@@ -8,7 +8,7 @@ export interface Post {
   /** YYYY-MM-DD */
   date: string;
   summary: string;
-  /** 関連する作品の id (data/projects.json の id) */
+  /** 関連するアプリの id (data/projects.json の id) */
   projects: string[];
   /** 本文の最初の画像。一覧の見出し画像に使う。無ければ null */
   image: string | null;

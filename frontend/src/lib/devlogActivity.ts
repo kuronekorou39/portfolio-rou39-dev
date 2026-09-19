@@ -43,7 +43,7 @@ export function buildCalendar(posts: Post[], today: string, weeks: number): DayC
   );
 }
 
-/** 期間内の記事を作品ごとに数え、多い順に返す。同数なら id 順で固定する */
+/** 期間内の記事をアプリごとに数え、多い順に返す。同数なら id 順で固定する */
 export function countByProject(posts: Post[], from: string, to: string): { id: string; count: number }[] {
   const count = new Map<string, number>();
   for (const post of posts) {
