@@ -6,7 +6,7 @@ projects: [vloom]
 
 Vloom は、画面に出したコードの動画をカメラで撮るだけでファイルが渡るアプリ。インストール不要の Web 版は受信が遅く、2MB のファイルだと復元まで届かなかった。走査(カメラの 1 コマからコードを読む処理)を速くして、通るようにした。
 
-![走査 fps の推移](/devlog/2026-09-18-vloom-pwa-receive/scan-fps.svg)
+![走査 fps の推移](/devlog/2026-09-07-vloom-pwa-receive/scan-fps.svg)
 
 | やったこと | 走査 fps | 中身 |
 |---|---|---|
