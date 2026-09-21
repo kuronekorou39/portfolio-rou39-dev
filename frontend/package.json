@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "content": "node ../scripts/content/build-content.mjs",
+    "predev": "npm run content",
     "dev": "vite",
+    "prebuild": "npm run content",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

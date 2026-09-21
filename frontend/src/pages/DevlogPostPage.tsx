@@ -3,34 +3,66 @@ import { Link, useParams } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchProjects } from '@/lib/api';
-import { findPost, posts } from '@/lib/posts';
+import { fetchPostBody, fetchPostIndex, type PostMeta } from '@/lib/posts';
 import PageBackground from '@/components/PageBackground';
+
+type State =
+  | { status: 'loading' }
+  | { status: 'missing' }
+  | { status: 'ready'; posts: PostMeta[]; post: PostMeta; body: string };
 
 export default function DevlogPostPage() {
   const { slug = '' } = useParams();
-  const post = findPost(slug);
+  const [state, setState] = useState<State>({ status: 'loading' });
   // 関連アプリは id で持っているので、表示名だけ API から引く。引けなくても id で出せる
   const [titles, setTitles] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!post || post.projects.length === 0) return;
+    let alive = true;
+    fetchPostIndex()
+      .then(async (posts) => {
+        const post = posts.find((p) => p.slug === slug);
+        if (!post) return { status: 'missing' } as const;
+        return { status: 'ready', posts, post, body: await fetchPostBody(slug) } as const;
+      })
+      .catch(() => ({ status: 'missing' }) as const)
+      .then((next) => alive && setState(next));
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
+
+  const hasProjects = state.status === 'ready' && state.post.projects.length > 0;
+  useEffect(() => {
+    if (!hasProjects) return;
     fetchProjects()
       .then((all) => setTitles(Object.fromEntries(all.map((p) => [p.id, p.title]))))
       .catch(() => {});
-  }, [post]);
+  }, [hasProjects]);
 
-  if (!post) {
+  // 前後のログへ移ったとき、読み込みが終わるまでは前の本文を出したままにする(白く抜けない)
+  if (state.status !== 'ready') {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-32 text-center text-white">
-        <p className="mb-6 text-white/50">記事が見つかりません</p>
-        <Link to="/devlog" className="text-sm text-white/60 underline underline-offset-4 hover:text-white">
-          Devlog へ戻る
-        </Link>
+      <div className="relative isolate min-h-screen bg-[#060608] text-white">
+        <PageBackground />
+        <div className="mx-auto max-w-3xl px-6 py-32 text-center">
+          {state.status === 'loading' ? (
+            <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-white/50" />
+          ) : (
+            <>
+              <p className="mb-6 text-white/50">ログが見つかりません</p>
+              <Link to="/devlog" className="text-sm text-white/60 underline underline-offset-4 hover:text-white">
+                Devlog へ戻る
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     );
   }
 
-  // posts は新しい順。前の記事 = より古い記事
+  const { posts, post, body } = state;
+  // posts は新しい順。前のログ = より古いログ
   const index = posts.indexOf(post);
   const newer = posts[index - 1];
   const older = posts[index + 1];
@@ -64,14 +96,14 @@ export default function DevlogPostPage() {
         </header>
 
         <div className="selectable md-content">
-          <Markdown remarkPlugins={[remarkGfm]}>{post.body}</Markdown>
+          <Markdown remarkPlugins={[remarkGfm]}>{body}</Markdown>
         </div>
 
         {(newer || older) && (
           <nav className="mt-16 grid gap-4 border-t border-white/[0.06] pt-8 sm:grid-cols-2">
             {older ? (
               <Link to={`/devlog/${older.slug}`} className="group">
-                <span className="text-xs text-white/30">← 前の記事</span>
+                <span className="text-xs text-white/30">← 前のログ</span>
                 <span className="mt-1 block text-sm text-white/60 transition-colors group-hover:text-white">{older.title}</span>
               </Link>
             ) : (
@@ -79,7 +111,7 @@ export default function DevlogPostPage() {
             )}
             {newer && (
               <Link to={`/devlog/${newer.slug}`} className="group sm:text-right">
-                <span className="text-xs text-white/30">次の記事 →</span>
+                <span className="text-xs text-white/30">次のログ →</span>
                 <span className="mt-1 block text-sm text-white/60 transition-colors group-hover:text-white">{newer.title}</span>
               </Link>
             )}

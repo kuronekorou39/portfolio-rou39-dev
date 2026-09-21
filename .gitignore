@@ -43,3 +43,6 @@ frontend/public/relations-app/data/depth2*.json
 # uraneko 会計台帳(ローカル専用・共同出資者との精算元帳。財務データなのでコミットしない)
 scripts/uraneko/uraneko-ledger.json
 scripts/uraneko/uraneko-ledger.json.tmp
+
+# Devlog の配信用ファイル (scripts/content/build-content.mjs が data/posts から毎回作る)
+frontend/public/content/

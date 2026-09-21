@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { buildCalendar, countByProject } from './devlogActivity';
-import type { Post } from './posts';
+import type { PostMeta } from './posts';
 
-const post = (date: string, projects: string[] = ['vloom']): Post => ({
-  slug: `${date}-x`, title: '', date, summary: '', projects, image: null, body: '',
+const post = (date: string, projects: string[] = ['vloom']): PostMeta => ({
+  slug: `${date}-x`, title: '', date, summary: '', projects, image: null,
 });
 
 describe('buildCalendar', () => {

@@ -4,11 +4,27 @@
 
 ## 記事の置き場所と形式
 
-正本は `data/posts/*.md`。ビルド時に `frontend/src/lib/posts.ts` が取り込むので、バックエンドも DB も無い。
-main へ push すると CI がビルドして公開される(= push が公開)。
+正本は `data/posts/*.md`。サイトには焼き込まず、**実行時に読む**。
+
+- `scripts/content/build-content.mjs` が全ログを検査し、配信用のファイルを `frontend/public/content/devlog/` に書き出す
+  (`index.json` = 一覧用のメタ情報、`posts/<slug>.md` = 本文)。生成物は git で管理しない
+- サイトは一覧で `index.json` を、ログを開いたときにその 1 本の本文を取得する(`frontend/src/lib/posts.ts`)
+- 手元では `npm run dev` / `npm run build` の前に自動で生成される。検査だけなら `node scripts/content/build-content.mjs --check`
+
+### 公開のしかた(main へ push)
+
+`.github/workflows/deploy.yml` が、push で変わった場所を見て経路を選ぶ。
+
+| 変わった場所 | 経路 | 所要 |
+|---|---|---|
+| `data/posts/`、`data/projects.json`、`frontend/public/devlog/`、`frontend/public/projects/` **だけ** | 中身だけの経路: 検査 → 生成 → S3 へ同期 → そのパスだけ invalidate → アプリのデータを投入 | 1〜2 分 |
+| それ以外が 1 ファイルでも含まれる | フルデプロイ(ビルド + CDK)。中身も一緒に載る | 10〜20 分 |
+
+**ログの追加は、仕組みの変更と同じ push に混ぜない。** 混ぜるとフルデプロイになる。
+**検査に 1 件でも落ちると、その push では何も載らない**(下の「何を書くか」「書くときのルール」を機械的に見ている)。push の前に `--check` を回す。
 
 ファイル名は `YYYY-MM-DD-<slug>.md`。slug は半角の小文字・数字・ハイフンのみ。
-この形式に合わないファイルは記事として扱われない。**日付はファイル名が正**(並び順と表示に使う)。
+この形式に合わないファイルは検査で落ちる。**日付はファイル名が正**(並び順と表示に使う)。
 
 ```markdown
 ---

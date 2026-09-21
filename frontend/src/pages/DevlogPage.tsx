@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchProjects } from '@/lib/api';
 import { buildCalendar, countByProject, localToday, type DayCell } from '@/lib/devlogActivity';
-import { posts, type Post } from '@/lib/posts';
+import { fetchPostIndex, type PostMeta } from '@/lib/posts';
 import PageBackground from '@/components/PageBackground';
 
 const PAGE_SIZE = 20;
@@ -23,8 +23,8 @@ function cellColor(count: number): string {
 const shortDate = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
 
 // 月ごとに区切る。日次で増えていくので、区切りが無いと日付の列が読みにくい
-function groupByMonth(items: Post[]): { month: string; items: Post[] }[] {
-  const groups: { month: string; items: Post[] }[] = [];
+function groupByMonth(items: PostMeta[]): { month: string; items: PostMeta[] }[] {
+  const groups: { month: string; items: PostMeta[] }[] = [];
   for (const post of items) {
     const month = post.date.slice(0, 7);
     const last = groups[groups.length - 1];
@@ -34,14 +34,14 @@ function groupByMonth(items: Post[]): { month: string; items: Post[] }[] {
   return groups;
 }
 
-function Activity({ titles }: { titles: Record<string, string> }) {
+function Activity({ posts, titles }: { posts: PostMeta[]; titles: Record<string, string> }) {
   const today = localToday();
-  const calendar = useMemo(() => buildCalendar(posts, today, ACTIVITY_WEEKS), [today]);
+  const calendar = useMemo(() => buildCalendar(posts, today, ACTIVITY_WEEKS), [posts, today]);
   const from = calendar[0][0].date;
   const days = calendar.flat().filter((d) => !d.future);
   const total = days.reduce((n, d) => n + d.posts.length, 0);
   const workDays = days.filter((d) => d.posts.length > 0).length;
-  const byProject = useMemo(() => countByProject(posts, from, today), [from, today]);
+  const byProject = useMemo(() => countByProject(posts, from, today), [posts, from, today]);
   const top = byProject.slice(0, TOP_PROJECTS);
   const max = top[0]?.count ?? 1;
 
@@ -202,9 +202,17 @@ function Pager({ page, pages, onChange }: { page: number; pages: number; onChang
 
 export default function DevlogPage() {
   const [params, setParams] = useSearchParams();
-  const pages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+  // null = 読み込み中
+  const [posts, setPosts] = useState<PostMeta[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    fetchPostIndex().then(setPosts).catch(() => setFailed(true));
+  }, []);
+
+  const all = posts ?? [];
+  const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
   const page = Math.min(pages, Math.max(1, Number(params.get('page')) || 1));
-  const groups = groupByMonth(posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
+  const groups = groupByMonth(all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
   const listRef = useRef<HTMLDivElement>(null);
 
   // アプリの id を表示名にする。引けなくても id のまま出せる
@@ -228,13 +236,21 @@ export default function DevlogPage() {
         <h1 className="mb-3 text-5xl font-black tracking-tight md:text-6xl">Devlog</h1>
         <p className="mb-10 text-lg text-white/40">開発の記録。その日に進んだことを、アプリごとに短く</p>
 
-        {posts.length === 0 ? (
+        {posts === null ? (
+          failed ? (
+            <p className="py-20 text-center text-white/40">ログを読み込めませんでした</p>
+          ) : (
+            <div className="flex justify-center py-20">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-white/50" />
+            </div>
+          )
+        ) : posts.length === 0 ? (
           <p className="py-20 text-center text-white/40">まだログがありません</p>
         ) : (
           <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_17.5rem] xl:items-start xl:gap-12">
             {/* 狭い窓では一覧の上、広い窓では右に固定する */}
             <aside className="mb-10 xl:sticky xl:top-24 xl:order-2 xl:mb-0">
-              <Activity titles={titles} />
+              <Activity posts={posts} titles={titles} />
             </aside>
 
             <div className="min-w-0 xl:order-1">

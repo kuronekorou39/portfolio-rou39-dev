@@ -4,8 +4,89 @@ on:
   push:
     branches: [main]
 
+# デプロイを重ねて走らせない(CDK と S3 の同期がぶつかる)。後から来た push は前のが終わるのを待つ
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  SITE_BUCKET: rou39-site
+  # rou39.com の CloudFront。作り直すと ID が変わる。infra/lib/github-oidc-stack.ts の
+  # SITE_DISTRIBUTION_ID と揃えること(あちらは invalidate の権限をこの配信だけに絞っている)
+  SITE_DISTRIBUTION_ID: E2MX55DRRVJ7XR
+
 jobs:
+  # 中身(ログ・アプリのデータ・その画像)だけが変わった push は、CDK を回さず軽い経路で反映する。
+  # 仕組み(frontend / backend / infra など)が 1 ファイルでも変わっていたらフルデプロイ。
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      content_only: ${{ steps.diff.outputs.content_only }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # 比べる相手が取れない(初回 push・force push など)ときは、安全側でフルデプロイ
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "content_only=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          other=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" \
+            | grep -vE '^(data/posts/|data/projects\.json$|frontend/public/devlog/|frontend/public/projects/)' || true)
+          if [ -z "$other" ]; then echo "content_only=true" >> "$GITHUB_OUTPUT"
+          else echo "content_only=false" >> "$GITHUB_OUTPUT"; echo "仕組みの変更あり:"; echo "$other" | head -20; fi
+
+  content:
+    needs: changes
+    if: needs.changes.outputs.content_only == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      # seed スクリプトが backend の AWS SDK を使う
+      - name: Install dependencies
+        run: npm ci
+
+      # 形式違反のログが 1 件でもあれば、ここで止まって何も載らない(ルールは docs/devlog.md)
+      - name: Check and build content
+        run: node scripts/content/build-content.mjs
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::234080517105:role/github-actions-deploy
+          aws-region: ap-northeast-1
+
+      - name: Sync content to S3
+        run: |
+          aws s3 sync frontend/public/content/devlog "s3://$SITE_BUCKET/content/devlog" --delete
+          aws s3 sync frontend/public/devlog "s3://$SITE_BUCKET/devlog" --delete
+          # アプリの画像は消さない(フルデプロイ側も prune しない。消し忘れより消しすぎのほうが痛い)
+          aws s3 sync frontend/public/projects "s3://$SITE_BUCKET/projects"
+
+      - name: Invalidate content paths
+        run: |
+          aws cloudfront create-invalidation --distribution-id "$SITE_DISTRIBUTION_ID" \
+            --paths '/content/devlog/*' '/devlog/*' '/projects/*'
+
+      - name: Seed projects data
+        run: node scripts/seed/seed-projects.mjs
+
   deploy:
+    needs: changes
+    if: needs.changes.outputs.content_only != 'true'
     runs-on: ubuntu-latest
     # OIDC で AWS の短命クレデンシャルを取得するために必要
     permissions:
