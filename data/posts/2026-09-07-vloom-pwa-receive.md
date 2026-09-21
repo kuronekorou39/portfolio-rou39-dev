@@ -1,6 +1,6 @@
 ---
 title: Vloom: ブラウザ版の受信を 2.7 倍速くした
-summary: インストール不要の Web 版の受信を、走査 3.6 fps から 9.9 fps に
+summary: インストール不要の Web 版の受信を、走査 3.6 fps から 9.9 fps まで上げた
 projects: [vloom]
 ---
 
