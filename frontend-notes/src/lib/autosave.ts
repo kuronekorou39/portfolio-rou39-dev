@@ -285,8 +285,10 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
   );
 
   // サーバ既知ビューが更新されるたびにオフライン用スナップショットを更新する
+  // (保存のたびに書くと数秒おきに IndexedDB へメモ全体が乗るので、少し待って最後の 1 回だけ書く)
   useEffect(() => {
-    void saveSnapshot(token, latest).catch(() => {});
+    const timer = setTimeout(() => void saveSnapshot(token, latest).catch(() => {}), 1500);
+    return () => clearTimeout(timer);
   }, [token, latest]);
 
   // ---- 保存 ----
@@ -309,6 +311,13 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
   const patchTab = useCallback((tabId: string, patch: Partial<TabState>) => {
     setTabs((prev) => prev.map((t) => (t.tab_id === tabId ? { ...t, ...patch } : t)));
   }, []);
+
+  /**
+   * バッファから復元した未送信編集(dirty で予約が無いタブ)の保存を予約する。
+   * 起動時と、遅延読み込み/同期でサーバ応答を取り込んだ直後にだけ走らせる
+   * (入力のたびに走らせると IME 変換中に止めた予約を戻してしまう)。
+   */
+  const armPendingRef = useRef(true);
 
   /** 保存が通った内容をサーバ既知キャッシュへ反映する(スナップショットの元)。 */
   const rememberSaved = useCallback(
@@ -482,6 +491,9 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
               const unchanged =
                 !!cur && !!sent && cur.title === sent.title && cur.content === sent.content;
               if (unchanged) clearBuffer(r.tab_id);
+              // 送信後にさらに編集されていたら、バッファの基準 version を新しい版に合わせる
+              // (古いままだと次回ロードで偽の競合になる)
+              else if (cur) writeBuffer(r.tab_id, { title: cur.title, content: cur.content, base_version: r.version, ts: Date.now() });
               patchTab(r.tab_id, { version: r.version, dirty: !unchanged, save: unchanged ? 'saved' : 'retrying' });
             } else if (r.result === 'conflict') {
               // 画面がまだ生きていれば個別保存で 409 を踏み直し、調停バナーを出す
@@ -807,6 +819,7 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
       rememberServer(data);
       if (data.unchanged) return;
       revRef.current = data.rev ?? null;
+      armPendingRef.current = true; // 取り込みでバッファ復元された dirty タブがあれば保存を予約する
       mergeServerTabs(data.tabs);
     },
     [rememberServer, mergeServerTabs],
@@ -816,8 +829,11 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
     if (syncStoppedRef.current) return 'stopped';
     setSyncing(true);
     try {
-      // 本文は読み込み済みのタブぶんだけ要求する(未読み込みのタブは表示時に取る)
-      const loadedIds = tabsRef.current.filter((t) => t.loaded && !t.pendingCreate).map((t) => t.tab_id);
+      // 本文は読み込み済みのタブぶんだけ、しかも手元の version と違うものだけ要求する
+      // (未読み込みのタブは表示時に取る。同じ version のタブはメタだけ返る)
+      const loadedIds = tabsRef.current
+        .filter((t) => t.loaded && !t.pendingCreate)
+        .map((t) => ({ tab_id: t.tab_id, version: t.version }));
       const data = await api.getMemo(token, pin, {
         knownRev: revRef.current ?? undefined,
         tabIds: loadedIds,
@@ -839,8 +855,18 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
 
   syncRef.current = sync;
 
-  /** 読み込み中のタブ(二重要求の抑止)。 */
-  const loadingRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!armPendingRef.current) return;
+    armPendingRef.current = false;
+    for (const t of tabs) {
+      if (t.dirty && t.save === 'saved' && !t.pendingCreate && !timersRef.current.has(t.tab_id)) {
+        armSave(t.tab_id, (id) => void saveNow(id));
+      }
+    }
+  }, [tabs, armSave, saveNow]);
+
+  /** 読み込み中のタブ → その Promise。二重要求を抑止しつつ、後から呼んだ側にも実結果を返す。 */
+  const loadingRef = useRef(new Map<string, Promise<'ok' | 'stopped' | 'error'>>());
 
   /**
    * 未読み込みタブの本文を取得する(タブを開いたとき)。
@@ -850,24 +876,29 @@ export function useAutosave(token: string, initial: MemoData, pin?: string) {
    * 'error' はオフライン等の一時的な失敗。
    */
   const loadTab = useCallback(
-    async (tabId: string): Promise<'ok' | 'stopped' | 'error'> => {
-      if (syncStoppedRef.current) return 'stopped';
+    (tabId: string): Promise<'ok' | 'stopped' | 'error'> => {
+      if (syncStoppedRef.current) return Promise.resolve('stopped');
       const t = tabsRef.current.find((x) => x.tab_id === tabId);
-      if (!t || t.loaded || loadingRef.current.has(tabId)) return 'ok';
-      loadingRef.current.add(tabId);
-      try {
-        const data = await api.getMemo(token, pin, { tabIds: [tabId] });
-        applyServer(data);
-        return 'ok';
-      } catch (e) {
-        if (e instanceof ApiError && (e.status === 401 || e.status === 404)) {
-          syncStoppedRef.current = true;
-          return 'stopped';
+      if (!t || t.loaded) return Promise.resolve('ok');
+      const inflight = loadingRef.current.get(tabId);
+      if (inflight) return inflight;
+      const p = (async (): Promise<'ok' | 'stopped' | 'error'> => {
+        try {
+          const data = await api.getMemo(token, pin, { tabIds: [tabId] });
+          applyServer(data);
+          return 'ok';
+        } catch (e) {
+          if (e instanceof ApiError && (e.status === 401 || e.status === 404)) {
+            syncStoppedRef.current = true;
+            return 'stopped';
+          }
+          return 'error';
+        } finally {
+          loadingRef.current.delete(tabId);
         }
-        return 'error';
-      } finally {
-        loadingRef.current.delete(tabId);
-      }
+      })();
+      loadingRef.current.set(tabId, p);
+      return p;
     },
     [token, pin, applyServer],
   );

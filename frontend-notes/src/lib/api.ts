@@ -123,8 +123,11 @@ export interface MemoData {
 export interface GetMemoOptions {
   /** 手元の rev。サーバの rev がこれ以下なら unchanged で返る。 */
   knownRev?: number;
-  /** 本文を含めるタブ id。firstTab と両方省略なら全タブ。 */
-  tabIds?: string[];
+  /**
+   * 本文を含めるタブ。{ tab_id, version } で渡すと、サーバの version が同じタブは本文が省かれる
+   * (手元と同じ内容を送り直さない)。firstTab と両方省略なら全タブ。
+   */
+  tabIds?: (string | { tab_id: string; version: number })[];
   /** 先頭タブの本文も含める(前回開いていたタブが分からないとき)。 */
   firstTab?: boolean;
 }

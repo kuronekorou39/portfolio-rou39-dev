@@ -57,9 +57,10 @@ async function queryAllTabs(memo_id: string): Promise<Tab[]> {
  * 通信量を抑えるための省略パラメータ(どちらも任意。省略時は従来どおり全タブ本文を返す):
  * - known_rev: クライアントが最後に取り込んだ変更カウンタ。メモの rev がこれ以下なら
  *   タブを読まず { unchanged: true } で返す(ポーリングの本命経路。応答は数KB)。
- * - tab_ids: 本文(content)を含めるタブ id の配列。first_tab=true なら先頭タブも含める。
- *   どちらかを指定したら、それ以外のタブは title/version/position/byte_size のメタだけ返す
- *   (遅延読み込み)。両方省略なら全タブ本文。
+ * - tab_ids: 本文(content)を含めるタブの配列。要素は tab_id 文字列か { tab_id, version }。
+ *   version 付きなら、サーバの version と同じタブは本文を省く(手元と同じ内容を送り直さない)。
+ *   first_tab=true なら先頭タブも含める。どちらかを指定したら、それ以外のタブは
+ *   title/version/position/byte_size のメタだけ返す(遅延読み込み)。両方省略なら全タブ本文。
  */
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
@@ -130,9 +131,17 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     // 本文を含めるタブの選択。両方省略なら全タブ(旧クライアント・オフライン保存との互換)
-    const wantIds = Array.isArray(tab_ids)
-      ? new Set(tab_ids.filter((x): x is string => typeof x === 'string'))
-      : null;
+    // tab_id → クライアントが持つ version(不明なら null)
+    const wantIds = Array.isArray(tab_ids) ? new Map<string, number | null>() : null;
+    if (wantIds) {
+      for (const x of tab_ids as unknown[]) {
+        if (typeof x === 'string') wantIds.set(x, null);
+        else if (x && typeof x === 'object' && typeof (x as { tab_id?: unknown }).tab_id === 'string') {
+          const v = (x as { version?: unknown }).version;
+          wantIds.set((x as { tab_id: string }).tab_id, typeof v === 'number' ? v : null);
+        }
+      }
+    }
     const wantFirst = first_tab === true;
     const wantAll = wantIds === null && !wantFirst;
 
@@ -142,7 +151,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const tabs = items
       .sort((a, b) => a.position - b.position)
       .map((t, i) => {
-        const withContent = wantAll || (wantFirst && i === 0) || (wantIds?.has(t.tab_id) ?? false);
+        const known = wantIds?.get(t.tab_id); // undefined=要求外, null=version 不明, number=手元の version
+        const withContent =
+          wantAll || (wantFirst && i === 0) || (known !== undefined && known !== t.version);
         return {
           tab_id: t.tab_id,
           title: t.title,
