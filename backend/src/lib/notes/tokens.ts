@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { GetCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../dynamo';
-import { MAX_MEMOS_PER_USER } from './limits';
-import type { Memo, NotesToken, TokenMode } from './types';
+import { limitsFor } from './limits';
+import type { Memo, NotesToken, NotesUserQuota, TokenMode } from './types';
 
 const USERS_TABLE = process.env.USERS_TABLE!;
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
@@ -398,19 +398,35 @@ export async function issueMemo(params: {
   const token_hash = hashToken(rawToken);
   const now = new Date().toISOString();
 
+  // プランを読んで上限を決める。カウンタ条件には「読んだ時点のプラン」を期待値として含め、
+  // 読みと予約の間にプランが変わっても上限を取り違えない(変わっていれば条件が落ちて再試行で済む)。
+  const userRes = await docClient.send(
+    new GetCommand({ TableName: USERS_TABLE, Key: { user_id: owner_user_id }, ConsistentRead: true }),
+  );
+  const user = userRes.Item as NotesUserQuota | undefined;
+  const limits = limitsFor(user?.plan);
+  const planCondition = user?.plan
+    ? '#plan = :plan AND memo_count < :cap'
+    : 'attribute_not_exists(user_id) OR (attribute_not_exists(#plan) AND memo_count < :cap)';
+
   try {
     await docClient.send(
       new TransactWriteCommand({
         TransactItems: [
           {
-            // 無料枠カウンタの予約(coupon.ts reserveRedemption と同じ条件付きカウンタ)。
+            // 利用枠カウンタの予約(coupon.ts reserveRedemption と同じ条件付きカウンタ)。
             // 初回発行時は行が無いので attribute_not_exists でも通す(ADD が行を作る)。
             Update: {
               TableName: USERS_TABLE,
               Key: { user_id: owner_user_id },
-              ConditionExpression: 'attribute_not_exists(user_id) OR memo_count < :cap',
+              ConditionExpression: planCondition,
               UpdateExpression: 'ADD memo_count :one',
-              ExpressionAttributeValues: { ':cap': MAX_MEMOS_PER_USER, ':one': 1 },
+              ExpressionAttributeNames: { '#plan': 'plan' },
+              ExpressionAttributeValues: {
+                ':cap': limits.memos,
+                ':one': 1,
+                ...(user?.plan ? { ':plan': user.plan } : {}),
+              },
             },
           },
           {
@@ -423,6 +439,8 @@ export async function issueMemo(params: {
                 active_token_hash: token_hash,
                 active_token_raw: rawToken, // 管理画面での URL 再表示用
                 tab_count: 1,
+                tab_limit: limits.tabs, // 未認証の create-tab はこれで上限を強制する
+                rev: 0,
                 status: 'active',
                 created_at: now,
                 updated_at: now,
@@ -469,7 +487,7 @@ export async function issueMemo(params: {
   } catch (err: unknown) {
     if ((err as { name?: string })?.name === 'TransactionCanceledException') {
       const reasons = (err as { CancellationReasons?: { Code?: string }[] }).CancellationReasons;
-      // 先頭(users のカウンタ条件)の失敗 = 無料枠上限
+      // 先頭(users のカウンタ条件)の失敗 = 利用枠上限(または読みと予約の間のプラン変更)
       if (reasons?.[0]?.Code === 'ConditionalCheckFailed') {
         return { ok: false, reason: 'limit' };
       }

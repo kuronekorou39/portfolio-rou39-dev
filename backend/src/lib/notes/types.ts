@@ -25,6 +25,18 @@ export interface Memo {
   /** メモ画面アクセス時に要求する PIN(scrypt ハッシュ "salt:hash")。未設定なら属性なし。 */
   pin_hash?: string | null;
   tab_count: number;
+  /**
+   * 内容の変更カウンタ(2026-10-15)。タブの保存/作成/削除/並べ替え・タイトル変更のたびに +1。
+   * get-memo はクライアントが持つ値(known_rev)以下なら本文を返さず「変更なし」で済ませる
+   * (30秒ポーリングのたびに全タブ本文を返していたのをやめる)。旧メモは属性なし=0。
+   */
+  rev?: number;
+  /**
+   * このメモのタブ数上限。発行時に所有者のプランから刻印する(未認証の create-tab Lambda は
+   * users テーブルに触れないため、メモ側に持たせる)。属性なし=旧メモ=無料枠の上限。
+   * プラン変更後は list-memos(管理画面の一覧)が所有メモを読んだときに刻み直す。
+   */
+  tab_limit?: number;
   status: 'active' | 'deleted';
   created_at: string;
   updated_at: string;
@@ -93,8 +105,10 @@ export interface AccessLogEntry {
   expires_at: number; // epoch秒(TTL)
 }
 
-/** notes-users の無料枠カウンタ行(PK user_id)。未認証 Lambda からは一切触らない。 */
+/** notes-users の利用枠行(PK user_id)。未認証 Lambda からは一切触らない。 */
 export interface NotesUserQuota {
   user_id: string;
   memo_count: number;
+  /** プラン(limits.ts の Plan)。属性なし=free。運営者がコンソールで手で付ける。 */
+  plan?: string;
 }

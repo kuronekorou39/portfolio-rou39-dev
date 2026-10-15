@@ -19,13 +19,15 @@ export async function renameMemo(params: {
         TableName: MEMOS_TABLE,
         Key: { memo_id: params.memo_id },
         ConditionExpression: 'owner_user_id = :me AND #s = :active',
-        UpdateExpression: 'SET title = :title, updated_at = :now',
+        // タイトルはメモ画面のヘッダにも出るので rev を進めて開いている端末に届ける
+        UpdateExpression: 'SET title = :title, updated_at = :now ADD rev :one',
         ExpressionAttributeNames: { '#s': 'status' },
         ExpressionAttributeValues: {
           ':me': params.owner_user_id,
           ':active': 'active',
           ':title': params.title,
           ':now': new Date().toISOString(),
+          ':one': 1,
         },
       }),
     );

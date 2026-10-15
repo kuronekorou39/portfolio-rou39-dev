@@ -1,14 +1,14 @@
 import { randomUUID } from 'crypto';
 import { GetCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient } from '../dynamo';
-import { MAX_TABS_PER_MEMO, TAB_CAP_BYTES } from './limits';
+import { PLAN_LIMITS, TAB_CAP_BYTES } from './limits';
 import type { Tab } from './types';
 
 const MEMOS_TABLE = process.env.MEMOS_TABLE!;
 const TABS_TABLE = process.env.TABS_TABLE!;
 
 export type SaveTabResult =
-  | { kind: 'ok'; version: number }
+  | { kind: 'ok'; version: number; rev: number | null }
   | { kind: 'too_large' }
   | { kind: 'not_found' }
   /** version 不一致(別タブ/別端末が先に保存)。サーバの現在値を返して再調停させる。 */
@@ -49,9 +49,11 @@ export async function saveTab(params: {
         ReturnValues: 'ALL_NEW',
       }),
     );
-    // Lambda は応答後にプロセスが凍結されるため fire-and-forget にせず await する
-    await touchMemo(memo_id, now);
-    return { kind: 'ok', version: (updated.Attributes as Tab).version };
+    // Lambda は応答後にプロセスが凍結されるため fire-and-forget にせず await する。
+    // 順序は「タブ → メモ(rev)」固定。get-memo は「メモ(rev)→ タブ」の順に強整合で読むので、
+    // rev が進んで見えたときは必ず新しい本文も見える(入れ替えると古い本文を掴み得る)
+    const rev = await touchMemo(memo_id, now);
+    return { kind: 'ok', version: (updated.Attributes as Tab).version, rev };
   } catch (err: unknown) {
     if ((err as { name?: string })?.name !== 'ConditionalCheckFailedException') throw err;
     // 不一致 or タブ消滅。現在値を強整合で読んで判別し、409 側にはサーバ値を渡す
@@ -72,7 +74,7 @@ export type CreateTabResult =
   | { kind: 'limit' };
 
 /**
- * タブ追加。memos.tab_count の条件付きカウンタで上限を原子的に強制する。
+ * タブ追加。memos.tab_count の条件付きカウンタで上限(memos.tab_limit)を原子的に強制する。
  *
  * tab_id はクライアントが採番して送ってくる(UI を先に更新して裏で作る楽観追加のため。
  * サーバ採番だと仮ID→実IDの差し替えが要り、dirty バッファや debounce タイマーの
@@ -100,12 +102,14 @@ export async function createTab(params: {
             Update: {
               TableName: MEMOS_TABLE,
               Key: { memo_id },
-              ConditionExpression: '#s = :active AND tab_count < :max',
-              UpdateExpression: 'ADD tab_count :one SET updated_at = :now',
+              // 上限はメモに刻印された tab_limit(プラン由来)。刻印の無い旧メモは無料枠
+              ConditionExpression:
+                '#s = :active AND ((attribute_not_exists(tab_limit) AND tab_count < :free) OR tab_count < tab_limit)',
+              UpdateExpression: 'ADD tab_count :one, rev :one SET updated_at = :now',
               ExpressionAttributeNames: { '#s': 'status' },
               ExpressionAttributeValues: {
                 ':active': 'active',
-                ':max': MAX_TABS_PER_MEMO,
+                ':free': PLAN_LIMITS.free.tabs,
                 ':one': 1,
                 ':now': now,
               },
@@ -141,12 +145,12 @@ export async function createTab(params: {
   return { kind: 'ok', tab: { tab_id, title, content: '', version: 0, position } };
 }
 
-export type ReorderTabsResult = { kind: 'ok' } | { kind: 'not_found' };
+export type ReorderTabsResult = { kind: 'ok'; rev: number | null } | { kind: 'not_found' };
 
 /**
  * タブの並べ替え。渡された tab_id の順に position を 0,1,2… で振り直す。
  *
- * 1タブずつ saveTab を呼ぶと per-token スロットル(1回/秒)で12枚に12秒かかるため、
+ * 1タブずつ saveTab を呼ぶと per-token スロットル(1回/秒)でタブ数ぶんの秒数がかかるため、
  * TransactWrite 1回でまとめて書く(スロットル消費も1回)。
  * content には触らないので、編集中の楽観ロック(version)とは干渉しない。
  * 存在しない tab_id が混ざっていたらトランザクションごと失敗させる(部分適用を作らない)。
@@ -156,7 +160,7 @@ export async function reorderTabs(params: {
   tab_ids: string[];
 }): Promise<ReorderTabsResult> {
   const { memo_id, tab_ids } = params;
-  if (!tab_ids.length) return { kind: 'ok' };
+  if (!tab_ids.length) return { kind: 'ok', rev: null };
   const now = new Date().toISOString();
 
   try {
@@ -181,8 +185,8 @@ export async function reorderTabs(params: {
     throw err;
   }
 
-  await touchMemo(memo_id, now);
-  return { kind: 'ok' };
+  const rev = await touchMemo(memo_id, now);
+  return { kind: 'ok', rev };
 }
 
 export type DeleteTabResult = { kind: 'ok' } | { kind: 'last_tab' };
@@ -200,7 +204,7 @@ export async function deleteTab(params: { memo_id: string; tab_id: string }): Pr
               TableName: MEMOS_TABLE,
               Key: { memo_id },
               ConditionExpression: '#s = :active AND tab_count > :one',
-              UpdateExpression: 'ADD tab_count :minus SET updated_at = :now',
+              UpdateExpression: 'ADD tab_count :minus, rev :one SET updated_at = :now',
               ExpressionAttributeNames: { '#s': 'status' },
               ExpressionAttributeValues: { ':active': 'active', ':one': 1, ':minus': -1, ':now': now },
             },
@@ -224,19 +228,30 @@ export async function deleteTab(params: { memo_id: string; tab_id: string }): Pr
   return { kind: 'ok' };
 }
 
-/** メモの更新時刻を進める(管理画面の「更新」表示用)。失敗しても保存は成功扱い。 */
-async function touchMemo(memo_id: string, nowIso: string): Promise<void> {
-  try {
-    await docClient.send(
-      new UpdateCommand({
-        TableName: MEMOS_TABLE,
-        Key: { memo_id },
-        ConditionExpression: 'attribute_exists(memo_id)',
-        UpdateExpression: 'SET updated_at = :now',
-        ExpressionAttributeValues: { ':now': nowIso },
-      }),
-    );
-  } catch {
-    // best-effort
+/**
+ * メモの更新時刻と変更カウンタ(rev)を進める。rev はポーリングの「変更なし」判定に使うので、
+ * 失敗すると他端末が次の変更まで取り込めない(受容: 本文は保存済みで、次の変更で追いつく)。
+ * 一度だけ再試行し、それでも駄目なら null を返す(保存自体は成功扱い)。
+ */
+export async function touchMemo(memo_id: string, nowIso: string): Promise<number | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await docClient.send(
+        new UpdateCommand({
+          TableName: MEMOS_TABLE,
+          Key: { memo_id },
+          ConditionExpression: 'attribute_exists(memo_id)',
+          UpdateExpression: 'SET updated_at = :now ADD rev :one',
+          ExpressionAttributeValues: { ':now': nowIso, ':one': 1 },
+          ReturnValues: 'UPDATED_NEW',
+        }),
+      );
+      const rev = (r.Attributes as { rev?: number } | undefined)?.rev;
+      return typeof rev === 'number' ? rev : null;
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name === 'ConditionalCheckFailedException') return null;
+      if (attempt === 1) return null;
+    }
   }
+  return null;
 }

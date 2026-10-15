@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ApiError, type MemoData } from './api';
+import { api, ApiError, type MemoData, type MemoTab } from './api';
+import { saveSnapshot } from './offline';
 
 /**
  * メモ画面の自動保存エンジン。
@@ -12,6 +13,8 @@ import { api, ApiError, type MemoData } from './api';
  * - ページ離脱(visibilitychange hidden / pagehide)時は全 dirty タブを
  *   /m/flush に一括送信(1回のスロットル消費)+ fetch keepalive。
  * - 409 は黙って上書きせず conflict 状態にして UI に調停させる。
+ * - タブ本文は遅延読み込み。開いたタブの本文だけサーバから取り、ポーリングは
+ *   手元の rev を送って「変更なし」なら本文抜きの応答で済ませる。
  *
  * このファイルは lib/auth を import しない(メモ画面チャンクの隔離)。
  */
@@ -22,6 +25,8 @@ export interface TabState {
   content: string;
   version: number;
   position: number;
+  /** 本文をサーバから取得済みか。false の間は content は空で、表示時に loadTab で取る。 */
+  loaded: boolean;
   dirty: boolean;
   /**
    * 保存状態。'revoked'/'auth'/'create_failed' は終端(=これ以上保存できない。リトライしない)。
@@ -51,16 +56,16 @@ const MAX_WAIT_MS = 10_000;
 const MAX_RETRY_DELAY_MS = 15_000;
 /** タブ作成の再試行回数(429 やネットワーク断のとき)。使い切ったら create_failed。 */
 const CREATE_MAX_RETRY = 3;
-/** backend limits.ts の MAX_TABS_PER_MEMO と一致させる。 */
-export const MAX_TABS_PER_MEMO = 12;
+/** サーバが tab_limit を返さなかったとき(旧API)の既定。backend limits.ts の無料枠と一致させる。 */
+export const DEFAULT_TAB_LIMIT = 10;
 /**
  * サーバ側の変更を取り込む間隔。表示中のときだけ動かす。
- * 短くするほど反映は速いが /m/get の読み取り回数がそのまま増える。
+ * 変更が無ければ本文抜きの小さな応答で済むので、短めでも通信量は増えない。
  */
 const SYNC_INTERVAL_MS = 30_000;
 /**
  * 自分の作成/削除がサーバの読みに反映されるまでの猶予。
- * /m/get のタブ取得は結果整合なので、この間はサーバ側の欠落/存在を信用しない。
+ * サーバは強整合で読むようになったが、作成リクエストの完了前に同期が走る窓は残るので維持する。
  */
 const STALE_READ_GRACE_MS = 15_000;
 
@@ -88,7 +93,26 @@ interface DirtyBuffer {
   ts: number;
 }
 
-const bufKey = (tabId: string) => `notes_dirty_${tabId}`;
+const BUF_PREFIX = 'notes_dirty_';
+const bufKey = (tabId: string) => `${BUF_PREFIX}${tabId}`;
+
+/**
+ * この端末に未送信編集(dirty バッファ)が残っているタブ id の一覧。
+ * 初回ロードでこれらの本文を一緒に要求し、起動時にバッファ調停(自動復元 or 競合)を走らせる
+ * (遅延読み込みで本文が来ないタブは調停されず、編集が送られないままになるため)。
+ */
+export function bufferedTabIds(): string[] {
+  const ids: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(BUF_PREFIX)) ids.push(k.slice(BUF_PREFIX.length));
+    }
+  } catch {
+    /* localStorage 不可。調停は開いたときに行われる */
+  }
+  return ids;
+}
 
 export function readBuffer(tabId: string): DirtyBuffer | null {
   try {
@@ -115,34 +139,50 @@ export function clearBuffer(tabId: string): void {
   }
 }
 
-export function useAutosave(
-  token: string,
-  initialTabs: { tab_id: string; title: string; content: string; version: number; position: number }[],
-  pin?: string,
-) {
-  const [tabs, setTabs] = useState<TabState[]>(() =>
-    initialTabs.map((t) => {
-      // 前回セッションの未送信編集(dirty バッファ)との調停:
-      // - サーバ version がバッファ取得時と同じ → 誰も書いていないので自動復元(自動保存が押し込む)
-      // - サーバが進んでいる → 勝手に上書きせず conflict としてユーザーに選ばせる
-      const buf = readBuffer(t.tab_id);
-      if (buf && (buf.content !== t.content || buf.title !== t.title)) {
-        if (buf.base_version === t.version) {
-          return { ...t, title: buf.title, content: buf.content, dirty: true, save: 'saved' as const };
-        }
-        return {
-          ...t,
-          title: buf.title,
-          content: buf.content,
-          dirty: true,
-          save: 'conflict' as const,
-          conflictCurrent: { title: t.title, content: t.content, version: t.version },
-        };
-      }
-      if (buf) clearBuffer(t.tab_id); // サーバと同一内容なら残骸を掃除
-      return { ...t, dirty: false, save: 'saved' as const };
-    }),
-  );
+/**
+ * サーバのタブをローカル状態にする。本文付きなら前回セッションの未送信編集(dirty バッファ)と調停:
+ * - サーバ version がバッファ取得時と同じ → 誰も書いていないので自動復元(自動保存が押し込む)
+ * - サーバが進んでいる → 勝手に上書きせず conflict としてユーザーに選ばせる
+ * 本文無し(未読み込み)のタブはメタだけ持ち、バッファの調停は loadTab で本文が来たときに行う。
+ */
+function fromServer(t: MemoTab): TabState {
+  const base = { tab_id: t.tab_id, title: t.title, version: t.version, position: t.position };
+  if (t.content === undefined) {
+    return { ...base, content: '', loaded: false, dirty: false, save: 'saved' };
+  }
+  const buf = readBuffer(t.tab_id);
+  if (buf && (buf.content !== t.content || buf.title !== t.title)) {
+    // base がサーバと同じ=誰も書いていない。base がサーバより新しい=手元のビュー(オフライン
+    // スナップショット等)が古いだけで競合ではない。どちらも自動復元する(本当に衝突していれば
+    // 保存時の 409 で調停に回る)。
+    if (buf.base_version >= t.version) {
+      return {
+        ...base,
+        title: buf.title,
+        content: buf.content,
+        version: Math.max(t.version, buf.base_version),
+        loaded: true,
+        dirty: true,
+        save: 'saved',
+      };
+    }
+    return {
+      ...base,
+      title: buf.title,
+      content: buf.content,
+      loaded: true,
+      dirty: true,
+      save: 'conflict',
+      conflictCurrent: { title: t.title, content: t.content, version: t.version },
+    };
+  }
+  if (buf) clearBuffer(t.tab_id); // サーバと同一内容なら残骸を掃除
+  return { ...base, content: t.content, loaded: true, dirty: false, save: 'saved' };
+}
+
+export function useAutosave(token: string, initial: MemoData, pin?: string) {
+  const [tabs, setTabs] = useState<TabState[]>(() => initial.tabs.map(fromServer));
+  const tabLimit = initial.tab_limit ?? DEFAULT_TAB_LIMIT;
 
   const tabsRef = useRef<TabState[]>(tabs);
   useEffect(() => {
@@ -153,6 +193,103 @@ export function useAutosave(
   const retryCountRef = useRef(new Map<string, number>());
   /** 直近の保存以降で最初に編集した時刻(tab_id →epoch ms)。MAX_WAIT の起点。 */
   const firstEditRef = useRef(new Map<string, number>());
+
+  // ---- サーバ既知の状態(rev とタブのキャッシュ) ----
+
+  /**
+   * 手元が取り込み済みのメモの変更カウンタ。null は不明(次回はフル取得)。
+   * 自分の保存で返った rev が「ちょうど +1」のときだけ進める。飛んでいたら他端末の変更が
+   * 挟まっているので、進めずに次回ポーリングで取り込ませる。
+   */
+  const revRef = useRef<number | null>(initial.rev ?? null);
+  const adoptRev = (rev: number | null | undefined, bumps = 1) => {
+    if (typeof rev !== 'number' || revRef.current === null) return;
+    if (rev === revRef.current + bumps) revRef.current = rev;
+  };
+
+  /**
+   * サーバが返した内容のキャッシュ(本文はサーバ ACK 済みのものだけ)。オフライン用の
+   * スナップショットはここから作る。ローカルの未保存編集を混ぜると、次回ロード時に
+   * 「サーバと同一」と誤判定してバッファが捨てられ、編集が永遠に送られなくなる。
+   */
+  const serverTabsRef = useRef(new Map<string, MemoTab>(initial.tabs.map((t) => [t.tab_id, t])));
+  const headRef = useRef<Omit<MemoData, 'tabs' | 'access_log' | 'unchanged'>>({
+    memo: initial.memo,
+    mode: initial.mode,
+    has_pin: initial.has_pin,
+    rev: initial.rev,
+    tab_limit: initial.tab_limit,
+  });
+
+  /** 直近のサーバ既知ビュー(アクセス履歴の表示と、オフライン用スナップショットの元)。 */
+  const [latest, setLatest] = useState<MemoData>(initial);
+  const [syncing, setSyncing] = useState(false);
+  const accessLogRef = useRef<MemoData['access_log']>(initial.access_log);
+
+  /** refs からサーバ既知ビューを組み立てて公開する(スナップショット更新の起点)。 */
+  const publishLatest = useCallback(() => {
+    setLatest({
+      ...headRef.current,
+      tabs: [...serverTabsRef.current.values()].sort((a, b) => a.position - b.position),
+      access_log: accessLogRef.current,
+    });
+  }, []);
+
+  /**
+   * 直近で自分が作成/削除したタブ(tab_id → 猶予の期限)。
+   * この猶予の間はサーバ側の欠落/存在を信用しない(「作ったばかりのタブが消える」
+   * 「消したタブが復活する」を防ぐ)。
+   */
+  const graceRef = useRef(new Map<string, { until: number; kind: 'created' | 'deleted' }>());
+  const markGrace = useCallback((tabId: string, kind: 'created' | 'deleted') => {
+    graceRef.current.set(tabId, { until: Date.now() + STALE_READ_GRACE_MS, kind });
+  }, []);
+  const graceOf = (id: string) => {
+    const g = graceRef.current.get(id);
+    if (g && g.until <= Date.now()) {
+      graceRef.current.delete(id);
+      return undefined;
+    }
+    return g;
+  };
+
+  const rememberServer = useCallback(
+    (data: MemoData) => {
+      const { memo, mode, has_pin, rev, tab_limit } = data;
+      headRef.current = { memo, mode, has_pin, rev, tab_limit };
+      const accessLogJson = JSON.stringify(data.access_log ?? []);
+      // 「変更なし」でアクセス履歴も同じなら何もしない(30秒ごとにスナップショットを書き直さない)
+      if (data.unchanged && accessLogJson === JSON.stringify(accessLogRef.current ?? [])) return;
+      accessLogRef.current = data.access_log;
+      if (!data.unchanged) {
+        const next = new Map<string, MemoTab>();
+        for (const s of data.tabs) {
+          if (graceOf(s.tab_id)?.kind === 'deleted') continue; // 消したばかりのタブは戻さない
+          const prev = serverTabsRef.current.get(s.tab_id);
+          // 本文が来なかったタブは、version が変わっていなければ前回の本文を保つ
+          const content =
+            s.content !== undefined ? s.content : prev && prev.version === s.version ? prev.content : undefined;
+          next.set(s.tab_id, { ...s, content });
+        }
+        // 作ったばかりで応答に欠けているタブは保つ(反映前の読み)
+        for (const [id, prev] of serverTabsRef.current) {
+          if (!next.has(id) && graceOf(id)?.kind === 'created') next.set(id, prev);
+        }
+        serverTabsRef.current = next;
+      }
+      publishLatest();
+    },
+    // graceOf は ref しか触らない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [publishLatest],
+  );
+
+  // サーバ既知ビューが更新されるたびにオフライン用スナップショットを更新する
+  useEffect(() => {
+    void saveSnapshot(token, latest).catch(() => {});
+  }, [token, latest]);
+
+  // ---- 保存 ----
 
   /**
    * debounce 保存を(再)予約する。入力のたびに呼ばれ、前の予約は取り消す。
@@ -169,21 +306,19 @@ export function useAutosave(
     timersRef.current.set(tabId, setTimeout(() => save(tabId), delay));
   }, []);
 
-  /**
-   * 直近で自分が作成/削除したタブ(tab_id → 猶予の期限)。
-   *
-   * /m/get のタブ取得は結果整合なので、書いた直後は反映前の一覧が返ることがある。
-   * それをそのまま合流させると「作ったばかりのタブが消える」「消したタブが復活する」
-   * が起きるため、この猶予の間はサーバ側の欠落/存在を信用しない。
-   */
-  const graceRef = useRef(new Map<string, { until: number; kind: 'created' | 'deleted' }>());
-  const markGrace = useCallback((tabId: string, kind: 'created' | 'deleted') => {
-    graceRef.current.set(tabId, { until: Date.now() + STALE_READ_GRACE_MS, kind });
-  }, []);
-
   const patchTab = useCallback((tabId: string, patch: Partial<TabState>) => {
     setTabs((prev) => prev.map((t) => (t.tab_id === tabId ? { ...t, ...patch } : t)));
   }, []);
+
+  /** 保存が通った内容をサーバ既知キャッシュへ反映する(スナップショットの元)。 */
+  const rememberSaved = useCallback(
+    (tabId: string, saved: { title: string; content: string; version: number }) => {
+      const prev = serverTabsRef.current.get(tabId);
+      if (prev) serverTabsRef.current.set(tabId, { ...prev, ...saved });
+      publishLatest(); // 保存 ACK 済みの本文をスナップショットにも反映(古い版での偽競合を防ぐ)
+    },
+    [publishLatest],
+  );
 
   const saveNow = useCallback(
     async (tabId: string): Promise<void> => {
@@ -206,6 +341,8 @@ export function useAutosave(
       patchTab(tabId, { save: 'saving' });
       try {
         const r = await api.saveTab(token, { tab_id: tabId, ...snapshot }, pin);
+        adoptRev(r.rev);
+        rememberSaved(tabId, { title: snapshot.title, content: snapshot.content, version: r.version });
         retryCountRef.current.delete(tabId);
         const cur = tabsRef.current.find((x) => x.tab_id === tabId);
         const unchanged =
@@ -252,7 +389,7 @@ export function useAutosave(
         timersRef.current.set(tabId, timer);
       }
     },
-    [token, patchTab, armSave],
+    [token, pin, patchTab, armSave, rememberSaved],
   );
 
   /**
@@ -263,7 +400,7 @@ export function useAutosave(
   const edit = useCallback(
     (tabId: string, patch: { title?: string; content?: string }, opts: { composing?: boolean } = {}) => {
       const t = tabsRef.current.find((x) => x.tab_id === tabId);
-      if (!t) return;
+      if (!t || !t.loaded) return;
       const next = { title: patch.title ?? t.title, content: patch.content ?? t.content };
       writeBuffer(tabId, { ...next, base_version: t.version, ts: Date.now() });
       // 終端(revoked/auth/create_failed)後は編集をローカルバッファに残すだけでサーバ保存は試みない。
@@ -334,11 +471,14 @@ export function useAutosave(
           })),
           { keepalive, pin },
         )
-        .then(({ results }) => {
+        .then(({ results, rev }) => {
+          let okCount = 0;
           for (const r of results) {
             if (r.result === 'ok' && r.version !== undefined) {
+              okCount++;
               const cur = tabsRef.current.find((x) => x.tab_id === r.tab_id);
               const sent = dirty.find((x) => x.tab_id === r.tab_id);
+              if (sent) rememberSaved(r.tab_id, { title: sent.title, content: sent.content, version: r.version });
               const unchanged =
                 !!cur && !!sent && cur.title === sent.title && cur.content === sent.content;
               if (unchanged) clearBuffer(r.tab_id);
@@ -350,13 +490,18 @@ export function useAutosave(
               timersRef.current.set(r.tab_id, timer);
             }
           }
+          // 成功した保存の数だけ rev が進んでいれば自分の変更だけなので取り込み済みにできる
+          if (okCount > 0) adoptRev(rev, okCount);
         })
         .catch(() => {
           /* 離脱中の失敗はバッファが安全網 */
         });
     },
-    [token, patchTab, saveNow],
+    [token, pin, patchTab, saveNow, rememberSaved],
   );
+
+  /** sync はこの後で定義される(保存系より後ろ)ので、離脱/復帰ハンドラからは ref 経由で呼ぶ。 */
+  const syncRef = useRef<() => Promise<unknown>>(() => Promise.resolve());
 
   // 離脱時フラッシュ(beforeunload ではなく visibilitychange/pagehide=モバイルで確実)
   // + オンライン復帰時は未送信の編集を即座に一括同期する(オフライン編集の同期経路)
@@ -365,7 +510,10 @@ export function useAutosave(
       if (document.visibilityState === 'hidden') flushAll(true);
     };
     const onPageHide = () => flushAll(true);
-    const onOnline = () => flushAll(false);
+    const onOnline = () => {
+      flushAll(false);
+      void syncRef.current(); // オフライン中に取れなかった分(未読み込みタブのメタ等)を取り直す
+    };
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', onPageHide);
     window.addEventListener('online', onOnline);
@@ -423,6 +571,8 @@ export function useAutosave(
         await api.createTab(token, { tab_id: tabId, title: '', position }, pin);
         // 反映前の読みで欠けていても消さないよう猶予を張る
         markGrace(tabId, 'created');
+        serverTabsRef.current.set(tabId, { tab_id: tabId, title: '', content: '', version: 0, position });
+        publishLatest();
         patchTab(tabId, { pendingCreate: false, save: 'saved', createError: null });
         // 作成待ちの間に入力されていたぶんを送る
         const cur = tabsRef.current.find((x) => x.tab_id === tabId);
@@ -444,7 +594,7 @@ export function useAutosave(
         timersRef.current.set(`create_${tabId}`, timer);
       }
     },
-    [token, pin, patchTab, saveNow, markGrace],
+    [token, pin, patchTab, saveNow, markGrace, publishLatest],
   );
 
   /**
@@ -454,7 +604,7 @@ export function useAutosave(
    * 戻り値は追加したタブの id。上限に達している場合は null。
    */
   const addTab = useCallback((): string | null => {
-    if (tabsRef.current.length >= MAX_TABS_PER_MEMO) return null;
+    if (tabsRef.current.length >= tabLimit) return null;
     const tabId = newTabId();
     const position = Math.max(-1, ...tabsRef.current.map((t) => t.position)) + 1;
     setTabs((prev) => [
@@ -465,6 +615,7 @@ export function useAutosave(
         content: '',
         version: 0,
         position,
+        loaded: true, // 新規タブは空なので本文は手元にある
         dirty: false,
         save: 'saving',
         pendingCreate: true,
@@ -472,7 +623,7 @@ export function useAutosave(
     ]);
     void createOnServer(tabId, position);
     return tabId;
-  }, [createOnServer]);
+  }, [createOnServer, tabLimit]);
 
   /** create_failed になったタブの作成をやり直す。 */
   const retryCreate = useCallback(
@@ -506,7 +657,8 @@ export function useAutosave(
       );
       if (known.length === 0) return true;
       try {
-        await api.reorderTabs(token, known, pin);
+        const r = await api.reorderTabs(token, known, pin);
+        adoptRev(r.rev);
         return true;
       } catch {
         return false;
@@ -523,6 +675,8 @@ export function useAutosave(
         markGrace(tabId, 'deleted');
         clearBuffer(tabId);
         firstEditRef.current.delete(tabId);
+        serverTabsRef.current.delete(tabId);
+        publishLatest();
         for (const key of [tabId, `create_${tabId}`]) {
           const timer = timersRef.current.get(key);
           if (timer) clearTimeout(timer);
@@ -549,32 +703,24 @@ export function useAutosave(
         return false;
       }
     },
-    [token, pin, markGrace],
+    [token, pin, markGrace, publishLatest],
   );
 
   // ---- サーバ側の変更の取り込み ----
 
   /** 401/404 を観測したら以後の取得を止める。401 を叩き続けるとトークンを自己ロックするため。 */
   const syncStoppedRef = useRef(false);
-  const [latest, setLatest] = useState<MemoData | null>(null);
-  const [syncing, setSyncing] = useState(false);
 
   /**
    * サーバのタブ一覧をローカル状態に合流させる。
    *
+   * - 未読み込みのタブ → 本文が来ていれば読み込み済みにする(バッファ調停込み)。無ければメタだけ更新
    * - 未編集 かつ サーバの version が進んでいる → 黙って置き換える(これが本命)
-   * - 編集中 かつ サーバが進んでいる → 従来どおり競合 UI に載せる
+   * - 編集中 かつ サーバが進んでいる → 競合 UI に載せる
    * - 送信中/作成中/終端のタブは触らない(進行中の状態を壊さない)
-   *
-   * /m/get の読みは結果整合なので、古い版が返ることがある。version が進んでいるときしか
-   * 採用しないので、その場合は何も起きない(次回の取得で追いつく)。
    */
-  const mergeServerTabs = useCallback((serverTabs: MemoData['tabs']) => {
+  const mergeServerTabs = useCallback((serverTabs: MemoTab[]) => {
     setTabs((prev) => {
-      const now = Date.now();
-      for (const [id, g] of graceRef.current) if (g.until <= now) graceRef.current.delete(id);
-      const graceOf = (id: string) => graceRef.current.get(id);
-
       const prevById = new Map(prev.map((t) => [t.tab_id, t]));
       const serverIds = new Set(serverTabs.map((t) => t.tab_id));
       const merged: TabState[] = [];
@@ -584,7 +730,7 @@ export function useAutosave(
         if (graceOf(s.tab_id)?.kind === 'deleted') continue;
         const local = prevById.get(s.tab_id);
         if (!local) {
-          merged.push({ ...s, dirty: false, save: 'saved' }); // 別端末で増えたタブ
+          merged.push(fromServer(s)); // 別端末で増えたタブ
           continue;
         }
         const busy =
@@ -594,8 +740,31 @@ export function useAutosave(
           local.save === 'revoked' ||
           local.save === 'auth' ||
           local.save === 'create_failed';
-        if (busy || s.version <= local.version) {
+        if (busy) {
           merged.push({ ...local, position: s.position });
+          continue;
+        }
+        if (!local.loaded) {
+          // 本文が来たなら読み込み完了。来ていなければタブ名などのメタだけ追従
+          merged.push(
+            s.content !== undefined
+              ? fromServer(s)
+              : { ...local, title: s.title, version: s.version, position: s.position },
+          );
+          continue;
+        }
+        if (s.version <= local.version) {
+          merged.push({ ...local, position: s.position });
+          continue;
+        }
+        if (s.content === undefined) {
+          // version は進んだが本文は要求に含まれていなかった(読み込み中に同期が走った等)。
+          // 未編集なら未読み込みに戻して表示時に取り直す。編集中なら保存時の 409 に任せる
+          merged.push(
+            local.dirty
+              ? { ...local, position: s.position }
+              : { ...local, title: s.title, version: s.version, position: s.position, content: '', loaded: false },
+          );
           continue;
         }
         if (!local.dirty) {
@@ -632,13 +801,28 @@ export function useAutosave(
     });
   }, []);
 
+  /** サーバ応答(フル取得)を取り込む共通処理。 */
+  const applyServer = useCallback(
+    (data: MemoData) => {
+      rememberServer(data);
+      if (data.unchanged) return;
+      revRef.current = data.rev ?? null;
+      mergeServerTabs(data.tabs);
+    },
+    [rememberServer, mergeServerTabs],
+  );
+
   const sync = useCallback(async (): Promise<'ok' | 'stopped' | 'error'> => {
     if (syncStoppedRef.current) return 'stopped';
     setSyncing(true);
     try {
-      const data = await api.getMemo(token, pin);
-      setLatest(data);
-      mergeServerTabs(data.tabs);
+      // 本文は読み込み済みのタブぶんだけ要求する(未読み込みのタブは表示時に取る)
+      const loadedIds = tabsRef.current.filter((t) => t.loaded && !t.pendingCreate).map((t) => t.tab_id);
+      const data = await api.getMemo(token, pin, {
+        knownRev: revRef.current ?? undefined,
+        tabIds: loadedIds,
+      });
+      applyServer(data);
       return 'ok';
     } catch (e) {
       // PIN が変更された(401)/ URL が無効化された(404)。以後の取得を止める。
@@ -651,7 +835,42 @@ export function useAutosave(
     } finally {
       setSyncing(false);
     }
-  }, [token, pin, mergeServerTabs]);
+  }, [token, pin, applyServer]);
+
+  syncRef.current = sync;
+
+  /** 読み込み中のタブ(二重要求の抑止)。 */
+  const loadingRef = useRef(new Set<string>());
+
+  /**
+   * 未読み込みタブの本文を取得する(タブを開いたとき)。
+   * 応答には全タブのメタも載るので、ついでに同期も進む。
+   * 'stopped' は URL 失効/PIN 変更(401/404)で、以後は取得しない(401 を叩き続けると
+   * pin_fail_count を消費してトークンを自己ロックするため。再読み込みボタンも出さないこと)。
+   * 'error' はオフライン等の一時的な失敗。
+   */
+  const loadTab = useCallback(
+    async (tabId: string): Promise<'ok' | 'stopped' | 'error'> => {
+      if (syncStoppedRef.current) return 'stopped';
+      const t = tabsRef.current.find((x) => x.tab_id === tabId);
+      if (!t || t.loaded || loadingRef.current.has(tabId)) return 'ok';
+      loadingRef.current.add(tabId);
+      try {
+        const data = await api.getMemo(token, pin, { tabIds: [tabId] });
+        applyServer(data);
+        return 'ok';
+      } catch (e) {
+        if (e instanceof ApiError && (e.status === 401 || e.status === 404)) {
+          syncStoppedRef.current = true;
+          return 'stopped';
+        }
+        return 'error';
+      } finally {
+        loadingRef.current.delete(tabId);
+      }
+    },
+    [token, pin, applyServer],
+  );
 
   // 画面に戻ったとき + 表示中は一定間隔で、サーバの変更を取り込む。
   // 非表示のときは動かさない(裏で読み取りを撃ち続けない)。
@@ -671,6 +890,8 @@ export function useAutosave(
 
   return {
     tabs,
+    /** このメモのタブ数上限。 */
+    tabLimit,
     edit,
     kick,
     saveNow,
@@ -681,9 +902,10 @@ export function useAutosave(
     retryCreate,
     removeTab,
     reorder,
+    loadTab,
     sync,
     syncing,
-    /** 直近の取得結果(アクセス履歴の更新に使う)。まだ取得していなければ null。 */
+    /** 直近のサーバ既知ビュー(アクセス履歴の表示に使う)。 */
     latest,
   };
 }

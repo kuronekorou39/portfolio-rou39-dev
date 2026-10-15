@@ -54,8 +54,19 @@ export interface MemoSummary {
   /** 読み取り専用URLが期限切れか。 */
   readonly_url_expired: boolean;
   tab_count: number;
+  /** このメモのタブ数上限(プラン由来)。 */
+  tab_limit: number;
   created_at: string;
   updated_at: string;
+}
+
+export type Plan = 'free' | 'premium';
+
+/** GET /admin/memos の応答。プランと上限は管理画面の表示用(強制はサーバ側)。 */
+export interface MemoList {
+  plan: Plan;
+  limits: { memos: number; tabs: number };
+  memos: MemoSummary[];
 }
 
 export interface IssueResult {
@@ -77,6 +88,19 @@ export interface AccessLogEntry {
   via?: TokenMode;
 }
 
+/**
+ * サーバから返るタブ。content は要求したタブにだけ付く(遅延読み込み)。
+ * content が無いタブは byte_size で大きさだけ分かる。
+ */
+export interface MemoTab {
+  tab_id: string;
+  title: string;
+  version: number;
+  position: number;
+  byte_size?: number;
+  content?: string;
+}
+
 export interface MemoData {
   /** memo_id はメモ単位のローカル状態(最後に見ていたタブ・既読IP)の保存キーに使う。 */
   memo: { memo_id?: string; title: string; updated_at: string };
@@ -84,15 +108,34 @@ export interface MemoData {
   mode?: TokenMode;
   /** このメモが PIN 保護されているか(書き込み時に PIN を同送する必要がある)。 */
   has_pin?: boolean;
-  tabs: { tab_id: string; title: string; content: string; version: number; position: number }[];
+  /** 変更カウンタ。次回の取得で known_rev として送ると、変わっていなければ本文抜きで返る。 */
+  rev?: number;
+  /** このメモのタブ数上限(プランで変わる)。 */
+  tab_limit?: number;
+  /** known_rev 以降に変更が無かった。tabs は付かない(空配列)。 */
+  unchanged?: boolean;
+  tabs: MemoTab[];
   /** 直近のアクセス履歴(新しい順)。読み取り専用URLでは空。 */
   access_log?: AccessLogEntry[];
 }
 
+/** getMemo の省略指定。 */
+export interface GetMemoOptions {
+  /** 手元の rev。サーバの rev がこれ以下なら unchanged で返る。 */
+  knownRev?: number;
+  /** 本文を含めるタブ id。firstTab と両方省略なら全タブ。 */
+  tabIds?: string[];
+  /** 先頭タブの本文も含める(前回開いていたタブが分からないとき)。 */
+  firstTab?: boolean;
+}
+
 export const api = {
   // ---- 管理(Cognito IDトークン必須) ----
-  listMemos(idToken: string): Promise<MemoSummary[]> {
-    return request<MemoSummary[]>('/admin/memos', { headers: authHeaders(idToken) });
+  listMemos(idToken: string): Promise<MemoList> {
+    return request<MemoList | MemoSummary[]>('/admin/memos', { headers: authHeaders(idToken) }).then((r) =>
+      // デプロイ中に旧API(配列)へ当たっても一覧が壊れないようにする
+      Array.isArray(r) ? { plan: 'free', limits: { memos: 10, tabs: 10 }, memos: r } : r,
+    );
   },
   issueMemo(idToken: string, title: string): Promise<IssueResult> {
     return request<IssueResult>('/admin/memos', {
@@ -174,20 +217,27 @@ export const api = {
 
   // ---- メモ画面(秘密URLトークンを body でのみ渡す。path/query に載せない) ----
   // PIN 保護されたメモは pin を同送する(未設定なら pin=undefined でも通る)。
-  getMemo(token: string, pin?: string): Promise<MemoData> {
+  getMemo(token: string, pin?: string, opts: GetMemoOptions = {}): Promise<MemoData> {
     return request<MemoData>('/m/get', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, pin }),
+      body: JSON.stringify({
+        token,
+        pin,
+        known_rev: opts.knownRev,
+        tab_ids: opts.tabIds,
+        first_tab: opts.firstTab,
+      }),
       cache: 'no-store',
     });
   },
+  /** 保存。rev は保存後のメモの変更カウンタ(自分の変更だけなら known_rev をこれに進められる)。 */
   saveTab(
     token: string,
     params: { tab_id: string; base_version: number; title: string; content: string },
     pin?: string,
-  ): Promise<{ version: number }> {
-    return request<{ version: number }>('/m/tabs/save', {
+  ): Promise<{ version: number; rev: number | null }> {
+    return request<{ version: number; rev: number | null }>('/m/tabs/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, pin, ...params }),
@@ -203,8 +253,8 @@ export const api = {
     token: string,
     params: { tab_id: string; title: string; position: number },
     pin?: string,
-  ): Promise<{ tab: MemoData['tabs'][number] }> {
-    return request<{ tab: MemoData['tabs'][number] }>('/m/tabs/create', {
+  ): Promise<{ tab: MemoTab }> {
+    return request<{ tab: MemoTab }>('/m/tabs/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, pin, ...params }),
@@ -212,8 +262,12 @@ export const api = {
     });
   },
   /** タブの並べ替え。渡した順に position が 0,1,2… で振り直される。 */
-  reorderTabs(token: string, tab_ids: string[], pin?: string): Promise<{ reordered: boolean }> {
-    return request<{ reordered: boolean }>('/m/tabs/reorder', {
+  reorderTabs(
+    token: string,
+    tab_ids: string[],
+    pin?: string,
+  ): Promise<{ reordered: boolean; rev?: number | null }> {
+    return request<{ reordered: boolean; rev?: number | null }>('/m/tabs/reorder', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, tab_ids, pin }),
@@ -237,7 +291,7 @@ export const api = {
     token: string,
     tabs: { tab_id: string; base_version: number; title: string; content: string }[],
     opts: { keepalive?: boolean; pin?: string } = {},
-  ): Promise<{ results: { tab_id: string; result: string; version?: number }[] }> {
+  ): Promise<{ results: { tab_id: string; result: string; version?: number }[]; rev?: number | null }> {
     return request('/m/flush', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

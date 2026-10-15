@@ -99,8 +99,9 @@ export class NotesApiStack extends cdk.Stack {
       // 管理系は低頻度。暴走・濫用時の同時実行を絞る(コスト暴走の上限)
       reservedConcurrentExecutions: 5,
     });
-    // 発行は users(カウンタ)+ memos + tokens + tabs を1つの TransactWrite で書く
-    props.usersTable.grantWriteData(issueMemoFn);
+    // 発行は users(カウンタ)+ memos + tokens + tabs を1つの TransactWrite で書く。
+    // 上限はプラン(users.plan)で決まるので、発行前に users を読む
+    props.usersTable.grantReadWriteData(issueMemoFn);
     props.memosTable.grantWriteData(issueMemoFn);
     props.tokensTable.grantWriteData(issueMemoFn);
     props.tabsTable.grantWriteData(issueMemoFn);
@@ -117,7 +118,9 @@ export class NotesApiStack extends cdk.Stack {
       bundling,
       reservedConcurrentExecutions: 5,
     });
-    props.memosTable.grantReadData(listMemosFn); // GSI by_owner の Query を含む
+    props.usersTable.grantReadData(listMemosFn); // プラン(users.plan)の表示と上限計算
+    // GSI by_owner の Query に加え、プラン変更後に memos.tab_limit を刻み直す(所有者条件付き)
+    props.memosTable.grantReadWriteData(listMemosFn);
     props.tokensTable.grantReadData(listMemosFn); // 有効期限(url_expires_at)の join 用
 
     // --- get memo (公開: 秘密URLトークンでメモ+タブ取得) ---
@@ -263,7 +266,7 @@ export class NotesApiStack extends cdk.Stack {
       handler: 'handler',
       environment: commonEnv,
       bundling,
-      timeout: cdk.Duration.seconds(15), // 最大12タブの逐次保存
+      timeout: cdk.Duration.seconds(20), // 最大40タブ(premium)の逐次保存
       reservedConcurrentExecutions: 10,
     });
     writeGrants(flushFn, false);

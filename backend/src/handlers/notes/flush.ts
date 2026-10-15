@@ -5,7 +5,7 @@ import { passesOriginCheck } from '../../lib/notes/origin';
 import { resolveTokenThrottled, modeOf } from '../../lib/notes/tokens';
 import { pinGateResponse } from '../../lib/notes/pin';
 import { saveTab } from '../../lib/notes/tabs';
-import { MAX_TABS_PER_MEMO, MIN_FLUSH_INTERVAL_MS } from '../../lib/notes/limits';
+import { MAX_TABS_HARD, MIN_FLUSH_INTERVAL_MS } from '../../lib/notes/limits';
 
 interface FlushTab {
   tab_id: string;
@@ -35,7 +35,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
     const { token, tabs, pin } = body as { token?: unknown; tabs?: unknown; pin?: unknown };
     if (typeof token !== 'string' || !token) return noStore(notFound());
-    if (!Array.isArray(tabs) || tabs.length === 0 || tabs.length > MAX_TABS_PER_MEMO) {
+    if (!Array.isArray(tabs) || tabs.length === 0 || tabs.length > MAX_TABS_HARD) {
       return noStore(badRequest('invalid_params'));
     }
     for (const t of tabs as FlushTab[]) {
@@ -58,6 +58,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const memo_id = resolved.token.memo_id;
     const results = [];
+    let rev: number | null = null; // 最後に成功した保存後の変更カウンタ
     for (const t of tabs as FlushTab[]) {
       const r = await saveTab({
         memo_id,
@@ -66,13 +67,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         title: t.title.slice(0, 200),
         content: t.content,
       });
+      if (r.kind === 'ok') rev = r.rev;
       results.push({
         tab_id: t.tab_id,
         result: r.kind,
         version: r.kind === 'ok' ? r.version : undefined,
       });
     }
-    return noStore(ok({ results }));
+    return noStore(ok({ results, rev }));
   } catch (err) {
     console.error('flush error:', err);
     return noStore(serverError());

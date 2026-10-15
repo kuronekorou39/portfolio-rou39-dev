@@ -66,7 +66,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
     switch (result.kind) {
       case 'ok':
-        return noStore(ok({ version: result.version }));
+        return noStore(ok({ version: result.version, rev: result.rev }));
       case 'too_large':
         return noStore(payloadTooLarge('content_too_large'));
       case 'not_found':

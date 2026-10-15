@@ -7,6 +7,7 @@ import {
   ApiError,
   PIN_MIN_LEN,
   type AccessLogEntry,
+  type MemoList,
   type MemoSummary,
   type TokenMode,
 } from '../lib/api';
@@ -14,8 +15,8 @@ import ThemeToggle from '../components/ThemeToggle';
 import Loading from '../components/Loading';
 import Landing from './Landing';
 
-// backend の MAX_MEMOS_PER_USER と一致させる(残り作成可能数の表示用)
-const MAX_MEMOS = 20;
+// 上限はサーバの応答(plan / limits)から表示する。強制もサーバ側(backend limits.ts)。
+const PLAN_LABEL: Record<MemoList['plan'], string> = { free: '無料', premium: 'プレミアム' };
 
 function fmtJst(iso: string): string {
   return new Date(iso).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
@@ -889,6 +890,8 @@ function SettingsModal({
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth();
   const [memos, setMemos] = useState<MemoSummary[] | null>(null);
+  const [plan, setPlan] = useState<MemoList['plan'] | null>(null);
+  const [limits, setLimits] = useState<MemoList['limits'] | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [issuing, setIssuing] = useState(false);
@@ -902,7 +905,10 @@ export default function DashboardPage() {
     const idToken = await getIdToken();
     if (!idToken) return;
     try {
-      setMemos(await api.listMemos(idToken));
+      const list = await api.listMemos(idToken);
+      setMemos(list.memos);
+      setPlan(list.plan);
+      setLimits(list.limits);
       setListError(null);
     } catch {
       setListError('一覧の取得に失敗しました。再読み込みしてください。');
@@ -1237,12 +1243,27 @@ export default function DashboardPage() {
           }}
         >
           {issueError && <span style={{ color: 'var(--danger)' }}>{issueError}</span>}
-          {memos && (
+          {memos && limits && (
             <span
               style={{ marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}
-              title="作成済み / 上限"
+              title={`作成済み / 上限(${plan ? PLAN_LABEL[plan] : ''}プラン: メモ ${limits.memos} 件・1メモ ${limits.tabs} タブ)`}
             >
-              {memos.length} / {MAX_MEMOS}
+              {plan === 'premium' && (
+                <span
+                  style={{
+                    marginRight: 8,
+                    padding: '1px 8px',
+                    borderRadius: 999,
+                    border: '1px solid var(--accent)',
+                    color: 'var(--accent)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}
+                >
+                  プレミアム
+                </span>
+              )}
+              {memos.length} / {limits.memos}
             </span>
           )}
         </div>
@@ -1343,7 +1364,8 @@ export default function DashboardPage() {
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  タブ <b style={{ color: 'var(--fg)' }}>{m.tab_count}</b> ・ 最終更新{' '}
+                  タブ <b style={{ color: 'var(--fg)' }}>{m.tab_count}</b>
+                  <span title="このメモのタブ数上限">/{m.tab_limit}</span> ・ 最終更新{' '}
                   <b style={{ color: 'var(--fg)' }}>{fmtJst(m.updated_at)}</b>
                 </div>
               </div>

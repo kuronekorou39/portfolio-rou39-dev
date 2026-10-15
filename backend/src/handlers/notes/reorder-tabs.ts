@@ -5,7 +5,7 @@ import { passesOriginCheck } from '../../lib/notes/origin';
 import { resolveTokenThrottled, modeOf } from '../../lib/notes/tokens';
 import { pinGateResponse } from '../../lib/notes/pin';
 import { reorderTabs } from '../../lib/notes/tabs';
-import { MAX_TABS_PER_MEMO, MIN_SAVE_INTERVAL_MS } from '../../lib/notes/limits';
+import { MAX_TABS_HARD, MIN_SAVE_INTERVAL_MS } from '../../lib/notes/limits';
 
 /**
  * POST /m/tabs/reorder — タブの並べ替え。tab_id の配列を受けて position を振り直す。
@@ -26,7 +26,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (typeof token !== 'string' || !token) return noStore(notFound());
 
     if (!Array.isArray(tab_ids) || tab_ids.length === 0) return noStore(badRequest('tab_ids_required'));
-    if (tab_ids.length > MAX_TABS_PER_MEMO) return noStore(badRequest('too_many_tabs'));
+    if (tab_ids.length > MAX_TABS_HARD) return noStore(badRequest('too_many_tabs'));
     if (!tab_ids.every((id) => typeof id === 'string' && id.length > 0 && id.length <= 64)) {
       return noStore(badRequest('invalid_tab_id'));
     }
@@ -46,7 +46,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
     // 知らない tab_id が混ざっている = 別端末で削除された等。クライアントは再取得して直す
     if (result.kind === 'not_found') return noStore(conflict('tab_missing'));
-    return noStore(ok({ reordered: true }));
+    return noStore(ok({ reordered: true, rev: result.rev }));
   } catch (err) {
     console.error('reorder-tabs error:', err);
     return noStore(serverError());

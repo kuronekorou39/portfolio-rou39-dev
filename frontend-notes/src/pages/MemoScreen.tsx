@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api, ApiError, PIN_MIN_LEN, type AccessLogEntry, type MemoData } from '../lib/api';
-import {
-  useAutosave,
-  lastTabKey,
-  seenIpsKey,
-  MAX_TABS_PER_MEMO,
-  type TabState,
-} from '../lib/autosave';
+import { api, ApiError, PIN_MIN_LEN, type AccessLogEntry, type MemoData, type MemoTab } from '../lib/api';
+import { useAutosave, lastTabKey, seenIpsKey, bufferedTabIds, type TabState } from '../lib/autosave';
 import { saveSnapshot, loadSnapshot, deleteSnapshot } from '../lib/offline';
 import ThemeToggle from '../components/ThemeToggle';
 import Loading from '../components/Loading';
@@ -243,8 +237,6 @@ function saveLabel(tab: TabState | undefined): { text: string; color: string } {
   }
 }
 
-const MAX_TABS = MAX_TABS_PER_MEMO;
-
 /** 空行に1行分の高さを持たせるための埋め草。幅ゼロなので折り返しに影響しない。 */
 const ZERO_WIDTH_SPACE = '\u200b';
 
@@ -362,8 +354,21 @@ function Editor({
   /** PIN 保護メモの場合の PIN(書き込みに同送)。 */
   pin?: string;
 }) {
-  const { tabs, edit, kick, saveNow, adoptServer, overwriteServer, addTab, retryCreate, removeTab, reorder, latest } =
-    useAutosave(token, data.tabs, pin);
+  const {
+    tabs,
+    tabLimit,
+    edit,
+    kick,
+    saveNow,
+    adoptServer,
+    overwriteServer,
+    addTab,
+    retryCreate,
+    removeTab,
+    reorder,
+    loadTab,
+    latest,
+  } = useAutosave(token, data, pin);
   const memoId = data.memo.memo_id;
   // IME 変換中フラグ。変換中の onChange では保存を予約せず、確定時に kick で予約し直す
   const composingRef = useRef(false);
@@ -392,6 +397,29 @@ function Editor({
     }
   }, [memoId, active]);
 
+  // 本文が未読み込みのタブを開いたら取りに行く(遅延読み込み)。
+  // 一時的な失敗(オフライン等)は案内+再試行を出し、回線復帰でも取り直す。
+  // URL 失効/PIN 変更(stopped)は再試行させない(401 を叩き続けるとトークンを自己ロックする)。
+  const [loadState, setLoadState] = useState<{ id: string; result: 'error' | 'stopped' } | null>(null);
+  const [onlineTick, setOnlineTick] = useState(0);
+  useEffect(() => {
+    const onOnline = () => setOnlineTick((n) => n + 1);
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, []);
+  const activeTabId = active?.tab_id;
+  const activeLoaded = active?.loaded ?? true;
+  useEffect(() => {
+    if (!activeTabId || activeLoaded) return;
+    let cancelled = false;
+    void loadTab(activeTabId).then((result) => {
+      if (!cancelled) setLoadState(result === 'ok' ? null : { id: activeTabId, result });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTabId, activeLoaded, loadTab, onlineTick]);
+
   const switchTab = (id: string) => {
     // タブ切替時は前のタブを即時保存(debounce を待たない)
     if (active && active.dirty) void saveNow(active.tab_id);
@@ -403,7 +431,7 @@ function Editor({
     setTabError(null);
     const id = addTab();
     if (!id) {
-      setTabError(`タブは最大 ${MAX_TABS} 枚までです`);
+      setTabError(`タブは最大 ${tabLimit} 枚までです`);
       return;
     }
     setActiveId(id);
@@ -465,7 +493,7 @@ function Editor({
           marginBottom: 8,
         }}
       >
-        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{data.memo.title || 'メモ'}</span>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{latest.memo.title || 'メモ'}</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12, color: indicator.color }}>{indicator.text}</span>
           <ThemeToggle />
@@ -541,7 +569,7 @@ function Editor({
             )}
           </div>
         ))}
-        {tabs.length < MAX_TABS && (
+        {tabs.length < tabLimit && (
           <button
             onClick={onAddTab}
             title="タブを追加"
@@ -646,7 +674,7 @@ function Editor({
           }}
         >
           {active.createError === 'tab_limit_reached'
-            ? `タブは最大 ${MAX_TABS} 枚までです。このタブはサーバに作成されていません。`
+            ? `タブは最大 ${tabLimit} 枚までです。このタブはサーバに作成されていません。`
             : 'このタブをサーバに作成できませんでした。入力内容はこの画面に残っています。'}
           <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             {active.createError !== 'tab_limit_reached' && (
@@ -700,8 +728,44 @@ function Editor({
         </div>
       )}
 
+      {/* 本文が未読み込み(開いた直後 or オフライン) */}
+      {active && !active.loaded && (
+        <div style={{ padding: '24px 4px', fontSize: 13, color: 'var(--muted)' }}>
+          {loadState?.id === active.tab_id && loadState.result === 'stopped' ? (
+            <span style={{ color: 'var(--danger)' }}>
+              この URL が無効化(または期限切れ・PIN 変更)になったため、このタブの内容を読み込めません。
+              ページを再読み込みし、必要なら新しい URL / PIN で開き直してください。
+            </span>
+          ) : loadState?.id === active.tab_id ? (
+            <>
+              このタブの内容を読み込めませんでした(通信状態を確認してください)。
+              <button
+                onClick={() => {
+                  setLoadState(null);
+                  void loadTab(active.tab_id).then((result) => {
+                    if (result !== 'ok') setLoadState({ id: active.tab_id, result });
+                  });
+                }}
+                style={{
+                  marginLeft: 8,
+                  padding: '4px 12px',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  borderRadius: 6,
+                  fontSize: 13,
+                }}
+              >
+                再読み込み
+              </button>
+            </>
+          ) : (
+            '読み込み中…'
+          )}
+        </div>
+      )}
+
       {/* タブ名 + 本文 */}
-      {active && (
+      {active && active.loaded && (
         <>
           <input
             value={active.title}
@@ -736,11 +800,54 @@ function Editor({
   );
 }
 
-/** 読み取り専用URLで開いたときのビュー(閲覧のみ・編集不可・アクセス履歴も非表示)。 */
-function ReadonlyView({ data, offlineAt }: { data: MemoData; offlineAt: number | null }) {
-  const tabs = data.tabs;
+/**
+ * 読み取り専用URLで開いたときのビュー(閲覧のみ・編集不可・アクセス履歴も非表示)。
+ * 本文は開いたタブだけ取る(遅延読み込み)。取れたぶんはオフライン用スナップショットにも足す。
+ */
+function ReadonlyView({
+  token,
+  data,
+  offlineAt,
+  pin,
+}: {
+  token: string;
+  data: MemoData;
+  offlineAt: number | null;
+  pin?: string;
+}) {
+  const [tabs, setTabs] = useState<MemoTab[]>(data.tabs);
+  const tabsRef = useRef(tabs);
+  tabsRef.current = tabs;
   const [activeId, setActiveId] = useState<string>(tabs[0]?.tab_id ?? '');
+  const [loadFailed, setLoadFailed] = useState(false);
   const active = tabs.find((t) => t.tab_id === activeId) ?? tabs[0];
+
+  const activeTabId = active?.tab_id;
+  const activeLoaded = active?.content !== undefined;
+  useEffect(() => {
+    if (!activeTabId || activeLoaded) return;
+    let cancelled = false;
+    api
+      .getMemo(token, pin, { tabIds: [activeTabId] })
+      .then((d) => {
+        if (cancelled) return;
+        // 来た本文を足す。要求外のタブは version が同じなら手元の本文を保つ
+        const prevById = new Map(tabsRef.current.map((t) => [t.tab_id, t]));
+        const next = d.tabs.map((s) => {
+          const p = prevById.get(s.tab_id);
+          return s.content !== undefined ? s : p && p.version === s.version ? { ...s, content: p.content } : s;
+        });
+        setTabs(next);
+        void saveSnapshot(token, { ...d, tabs: next }).catch(() => {});
+        setLoadFailed(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, pin, activeTabId, activeLoaded]);
 
   return (
     <main
@@ -839,7 +946,13 @@ function ReadonlyView({ data, offlineAt }: { data: MemoData; offlineAt: number |
           minHeight: '55dvh',
         }}
       >
-        {active?.content || <span style={{ color: 'var(--muted)' }}>(空のタブ)</span>}
+        {active?.content === undefined ? (
+          <span style={{ color: 'var(--muted)' }}>
+            {loadFailed ? 'このタブの内容を読み込めませんでした(通信状態を確認してください)' : '読み込み中…'}
+          </span>
+        ) : (
+          active.content || <span style={{ color: 'var(--muted)' }}>(空のタブ)</span>
+        )}
       </div>
       <MemoFooter />
     </main>
@@ -944,8 +1057,31 @@ export default function MemoScreen() {
         setState('unavailable');
         return;
       }
+      // 本文を要求するタブ: 前回開いていたタブ(オフライン用スナップショットの memo_id から分かる。
+      // 分からなければ先頭タブ)+ この端末に未送信編集が残っているタブ(起動時にバッファ調停を
+      // 走らせるため。サーバは知らない id を無視する)。残りは開いたときに取る
+      const snap = await loadSnapshot(token).catch(() => null);
+      const rememberedTab = snap?.data.memo.memo_id
+        ? localStorage.getItem(lastTabKey(snap.data.memo.memo_id))
+        : null;
+      const wantIds = new Set(bufferedTabIds());
+      if (rememberedTab) wantIds.add(rememberedTab);
       try {
-        const d = await api.getMemo(token, tryPin);
+        const fetched = await api.getMemo(token, tryPin, {
+          tabIds: [...wantIds],
+          firstTab: !rememberedTab,
+        });
+        // 本文が来なかったタブは、前回のスナップショットに同じ version の本文があればそれで埋める
+        // (スナップショットはサーバ ACK 済みの内容なので安全)。オフライン時に読めるタブを減らさない
+        const snapById = new Map((snap?.data.tabs ?? []).map((t) => [t.tab_id, t]));
+        const d: MemoData = {
+          ...fetched,
+          tabs: fetched.tabs.map((t) => {
+            if (t.content !== undefined) return t;
+            const s = snapById.get(t.tab_id);
+            return s && s.content !== undefined && s.version === t.version ? { ...t, content: s.content } : t;
+          }),
+        };
         setData(d);
         setPin(tryPin);
         setState('ready');
@@ -968,7 +1104,6 @@ export default function MemoScreen() {
           }
         }
         // ネットワーク断・サーバ障害 → オフラインスナップショットにフォールバック
-        const snap = await loadSnapshot(token).catch(() => null);
         if (snap) {
           setData(snap.data);
           setPin(tryPin);
@@ -1023,6 +1158,6 @@ export default function MemoScreen() {
   }
 
   // 読み取り専用URL(mode='ro')は閲覧ビュー。編集エンジンは起動しない
-  if (data.mode === 'ro') return <ReadonlyView data={data} offlineAt={offlineAt} />;
+  if (data.mode === 'ro') return <ReadonlyView token={token} data={data} offlineAt={offlineAt} pin={pin} />;
   return <Editor token={token} data={data} offlineAt={offlineAt} pin={pin} />;
 }

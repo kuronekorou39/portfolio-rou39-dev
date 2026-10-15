@@ -1,16 +1,42 @@
-// 無料枠の上限。運用で調整する値なのでここに集約する。
-
-/** 1ユーザーが持てるメモ(=秘密URL)数の上限。発行時に原子的カウンタで強制。 */
-export const MAX_MEMOS_PER_USER = 20;
-
-/** 1メモのタブ数上限。作成時に原子的カウンタで強制。 */
-export const MAX_TABS_PER_MEMO = 12;
+// 利用枠の上限。運用で調整する値なのでここに集約する。
 
 /**
- * 1タブの本文上限(UTF-8 バイト)。
- * DynamoDB の 400KB item 制限、退出時フラッシュ(fetch keepalive / sendBeacon)の
- * 64KB 制限、全タブ取得 Query の 1MB/ページ制限(MAX_TABS_PER_MEMO × 本値 ≤ 約1MB)
- * のすべてに封筒分の余裕を持たせた値。
+ * プラン。notes-users の plan 属性(無ければ 'free')。
+ * premium は運営者が DynamoDB コンソールで手で付ける(決済なし。docs/notes-plans.md)。
+ */
+export type Plan = 'free' | 'premium';
+
+export interface PlanLimits {
+  /** 1ユーザーが持てるメモ(=秘密URL)数の上限。発行時に原子的カウンタで強制。 */
+  memos: number;
+  /** 1メモのタブ数上限。作成時に memos.tab_limit(発行時にプランから刻印)で強制。 */
+  tabs: number;
+}
+
+export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
+  free: { memos: 10, tabs: 10 },
+  premium: { memos: 100, tabs: 40 },
+};
+
+export function isPlan(v: unknown): v is Plan {
+  return v === 'free' || v === 'premium';
+}
+
+export function limitsFor(plan: unknown): PlanLimits {
+  return PLAN_LIMITS[isPlan(plan) ? plan : 'free'];
+}
+
+/**
+ * 全プランを通じた 1 メモのタブ数の最大。入力検証(flush/reorder の配列長)と
+ * get-memo の応答サイズ見積もり(タブ数 × TAB_CAP_BYTES が Lambda の応答上限 6MB に
+ * 収まること)の両方の根拠なので、premium を増やすときはここも見直す。
+ */
+export const MAX_TABS_HARD = Math.max(...Object.values(PLAN_LIMITS).map((l) => l.tabs));
+
+/**
+ * 1タブの本文上限(UTF-8 バイト)。プランで変えない。
+ * DynamoDB の 400KB item 制限と、退出時フラッシュ(fetch keepalive / sendBeacon)の
+ * 64KB 制限に封筒分の余裕を持たせた値。タブ数を増やす方向で容量を確保する。
  */
 export const TAB_CAP_BYTES = 60_000;
 

@@ -44,10 +44,10 @@ export class NotesStorageStack extends cdk.Stack {
       sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
     });
 
-    // タブ(memo_id パーティションに同居 → 1 Query で全タブ取得、削除も BatchWrite で一括)。
+    // タブ(memo_id パーティションに同居 → Query で全タブ取得、削除も BatchWrite で一括)。
     // content は inline なので 1 タブの上限は DynamoDB の 400KB item 制限より十分小さく取る
-    // (実効 ~60KB)。かつ MAX_TABS × 上限 ≤ 約1MB に収め、全タブ取得が Query 1ページに収まる
-    // ようにする(超えるなら LastEvaluatedKey でページングが必要になる)。
+    // (実効 ~60KB)。タブ数 × 上限が Query の 1MB/ページを超え得るので、get-memo は
+    // LastEvaluatedKey でページングする。
     this.tabsTable = new dynamodb.Table(this, 'TabsTable', {
       tableName: 'notes-tabs',
       partitionKey: { name: 'memo_id', type: dynamodb.AttributeType.STRING },
