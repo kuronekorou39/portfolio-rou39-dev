@@ -4,7 +4,8 @@ import { api, ApiError, type MemoData } from './api';
 /**
  * メモ画面の自動保存エンジン。
  *
- * - タブ毎に debounce(約1.3秒)して保存。サーバは version 楽観ロック(409)+
+ * - タブ毎に debounce(入力停止から約3秒、打ち続けても最長10秒)して保存。IME 変換中は
+ *   予約しない。サーバは version 楽観ロック(409)+
  *   per-token スロットル(429)+ 60KB 上限(413)で守られている。
  * - 編集は即座に localStorage の dirty バッファへも書き、サーバ ACK(200+新version)
  *   まで消さない。通信断・タブ強制終了でも編集はローカルに残る。
@@ -40,7 +41,13 @@ export interface TabState {
   createError?: string | null;
 }
 
-const DEBOUNCE_MS = 1300;
+/**
+ * 入力が止まってから保存するまでの待ち。日本語入力は変換のたびに手が止まるので、
+ * 短いと文を考えながら打つだけで数秒おきに本文全体が飛ぶ。
+ */
+const DEBOUNCE_MS = 3000;
+/** 打ち続けていても、最初の編集からこの時間以内には必ず一度保存する(消失の不安を抑える)。 */
+const MAX_WAIT_MS = 10_000;
 const MAX_RETRY_DELAY_MS = 15_000;
 /** タブ作成の再試行回数(429 やネットワーク断のとき)。使い切ったら create_failed。 */
 const CREATE_MAX_RETRY = 3;
@@ -144,6 +151,23 @@ export function useAutosave(
 
   const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const retryCountRef = useRef(new Map<string, number>());
+  /** 直近の保存以降で最初に編集した時刻(tab_id →epoch ms)。MAX_WAIT の起点。 */
+  const firstEditRef = useRef(new Map<string, number>());
+
+  /**
+   * debounce 保存を(再)予約する。入力のたびに呼ばれ、前の予約は取り消す。
+   * ただし最初の編集から MAX_WAIT を超えそうなら、その残り時間で発火させる
+   * (入力が続く限り永遠に保存されない、を防ぐ)。
+   */
+  const armSave = useCallback((tabId: string, save: (id: string) => void) => {
+    const now = Date.now();
+    const first = firstEditRef.current.get(tabId) ?? now;
+    firstEditRef.current.set(tabId, first);
+    const delay = Math.max(0, Math.min(DEBOUNCE_MS, first + MAX_WAIT_MS - now));
+    const existing = timersRef.current.get(tabId);
+    if (existing) clearTimeout(existing);
+    timersRef.current.set(tabId, setTimeout(() => save(tabId), delay));
+  }, []);
 
   /**
    * 直近で自分が作成/削除したタブ(tab_id → 猶予の期限)。
@@ -178,6 +202,7 @@ export function useAutosave(
         return;
 
       const snapshot = { title: t.title, content: t.content, base_version: t.version };
+      firstEditRef.current.delete(tabId); // ここから先の編集は新しい MAX_WAIT 窓
       patchTab(tabId, { save: 'saving' });
       try {
         const r = await api.saveTab(token, { tab_id: tabId, ...snapshot }, pin);
@@ -190,8 +215,7 @@ export function useAutosave(
         } else {
           // 送信中にさらに編集された。新 version でバッファを更新し、再度 debounce
           if (cur) writeBuffer(tabId, { title: cur.title, content: cur.content, base_version: r.version, ts: Date.now() });
-          const timer = setTimeout(() => void saveNow(tabId), DEBOUNCE_MS);
-          timersRef.current.set(tabId, timer);
+          armSave(tabId, (id) => void saveNow(id));
         }
         patchTab(tabId, { version: r.version, dirty: !unchanged, save: 'saved' });
       } catch (e) {
@@ -228,12 +252,16 @@ export function useAutosave(
         timersRef.current.set(tabId, timer);
       }
     },
-    [token, patchTab],
+    [token, patchTab, armSave],
   );
 
-  /** 編集入力。state 更新 + dirty バッファ書き込み + debounce 保存予約。 */
+  /**
+   * 編集入力。state 更新 + dirty バッファ書き込み + debounce 保存予約。
+   * composing=true(IME 変換中)のときは予約しない。変換中は onChange が連続して来るが、
+   * 確定前の途中文字列を保存しても無駄なので、確定後に kick() で予約し直す。
+   */
   const edit = useCallback(
-    (tabId: string, patch: { title?: string; content?: string }) => {
+    (tabId: string, patch: { title?: string; content?: string }, opts: { composing?: boolean } = {}) => {
       const t = tabsRef.current.find((x) => x.tab_id === tabId);
       if (!t) return;
       const next = { title: patch.title ?? t.title, content: patch.content ?? t.content };
@@ -257,12 +285,27 @@ export function useAutosave(
       // 作成中は debounce だけ張っておく(saveNow 側が pendingCreate を見て送信を見送り、
       // 作成完了時に改めて送られる)。
       if (terminal) return;
-      const existing = timersRef.current.get(tabId);
-      if (existing) clearTimeout(existing);
-      const timer = setTimeout(() => void saveNow(tabId), DEBOUNCE_MS);
-      timersRef.current.set(tabId, timer);
+      if (opts.composing) {
+        // 変換中に前の予約が発火しないよう止める(MAX_WAIT の起点は維持する)
+        const existing = timersRef.current.get(tabId);
+        if (existing) clearTimeout(existing);
+        if (!firstEditRef.current.has(tabId)) firstEditRef.current.set(tabId, Date.now());
+        return;
+      }
+      armSave(tabId, (id) => void saveNow(id));
     },
-    [patchTab, saveNow],
+    [patchTab, saveNow, armSave],
+  );
+
+  /** 未保存の編集があれば保存を予約し直す(IME 確定後など、edit を経ずに再アームしたいとき)。 */
+  const kick = useCallback(
+    (tabId: string) => {
+      const t = tabsRef.current.find((x) => x.tab_id === tabId);
+      if (!t?.dirty) return;
+      if (t.save === 'revoked' || t.save === 'auth' || t.save === 'create_failed') return;
+      armSave(tabId, (id) => void saveNow(id));
+    },
+    [saveNow, armSave],
   );
 
   /** 全 dirty タブの一括保存(タブ切替・離脱時)。1回のスロットル消費で送る。 */
@@ -479,6 +522,7 @@ export function useAutosave(
         // 反映前の読みで返ってきても復活させないよう猶予を張る
         markGrace(tabId, 'deleted');
         clearBuffer(tabId);
+        firstEditRef.current.delete(tabId);
         for (const key of [tabId, `create_${tabId}`]) {
           const timer = timersRef.current.get(key);
           if (timer) clearTimeout(timer);
@@ -628,6 +672,7 @@ export function useAutosave(
   return {
     tabs,
     edit,
+    kick,
     saveNow,
     flushAll,
     adoptServer,

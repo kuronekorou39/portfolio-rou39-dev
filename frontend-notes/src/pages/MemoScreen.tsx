@@ -267,9 +267,12 @@ function trailingBlankFrom(text: string): number {
 function ContentEditor({
   value,
   onChange,
+  onComposing,
 }: {
   value: string;
   onChange: (v: string) => void;
+  /** IME 変換の開始/終了。変換中は自動保存を予約しないために使う。 */
+  onComposing?: (composing: boolean) => void;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const lines = useMemo(() => value.split('\n'), [value]);
@@ -325,6 +328,8 @@ function ContentEditor({
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onCompositionStart={() => onComposing?.(true)}
+        onCompositionEnd={() => onComposing?.(false)}
         onScroll={(e) => {
           // 背面レイヤを textarea のスクロールに追従させる
           if (overlayRef.current) overlayRef.current.scrollTop = e.currentTarget.scrollTop;
@@ -357,9 +362,15 @@ function Editor({
   /** PIN 保護メモの場合の PIN(書き込みに同送)。 */
   pin?: string;
 }) {
-  const { tabs, edit, saveNow, adoptServer, overwriteServer, addTab, retryCreate, removeTab, reorder, latest } =
+  const { tabs, edit, kick, saveNow, adoptServer, overwriteServer, addTab, retryCreate, removeTab, reorder, latest } =
     useAutosave(token, data.tabs, pin);
   const memoId = data.memo.memo_id;
+  // IME 変換中フラグ。変換中の onChange では保存を予約せず、確定時に kick で予約し直す
+  const composingRef = useRef(false);
+  const onComposing = (tabId: string) => (composing: boolean) => {
+    composingRef.current = composing;
+    if (!composing) kick(tabId);
+  };
   // 前回このメモで見ていたタブを復元する(無ければ先頭)
   const [activeId, setActiveId] = useState<string>(() => {
     const remembered = memoId ? localStorage.getItem(lastTabKey(memoId)) : null;
@@ -424,8 +435,11 @@ function Editor({
       return;
     }
     if (activeId === id) {
+      // 表示中のタブを消したら隣(左。無ければ右)へ移る。先頭に飛ばすと作業位置を見失う
+      const idx = tabs.findIndex((x) => x.tab_id === id);
       const rest = tabs.filter((x) => x.tab_id !== id);
-      setActiveId(rest[0]?.tab_id ?? '');
+      const next = rest[Math.max(0, idx - 1)] ?? rest[0];
+      setActiveId(next?.tab_id ?? '');
     }
   };
 
@@ -691,7 +705,11 @@ function Editor({
         <>
           <input
             value={active.title}
-            onChange={(e) => edit(active.tab_id, { title: e.target.value })}
+            onChange={(e) =>
+              edit(active.tab_id, { title: e.target.value }, { composing: composingRef.current })
+            }
+            onCompositionStart={() => onComposing(active.tab_id)(true)}
+            onCompositionEnd={() => onComposing(active.tab_id)(false)}
             placeholder="タブ名(任意)"
             maxLength={200}
             style={{
@@ -705,7 +723,8 @@ function Editor({
           />
           <ContentEditor
             value={active.content}
-            onChange={(v) => edit(active.tab_id, { content: v })}
+            onChange={(v) => edit(active.tab_id, { content: v }, { composing: composingRef.current })}
+            onComposing={onComposing(active.tab_id)}
           />
         </>
       )}
