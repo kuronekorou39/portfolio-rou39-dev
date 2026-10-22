@@ -11,7 +11,24 @@
 - サイトは一覧で `index.json` を、ログを開いたときにその 1 本の本文を取得する(`frontend/src/lib/posts.ts`)
 - 手元では `npm run dev` / `npm run build` の前に自動で生成される。検査だけなら `node scripts/content/build-content.mjs --check`
 
-### 公開のしかた(main へ push)
+### 公開のしかた
+
+公開の経路は 2 つ。**どちらも `scripts/content/publish-devlog.mjs` で S3 に上げる**(検査 → 生成 → 同期)。
+
+#### 手元から公開する(GitHub に依存しない)
+
+```bash
+npm run publish:devlog              # 検査 → 生成 → rou39-site へ同期。5 分以内にサイトへ出る
+npm run publish:devlog -- --dryrun  # S3 に何をするかだけ表示する
+```
+
+- リポジトリが private で Actions が動かない(課金ロックなど)ときでも公開できる。commit / push は後でよい
+- キャッシュは消さない。ログと図に `Cache-Control: public, max-age=300` を付けて上げ、CloudFront はその時間で取り直す。
+  そのため手元の権限(`portfolio-local-tools` の rou39-site への書き込み)だけで足りる
+- **`--delete` で同期するので、手元に無いログは配信から消える。** 別の端末で足したログがあるなら先に pull する
+- アプリのデータ(`data/projects.json`)と `frontend/public/projects/` は対象外。こちらは push(下)か `node scripts/seed/seed-projects.mjs`
+
+#### main へ push する
 
 `.github/workflows/deploy.yml` が、push で変わった場所を見て経路を選ぶ。
 
@@ -19,6 +36,8 @@
 |---|---|---|
 | `data/posts/`、`data/projects.json`、`frontend/public/devlog/`、`frontend/public/projects/` **だけ** | 中身だけの経路: 検査 → 生成 → S3 へ同期 → そのパスだけ invalidate → アプリのデータを投入 | 1〜2 分 |
 | それ以外が 1 ファイルでも含まれる | フルデプロイ(ビルド + CDK)。中身も一緒に載る | 10〜20 分 |
+
+どちらの経路も最後に `publish-devlog.mjs --invalidate` を通す(フルデプロイでは CDK が印なしで上げたログを、印付きで上げ直す)。
 
 **ログの追加は、仕組みの変更と同じ push に混ぜない。** 混ぜるとフルデプロイになる。
 **検査に 1 件でも落ちると、その push では何も載らない**(下の「何を書くか」「書くときのルール」を機械的に見ている)。push の前に `--check` を回す。
