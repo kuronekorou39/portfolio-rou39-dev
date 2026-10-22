@@ -49,6 +49,15 @@ http://localhost:5173 でフロントエンドが起動。
 npm run build
 ```
 
+## テスト
+
+テストがあるのは frontend のみ(Vitest)。
+
+```bash
+npm run test --workspace=frontend  # 全件実行
+npx vitest run <path>              # 単一ファイルのみ実行(frontend/ 配下)
+```
+
 ## AWSデプロイ
 
 事前に AWS CLI の認証設定が必要。
