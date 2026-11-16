@@ -35,7 +35,7 @@ jobs:
             echo "content_only=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           other=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" \
-            | grep -vE '^(data/posts/|data/projects\.json$|data/activity\.json$|frontend/public/devlog/|frontend/public/projects/)' || true)
+            | grep -vE '^(data/posts/|data/projects\.json$|data/activity\.json$|data/goals\.json$|frontend/public/devlog/|frontend/public/projects/)' || true)
           if [ -z "$other" ]; then echo "content_only=true" >> "$GITHUB_OUTPUT"
           else echo "content_only=false" >> "$GITHUB_OUTPUT"; echo "仕組みの変更あり:"; echo "$other" | head -20; fi
 

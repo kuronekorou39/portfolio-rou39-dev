@@ -782,7 +782,7 @@ function ProjectShowcase({ project, index }: { project: Project; index: number }
               <motion.img
                 src={project.icon}
                 alt=""
-                className="relative z-10 h-28 w-28 rounded-[26px] border border-white/10 object-cover shadow-2xl md:h-32 md:w-32"
+                className="relative z-10 h-44 w-44 rounded-[40px] border border-white/10 object-cover shadow-2xl md:h-56 md:w-56 md:rounded-[52px]"
                 animate={{ y: [0, -10, 0], rotate: [0, 3, -3, 0] }}
                 transition={{ duration: 5, delay: index * 0.3, repeat: Infinity, ease: 'easeInOut' }}
                 loading="lazy"

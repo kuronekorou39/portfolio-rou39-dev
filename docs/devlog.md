@@ -34,7 +34,7 @@ npm run publish:devlog -- --dryrun  # S3 に何をするかだけ表示する
 
 | 変わった場所 | 経路 | 所要 |
 |---|---|---|
-| `data/posts/`、`data/projects.json`、`data/activity.json`、`frontend/public/devlog/`、`frontend/public/projects/` **だけ** | 中身だけの経路: 検査 → 生成 → S3 へ同期 → そのパスだけ invalidate → アプリのデータを投入 | 1〜2 分 |
+| `data/posts/`、`data/projects.json`、`data/activity.json`、`data/goals.json`、`frontend/public/devlog/`、`frontend/public/projects/` **だけ** | 中身だけの経路: 検査 → 生成 → S3 へ同期 → そのパスだけ invalidate → アプリのデータを投入 | 1〜2 分 |
 | それ以外が 1 ファイルでも含まれる | フルデプロイ(ビルド + CDK)。中身も一緒に載る | 10〜20 分 |
 
 どちらの経路も最後に `publish-devlog.mjs --invalidate` を通す(フルデプロイでは CDK が印なしで上げたログを、印付きで上げ直す)。
@@ -84,7 +84,32 @@ npm run status -- --json  # 日ごとのコミット数まで出す(ログの下
 
 ## タイムライン
 
-`/timeline` は、アプリ(縦)× 日付(横)の表。その日のコミット件数を濃淡で、ログのある日を白い枠で示す。
+`/timeline` は、アプリ(縦)× 日付(横)の表。アプリごとに「予定」と「実績」の 2 行を持つ。
+
+- 予定: 目標ごとに、着手日から期限までのバー。期限を過ぎたぶんは赤い斜線で伸びる
+- 実績: ひと続きの作業を 1 本のバーにし、中を日ごとのコミット件数の濃淡で塗る。ログのある日は白い点
+- 表の下に目標の一覧(期間・状態・作業した日数)
+
+### 目標を書く
+
+正本は `data/goals.json`。1 件が 1 つの目標。
+
+```json
+[
+  { "project": "mobile-bex", "title": "Chromium 156 に追従する", "start": "2026-11-18", "due": "2026-11-30" }
+]
+```
+
+| キー | 必須 | 内容 |
+|---|---|---|
+| `project` | ○ | アプリの id |
+| `title` | ○ | 何をやるか。バーの中に出るので短く |
+| `start` / `due` | ○ | 着手日と期限(YYYY-MM-DD) |
+| `done` | | 終えた日。書くと「完了」になり、期限より後なら遅れた日数が出る |
+
+目標はサイトにそのまま出る。外に出せないことは書かない。形式に違反すると、ログと同じく何も載らない。
+
+### 実績を集める
 
 ```bash
 npm run activity          # 公開中のアプリのコミット件数を集め、data/activity.json に書く

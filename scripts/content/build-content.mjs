@@ -10,7 +10,7 @@
  * を書き出す。サイトはこれを実行時に読む。検査に 1 件でも落ちたら何も書かずに失敗する
  * (形式違反のログは、push しても載らない)。
  *
- * あわせて data/activity.json(タイムラインの材料)から、公開中のアプリの分だけを
+ * あわせて data/activity.json(実績)と data/goals.json(目標)から、公開中のアプリの分だけを
  * 同じフォルダの activity.json に書き出す(CI が書き込める場所は content/devlog/ 以下に絞ってある)。
  *
  * 生成物は git で管理しない。frontend の predev / prebuild と、deploy.yml の中身だけの経路が毎回作り直す。
@@ -45,8 +45,21 @@ for (const fileName of readdirSync(postsDir).filter((f) => f.endsWith('.md')).so
   posts.push(post);
 }
 
+// 目標(タイムラインの予定)。形式は docs/devlog.md
+const goalsPath = join(root, 'data', 'goals.json');
+const allGoals = existsSync(goalsPath) ? JSON.parse(readFileSync(goalsPath, 'utf8')) : [];
+const isDate = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+allGoals.forEach((goal, i) => {
+  const where = `data/goals.json の ${i + 1} 件目`;
+  if (!projects.some((p) => p.id === goal.project)) failures.push(`${where}: project "${goal.project}" が data/projects.json に無い`);
+  if (typeof goal.title !== 'string' || !goal.title.trim()) failures.push(`${where}: title が無い`);
+  if (!isDate(goal.start) || !isDate(goal.due)) failures.push(`${where}: start / due は YYYY-MM-DD で書く`);
+  else if (goal.start > goal.due) failures.push(`${where}: start が due より後`);
+  if (goal.done !== undefined && !isDate(goal.done)) failures.push(`${where}: done は YYYY-MM-DD で書く`);
+});
+
 if (failures.length > 0) {
-  console.error(`Devlog の検査に ${failures.length} 件落ちた。ルールは docs/devlog.md:\n` + failures.map((f) => `  - ${f}`).join('\n'));
+  console.error(`中身の検査に ${failures.length} 件落ちた。ルールは docs/devlog.md:\n` + failures.map((f) => `  - ${f}`).join('\n'));
   process.exit(1);
 }
 
@@ -62,6 +75,7 @@ if (!checkOnly) {
   const activityPath = join(root, 'data', 'activity.json');
   const activity = existsSync(activityPath) ? JSON.parse(readFileSync(activityPath, 'utf8')) : { updatedAt: '', apps: {} };
   const apps = Object.fromEntries(Object.entries(activity.apps).filter(([id]) => context.projectIds.has(id)));
-  writeFileSync(join(outDir, 'activity.json'), JSON.stringify({ updatedAt: activity.updatedAt, apps }));
+  const goals = allGoals.filter((goal) => context.projectIds.has(goal.project));
+  writeFileSync(join(outDir, 'activity.json'), JSON.stringify({ updatedAt: activity.updatedAt, apps, goals }));
 }
 console.log(`Devlog: ${posts.length} 件を検査${checkOnly ? '' : 'して生成'}した`);
