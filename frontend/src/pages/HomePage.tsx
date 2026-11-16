@@ -516,6 +516,7 @@ function ClickRipples() {
 // ═══════════════════════════════════════════════════════════
 
 // ─── Noise texture overlay ─────────────────────────────────
+// 背景にだけかける。本文の section(z-10)より下に敷くので、カードやスクショには乗らない
 function NoiseOverlay() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -538,7 +539,7 @@ function NoiseOverlay() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-[100] h-full w-full opacity-40"
+      className="pointer-events-none fixed inset-0 z-[7] h-full w-full opacity-40"
       style={{ imageRendering: 'pixelated', width: '100%', height: '100%' }}
     />
   );
@@ -735,7 +736,8 @@ function ProjectShowcase({ project, index }: { project: Project; index: number }
   });
   const y = useTransform(scrollYProgress, [0, 1], [60, -60]);
   const { color, accent } = accentPair(project.id);
-  const screenshot = project.screenshots?.[0];
+  // スマホのスクショは縦長で、横長の枠に入れると小さく浮く。モバイルはアイコンを見せる
+  const screenshot = project.category === 'mobile' && project.icon ? undefined : project.screenshots?.[0];
   const updatedAt = Date.parse(project.updatedAt);
   const isNew = Number.isFinite(updatedAt) && Date.now() - updatedAt <= NEW_BADGE_DAYS * 86_400_000;
 
@@ -757,7 +759,7 @@ function ProjectShowcase({ project, index }: { project: Project; index: number }
           style={{ y }}
         >
           <div
-            className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl border border-white/[0.08]"
+            className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl border border-white/[0.1] bg-white/[0.03] backdrop-blur-xl"
           >
             {/* Gradient background */}
             <div
@@ -858,16 +860,11 @@ function ProjectShowcase({ project, index }: { project: Project; index: number }
               </span>
             ))}
           </motion.div>
-          <motion.span
-            className="inline-flex items-center gap-2 text-sm font-medium text-white/50 transition-colors group-hover:text-white/80"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
-          >
+          {/* マウスを載せたときだけ出す。行は常に確保して、出入りで高さが動かないようにする */}
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-white/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
             詳細を見る
             <span className="transition-transform group-hover:translate-x-1">→</span>
-          </motion.span>
+          </span>
         </div>
       </Link>
     </motion.div>

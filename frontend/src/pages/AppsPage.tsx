@@ -36,12 +36,8 @@ const statusRank: Record<string, number> = {
   archived: 2,
 };
 
-// スクリーンショットが無いアプリのカバー色。id から決まるので、再訪しても同じ色になる
-function coverStyle(id: string): string {
-  let h = 0;
-  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) % 360;
-  return `linear-gradient(135deg, hsl(${h} 45% 24%), hsl(${(h + 60) % 360} 40% 12%))`;
-}
+// カードの中に並べるスマホのスクショの枚数
+const MOBILE_SHOT_COUNT = 3;
 
 function daysSince(iso: string): number {
   const t = Date.parse(iso);
@@ -53,7 +49,7 @@ function daysSince(iso: string): number {
 function StoreMarks({ links }: { links: Project['links'] }) {
   if (!links.appStore && !links.playStore) return null;
   return (
-    <span className="flex shrink-0 items-center gap-1.5 text-white/30">
+    <span className="flex shrink-0 items-center gap-1.5 text-white/45">
       {links.appStore && (
         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-label="App Store で配信中">
           <title>App Store で配信中</title>
@@ -153,6 +149,8 @@ export default function AppsPage() {
   }, [projects, filter, tagFilter, searchInput, sort]);
 
   const hasFilters = filter !== 'all' || !!tagFilter || !!searchInput;
+  // 検索と絞り込みは畳んでおく。条件付きの URL で来たときは、何が効いているか見えるよう開く
+  const [filtersOpen, setFiltersOpen] = useState(hasFilters || sort !== DEFAULT_SORT);
 
   function clearFilters() {
     setSearchInput('');
@@ -177,12 +175,43 @@ export default function AppsPage() {
           </p>
         </motion.div>
 
+        {/* 開閉ボタン + 件数 */}
+        <motion.div
+          className={`flex flex-wrap items-center gap-3 ${filtersOpen ? 'mb-4' : 'mb-10'}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <button
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            aria-controls="apps-filters"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#0b0c10]/60 px-4 py-2 text-xs font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            検索・絞り込み
+            <span className={`transition-transform ${filtersOpen ? 'rotate-180' : ''}`} aria-hidden>▾</span>
+          </button>
+          <span className="text-xs text-white/40">{visible.length} 件</span>
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-xs text-white/45 underline underline-offset-4 transition-colors hover:text-white/80"
+            >
+              条件をクリア
+            </button>
+          )}
+        </motion.div>
+
+        {filtersOpen && (
+        <div id="apps-filters" className="mb-10">
         {/* Search + sort */}
         <motion.div
           className="mb-4 flex flex-wrap items-center gap-3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
         >
           <div className="relative min-w-[240px] flex-1">
             <svg
@@ -208,7 +237,7 @@ export default function AppsPage() {
                 className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
                   sort === s.key
                     ? 'bg-white/15 text-white'
-                    : 'border border-white/[0.06] text-white/30 hover:border-white/20 hover:text-white/60'
+                    : 'border border-white/[0.12] text-white/50 hover:border-white/30 hover:text-white/80'
                 }`}
               >
                 {s.label}
@@ -222,7 +251,7 @@ export default function AppsPage() {
           className="mb-4 flex flex-wrap gap-2"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.05 }}
         >
           {categories.map((cat) => (
             <button
@@ -231,7 +260,7 @@ export default function AppsPage() {
               className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
                 filter === cat.key
                   ? 'bg-white text-black'
-                  : 'border border-white/10 text-white/40 hover:border-white/30 hover:text-white/70'
+                  : 'border border-white/15 text-white/55 hover:border-white/40 hover:text-white/85'
               }`}
             >
               {cat.label}
@@ -241,12 +270,12 @@ export default function AppsPage() {
 
         {/* Tech tag filter */}
         <motion.div
-          className="mb-12 flex flex-wrap items-center gap-1.5"
+          className="flex flex-wrap items-center gap-1.5"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.1 }}
         >
-          <span className="mr-1 text-xs text-white/20">Tech:</span>
+          <span className="mr-1 text-xs text-white/40">Tech:</span>
           {techTags.map((tag) => (
             <button
               key={tag}
@@ -254,24 +283,15 @@ export default function AppsPage() {
               className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
                 tagFilter === tag
                   ? 'bg-white/15 text-white'
-                  : 'border border-white/[0.06] text-white/25 hover:border-white/20 hover:text-white/50'
+                  : 'border border-white/[0.12] text-white/50 hover:border-white/30 hover:text-white/80'
               }`}
             >
               {tag}
             </button>
           ))}
-          <span className="ml-2 text-xs text-white/20">
-            {visible.length} projects
-          </span>
-          {hasFilters && (
-            <button
-              onClick={clearFilters}
-              className="ml-1 text-xs text-white/25 underline underline-offset-4 transition-colors hover:text-white/60"
-            >
-              条件をクリア
-            </button>
-          )}
         </motion.div>
+        </div>
+        )}
 
         {/* Grid */}
         {loading ? (
@@ -302,7 +322,11 @@ export default function AppsPage() {
               const size = project.size || 'medium';
               const isLarge = size === 'large';
               const isSmall = size === 'small';
-              const screenshot = project.screenshots?.[0];
+              // スマホは縦長を数枚並べ、それ以外は横長を 1 枚。小さいカードには置かない
+              const isPortrait = project.category === 'mobile';
+              const shots = isSmall
+                ? []
+                : (project.screenshots ?? []).slice(0, isPortrait ? MOBILE_SHOT_COUNT : 1);
               const tagLimit = isLarge ? 5 : isSmall ? 2 : 3;
               const isNew = daysSince(project.updatedAt) <= NEW_BADGE_DAYS;
               const downloads = project.downloadCount ?? 0;
@@ -319,32 +343,12 @@ export default function AppsPage() {
                 >
                   <Link
                     to={`/apps/${project.id}`}
-                    className={`group relative block overflow-hidden rounded-2xl transition-all hover:bg-white/[0.04] ${
+                    className={`group relative block overflow-hidden rounded-2xl backdrop-blur-md transition-all hover:bg-[#12141a]/85 ${
                       isComingSoon
-                        ? 'border border-dashed border-blue-400/20 bg-blue-400/[0.02] hover:border-blue-400/40'
-                        : 'border border-white/[0.06] bg-white/[0.02] hover:border-white/20'
+                        ? 'border border-dashed border-blue-400/30 bg-[#0b0c10]/75 hover:border-blue-400/50'
+                        : 'border border-white/[0.12] bg-[#0b0c10]/75 hover:border-white/30'
                     } ${isSmall ? 'p-4' : 'p-6'}`}
                   >
-                    {/* Cover — large only. スクショが無くても枠が空かないよう色で埋める */}
-                    {isLarge && (
-                      <div className="-mx-6 -mt-6 mb-5 overflow-hidden bg-white/[0.03]">
-                        {screenshot ? (
-                          <img src={screenshot} alt="" className="aspect-video w-full object-cover" loading="lazy" />
-                        ) : (
-                          <div
-                            className="flex aspect-video items-center justify-center"
-                            style={{ background: coverStyle(project.id) }}
-                          >
-                            {project.icon ? (
-                              <img src={project.icon} alt="" className="h-16 w-16 rounded-2xl border border-white/10 object-cover shadow-lg" loading="lazy" />
-                            ) : (
-                              <span className="text-6xl opacity-50">{categoryEmoji[project.category]}</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
                     {/* 情報の並びは全サイズで共通。行ごと消すと視線の位置が揃わないので、
                         大きさの差はフォントサイズと余白だけでつける */}
 
@@ -358,7 +362,7 @@ export default function AppsPage() {
                             {categoryEmoji[project.category]}
                           </span>
                         )}
-                        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
+                        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50">
                           {categoryLabel[project.category]}
                         </span>
                       </div>
@@ -370,7 +374,7 @@ export default function AppsPage() {
 
                     {/* Row 2: title + NEW + hover arrow */}
                     <div className="mb-1.5 flex items-center gap-2">
-                      <h2 className={`min-w-0 font-bold text-white/80 transition-colors group-hover:text-white ${isSmall ? 'text-base' : isLarge ? 'text-2xl' : 'text-xl'}`}>
+                      <h2 className={`min-w-0 font-bold text-white/90 transition-colors group-hover:text-white ${isSmall ? 'text-base' : isLarge ? 'text-2xl' : 'text-xl'}`}>
                         {project.title}
                       </h2>
                       {isNew && (
@@ -378,37 +382,52 @@ export default function AppsPage() {
                           New
                         </span>
                       )}
-                      <span className="ml-auto shrink-0 text-white/0 transition-all group-hover:text-white/30">→</span>
+                      <span className="ml-auto shrink-0 text-white/0 transition-all group-hover:text-white/60">→</span>
                     </div>
 
                     {/* Row 3: subtitle — 2行で打ち切り、カード間の高さの差を抑える */}
-                    <p className={`line-clamp-2 text-sm text-white/30 transition-colors group-hover:text-white/45 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
+                    <p className={`line-clamp-2 text-sm text-white/55 transition-colors group-hover:text-white/70 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
                       {project.subtitle}
                     </p>
+
+                    {/* スクショはカードの中に置く。頭はどのカードもアイコンと種類で揃える */}
+                    {shots.length > 0 && (
+                      <div className={`mb-4 grid gap-2 ${isPortrait ? 'grid-cols-3' : 'grid-cols-1'}`}>
+                        {shots.map((src) => (
+                          <img
+                            key={src}
+                            src={src}
+                            alt=""
+                            className={`w-full rounded-lg border border-white/10 object-cover object-top ${isPortrait ? 'aspect-[9/16]' : 'aspect-video'}`}
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     {/* Row 4: tags */}
                     <div className={`flex flex-wrap items-center gap-1.5 ${isSmall ? 'mb-3' : 'mb-4'}`}>
                       {project.tags.slice(0, tagLimit).map((tag) => (
-                        <span key={tag} className={`rounded-full border border-white/[0.06] text-white/25 ${isSmall ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'}`}>
+                        <span key={tag} className={`rounded-full border border-white/[0.12] text-white/50 ${isSmall ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'}`}>
                           {tag}
                         </span>
                       ))}
                       {project.tags.length > tagLimit && (
-                        <span className="px-1 text-[11px] text-white/15">+{project.tags.length - tagLimit}</span>
+                        <span className="px-1 text-[11px] text-white/35">+{project.tags.length - tagLimit}</span>
                       )}
                     </div>
 
                     {/* Row 5: platform + stores / counts */}
-                    <div className="flex items-center gap-2 border-t border-white/[0.05] pt-3">
-                      <span className="truncate text-[10px] font-medium uppercase tracking-wider text-white/15">
+                    <div className="flex items-center gap-2 border-t border-white/[0.08] pt-3">
+                      <span className="truncate text-[10px] font-medium uppercase tracking-wider text-white/40">
                         {project.platform.join(' · ')}
                       </span>
                       <StoreMarks links={project.links} />
-                      <span className="ml-auto flex shrink-0 items-center gap-1 text-[10px] text-white/15" title="ページ表示数">
+                      <span className="ml-auto flex shrink-0 items-center gap-1 text-[10px] text-white/40" title="ページ表示数">
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         {(project.viewCount ?? 0).toLocaleString()}
                       </span>
-                      <span className="flex shrink-0 items-center gap-1 text-[10px] text-white/15" title="ダウンロード数">
+                      <span className="flex shrink-0 items-center gap-1 text-[10px] text-white/40" title="ダウンロード数">
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         {downloads > 0 ? downloads.toLocaleString() : '-'}
                       </span>
