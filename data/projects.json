@@ -38,7 +38,7 @@
     "publishedAt": "2025-07-20",
     "updatedAt": "2026-09-12",
     "size": "large",
-    "published": true,
+    "published": false,
     "featured": true
   },
   {
@@ -68,7 +68,7 @@
     "publishedAt": "2025-03-01",
     "updatedAt": "2026-09-03",
     "size": "large",
-    "published": true,
+    "published": false,
     "featured": true
   },
   {
@@ -109,7 +109,7 @@
     "publishedAt": "2025-01-15",
     "updatedAt": "2026-09-11",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "cryptid-logic-solver",
@@ -137,7 +137,7 @@
     "publishedAt": "2025-09-10",
     "updatedAt": "2026-01-04",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "icon-builder",
@@ -166,7 +166,7 @@
     "publishedAt": "2025-10-01",
     "updatedAt": "2026-05-16",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "chrome-transcoder",
@@ -192,7 +192,7 @@
     "publishedAt": "2025-06-01",
     "updatedAt": "2026-03-16",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "parallel-stream",
@@ -231,7 +231,7 @@
     "publishedAt": "2026-05-28",
     "updatedAt": "2026-09-12",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "ad-skipper-twitch",
@@ -264,7 +264,7 @@
     "publishedAt": "2026-02-13",
     "updatedAt": "2026-08-08",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "ad-skipper-prime",
@@ -301,7 +301,7 @@
     "publishedAt": "2026-02-13",
     "updatedAt": "2026-08-08",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "ad-skipper-youtube",
@@ -334,7 +334,7 @@
     "publishedAt": "2026-02-13",
     "updatedAt": "2026-08-08",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "local-port-board",
@@ -390,7 +390,7 @@
     "publishedAt": "2025-05-01",
     "updatedAt": "2026-04-03",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "actlog-app",
@@ -415,7 +415,7 @@
     "publishedAt": "2026-01-01",
     "updatedAt": "2026-04-04",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "office-raw-editor",
@@ -446,7 +446,7 @@
     "publishedAt": "2025-08-01",
     "updatedAt": "2026-04-29",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "deka-mado",
@@ -527,7 +527,7 @@
     "publishedAt": "2025-12-01",
     "updatedAt": "2026-09-01",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "burp-macro-builder",
@@ -554,7 +554,7 @@
     "publishedAt": "2025-12-01",
     "updatedAt": "2026-09-01",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "domain-traffic-inspector",
@@ -586,7 +586,7 @@
     "publishedAt": "2025-06-01",
     "updatedAt": "2026-08-21",
     "size": "small",
-    "published": true,
+    "published": false,
     "downloads": [
       {
         "label": "Chrome 拡張 (.zip)",
@@ -632,7 +632,7 @@
     "publishedAt": "2026-02-18",
     "updatedAt": "2026-09-03",
     "size": "large",
-    "published": true
+    "published": false
   },
   {
     "id": "u2b-loop-web",
@@ -702,7 +702,7 @@
     "publishedAt": "2026-05-28",
     "updatedAt": "2026-09-15",
     "size": "large",
-    "published": true
+    "published": false
   },
   {
     "id": "easy-blur",
@@ -736,7 +736,7 @@
     "publishedAt": "2026-04-01",
     "updatedAt": "2026-09-03",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "hayabuzz",
@@ -766,7 +766,7 @@
     "publishedAt": "2026-08-13",
     "updatedAt": "2026-09-04",
     "size": "medium",
-    "published": true
+    "published": false
   },
   {
     "id": "tapomaton",
@@ -794,7 +794,7 @@
     "publishedAt": "2026-08-21",
     "updatedAt": "2026-09-02",
     "size": "small",
-    "published": true
+    "published": false
   },
   {
     "id": "window-resizer",
@@ -821,6 +821,6 @@
     "publishedAt": "2025-08-05",
     "updatedAt": "2025-08-05",
     "size": "small",
-    "published": true
+    "published": false
   }
 ]

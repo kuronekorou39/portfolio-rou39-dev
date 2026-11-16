@@ -689,7 +689,20 @@ function FeaturedProjects() {
       .catch(console.error);
   }, []);
 
+  // 載せるアプリが 1 つも無いあいだは、見出しごと出さない(見出しとボタンだけが残ると空欄に見える)
+  if (featured.length === 0) return null;
+
   return (
+    <section className="relative z-10 py-32">
+      <motion.div
+        className="mb-20 text-center"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">Projects</h2>
+        <p className="mt-3 text-3xl font-bold text-white/80 md:text-4xl">つくったもの</p>
+      </motion.div>
     <div className="mx-auto max-w-5xl space-y-24 px-6 md:space-y-32">
       {featured.map((project, i) => (
         <ProjectShowcase key={project.id} project={project} index={i} />
@@ -709,6 +722,7 @@ function FeaturedProjects() {
         </Link>
       </motion.div>
     </div>
+    </section>
   );
 }
 
@@ -1134,18 +1148,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════ FEATURED PROJECTS ══════ */}
-      <section className="relative z-10 py-32">
-        <motion.div
-          className="mb-20 text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/30">Projects</h2>
-          <p className="mt-3 text-3xl font-bold text-white/80 md:text-4xl">つくったもの</p>
-        </motion.div>
-        <FeaturedProjects />
-      </section>
+      <FeaturedProjects />
 
       {/* ══════ PLAYGROUND ══════ */}
       <section className="relative z-10 py-24">

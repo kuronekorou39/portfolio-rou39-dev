@@ -63,6 +63,25 @@ projects: [vloom, hayabuzz]
 
 frontmatter は `key: value` と `[a, b]` の配列だけを読む簡易パーサ。YAML の入れ子や複数行は使えない。
 
+## 退避したログ(2026-11-16)
+
+整理し直すため、それまでの 208 本と全アプリをいったん引っ込めた。消してはいない。
+
+- ログ: `data/archive/posts/`、図: `data/archive/devlog-figures/`。検査と公開の対象外
+- アプリ: `data/projects.json` で全件 `published: false`。それまで公開していた id は `data/archive/published-before.json`
+- 戻すときは、ログを `data/posts/` へ、図を `frontend/public/devlog/<slug>/` へ移し、アプリを `published: true` にする
+  (ログは、公開中のアプリのものしか検査を通らない)
+
+## 遅れを確かめる
+
+```bash
+npm run status            # アプリごとに、最後のログより後の作業日数と、古いダウンロード先を出す
+npm run status -- --json  # 日ごとのコミット数まで出す(ログの下書きの材料)
+```
+
+アプリとリポジトリの対応は `data/sources.json`。アプリを足したらここにも足す
+(`projects.json` は API でそのまま公開されるので、リポジトリ名はそちらに書かない)。
+
 ## 何を書くか
 
 **1記事で1つのアプリを取り上げ、そのアプリに加えた更新を載せる。** サイト自体の更新報告や、複数アプリの変更の羅列にはしない。
@@ -88,8 +107,8 @@ frontmatter は `key: value` と `[a, b]` の配列だけを読む簡易パー�
 
 ## 図の様式(SVG を手描きするとき)
 
-見本: `frontend/public/devlog/2026-09-07-vloom-pwa-receive/scan-fps.svg`(グラフ)、
-`frontend/public/devlog/2026-08-24-hayabuzz-question-formats/choices-flow.svg`(流れ + 画面のラフ)
+見本: `data/archive/devlog-figures/2026-09-07-vloom-pwa-receive/scan-fps.svg`(グラフ)、
+`data/archive/devlog-figures/2026-08-24-hayabuzz-question-formats/choices-flow.svg`(流れ + 画面のラフ)
 
 - `viewBox="0 0 720 <高さ>"`、高さは 200〜460。`font-family="system-ui, sans-serif"`。最初に地の色の `<rect>` を全面に敷く(`#0b0c10`)
 - 色: 強調は `#60a5fa` の 1 色だけ(今回足した・変えた部分に使う)。それ以外は白の不透明度で濃淡をつける(見出し 0.85 / 本文 0.6 / 補足 0.4 / 枠線 0.12 / 面 0.04)。不具合や「直す前」を示すときだけ `#f87171` を使ってよい

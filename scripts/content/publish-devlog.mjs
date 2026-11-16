@@ -46,6 +46,8 @@ for (const [local, remote] of syncs) {
   run('aws', [
     's3', 'sync', local, `s3://${bucket}/${remote}`,
     '--delete',
+    // ログや図が 1 つも無いときにフォルダを残すための置き石。配信には要らない
+    '--exclude', '.gitkeep',
     '--cache-control', CACHE_CONTROL,
     ...(dryrun ? ['--dryrun'] : []),
   ]);

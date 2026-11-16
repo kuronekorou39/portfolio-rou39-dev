@@ -278,6 +278,8 @@ export default function AppsPage() {
           <div className="flex justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
           </div>
+        ) : projects.length === 0 ? (
+          <p className="py-20 text-center text-white/40">準備中</p>
         ) : visible.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-white/40">条件に合うアプリがありません</p>
