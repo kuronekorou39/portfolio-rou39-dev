@@ -1,0 +1,37 @@
+{
+  "omniverse": { "repo": "kuronekorou39/mobile-omniverse" },
+  "koko-meshi": { "repo": "kuronekorou39/koko-meshi" },
+  "u2b-loop": { "repo": "kuronekorou39/u2b-loop-app" },
+  "cryptid-logic-solver": { "repo": "kuronekorou39/cryptid-logic-solver" },
+  "icon-builder": { "repo": "kuronekorou39/icon-builder" },
+  "chrome-transcoder": { "repo": "kuronekorou39/chrome-transcoder" },
+  "parallel-stream": { "repo": "kuronekorou39/chrome-parallel-stream" },
+  "ad-skipper-twitch": {
+    "repo": "kuronekorou39/chrome-ad-skipper",
+    "path": "packages/extension-twitch",
+    "tagPrefix": "twitch-v"
+  },
+  "ad-skipper-prime": {
+    "repo": "kuronekorou39/chrome-ad-skipper",
+    "path": "packages/extension-prime",
+    "tagPrefix": "prime-v"
+  },
+  "ad-skipper-youtube": {
+    "repo": "kuronekorou39/chrome-ad-skipper",
+    "path": "packages/extension-youtube",
+    "tagPrefix": "youtube-v"
+  },
+  "local-port-board": { "repo": "kuronekorou39/local-port-board" },
+  "actlog-app": { "repo": "kuronekorou39/actlog-app" },
+  "office-raw-editor": { "repo": "kuronekorou39/office-raw-editor" },
+  "burp-intruder-queue": { "repo": "kuronekorou39/burp-extensions", "path": "extensions/intruder-queue" },
+  "burp-macro-builder": { "repo": "kuronekorou39/burp-extensions", "path": "extensions/macro-builder" },
+  "domain-traffic-inspector": { "repo": "kuronekorou39/chrome-domain-traffic-inspector" },
+  "mobile-bex": { "repo": "kuronekorou39/mobile-bex" },
+  "u2b-loop-web": { "repo": "kuronekorou39/u2b-loop" },
+  "vloom": { "repo": "kuronekorou39/vloom" },
+  "easy-blur": { "repo": "kuronekorou39/easy-blur" },
+  "hayabuzz": { "repo": "kuronekorou39/hayabuzz" },
+  "tapomaton": { "repo": "kuronekorou39/tapomaton" },
+  "window-resizer": { "repo": "kuronekorou39/chrome-window-resizer" }
+}

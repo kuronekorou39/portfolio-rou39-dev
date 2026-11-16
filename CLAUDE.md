@@ -18,6 +18,7 @@ rou39.com(本家)・uraneko.rou39.com(動画販売)・notes.rou39.com(メモ)の
 npm run test --workspace=frontend   # テストは frontend にしか無い
 npm run lint --workspace=frontend   # lint も frontend のみ
 npm run build --workspace=backend   # backend の型チェック
+npm run status                      # ログにしていない作業日と、古いダウンロード先をアプリごとに出す
 npm run publish:devlog              # Devlog を手元から公開(GitHub を通さない)
 node scripts/seed/seed-projects.mjs # data/projects.json を DynamoDB へ反映
 ```
