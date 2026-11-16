@@ -6,6 +6,7 @@
  *   node scripts/omniverse/publish-android.mjs --version 1.14.1 --notes "..."
  *   node scripts/omniverse/publish-android.mjs --notes "..." --dry-run
  *   node scripts/omniverse/publish-android.mjs --notes "..." --no-push
+ *   node scripts/omniverse/publish-android.mjs --beta --notes "テスト版"
  *
  * 何をするか:
  *   1. mobile-omniverse の GitHub Release から APK を取得
@@ -23,6 +24,11 @@
  * という食い違いが起きるのでこのスクリプトで揃える。
  *
  * iOS は App Store の照会 API を見ているので対象外。Android だけが自前配布。
+ *
+ * --beta はテスト版として出す。APK を S3 に置き、update-beta.json だけを更新する。
+ * update.json と projects.json には触らないので、届くのはアプリのデバッグ設定で
+ * 「テスト版も受け取る」をオンにした端末だけ。確かめて問題なければ、--beta を
+ * 付けずにもう一度走らせると全員に配られる（APK は同じものなので上げ直さない）。
  *
  * 前提:
  *   - gh CLI が mobile-omniverse を読める状態で認証済み
@@ -52,6 +58,7 @@ const PROJECT_ID = 'omniverse';
 const APK_CONTENT_TYPE = 'application/vnd.android.package-archive';
 
 const UPDATE_JSON = join(REPO_ROOT, 'frontend/public/omniverse/update.json');
+const BETA_JSON = join(REPO_ROOT, 'frontend/public/omniverse/update-beta.json');
 const PROJECTS_JSON = join(REPO_ROOT, 'data/projects.json');
 
 const { values } = parseArgs({
@@ -59,12 +66,14 @@ const { values } = parseArgs({
     version: { type: 'string' },
     notes: { type: 'string' },
     apk: { type: 'string' },
+    beta: { type: 'boolean', default: false },
     'dry-run': { type: 'boolean', default: false },
     'no-push': { type: 'boolean', default: false },
   },
 });
 
 const dryRun = values['dry-run'];
+const beta = values.beta;
 
 function sh(cmd, args, opts = {}) {
   const shown = `${cmd} ${args.join(' ')}`;
@@ -100,7 +109,7 @@ if (!/^\d+(\.\d+)*$/.test(version)) fail(`バージョンの形が変です: ${v
 const apkName = `OmniVerse-v${version}.apk`;
 const apkUrl = `${SITE_BASE}/${apkName}`;
 
-console.log(`OmniVerse ${version} を Android 向けに配信`);
+console.log(`OmniVerse ${version} を Android 向けに${beta ? 'テスト版として' : ''}配信`);
 if (dryRun) console.log('(dry-run: 何も変更しない)');
 
 const tmp = mkdtempSync(join(tmpdir(), 'omniverse-'));
@@ -152,31 +161,41 @@ try {
     }
   }
 
-  console.log(`\n[3/5] update.json を更新（アプリ内の更新チェック）`);
+  const manifestName = beta ? 'update-beta.json' : 'update.json';
+  console.log(`\n[3/5] ${manifestName} を更新（アプリ内の更新チェック）`);
   const updateJson = { version, release_notes: notes, apk_url: apkUrl };
   console.log(`      version=${version}`);
   for (const line of notes.split('\n')) console.log(`      | ${line}`);
-  if (!dryRun) writeFileSync(UPDATE_JSON, JSON.stringify(updateJson, null, 2) + '\n', 'utf-8');
+  if (!dryRun) {
+    writeFileSync(beta ? BETA_JSON : UPDATE_JSON, JSON.stringify(updateJson, null, 2) + '\n', 'utf-8');
+  }
 
   console.log(`\n[4/5] projects.json の downloads を更新（作品ページの DL ボタン）`);
-  const projects = JSON.parse(readFileSync(PROJECTS_JSON, 'utf-8'));
-  const project = projects.find((p) => p.id === PROJECT_ID);
-  if (!project) fail(`projects.json に id=${PROJECT_ID} がありません`);
-  const entry = (project.downloads ?? []).find((d) => d.os === 'android');
-  if (!entry) fail(`projects.json の ${PROJECT_ID} に android の downloads がありません`);
-  console.log(`      ${entry.url}`);
-  console.log(`   →  ${apkUrl}`);
-  if (!dryRun) {
-    entry.url = apkUrl;
-    writeFileSync(PROJECTS_JSON, JSON.stringify(projects, null, 2) + '\n', 'utf-8');
+  if (beta) {
+    console.log('      テスト版なのでスキップ（サイトからは公開版を落とさせる）');
+  } else {
+    const projects = JSON.parse(readFileSync(PROJECTS_JSON, 'utf-8'));
+    const project = projects.find((p) => p.id === PROJECT_ID);
+    if (!project) fail(`projects.json に id=${PROJECT_ID} がありません`);
+    const entry = (project.downloads ?? []).find((d) => d.os === 'android');
+    if (!entry) fail(`projects.json の ${PROJECT_ID} に android の downloads がありません`);
+    console.log(`      ${entry.url}`);
+    console.log(`   →  ${apkUrl}`);
+    if (!dryRun) {
+      entry.url = apkUrl;
+      writeFileSync(PROJECTS_JSON, JSON.stringify(projects, null, 2) + '\n', 'utf-8');
+    }
   }
 
   console.log(`\n[5/5] コミット`);
-  const paths = ['frontend/public/omniverse/update.json', 'data/projects.json'];
+  const paths = beta
+    ? ['frontend/public/omniverse/update-beta.json']
+    : ['frontend/public/omniverse/update.json', 'data/projects.json'];
   sh('git', ['-C', REPO_ROOT, 'add', ...paths]);
   const staged = sh('git', ['-C', REPO_ROOT, 'diff', '--cached', '--name-only'], { quiet: true });
   if (dryRun || staged) {
-    sh('git', ['-C', REPO_ROOT, 'commit', '-m', `chore: OmniVerse Android を ${version} に更新`]);
+    const what = beta ? 'Android のテスト版' : 'Android';
+    sh('git', ['-C', REPO_ROOT, 'commit', '-m', `chore: OmniVerse ${what} を ${version} に更新`]);
     if (values['no-push']) {
       console.log('      push はスキップ（--no-push）');
     } else {
@@ -192,5 +211,5 @@ try {
 console.log(`\n✅ 完了`);
 if (!dryRun && !values['no-push']) {
   console.log('   CI が CDK デプロイと DynamoDB の seed を行います。');
-  console.log('   反映後に確認: curl -s https://rou39.com/omniverse/update.json');
+  console.log(`   反映後に確認: curl -s ${SITE_BASE}/${beta ? 'update-beta.json' : 'update.json'}`);
 }
