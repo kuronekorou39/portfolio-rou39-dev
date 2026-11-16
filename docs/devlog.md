@@ -34,7 +34,7 @@ npm run publish:devlog -- --dryrun  # S3 に何をするかだけ表示する
 
 | 変わった場所 | 経路 | 所要 |
 |---|---|---|
-| `data/posts/`、`data/projects.json`、`frontend/public/devlog/`、`frontend/public/projects/` **だけ** | 中身だけの経路: 検査 → 生成 → S3 へ同期 → そのパスだけ invalidate → アプリのデータを投入 | 1〜2 分 |
+| `data/posts/`、`data/projects.json`、`data/activity.json`、`frontend/public/devlog/`、`frontend/public/projects/` **だけ** | 中身だけの経路: 検査 → 生成 → S3 へ同期 → そのパスだけ invalidate → アプリのデータを投入 | 1〜2 分 |
 | それ以外が 1 ファイルでも含まれる | フルデプロイ(ビルド + CDK)。中身も一緒に載る | 10〜20 分 |
 
 どちらの経路も最後に `publish-devlog.mjs --invalidate` を通す(フルデプロイでは CDK が印なしで上げたログを、印付きで上げ直す)。
@@ -81,6 +81,19 @@ npm run status -- --json  # 日ごとのコミット数まで出す(ログの下
 
 アプリとリポジトリの対応は `data/sources.json`。アプリを足したらここにも足す
 (`projects.json` は API でそのまま公開されるので、リポジトリ名はそちらに書かない)。
+
+## タイムライン
+
+`/timeline` は、アプリ(縦)× 日付(横)の表。その日のコミット件数を濃淡で、ログのある日を白い枠で示す。
+
+```bash
+npm run activity          # 公開中のアプリのコミット件数を集め、data/activity.json に書く
+npm run publish:devlog    # ログと一緒にサイトへ出す(push でも出る)
+```
+
+- 集めるのは手元の gh の認証。private のリポジトリも数えられる。外に出るのは日付と件数だけ
+- 自動では更新されない。ログを書く前に `npm run activity` を回す
+- アプリを公開に切り替えたら回し直す(非公開のアプリは集めない)
 
 ## 何を書くか
 

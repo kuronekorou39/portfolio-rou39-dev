@@ -19,7 +19,8 @@ npm run test --workspace=frontend   # テストは frontend にしか無い
 npm run lint --workspace=frontend   # lint も frontend のみ
 npm run build --workspace=backend   # backend の型チェック
 npm run status                      # ログにしていない作業日と、古いダウンロード先をアプリごとに出す
-npm run publish:devlog              # Devlog を手元から公開(GitHub を通さない)
+npm run activity                    # タイムライン用に、公開中アプリの日ごとのコミット件数を集め直す
+npm run publish:devlog              # Devlog とタイムラインを手元から公開(GitHub を通さない)
 node scripts/seed/seed-projects.mjs # data/projects.json を DynamoDB へ反映
 ```
 

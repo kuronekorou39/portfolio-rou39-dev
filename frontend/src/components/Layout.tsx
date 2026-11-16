@@ -35,6 +35,12 @@ export default function Layout() {
             >
               Devlog
             </Link>
+            <Link
+              to="/timeline"
+              className="text-sm font-medium text-gray-400 transition-colors hover:text-gray-100"
+            >
+              Timeline
+            </Link>
             {!loading && (
               user ? (
                 <div className="flex items-center gap-3">

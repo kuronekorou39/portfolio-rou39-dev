@@ -9,6 +9,7 @@ const AppsPage = lazy(() => import('@/pages/AppsPage'));
 const AppDetailPage = lazy(() => import('@/pages/AppDetailPage'));
 const DevlogPage = lazy(() => import('@/pages/DevlogPage'));
 const DevlogPostPage = lazy(() => import('@/pages/DevlogPostPage'));
+const TimelinePage = lazy(() => import('@/pages/TimelinePage'));
 const AuthPage = lazy(() => import('@/pages/AuthPage'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
@@ -48,6 +49,7 @@ function App() {
           <Route path="/apps/:id" element={<AppDetailPage />} />
           <Route path="/devlog" element={<DevlogPage />} />
           <Route path="/devlog/:slug" element={<DevlogPostPage />} />
+          <Route path="/timeline" element={<TimelinePage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />

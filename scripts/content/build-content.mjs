@@ -10,6 +10,9 @@
  * を書き出す。サイトはこれを実行時に読む。検査に 1 件でも落ちたら何も書かずに失敗する
  * (形式違反のログは、push しても載らない)。
  *
+ * あわせて data/activity.json(タイムラインの材料)から、公開中のアプリの分だけを
+ * frontend/public/content/activity.json に書き出す。
+ *
  * 生成物は git で管理しない。frontend の predev / prebuild と、deploy.yml の中身だけの経路が毎回作り直す。
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
@@ -54,5 +57,11 @@ if (!checkOnly) {
   const sorted = sortPosts(posts);
   writeFileSync(join(outDir, 'index.json'), JSON.stringify(sorted.map(({ body: _body, ...meta }) => meta)));
   for (const post of sorted) writeFileSync(join(outDir, 'posts', `${post.slug}.md`), `${post.body}\n`);
+
+  // タイムライン。非公開にしたアプリの作業日は出さない
+  const activityPath = join(root, 'data', 'activity.json');
+  const activity = existsSync(activityPath) ? JSON.parse(readFileSync(activityPath, 'utf8')) : { updatedAt: '', apps: {} };
+  const apps = Object.fromEntries(Object.entries(activity.apps).filter(([id]) => context.projectIds.has(id)));
+  writeFileSync(join(publicDir, 'content', 'activity.json'), JSON.stringify({ updatedAt: activity.updatedAt, apps }));
 }
 console.log(`Devlog: ${posts.length} 件を検査${checkOnly ? '' : 'して生成'}した`);

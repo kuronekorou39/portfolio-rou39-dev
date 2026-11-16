@@ -1,5 +1,5 @@
 /**
- * Devlog を rou39.com に公開する。手元からも CI からも使う。
+ * Devlog とタイムラインの材料を rou39.com に公開する。手元からも CI からも使う。
  *
  *   node scripts/content/publish-devlog.mjs               検査 → 生成 → S3 へ同期
  *   node scripts/content/publish-devlog.mjs --dryrun      S3 に何をするかだけ表示する
@@ -53,6 +53,13 @@ for (const [local, remote] of syncs) {
   ]);
 }
 
+// タイムラインの材料(アプリごと・日ごとのコミット件数)
+run('aws', [
+  's3', 'cp', 'frontend/public/content/activity.json', `s3://${bucket}/content/activity.json`,
+  '--cache-control', CACHE_CONTROL,
+  ...(dryrun ? ['--dryrun'] : []),
+]);
+
 if (invalidate && !dryrun) {
   const distributionId = process.env.SITE_DISTRIBUTION_ID;
   if (!distributionId) {
@@ -61,7 +68,7 @@ if (invalidate && !dryrun) {
   }
   run('aws', [
     'cloudfront', 'create-invalidation', '--distribution-id', distributionId,
-    '--paths', '/content/devlog/*', '/devlog/*',
+    '--paths', '/content/devlog/*', '/content/activity.json', '/devlog/*',
   ]);
 }
 

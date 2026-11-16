@@ -18,7 +18,8 @@
     "build:notes": "npm run build --workspace=frontend-notes",
     "deploy:infra": "npm run deploy --workspace=infra",
     "publish:devlog": "node scripts/content/publish-devlog.mjs",
-    "status": "node scripts/content/status.mjs"
+    "status": "node scripts/content/status.mjs",
+    "activity": "node scripts/content/update-activity.mjs"
   },
   "allowScripts": {
     "esbuild": true
