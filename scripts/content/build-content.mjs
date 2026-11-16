@@ -11,7 +11,7 @@
  * (形式違反のログは、push しても載らない)。
  *
  * あわせて data/activity.json(タイムラインの材料)から、公開中のアプリの分だけを
- * frontend/public/content/activity.json に書き出す。
+ * 同じフォルダの activity.json に書き出す(CI が書き込める場所は content/devlog/ 以下に絞ってある)。
  *
  * 生成物は git で管理しない。frontend の predev / prebuild と、deploy.yml の中身だけの経路が毎回作り直す。
  */
@@ -62,6 +62,6 @@ if (!checkOnly) {
   const activityPath = join(root, 'data', 'activity.json');
   const activity = existsSync(activityPath) ? JSON.parse(readFileSync(activityPath, 'utf8')) : { updatedAt: '', apps: {} };
   const apps = Object.fromEntries(Object.entries(activity.apps).filter(([id]) => context.projectIds.has(id)));
-  writeFileSync(join(publicDir, 'content', 'activity.json'), JSON.stringify({ updatedAt: activity.updatedAt, apps }));
+  writeFileSync(join(outDir, 'activity.json'), JSON.stringify({ updatedAt: activity.updatedAt, apps }));
 }
 console.log(`Devlog: ${posts.length} 件を検査${checkOnly ? '' : 'して生成'}した`);

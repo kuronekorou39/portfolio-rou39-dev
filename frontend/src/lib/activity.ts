@@ -11,7 +11,7 @@ export interface Activity {
 let promise: Promise<Activity> | null = null;
 
 export function fetchActivity(): Promise<Activity> {
-  promise ??= fetch('/content/activity.json')
+  promise ??= fetch('/content/devlog/activity.json')
     .then((res) => {
       // SPA のフォールバックで、存在しないパスにも index.html が 200 で返ることがある
       if (!res.ok || res.headers.get('content-type')?.includes('text/html')) throw new Error('failed to load activity');

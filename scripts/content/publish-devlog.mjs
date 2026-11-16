@@ -37,7 +37,7 @@ function run(command, args) {
 run(process.execPath, [join('scripts', 'content', 'build-content.mjs')]);
 
 const syncs = [
-  // 一覧(index.json)と本文
+  // 一覧(index.json)と本文、タイムラインの材料(activity.json)
   ['frontend/public/content/devlog', 'content/devlog'],
   // 図
   ['frontend/public/devlog', 'devlog'],
@@ -53,13 +53,6 @@ for (const [local, remote] of syncs) {
   ]);
 }
 
-// タイムラインの材料(アプリごと・日ごとのコミット件数)
-run('aws', [
-  's3', 'cp', 'frontend/public/content/activity.json', `s3://${bucket}/content/activity.json`,
-  '--cache-control', CACHE_CONTROL,
-  ...(dryrun ? ['--dryrun'] : []),
-]);
-
 if (invalidate && !dryrun) {
   const distributionId = process.env.SITE_DISTRIBUTION_ID;
   if (!distributionId) {
@@ -68,7 +61,7 @@ if (invalidate && !dryrun) {
   }
   run('aws', [
     'cloudfront', 'create-invalidation', '--distribution-id', distributionId,
-    '--paths', '/content/devlog/*', '/content/activity.json', '/devlog/*',
+    '--paths', '/content/devlog/*', '/devlog/*',
   ]);
 }
 
