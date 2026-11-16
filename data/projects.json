@@ -229,9 +229,9 @@
     ],
     "status": "active",
     "publishedAt": "2026-05-28",
-    "updatedAt": "2026-09-12",
+    "updatedAt": "2026-09-30",
     "size": "medium",
-    "published": false
+    "published": true
   },
   {
     "id": "ad-skipper-twitch",
@@ -624,15 +624,15 @@
     "downloads": [
       {
         "label": "Android (.apk)",
-        "url": "https://github.com/kuronekorou39/mobile-bex/releases/download/v0.3.1/BEX-0.3.1.apk",
+        "url": "https://github.com/kuronekorou39/mobile-bex/releases/download/v0.3.3/BEX-0.3.3.apk",
         "os": "android"
       }
     ],
     "status": "active",
     "publishedAt": "2026-02-18",
-    "updatedAt": "2026-09-03",
+    "updatedAt": "2026-10-13",
     "size": "large",
-    "published": false
+    "published": true
   },
   {
     "id": "u2b-loop-web",
