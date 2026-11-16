@@ -170,6 +170,8 @@ export class FrontendStack extends cdk.Stack {
       distribution,
       distributionPaths: ['/*'],
       prune: false,
+      // 既定の 128 MB だと毎回上限に張り付き、同期が遅くなって S3 への接続が切れる(2026-11-17 に連続で失敗)
+      memoryLimit: 1024,
     });
 
     new cdk.CfnOutput(this, 'SiteUrl', {
