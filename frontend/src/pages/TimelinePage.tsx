@@ -10,7 +10,6 @@ import {
   goalStatus,
   toStreaks,
   type Activity,
-  type Goal,
   type GoalState,
 } from '@/lib/activity';
 import { localToday } from '@/lib/devlogActivity';
@@ -47,15 +46,14 @@ const LEVELS = [
 const levelColor = (count: number) => LEVELS.find((l) => count >= l.min)?.color;
 
 // 予定: 状態ごとの見た目。赤は期限を過ぎたものにだけ使う
-const GOAL_STYLE: Record<GoalState, { border: string; background: string; color: string; dashed?: boolean }> = {
-  planned: { border: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.65)', dashed: true },
-  active: { border: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.14)', color: '#fff' },
-  overdue: { border: '#f87171', background: 'rgba(248,113,113,0.16)', color: '#fff' },
-  done: { border: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.75)' },
-  'done-late': { border: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.75)' },
+const GOAL_STYLE: Record<GoalState, { border: string; background: string; dashed?: boolean }> = {
+  planned: { border: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.05)', dashed: true },
+  active: { border: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.14)' },
+  overdue: { border: '#f87171', background: 'rgba(248,113,113,0.16)' },
+  done: { border: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.1)' },
+  'done-late': { border: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.1)' },
 };
 const LATE_TAIL = 'repeating-linear-gradient(135deg, rgba(248,113,113,0.5) 0 4px, rgba(248,113,113,0.15) 4px 8px)';
-const isDone = (state: GoalState) => state === 'done' || state === 'done-late';
 
 const shortDate = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
 const dayOfWeek = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay();
@@ -129,34 +127,12 @@ export default function TimelinePage() {
     if (el) el.scrollLeft = LEFT_WIDTH + todayIndex * CELL - el.clientWidth * TODAY_POSITION;
   }, [rows.length, todayIndex]);
 
-  const titles = useMemo(() => Object.fromEntries(projects.map((p) => [p.id, p.title])), [projects]);
-
-  // 目標の一覧。動いているもの(超過・進行中)→ これから → 終えたもの(新しい順)
-  const goalRows = useMemo(() => {
-    const order: Record<GoalState, number> = { overdue: 0, active: 1, planned: 2, 'done-late': 3, done: 3 };
-    return (activity?.goals ?? [])
-      .filter((goal) => titles[goal.project])
-      .map((goal) => {
-        const status = goalStatus(goal, today);
-        const days = activity?.apps[goal.project] ?? {};
-        // 実績は、着手日から「終えた日か今日」までに作業のあった日数
-        const until = goal.done ?? today;
-        const workDays = Object.keys(days).filter((d) => d >= goal.start && d <= until).length;
-        return { goal, status, workDays };
-      })
-      .sort(
-        (a, b) =>
-          order[a.status.state] - order[b.status.state] ||
-          (isDone(a.status.state) ? b.goal.due.localeCompare(a.goal.due) : a.goal.due.localeCompare(b.goal.due)),
-      );
-  }, [activity, titles, today]);
-
   return (
     <div className="relative isolate min-h-screen bg-[#060608] text-white">
       <PageBackground />
       <div className="mx-auto max-w-6xl px-6 py-20">
         <h1 className="mb-3 text-5xl font-black tracking-tight md:text-6xl">Timeline</h1>
-        <p className="mb-10 text-lg text-white/40">アプリごとの予定と、実際に作業した日</p>
+        <p className="mb-10 text-lg text-white/40">予定と実績</p>
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -266,23 +242,18 @@ export default function TimelinePage() {
                               return (
                                 <div key={`${goal.start}-${goal.title}`}>
                                   {bar && (
+                                    // 目標の文はバーに出さず、マウスを乗せたときだけ見せる
                                     <div
                                       title={label}
-                                      className="absolute overflow-hidden whitespace-nowrap rounded-md px-2 text-[11px] font-medium"
+                                      className="absolute rounded-md"
                                       style={{
                                         ...bar,
                                         top,
                                         height: BAR_HEIGHT,
-                                        lineHeight: `${BAR_HEIGHT - 3}px`,
                                         border: `1.5px ${look.dashed ? 'dashed' : 'solid'} ${look.border}`,
                                         background: look.background,
-                                        color: look.color,
-                                        textOverflow: 'ellipsis',
                                       }}
-                                    >
-                                      {isDone(status.state) && '✓ '}
-                                      {goal.title}
-                                    </div>
+                                    />
                                   )}
                                   {tail && (
                                     <div
@@ -384,68 +355,9 @@ export default function TimelinePage() {
               {activity.updatedAt && <span className="ml-auto text-white/35">実績は {shortDate(activity.updatedAt)} 時点</span>}
             </div>
 
-            {/* 目標の一覧: 予定と実績を並べる */}
-            <h2 className="mb-4 mt-14 text-xl font-bold text-white/90">目標</h2>
-            {goalRows.length === 0 ? (
-              <p className="rounded-2xl border border-white/[0.12] bg-[#0b0c10]/75 px-6 py-8 text-center text-sm text-white/45 backdrop-blur-md">
-                目標はまだありません
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-2xl border border-white/[0.12] bg-[#0b0c10]/75 backdrop-blur-md">
-                <table className="w-full min-w-[640px] text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/[0.12] text-xs text-white/45">
-                      <th className="px-5 py-3 font-medium">アプリ</th>
-                      <th className="px-3 py-3 font-medium">目標</th>
-                      <th className="px-3 py-3 font-medium">予定の期間</th>
-                      <th className="px-3 py-3 font-medium">状態</th>
-                      <th className="px-5 py-3 text-right font-medium">作業した日数</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {goalRows.map(({ goal, status, workDays }) => (
-                      <GoalRow key={`${goal.project}-${goal.start}-${goal.title}`} goal={goal} app={titles[goal.project]} status={status} workDays={workDays} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </>
         )}
       </div>
     </div>
-  );
-}
-
-function GoalRow({
-  goal,
-  app,
-  status,
-  workDays,
-}: {
-  goal: Goal;
-  app: string;
-  status: ReturnType<typeof goalStatus>;
-  workDays: number;
-}) {
-  const tone =
-    status.state === 'overdue' || status.state === 'done-late'
-      ? 'text-red-300'
-      : status.state === 'active'
-        ? 'text-white'
-        : 'text-white/55';
-  const planned = dayDiff(goal.start, goal.due) + 1;
-  return (
-    <tr className="border-b border-white/[0.06] last:border-b-0">
-      <td className="whitespace-nowrap px-5 py-3 text-white/70">
-        <Link to={`/apps/${goal.project}`} className="transition-colors hover:text-white">{app}</Link>
-      </td>
-      <td className="px-3 py-3 text-white/90">{goal.title}</td>
-      <td className="whitespace-nowrap px-3 py-3 text-white/55">
-        {shortDate(goal.start)}〜{shortDate(goal.due)}({planned} 日)
-      </td>
-      <td className={`whitespace-nowrap px-3 py-3 font-medium ${tone}`}>{status.text}</td>
-      <td className="whitespace-nowrap px-5 py-3 text-right tabular-nums text-white/70">{workDays} 日</td>
-    </tr>
   );
 }

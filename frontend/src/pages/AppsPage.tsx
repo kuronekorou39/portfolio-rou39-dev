@@ -157,7 +157,7 @@ export default function AppsPage() {
   return (
     <div className="relative isolate min-h-screen bg-[#060608] text-white">
       <PageBackground />
-      <div className="mx-auto max-w-6xl px-6 py-20">
+      <div className="mx-auto max-w-6xl px-6 py-20 2xl:max-w-7xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -174,7 +174,7 @@ export default function AppsPage() {
 
         {/* 開閉ボタン + 件数 */}
         <motion.div
-          className={`flex flex-wrap items-center gap-3 ${filtersOpen ? 'mb-4' : 'mb-10'}`}
+          className="mb-4 flex flex-wrap items-center gap-3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
@@ -202,13 +202,24 @@ export default function AppsPage() {
           )}
         </motion.div>
 
+        {/* 開くときと同じ動きで閉じる。高さも縮めて、下のカードが滑らかに上がるようにする */}
+        <AnimatePresence initial={false}>
         {filtersOpen && (
-        <div id="apps-filters" className="mb-10">
+        <motion.div
+          id="apps-filters"
+          className="overflow-hidden"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
+        <div className="pb-4">
         {/* Search + sort */}
         <motion.div
           className="mb-4 flex flex-wrap items-center gap-3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
         >
           <div className="relative min-w-[240px] flex-1">
             <svg
@@ -248,6 +259,7 @@ export default function AppsPage() {
           className="mb-4 flex flex-wrap gap-2"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
           transition={{ delay: 0.05 }}
         >
           {categories.map((cat) => (
@@ -270,6 +282,7 @@ export default function AppsPage() {
           className="flex flex-wrap items-center gap-1.5"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
           transition={{ delay: 0.1 }}
         >
           <span className="mr-1 text-xs text-white/40">Tech:</span>
@@ -288,7 +301,9 @@ export default function AppsPage() {
           ))}
         </motion.div>
         </div>
+        </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Grid */}
         {loading ? (
@@ -310,7 +325,7 @@ export default function AppsPage() {
         ) : (
         <motion.div
           layout
-          className="columns-1 gap-5 sm:columns-2 lg:columns-3 xl:columns-4"
+          className="mt-6 columns-1 gap-5 sm:columns-2 lg:columns-3 xl:gap-6"
         >
           <AnimatePresence mode="popLayout">
             {visible.map((project, i) => {
@@ -341,34 +356,34 @@ export default function AppsPage() {
                       isComingSoon
                         ? 'border border-dashed border-blue-400/30 bg-[#0b0c10]/75 hover:border-blue-400/50'
                         : 'border border-white/[0.12] bg-[#0b0c10]/75 hover:border-white/30'
-                    } ${isSmall ? 'p-4' : 'p-6'}`}
+                    } ${isSmall ? 'p-4' : 'p-6 xl:p-8'}`}
                   >
                     {/* 情報の並びは全サイズで共通。行ごと消すと視線の位置が揃わないので、
                         大きさの差はフォントサイズと余白だけでつける */}
 
-                    {/* Row 1: icon + category / status */}
-                    <div className={`flex items-center justify-between gap-2 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        {project.icon ? (
-                          <img src={project.icon} alt="" className={`shrink-0 rounded-full border border-white/10 object-cover ${isSmall ? 'h-6 w-6' : 'h-8 w-8'}`} loading="lazy" />
-                        ) : (
-                          <span className={`shrink-0 ${isSmall ? 'text-lg' : 'text-2xl'}`}>
-                            {categoryEmoji[project.category]}
-                          </span>
-                        )}
-                        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50">
-                          {categoryLabel[project.category]}
+                    {/* Row 1: status。左に寄せ、右は空けてゆとりにする */}
+                    <span className={`flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider ${isSmall ? 'mb-2' : 'mb-3'}`} style={{ color: status.color }}>
+                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
+                      {status.text}
+                    </span>
+
+                    {/* Row 2: icon + category。アイコンは元の角丸のまま見せる(丸く切らない) */}
+                    <div className={`flex min-w-0 items-center gap-2.5 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
+                      {project.icon ? (
+                        <img src={project.icon} alt="" className={`shrink-0 rounded-[22%] object-cover ${isSmall ? 'h-7 w-7' : 'h-10 w-10 xl:h-12 xl:w-12'}`} loading="lazy" />
+                      ) : (
+                        <span className={`shrink-0 ${isSmall ? 'text-lg' : 'text-2xl'}`}>
+                          {categoryEmoji[project.category]}
                         </span>
-                      </div>
-                      <span className="flex shrink-0 items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider" style={{ color: status.color }}>
-                        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
-                        {status.text}
+                      )}
+                      <span className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50 xl:text-[11px]">
+                        {categoryLabel[project.category]}
                       </span>
                     </div>
 
-                    {/* Row 2: title + NEW + hover arrow */}
+                    {/* Row 3: title + NEW + hover arrow */}
                     <div className="mb-1.5 flex items-center gap-2">
-                      <h2 className={`min-w-0 font-bold text-white/90 transition-colors group-hover:text-white ${isSmall ? 'text-base' : isLarge ? 'text-2xl' : 'text-xl'}`}>
+                      <h2 className={`min-w-0 font-bold text-white/90 transition-colors group-hover:text-white ${isSmall ? 'text-base xl:text-lg' : isLarge ? 'text-2xl xl:text-3xl' : 'text-xl xl:text-2xl'}`}>
                         {project.title}
                       </h2>
                       {isNew && (
@@ -379,8 +394,8 @@ export default function AppsPage() {
                       <span className="ml-auto shrink-0 text-white/0 transition-all group-hover:text-white/60">→</span>
                     </div>
 
-                    {/* Row 3: subtitle — 2行で打ち切り、カード間の高さの差を抑える */}
-                    <p className={`line-clamp-2 text-sm text-white/55 transition-colors group-hover:text-white/70 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
+                    {/* Row 4: subtitle — 2行で打ち切り、カード間の高さの差を抑える */}
+                    <p className={`line-clamp-2 text-sm text-white/55 xl:text-base transition-colors group-hover:text-white/70 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
                       {project.subtitle}
                     </p>
 
@@ -415,7 +430,7 @@ export default function AppsPage() {
                     {/* 下端のスクショ。上をフェードさせて、文字の領域から地続きに見せる */}
                     {shot && (
                       <div
-                        className={`pointer-events-none relative -mx-6 -mb-6 mt-4 overflow-hidden ${isLarge ? 'h-48' : 'h-36'}`}
+                        className={`pointer-events-none relative -mx-6 -mb-6 mt-4 overflow-hidden xl:-mx-8 xl:-mb-8 ${isLarge ? 'h-48 xl:h-64' : 'h-36 xl:h-48'}`}
                         style={{
                           maskImage: 'linear-gradient(to bottom, transparent, black 70%)',
                           WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 70%)',

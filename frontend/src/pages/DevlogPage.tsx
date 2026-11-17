@@ -234,7 +234,7 @@ export default function DevlogPage() {
       <PageBackground />
       <div className="mx-auto max-w-3xl px-6 py-20 xl:max-w-6xl">
         <h1 className="mb-3 text-5xl font-black tracking-tight md:text-6xl">Devlog</h1>
-        <p className="mb-10 text-lg text-white/40">開発の記録。その日に進んだことを、アプリごとに短く</p>
+        <p className="mb-10 text-lg text-white/40">開発の記録</p>
 
         {posts === null ? (
           failed ? (
