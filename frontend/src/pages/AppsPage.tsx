@@ -440,8 +440,8 @@ export default function AppsPage() {
                       <div
                         className={`pointer-events-none relative -mx-6 -mb-6 mt-4 overflow-hidden xl:-mx-8 xl:-mb-8 ${isLarge ? 'h-48 xl:h-64' : 'h-36 xl:h-48'}`}
                         style={{
-                          maskImage: 'linear-gradient(to bottom, transparent, black 70%)',
-                          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 70%)',
+                          maskImage: 'linear-gradient(to bottom, transparent, black 40%)',
+                          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 40%)',
                         }}
                       >
                         <img

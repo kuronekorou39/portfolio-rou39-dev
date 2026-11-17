@@ -3,10 +3,11 @@
  * タイムライン(/timeline)に出す、アプリごと・日ごとのコミット件数を集めて data/activity.json に書く。
  *
  *   npm run activity
+ *   npm run activity -- --since 2025-01-01   # 古い日まで集め直す(タイムラインの左端)
  *
  * 公開中のアプリだけを、手元の gh の認証で読む。private のリポジトリも数えられるが、
  * 書き出すのは日付と件数だけ(コミットの文面やリポジトリ名は出さない)。
- * 集め直すのは直近 WINDOW_DAYS 日ぶんで、それより古い日は前回までの値を残す。
+ * 集め直すのは直近 WINDOW_DAYS 日ぶん(--since で変えられる)で、それより古い日は前回までの値を残す。
  *
  * 書いたあとは、npm run publish:devlog か push でサイトに出る。
  */
@@ -30,7 +31,11 @@ const previous = existsSync(OUT) ? readJson(OUT).apps ?? {} : {};
 
 /** ログの日付に合わせて、コミットの時刻を日本時間の日付に直す */
 const jstDate = (ms) => new Date(ms + JST_OFFSET_MS).toISOString().slice(0, 10);
-const sinceMs = Date.now() - WINDOW_DAYS * DAY_MS;
+const sinceArg = process.argv[process.argv.indexOf('--since') + 1];
+const sinceMs = process.argv.includes('--since')
+  ? Date.parse(`${sinceArg}T00:00:00+09:00`)
+  : Date.now() - WINDOW_DAYS * DAY_MS;
+if (Number.isNaN(sinceMs)) throw new Error('--since は YYYY-MM-DD で書く');
 const windowStart = jstDate(sinceMs);
 
 async function collect(project) {
@@ -69,5 +74,5 @@ for (const project of projects) {
 }
 
 writeFileSync(OUT, `${JSON.stringify({ updatedAt: jstDate(Date.now()), apps }, null, 2)}\n`);
-console.log(`data/activity.json に書いた(直近 ${WINDOW_DAYS} 日を集め直した)`);
+console.log(`data/activity.json に書いた(${windowStart} 以降を集め直した)`);
 if (failed) process.exit(1);

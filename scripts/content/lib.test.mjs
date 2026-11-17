@@ -55,27 +55,28 @@ describe('validatePost', () => {
   const context = { projectIds: new Set(['vloom']), imageExists: (url) => url === '/devlog/a/one.svg' };
   const make = (patch = {}) => ({
     slug: '2026-09-18-a', title: 'Vloom: t', date: '2026-09-18', summary: '要約', projects: ['vloom'],
-    image: '/devlog/a/one.svg', body: `${'あ'.repeat(300)}\n\n![図](/devlog/a/one.svg)`, ...patch,
+    image: '/devlog/a/one.svg', body: `${'あ'.repeat(100)}\n\n![図](/devlog/a/one.svg)`, ...patch,
   });
 
   it('ルールどおりなら問題なし', () => {
     assert.deepEqual(validatePost(make(), context), []);
   });
 
-  it('図が無い・未掲載のアプリ・実在しない画像を止める', () => {
-    assert.match(validatePost(make({ image: null, body: 'あ'.repeat(300) }), context).join(), /図が無い/);
+  it('図は無くてもよい。長いタイトル・未掲載のアプリ・実在しない画像は止める', () => {
+    assert.deepEqual(validatePost(make({ image: null, body: 'あ'.repeat(100) }), context), []);
+    assert.match(validatePost(make({ title: 'あ'.repeat(31) }), context).join(), /title が長い/);
     assert.match(validatePost(make({ projects: ['secret-app'] }), context).join(), /未掲載: secret-app/);
-    assert.match(validatePost(make({ body: `${'あ'.repeat(300)}\n\n![図](/devlog/a/none.svg)` }), context).join(), /画像が無い/);
+    assert.match(validatePost(make({ body: `${'あ'.repeat(100)}\n\n![図](/devlog/a/none.svg)` }), context).join(), /画像が無い/);
   });
 
   it('画像の行は字数に数えない', () => {
-    const body = `${'あ'.repeat(590)}\n\n![とても長い題の図](/devlog/a/one.svg)`;
+    const body = `${'あ'.repeat(290)}\n\n![とても長い題の図](/devlog/a/one.svg)`;
     assert.deepEqual(validatePost(make({ body }), context), []);
-    assert.match(validatePost(make({ body: `${'あ'.repeat(700)}\n\n![図](/devlog/a/one.svg)` }), context).join(), /本文が長い/);
+    assert.match(validatePost(make({ body: `${'あ'.repeat(400)}\n\n![図](/devlog/a/one.svg)` }), context).join(), /本文が長い/);
   });
 
   it('外に出せない文字列と、決めた言葉づかいの違反を止める', () => {
-    const withText = (text) => validatePost(make({ body: `${text}${'あ'.repeat(300)}\n\n![図](/devlog/a/one.svg)` }), context).join();
+    const withText = (text) => validatePost(make({ body: `${text}${'あ'.repeat(100)}\n\n![図](/devlog/a/one.svg)` }), context).join();
     assert.match(withText('C:\\projects\\x を見た。'), /絶対パス/);
     assert.match(withText('連絡は someone@example.com まで。'), /メールアドレス/);
     assert.match(withText('この作品を直した。'), /「作品」/);

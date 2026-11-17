@@ -5,8 +5,10 @@
 const POST_FILE = /^(\d{4}-\d{2}-\d{2})-[a-z0-9-]+\.md$/;
 const IMAGE = /!\[[^\]]*\]\(([^)\s]+)\)/;
 
-const BODY_MIN = 200;
-const BODY_MAX = 600;
+// 1 日 1 件の短いログ。タイトルはタイムラインのポップオーバーにも出るので短く
+const TITLE_MAX = 30;
+const BODY_MIN = 40;
+const BODY_MAX = 300;
 const SUMMARY_MAX = 70;
 
 // 公開されるので、外に出せない形の文字列は載せる前に止める
@@ -70,6 +72,7 @@ export function sortPosts(posts) {
  */
 export function validatePost(post, { projectIds, imageExists }) {
   const problems = [];
+  if ([...post.title].length > TITLE_MAX) problems.push(`title が長い (${[...post.title].length} 字)`);
   if (!post.summary) problems.push('summary が無い');
   else if ([...post.summary].length > SUMMARY_MAX) problems.push(`summary が長い (${[...post.summary].length} 字)`);
 
@@ -81,7 +84,6 @@ export function validatePost(post, { projectIds, imageExists }) {
   if (length < BODY_MIN) problems.push(`本文が短い (${length} 字)`);
   if (length > BODY_MAX) problems.push(`本文が長い (${length} 字)`);
 
-  if (!post.image) problems.push('図が無い(1 ログに図を 1 枚)');
   for (const match of post.body.matchAll(new RegExp(IMAGE, 'g'))) {
     if (!imageExists(match[1])) problems.push(`画像が無い: ${match[1]}`);
   }

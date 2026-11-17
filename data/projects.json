@@ -92,8 +92,7 @@
       "media_kit"
     ],
     "platform": [
-      "Android",
-      "iOS"
+      "Android"
     ],
     "icon": "/projects/u2b-loop/icon.png",
     "screenshots": [],
@@ -105,11 +104,6 @@
         "label": "Android (.apk)",
         "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.69.0/u2b-loop-v1.69.0.apk",
         "os": "android"
-      },
-      {
-        "label": "iOS (.ipa)",
-        "url": "https://github.com/kuronekorou39/u2b-loop-app/releases/download/v1.64.5/u2b-loop-ios-v1.64.5.ipa",
-        "os": "ios"
       }
     ],
     "status": "active",

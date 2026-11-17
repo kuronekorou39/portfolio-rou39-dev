@@ -18,16 +18,16 @@ import { categoryEmoji } from '@/data/mockProjects';
 import type { Project } from '../../../shared/src/types';
 import PageBackground from '@/components/PageBackground';
 
-// 今日から見て、過去と未来に何日ぶん並べるか。未来は予定を置くための余白
-const PAST_DAYS = 90;
+// 表の左端(実績を集め始めた日)。右は今日から FUTURE_DAYS 日先まで。未来は予定を置くための余白
+const START = '2025-01-01';
 const FUTURE_DAYS = 45;
 // 1 日の幅(px)。日付の数字と曜日が入る
-const CELL = 24;
-const LEFT_WIDTH = 176;
+const CELL = 34;
+const LEFT_WIDTH = 224;
 // 予定のバー 1 段と、実績の行の高さ
-const PLAN_LANE = 26;
-const ACTUAL_ROW = 30;
-const BAR_HEIGHT = 20;
+const PLAN_LANE = 32;
+const ACTUAL_ROW = 40;
+const BAR_HEIGHT = 24;
 // 作業の空きがこの日数までなら、ひと続きのバーにまとめる(土日を挟んでも切らない)
 const STREAK_MAX_GAP = 2;
 // 開いたとき、今日の列を表の幅のどのあたりに置くか(右に予定が見える位置)
@@ -58,12 +58,43 @@ const LATE_TAIL = 'repeating-linear-gradient(135deg, rgba(248,113,113,0.5) 0 4px
 const shortDate = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
 const dayOfWeek = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay();
 
+/** 実績の日を押したときに出す吹き出し。どのアプリのどの日か、と出す位置(画面座標) */
+interface Pick {
+  project: Project;
+  date: string;
+  count: number;
+  logs: PostMeta[];
+  x: number;
+  y: number;
+}
+
 export default function TimelinePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activity, setActivity] = useState<Activity | null>(null);
   const [posts, setPosts] = useState<PostMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pick, setPick] = useState<Pick | null>(null);
+
+  // 吹き出しは、外を押す・Esc・スクロールで閉じる
+  useEffect(() => {
+    if (!pick) return;
+    const close = () => setPick(null);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
+    const onDown = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('[data-popover]')) close();
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [pick]);
 
   useEffect(() => {
     // どれかが取れなくても、残りで出せるところまで出す
@@ -77,12 +108,12 @@ export default function TimelinePage() {
   }, []);
 
   const today = localToday();
-  const from = addDays(today, -PAST_DAYS);
+  const from = START;
   const to = addDays(today, FUTURE_DAYS);
   const dates = useMemo(() => dateRange(from, to), [from, to]);
   const lastIndex = dates.length - 1;
   const gridWidth = dates.length * CELL;
-  const todayIndex = PAST_DAYS;
+  const todayIndex = dayDiff(from, today);
 
   /** 期間 [start, end] を、表の中の左端と幅(px)に直す。表の外なら null */
   function span(start: string, end: string): { left: number; width: number } | null {
@@ -114,8 +145,10 @@ export default function TimelinePage() {
           own.map((g) => ({ start: g.start, end: [g.due, g.done ?? (today > g.due ? today : g.due)].sort().at(-1)! })),
         );
         const logs = posts.filter((post) => post.projects.includes(project.id));
+        const logsByDate = new Map<string, PostMeta[]>();
+        for (const log of logs) logsByDate.set(log.date, [...(logsByDate.get(log.date) ?? []), log]);
         const last = Object.keys(days).sort().at(-1) ?? '';
-        return { project, days, goals: own, lanes, laneCount: Math.max(1, ...lanes.map((l) => l + 1)), logs, last };
+        return { project, days, goals: own, lanes, laneCount: Math.max(1, ...lanes.map((l) => l + 1)), logs, logsByDate, last };
       })
       // 目標のあるアプリ、次に最近動いたアプリを上に
       .sort((a, b) => b.goals.length - a.goals.length || b.last.localeCompare(a.last) || a.project.title.localeCompare(b.project.title));
@@ -156,11 +189,15 @@ export default function TimelinePage() {
                       {months.map((month) => (
                         <div
                           key={month.key}
-                          className="shrink-0 overflow-hidden whitespace-nowrap border-l border-white/25 py-1.5 pl-2 text-xs font-semibold text-white/75 first:border-l-0"
+                          className="shrink-0 whitespace-nowrap border-l border-white/25 py-2 pl-2.5 text-sm font-semibold text-white/80 first:border-l-0"
                           style={{ width: month.days * CELL }}
                         >
-                          {/* 月の端で幅が足りないときは、年を省いても入らないので出さない */}
-                          {month.days >= 4 ? month.label : ''}
+                          {/* 月の頭が左の列に隠れても、月の名前は見えるところに留める */}
+                          {month.days >= 3 && (
+                            <span className="sticky inline-block" style={{ left: LEFT_WIDTH + 10 }}>
+                              {month.label}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -172,11 +209,11 @@ export default function TimelinePage() {
                         return (
                           <div
                             key={date}
-                            className={`shrink-0 py-1 text-center text-[9px] leading-[1.35] ${tone} ${isToday ? 'rounded-sm bg-white font-bold' : ''}`}
+                            className={`shrink-0 py-1.5 text-center text-[11px] leading-[1.35] ${tone} ${isToday ? 'rounded-md bg-white font-bold' : ''}`}
                             style={{ width: CELL }}
                           >
                             <div>{WEEKDAYS[dow]}</div>
-                            <div className="text-[10px]">{Number(date.slice(8, 10))}</div>
+                            <div className="text-sm font-medium">{Number(date.slice(8, 10))}</div>
                           </div>
                         );
                       })}
@@ -202,7 +239,7 @@ export default function TimelinePage() {
                     })}
                   </div>
 
-                  {rows.map(({ project, days, goals, lanes, laneCount, logs }) => {
+                  {rows.map(({ project, days, goals, lanes, laneCount, logsByDate }) => {
                     const planHeight = laneCount * PLAN_LANE + 6;
                     return (
                       <div key={project.id} className="flex border-b border-white/[0.08] last:border-b-0">
@@ -213,16 +250,16 @@ export default function TimelinePage() {
                         >
                           <Link
                             to={`/apps/${project.id}`}
-                            className="flex min-w-0 flex-1 items-center gap-2 pl-4 pr-1 text-white/85 transition-colors hover:text-white"
+                            className="flex min-w-0 flex-1 items-center gap-3 pl-4 pr-1 text-white/85 transition-colors hover:text-white"
                           >
                             {project.icon ? (
-                              <img src={project.icon} alt="" className="h-7 w-7 shrink-0 rounded-md border border-white/10 object-cover" loading="lazy" />
+                              <img src={project.icon} alt="" className="h-11 w-11 shrink-0 rounded-[22%] object-cover" loading="lazy" />
                             ) : (
-                              <span className="shrink-0 text-lg">{categoryEmoji[project.category]}</span>
+                              <span className="shrink-0 text-3xl">{categoryEmoji[project.category]}</span>
                             )}
-                            <span className="truncate text-xs font-semibold">{project.title}</span>
+                            <span className="truncate text-sm font-semibold">{project.title}</span>
                           </Link>
-                          <div className="shrink-0 pr-2 text-right text-[10px] text-white/45">
+                          <div className="shrink-0 pr-2.5 text-right text-[11px] text-white/45">
                             <div className="flex items-center justify-end" style={{ height: planHeight }}>予定</div>
                             <div className="flex items-center justify-end" style={{ height: ACTUAL_ROW }}>実績</div>
                           </div>
@@ -290,34 +327,29 @@ export default function TimelinePage() {
                                   {Array.from({ length: bar.width / CELL }, (_, i) => {
                                     const date = dates[first + i];
                                     const count = days[date] ?? 0;
+                                    const dayLogs = logsByDate.get(date) ?? [];
+                                    if (count === 0 && dayLogs.length === 0) {
+                                      return <div key={date} title={title} className="shrink-0" style={{ width: CELL }} />;
+                                    }
+                                    // 作業のあった日は押せる。その日にやったことを吹き出しで出す
                                     return (
-                                      <div
+                                      <button
                                         key={date}
-                                        title={count > 0 ? `${shortDate(date)} ${count} コミット` : title}
-                                        className="shrink-0"
+                                        type="button"
+                                        aria-label={`${shortDate(date)} にやったこと`}
+                                        onClick={(e) => {
+                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          setPick({ project, date, count, logs: dayLogs, x: rect.left + rect.width / 2, y: rect.bottom });
+                                        }}
+                                        className="relative flex shrink-0 items-center justify-center outline-none transition-[filter] hover:brightness-150 focus-visible:ring-2 focus-visible:ring-white/70"
                                         style={{ width: CELL, background: levelColor(count) }}
-                                      />
+                                      >
+                                        {/* ログのある日は白い点 */}
+                                        {dayLogs.length > 0 && <span className="h-2 w-2 rounded-full bg-white/90" />}
+                                      </button>
                                     );
                                   })}
                                 </div>
-                              );
-                            })}
-                            {/* ログのある日は白い点。押すとそのログを開く */}
-                            {logs.map((log) => {
-                              const at = span(log.date, log.date);
-                              return (
-                                at && (
-                                  <Link
-                                    key={log.slug}
-                                    to={`/devlog/${log.slug}`}
-                                    title={`${shortDate(log.date)} ログ: ${log.title}`}
-                                    aria-label={`${shortDate(log.date)} のログ: ${log.title}`}
-                                    className="absolute z-10 flex items-center justify-center"
-                                    style={{ left: at.left, width: CELL, top: 0, height: ACTUAL_ROW }}
-                                  >
-                                    <span className="h-2.5 w-2.5 rounded-full border-2 border-[#0b0c10] bg-white transition-transform hover:scale-150" />
-                                  </Link>
-                                )
                               );
                             })}
                           </div>
@@ -350,14 +382,60 @@ export default function TimelinePage() {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 rounded-full bg-white" />
-                ログ(押すと開く)
+                ログあり(日を押すと、その日にやったことが出る)
               </span>
               {activity.updatedAt && <span className="ml-auto text-white/35">実績は {shortDate(activity.updatedAt)} 時点</span>}
             </div>
 
+            {pick && <DayPopover pick={pick} />}
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+const POPOVER_WIDTH = 300;
+
+/** 押した日の下に出す吹き出し。ログのタイトルを押すと、その日のログを開く */
+function DayPopover({ pick }: { pick: Pick }) {
+  // 画面の端からはみ出さないよう、左右を詰める
+  const left = Math.min(Math.max(12, pick.x - POPOVER_WIDTH / 2), window.innerWidth - POPOVER_WIDTH - 12);
+  const weekday = WEEKDAYS[dayOfWeek(pick.date)];
+  return (
+    <div
+      data-popover
+      role="dialog"
+      aria-label={`${pick.project.title} ${shortDate(pick.date)}`}
+      className="fixed z-50 rounded-xl border border-white/15 bg-[#12141a]/95 p-4 shadow-2xl backdrop-blur-md"
+      style={{ left, top: pick.y + 8, width: POPOVER_WIDTH }}
+    >
+      <div className="mb-3 flex items-center gap-2.5">
+        {pick.project.icon && <img src={pick.project.icon} alt="" className="h-7 w-7 rounded-[22%] object-cover" />}
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-white/90">{pick.project.title}</div>
+          <div className="text-xs text-white/50">
+            {pick.date.slice(0, 4)}/{shortDate(pick.date)}({weekday}){pick.count > 0 && ` · ${pick.count} コミット`}
+          </div>
+        </div>
+      </div>
+      {pick.logs.length > 0 ? (
+        <ul className="space-y-1.5">
+          {pick.logs.map((log) => (
+            <li key={log.slug}>
+              <Link
+                to={`/devlog/${log.slug}`}
+                className="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 transition-colors hover:border-white/30 hover:bg-white/[0.08]"
+              >
+                <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-white/90">{log.title}</span>
+                <span className="shrink-0 text-white/40 transition-colors group-hover:text-white/80">→</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-white/45">この日のログはまだありません</p>
+      )}
     </div>
   );
 }
