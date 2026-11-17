@@ -212,10 +212,10 @@
     ],
     "icon": "/projects/parallel-stream/icon.png",
     "screenshots": [
-      "/projects/parallel-stream/snap-01-empty.jpg",
-      "/projects/parallel-stream/snap-02-one.jpg",
+      "/projects/parallel-stream/snap-04-many.jpg",
       "/projects/parallel-stream/snap-03-four.jpg",
-      "/projects/parallel-stream/snap-04-many.jpg"
+      "/projects/parallel-stream/snap-02-one.jpg",
+      "/projects/parallel-stream/snap-01-empty.jpg"
     ],
     "links": {
       "github": "https://github.com/kuronekorou39/chrome-parallel-stream"

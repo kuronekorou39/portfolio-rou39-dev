@@ -36,9 +36,6 @@ const statusRank: Record<string, number> = {
   archived: 2,
 };
 
-// カードの中に並べるスマホのスクショの枚数
-const MOBILE_SHOT_COUNT = 3;
-
 function daysSince(iso: string): number {
   const t = Date.parse(iso);
   return Number.isFinite(t) ? (Date.now() - t) / 86_400_000 : Infinity;
@@ -322,11 +319,8 @@ export default function AppsPage() {
               const size = project.size || 'medium';
               const isLarge = size === 'large';
               const isSmall = size === 'small';
-              // スマホは縦長を数枚並べ、それ以外は横長を 1 枚。小さいカードには置かない
-              const isPortrait = project.category === 'mobile';
-              const shots = isSmall
-                ? []
-                : (project.screenshots ?? []).slice(0, isPortrait ? MOBILE_SHOT_COUNT : 1);
+              // スクショは 1 枚だけ、カードの下端に敷いてフェードで溶かす。小さいカードには置かない
+              const shot = isSmall ? undefined : project.screenshots?.[0];
               const tagLimit = isLarge ? 5 : isSmall ? 2 : 3;
               const isNew = daysSince(project.updatedAt) <= NEW_BADGE_DAYS;
               const downloads = project.downloadCount ?? 0;
@@ -390,21 +384,6 @@ export default function AppsPage() {
                       {project.subtitle}
                     </p>
 
-                    {/* スクショはカードの中に置く。頭はどのカードもアイコンと種類で揃える */}
-                    {shots.length > 0 && (
-                      <div className={`mb-4 grid gap-2 ${isPortrait ? 'grid-cols-3' : 'grid-cols-1'}`}>
-                        {shots.map((src) => (
-                          <img
-                            key={src}
-                            src={src}
-                            alt=""
-                            className={`w-full rounded-lg border border-white/10 object-cover object-top ${isPortrait ? 'aspect-[9/16]' : 'aspect-video'}`}
-                            loading="lazy"
-                          />
-                        ))}
-                      </div>
-                    )}
-
                     {/* Row 4: tags */}
                     <div className={`flex flex-wrap items-center gap-1.5 ${isSmall ? 'mb-3' : 'mb-4'}`}>
                       {project.tags.slice(0, tagLimit).map((tag) => (
@@ -432,6 +411,24 @@ export default function AppsPage() {
                         {downloads > 0 ? downloads.toLocaleString() : '-'}
                       </span>
                     </div>
+
+                    {/* 下端のスクショ。上をフェードさせて、文字の領域から地続きに見せる */}
+                    {shot && (
+                      <div
+                        className={`pointer-events-none relative -mx-6 -mb-6 mt-4 overflow-hidden ${isLarge ? 'h-48' : 'h-36'}`}
+                        style={{
+                          maskImage: 'linear-gradient(to bottom, transparent, black 70%)',
+                          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 70%)',
+                        }}
+                      >
+                        <img
+                          src={shot}
+                          alt=""
+                          className="h-full w-full object-cover object-top opacity-60 transition-all duration-500 group-hover:scale-[1.03] group-hover:opacity-90"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                   </Link>
                 </motion.div>
               );
