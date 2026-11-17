@@ -37,6 +37,8 @@ export interface Project {
   platform: string[];
   icon: string;
   screenshots: string[];
+  /** 一覧のカードの下端に敷く画像。無ければ screenshots の先頭を使う */
+  cover?: string;
   links: ProjectLinks;
   downloads?: DownloadEntry[];
   published?: boolean;

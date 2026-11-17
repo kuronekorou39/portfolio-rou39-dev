@@ -9,9 +9,7 @@
  *   node scripts/kokomeshi/publish-android.mjs --beta --notes "テスト版"
  *
  * 何をするかは scripts/lib/publish-android.mjs を参照。
- *
- * 作品ページ(koko-meshi)はまだ公開しておらず DL ボタンも無いので、
- * projects.json には触らない。出すときに projectId を入れる。
+ * 作品ページ(koko-meshi)の DL ボタンも、配信のたびに新しい APK へ向け直す。
  */
 
 import { publishAndroid } from '../lib/publish-android.mjs';
@@ -21,5 +19,5 @@ await publishAndroid({
   repo: 'kuronekorou39/koko-meshi',
   prefix: 'kokomeshi',
   apkName: (version) => `kokomeshi-v${version}.apk`,
-  projectId: null,
+  projectId: 'koko-meshi',
 });

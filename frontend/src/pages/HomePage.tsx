@@ -11,7 +11,7 @@ import {
 } from 'framer-motion';
 import avatarImg from '@/assets/avatar.png';
 import underConstructionImg from '@/assets/under-construction.png';
-import { categoryLabel, categoryEmoji } from '@/data/mockProjects';
+import { kindLabel, categoryEmoji } from '@/data/mockProjects';
 import { fetchContributions, fetchProjects, type ContributionCalendar } from '@/lib/api';
 import type { Project } from '../../../shared/src/types';
 
@@ -818,10 +818,10 @@ function ProjectShowcase({ project, index }: { project: Project; index: number }
             transition={{ delay: 0.2 }}
           >
             <span
-              className="inline-block rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]"
+              className="inline-block rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.08em]"
               style={{ borderColor: `${accent}66`, color: accent }}
             >
-              {categoryLabel[project.category]}
+              {kindLabel(project)}
             </span>
             {isNew && (
               <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-300">

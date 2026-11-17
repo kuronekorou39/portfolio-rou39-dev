@@ -145,6 +145,18 @@ export const categoryLabel: Record<string, string> = {
   other: 'Other',
 };
 
+// スマホのアプリは「Mobile」とまとめず、出している OS をそのまま見せる
+const MOBILE_OS = ['Android', 'iOS'];
+
+/** カードに出す種類の名前。スマホは platform の OS(Android / iOS)、それ以外はカテゴリ名 */
+export function kindLabel(project: Pick<Project, 'category' | 'platform'>): string {
+  if (project.category === 'mobile') {
+    const os = MOBILE_OS.filter((name) => project.platform.includes(name));
+    if (os.length > 0) return os.join(' / ');
+  }
+  return categoryLabel[project.category] ?? project.category;
+}
+
 export const categoryEmoji: Record<string, string> = {
   web: '🌐',
   mobile: '📱',

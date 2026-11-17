@@ -38,7 +38,7 @@
     "publishedAt": "2025-07-20",
     "updatedAt": "2026-09-12",
     "size": "large",
-    "published": false,
+    "published": true,
     "featured": true
   },
   {
@@ -61,15 +61,22 @@
       "Android",
       "iOS"
     ],
-    "icon": "",
+    "icon": "/projects/koko-meshi/icon.png",
     "screenshots": [],
     "links": {},
     "status": "development",
     "publishedAt": "2025-03-01",
     "updatedAt": "2026-09-03",
     "size": "large",
-    "published": false,
-    "featured": true
+    "published": true,
+    "featured": true,
+    "downloads": [
+      {
+        "label": "Android (.apk)",
+        "url": "https://rou39.com/kokomeshi/kokomeshi-v0.13.2.apk",
+        "os": "android"
+      }
+    ]
   },
   {
     "id": "u2b-loop",
@@ -88,7 +95,7 @@
       "Android",
       "iOS"
     ],
-    "icon": "",
+    "icon": "/projects/u2b-loop/icon.png",
     "screenshots": [],
     "links": {
       "github": "https://github.com/kuronekorou39/u2b-loop-app"
@@ -109,7 +116,7 @@
     "publishedAt": "2025-01-15",
     "updatedAt": "2026-09-11",
     "size": "medium",
-    "published": false
+    "published": true
   },
   {
     "id": "cryptid-logic-solver",
@@ -632,7 +639,8 @@
     "publishedAt": "2026-02-18",
     "updatedAt": "2026-10-13",
     "size": "large",
-    "published": true
+    "published": true,
+    "cover": "/projects/mobile-bex/snap-hero.png"
   },
   {
     "id": "u2b-loop-web",

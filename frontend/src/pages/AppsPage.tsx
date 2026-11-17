@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
+import { kindLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
 import { fetchProjects } from '@/lib/api';
 import type { Project, ProjectCategory } from '../../../shared/src/types';
 import PageBackground from '@/components/PageBackground';
@@ -41,25 +41,60 @@ function daysSince(iso: string): number {
   return Number.isFinite(t) ? (Date.now() - t) / 86_400_000 : Infinity;
 }
 
-// カード全体が <Link> なので、ストアはリンクにせず「配信中」の目印として置く
-// (リンクの入れ子は不正な HTML になる)。実際のリンクは詳細ページにある
-function StoreMarks({ links }: { links: Project['links'] }) {
-  if (!links.appStore && !links.playStore) return null;
+// 技術タグは 1 行に収める。入りきらないぶんは「+N」にまとめる。
+// 幅はカードごとに違うので、全部を見えない所に並べて測ってから、入る数を決める
+function TagLine({ tags, small }: { tags: string[]; small: boolean }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(tags.length);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const measure = measureRef.current;
+    if (!box || !measure) return;
+    const fit = () => {
+      const gap = parseFloat(getComputedStyle(measure).columnGap) || 0;
+      const widths = [...measure.querySelectorAll<HTMLElement>('[data-tag]')].map((el) => el.offsetWidth);
+      const moreWidth = measure.querySelector<HTMLElement>('[data-more]')?.offsetWidth ?? 0;
+      const total = widths.reduce((sum, w, i) => sum + w + (i > 0 ? gap : 0), 0);
+      if (total <= box.clientWidth) return setShown(tags.length);
+      // 入りきらないときは、+N の幅を先に取っておいて、前から詰める
+      let used = moreWidth;
+      let count = 0;
+      for (const w of widths) {
+        if (used + gap + w > box.clientWidth) break;
+        used += gap + w;
+        count += 1;
+      }
+      setShown(count);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [tags]);
+
+  const chip = `shrink-0 whitespace-nowrap rounded-full border border-white/[0.12] text-white/50 ${
+    small ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-0.5 text-[11px] xl:text-xs'
+  }`;
+  const more = 'shrink-0 whitespace-nowrap px-1 text-[11px] text-white/40 xl:text-xs';
+  const rest = tags.length - shown;
+
   return (
-    <span className="flex shrink-0 items-center gap-1.5 text-white/45">
-      {links.appStore && (
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-label="App Store で配信中">
-          <title>App Store で配信中</title>
-          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-        </svg>
-      )}
-      {links.playStore && (
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-label="Google Play で配信中">
-          <title>Google Play で配信中</title>
-          <path d="M3.61 1.84 13.8 12 3.61 22.16a1.7 1.7 0 0 1-.6-1.3V3.14c0-.52.24-.99.6-1.3zm11.4 11.32 2.53 2.53-11.2 6.4 8.67-8.93zM20.6 10.4c.86.48.86 1.72 0 2.2l-2.72 1.55L15.1 12l2.78-2.15 2.72 1.55zM6.34 1.11l11.2 6.4-2.53 2.53L6.34 1.1z" />
-        </svg>
-      )}
-    </span>
+    <div ref={boxRef} className="relative">
+      <div className="flex items-center gap-1.5 overflow-hidden">
+        {tags.slice(0, shown).map((tag) => (
+          <span key={tag} className={chip}>{tag}</span>
+        ))}
+        {rest > 0 && <span className={more}>+{rest}</span>}
+      </div>
+      <div ref={measureRef} className="pointer-events-none invisible absolute left-0 top-0 flex gap-1.5" aria-hidden>
+        {tags.map((tag) => (
+          <span key={tag} data-tag className={chip}>{tag}</span>
+        ))}
+        <span data-more className={more}>+{tags.length}</span>
+      </div>
+    </div>
   );
 }
 
@@ -334,11 +369,9 @@ export default function AppsPage() {
               const size = project.size || 'medium';
               const isLarge = size === 'large';
               const isSmall = size === 'small';
-              // スクショは 1 枚だけ、カードの下端に敷いてフェードで溶かす。小さいカードには置かない
-              const shot = isSmall ? undefined : project.screenshots?.[0];
-              const tagLimit = isLarge ? 5 : isSmall ? 2 : 3;
+              // 画像は 1 枚だけ、カードの下端に敷いてフェードで溶かす。小さいカードには置かない
+              const shot = isSmall ? undefined : project.cover ?? project.screenshots?.[0];
               const isNew = daysSince(project.updatedAt) <= NEW_BADGE_DAYS;
-              const downloads = project.downloadCount ?? 0;
 
               return (
                 <motion.div
@@ -376,8 +409,8 @@ export default function AppsPage() {
                           {categoryEmoji[project.category]}
                         </span>
                       )}
-                      <span className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50 xl:text-[11px]">
-                        {categoryLabel[project.category]}
+                      <span className="truncate text-[11px] font-semibold tracking-[0.08em] text-white/55 xl:text-xs">
+                        {kindLabel(project)}
                       </span>
                     </div>
 
@@ -399,33 +432,8 @@ export default function AppsPage() {
                       {project.subtitle}
                     </p>
 
-                    {/* Row 4: tags */}
-                    <div className={`flex flex-wrap items-center gap-1.5 ${isSmall ? 'mb-3' : 'mb-4'}`}>
-                      {project.tags.slice(0, tagLimit).map((tag) => (
-                        <span key={tag} className={`rounded-full border border-white/[0.12] text-white/50 ${isSmall ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'}`}>
-                          {tag}
-                        </span>
-                      ))}
-                      {project.tags.length > tagLimit && (
-                        <span className="px-1 text-[11px] text-white/35">+{project.tags.length - tagLimit}</span>
-                      )}
-                    </div>
-
-                    {/* Row 5: platform + stores / counts */}
-                    <div className="flex items-center gap-2 border-t border-white/[0.08] pt-3">
-                      <span className="truncate text-[10px] font-medium uppercase tracking-wider text-white/40">
-                        {project.platform.join(' · ')}
-                      </span>
-                      <StoreMarks links={project.links} />
-                      <span className="ml-auto flex shrink-0 items-center gap-1 text-[10px] text-white/40" title="ページ表示数">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        {(project.viewCount ?? 0).toLocaleString()}
-                      </span>
-                      <span className="flex shrink-0 items-center gap-1 text-[10px] text-white/40" title="ダウンロード数">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        {downloads > 0 ? downloads.toLocaleString() : '-'}
-                      </span>
-                    </div>
+                    {/* Row 5: tags。1 行に入るぶんだけ出し、残りは +N にまとめる */}
+                    <TagLine tags={project.tags} small={isSmall} />
 
                     {/* 下端のスクショ。上をフェードさせて、文字の領域から地続きに見せる */}
                     {shot && (
