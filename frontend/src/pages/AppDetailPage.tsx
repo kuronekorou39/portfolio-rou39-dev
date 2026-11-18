@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
-import { categoryLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
+import { categoryEmoji, kindLabel, statusLabel } from '@/data/mockProjects';
 import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment, fetchReplies, createReply } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
@@ -10,6 +10,8 @@ import type { Project, Review, Comment as ProjectComment } from '../../../shared
 import PageBackground from '@/components/PageBackground';
 
 type Tab = 'about' | 'howto' | 'reviews' | 'feedback';
+
+const PRIMARY = 'flex flex-1 items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02] lg:flex-none';
 
 const GitHubIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -87,7 +89,7 @@ function DownloadButton({ projectId, downloads, compact = false }: { projectId: 
                   href={dlUrl(projectId, dl.os)}
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors hover:bg-white/10 ${
-                    isRecommended ? 'bg-white/[0.04] text-white' : 'text-white/50'
+                    isRecommended ? 'bg-white/[0.04] text-white' : 'text-white/75'
                   }`}
                 >
                   <DownloadIcon size={12} />
@@ -126,7 +128,7 @@ function StarRating({ rating }: { rating: number }) {
         if (half) {
           return (
             <span key={star} className="relative inline-block text-sm">
-              <span className="text-white/10">★</span>
+              <span className="text-white/20">★</span>
               <span
                 className="absolute left-0 top-0 text-yellow-400"
                 style={{ clipPath: 'inset(0 50% 0 0)' }}
@@ -135,7 +137,7 @@ function StarRating({ rating }: { rating: number }) {
           );
         }
         return (
-          <span key={star} className={`text-sm ${filled ? 'text-yellow-400' : 'text-white/10'}`}>★</span>
+          <span key={star} className={`text-sm ${filled ? 'text-yellow-400' : 'text-white/20'}`}>★</span>
         );
       })}
     </div>
@@ -159,7 +161,7 @@ function InteractiveStarRating({
           className="relative cursor-pointer text-xl"
           onMouseLeave={() => setHover(0)}
         >
-          <span className="text-white/10">★</span>
+          <span className="text-white/20">★</span>
           {active >= star - 0.5 && (
             <span
               className="pointer-events-none absolute inset-0 overflow-hidden text-yellow-400"
@@ -183,7 +185,7 @@ function InteractiveStarRating({
         </div>
       ))}
       {active > 0 && (
-        <span className="ml-1 self-center text-xs text-white/30">{active.toFixed(1)}</span>
+        <span className="ml-1 self-center text-xs text-white/55">{active.toFixed(1)}</span>
       )}
     </div>
   );
@@ -195,6 +197,9 @@ export default function AppDetailPage() {
   const { openAuth } = useOutletContext<{ openAuth: () => void }>();
   const [activeTab, setActiveTab] = useState<Tab>('about');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  // 大きく出しているスクショの番号と、横に払ったかを見るための指の位置
+  const [shot, setShot] = useState(0);
+  const [touchX, setTouchX] = useState<number | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -458,8 +463,8 @@ export default function AppDetailPage() {
         <div className="text-center">
           <p className="mb-4 text-6xl">🔍</p>
           <h1 className="mb-2 text-2xl font-bold text-white">Not Found</h1>
-          <p className="mb-6 text-white/30">このプロダクトは見つかりませんでした</p>
-          <Link to="/apps" className="text-sm text-white/50 underline hover:text-white">
+          <p className="mb-6 text-white/55">このプロダクトは見つかりませんでした</p>
+          <Link to="/apps" className="text-sm text-white/75 underline hover:text-white">
             ← アプリ一覧に戻る
           </Link>
         </div>
@@ -475,6 +480,9 @@ export default function AppDetailPage() {
   const myReview = user ? reviews.find((r) => r.userId === user.userId) : null;
 
   const isComingSoon = project.status === 'coming-soon';
+  const shots = project.screenshots ?? [];
+  // 端まで行ったら反対の端へ回す
+  const showShot = (i: number) => setShot((i + shots.length) % shots.length);
 
   const tabs: { key: Tab; label: string }[] = isComingSoon
     ? [
@@ -500,146 +508,195 @@ export default function AppDetailPage() {
         >
           <Link
             to="/apps"
-            className="inline-flex items-center gap-2 text-sm text-white/30 transition-colors hover:text-white/60"
+            className="inline-flex items-center gap-2 text-sm text-white/55 transition-colors hover:text-white/80"
           >
             ← Apps
           </Link>
         </motion.div>
 
-        {/* Two-column layout */}
-        <motion.div
-          className="mt-4 flex flex-col gap-6 sm:mt-8 sm:gap-8 lg:flex-row"
+        {/* 見出し: アイコン・状態・名前。広い窓では右に導線のボタンを並べる */}
+        <motion.header
+          className="mt-6 flex flex-col gap-6 sm:mt-8 lg:flex-row lg:items-end lg:justify-between"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* ===== Left column: main content ===== */}
-          <div className="min-w-0 flex-1">
-            {/* Title + meta (mobile/tablet only — desktop shows in sidebar) */}
-            <div className="mb-4 lg:hidden">
-              <div className="flex items-start gap-3">
-                {project.icon ? (
-                  <img src={project.icon} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" loading="lazy" />
-                ) : (
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xl">
-                    {categoryEmoji[project.category]}
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-xl font-black tracking-tight">{project.title}</h1>
-                  <p className="text-xs text-white/40">{project.subtitle}</p>
-                </div>
-                {/* Rating + views — top right */}
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  {!isComingSoon && reviews.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <StarRating rating={avgRating} />
-                      <span className="text-[10px] text-white/30">{avgRating.toFixed(1)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 text-[10px] text-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    {viewCount.toLocaleString()}
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-white/20">
-                    {project.platform.map((p) => (
-                      <span key={p} className="rounded bg-white/[0.06] px-1.5 py-0.5">{p}</span>
-                    ))}
-                  </div>
-                </div>
+          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+            {project.icon ? (
+              <img src={project.icon} alt="" className="h-16 w-16 shrink-0 rounded-[22%] object-cover sm:h-20 sm:w-20" />
+            ) : (
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22%] bg-white/[0.08] text-3xl sm:h-20 sm:w-20">
+                {categoryEmoji[project.category]}
+              </span>
+            )}
+            <div className="min-w-0">
+              <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="inline-flex items-center gap-1.5 font-medium" style={{ color: status.color }}>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
+                  {status.text}
+                </span>
+                <span className="font-semibold tracking-[0.08em] text-white/60">{kindLabel(project)}</span>
               </div>
+              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{project.title}</h1>
+              <p className="mt-1 text-sm text-white/70 sm:text-base">{project.subtitle}</p>
             </div>
+          </div>
 
-            {/* Screenshots gallery */}
-            {project.screenshots && project.screenshots.length > 0 && (
-              <div className="mb-6">
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  {project.screenshots.map((src, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setLightboxIndex(i)}
-                      className="shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/[0.06] transition-all hover:border-white/20"
-                    >
-                      <img
-                        src={src}
-                        alt={`${project.title} screenshot ${i + 1}`}
-                        className="h-44 w-auto object-cover sm:h-52"
-                        loading="lazy"
-                      />
-                    </button>
-                  ))}
+          {!isComingSoon ? (
+            <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
+              {project.links.web && (
+                <a href={project.links.web} target="_blank" rel="noopener noreferrer" className={PRIMARY}>
+                  <ExternalLinkIcon /> Open App
+                </a>
+              )}
+              {/* ストアはインストールの主な導線なので、APK 等の直接ダウンロードより先に置く */}
+              {project.links.appStore && (
+                <a href={project.links.appStore} target="_blank" rel="noopener noreferrer" className={PRIMARY}>
+                  <AppleIcon /> App Store
+                </a>
+              )}
+              {project.links.playStore && (
+                <a href={project.links.playStore} target="_blank" rel="noopener noreferrer" className={PRIMARY}>
+                  <PlayStoreIcon /> Google Play
+                </a>
+              )}
+              {project.downloads && project.downloads.length > 0 && (
+                <div className="min-w-[10rem] flex-1 lg:flex-none">
+                  <DownloadButton projectId={project.id} downloads={project.downloads} />
                 </div>
+              )}
+              {!project.downloads?.length && project.links.download && (
+                <a href={project.links.download} target="_blank" rel="noopener noreferrer" className={PRIMARY}>
+                  <DownloadIcon /> Download
+                </a>
+              )}
+              {project.links.github && (
+                <a
+                  href={project.links.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/25 px-5 py-2.5 text-sm font-medium text-white/85 transition-colors hover:border-white/50 hover:text-white lg:flex-none"
+                >
+                  <GitHubIcon /> GitHub
+                </a>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={user && token ? handleToggleInterest : openAuth}
+              disabled={interestLoading}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium transition-all lg:shrink-0 ${
+                isInterested
+                  ? 'border border-blue-400/40 bg-blue-400/15 text-blue-300'
+                  : 'border border-white/25 text-white/80 hover:border-white/50 hover:text-white'
+              }`}
+            >
+              {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
+            </button>
+          )}
+        </motion.header>
+
+        {/* スクショ: 1 枚目を大きく。下に全部を小さく並べ、左右で切り替える */}
+        {shots.length > 0 && (
+          <motion.section
+            className="mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <div
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0d0f14]"
+              onTouchStart={(e) => setTouchX(e.touches[0].clientX)}
+              onTouchEnd={(e) => {
+                if (touchX === null) return;
+                const dx = e.changedTouches[0].clientX - touchX;
+                // 指で横に払ったら前後へ。小さな動きはタップとして扱う
+                if (Math.abs(dx) > 40) showShot(shot + (dx < 0 ? 1 : -1));
+                setTouchX(null);
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setLightboxIndex(shot)}
+                className="block h-[60vw] max-h-[560px] min-h-[220px] w-full cursor-zoom-in"
+                aria-label="拡大して見る"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.img
+                    key={shot}
+                    src={shots[shot]}
+                    alt={`${project.title} の画面 ${shot + 1}`}
+                    className="h-full w-full object-contain"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  />
+                </AnimatePresence>
+              </button>
+              {shots.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => showShot(shot - 1)}
+                    aria-label="前の画像"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2.5 text-white/85 backdrop-blur transition hover:bg-black/80 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => showShot(shot + 1)}
+                    aria-label="次の画像"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2.5 text-white/85 backdrop-blur transition hover:bg-black/80 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                  <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs tabular-nums text-white/85 backdrop-blur">
+                    {shot + 1} / {shots.length}
+                  </span>
+                </>
+              )}
+            </div>
+            {shots.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {shots.map((src, i) => (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => showShot(i)}
+                    aria-label={`${i + 1} 枚目`}
+                    aria-current={i === shot}
+                    className={`h-16 shrink-0 overflow-hidden rounded-lg border-2 transition sm:h-20 ${
+                      i === shot ? 'border-[#60a5fa]' : 'border-transparent opacity-55 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={src} alt="" loading="lazy" className="h-full w-auto object-cover" />
+                  </button>
+                ))}
               </div>
             )}
+          </motion.section>
+        )}
 
-            {/* Mobile: action buttons + meta (hidden on desktop) */}
-            <div className="mb-4 lg:hidden">
-              {/* Action buttons */}
-              {!isComingSoon && (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {project.links.web && (
-                    <a href={project.links.web} target="_blank" rel="noopener noreferrer"
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
-                      <ExternalLinkIcon size={12} /> Open App
-                    </a>
-                  )}
-                  {/* ストアはモバイルでの主な導線なので、APK 等の直接ダウンロードより先に置く */}
-                  {project.links.appStore && (
-                    <a href={project.links.appStore} target="_blank" rel="noopener noreferrer"
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
-                      <AppleIcon size={12} /> App Store
-                    </a>
-                  )}
-                  {project.links.playStore && (
-                    <a href={project.links.playStore} target="_blank" rel="noopener noreferrer"
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
-                      <PlayStoreIcon size={12} /> Google Play
-                    </a>
-                  )}
-                  {project.downloads && project.downloads.length > 0 && (
-                    <div className="flex-1">
-                      <DownloadButton projectId={project.id} downloads={project.downloads} compact />
-                    </div>
-                  )}
-                  {!project.downloads?.length && project.links.download && (
-                    <a href={project.links.download} target="_blank" rel="noopener noreferrer"
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-semibold text-black">
-                      <DownloadIcon size={12} /> Download
-                    </a>
-                  )}
-                  {project.links.github && (
-                    <a href={project.links.github} target="_blank" rel="noopener noreferrer"
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 py-2.5 text-xs font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
-                      <GitHubIcon size={12} /> GitHub
-                    </a>
-                  )}
-                </div>
-              )}
-              {isComingSoon && (
-                <button
-                  onClick={user && token ? handleToggleInterest : openAuth}
-                  disabled={interestLoading}
-                  className={`mb-3 w-full rounded-lg py-2 text-xs font-medium transition-all ${
-                    isInterested
-                      ? 'border border-blue-400/30 bg-blue-400/10 text-blue-400'
-                      : 'border border-white/10 text-white/40'
-                  }`}
-                >
-                  {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
-                </button>
-              )}
-            </div>
-
+        <motion.div
+          className="mt-10 flex flex-col gap-10 lg:flex-row"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          {/* ===== 左: 説明・使い方・レビュー ===== */}
+          <div className="min-w-0 flex-1">
             {/* Tabs */}
-            <div className="mb-6 flex gap-1 overflow-x-auto border-b border-white/[0.06]">
+            <div className="mb-6 flex gap-1 overflow-x-auto border-b border-white/10">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`relative shrink-0 px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2.5 sm:text-sm ${
+                  className={`relative shrink-0 px-3 py-2.5 text-sm font-medium transition-all sm:px-4 ${
                     activeTab === tab.key
                       ? 'text-white'
-                      : 'text-white/30 hover:text-white/50'
+                      : 'text-white/55 hover:text-white/85'
                   }`}
                 >
                   {tab.label}
@@ -674,10 +731,10 @@ export default function AppDetailPage() {
             {activeTab === 'feedback' && (
               <div>
                 {/* Comment form */}
-                <div className="mb-8 rounded-xl border-l-2 border-blue-400/30 bg-white/[0.02] p-4 sm:p-6">
+                <div className="mb-8 rounded-xl border-l-2 border-blue-400/30 bg-white/[0.04] p-4 sm:p-6">
                   {user && token ? (
                     <div className="space-y-3">
-                      <p className="text-sm text-white/40">
+                      <p className="text-sm text-white/65">
                         忌憚ない意見をお待ちしています。匿名なので、思ったことを自由にどうぞ。バグ報告、改善案、要望、感想、何でもOK。
                       </p>
                       <textarea
@@ -686,10 +743,10 @@ export default function AppDetailPage() {
                         placeholder="期待してます！ / こんな機能がほしい / 気になる点..."
                         rows={3}
                         maxLength={500}
-                        className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                        className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/35 outline-none transition-colors focus:border-white/20"
                       />
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/20">{newComment.length}/500</span>
+                        <span className="text-xs text-white/45">{newComment.length}/500</span>
                         <button
                           onClick={handleSubmitComment}
                           disabled={commentSubmitting || !newComment.trim()}
@@ -702,7 +759,7 @@ export default function AppDetailPage() {
                   ) : (
                     <button
                       onClick={openAuth}
-                      className="text-sm text-white/40 underline transition-colors hover:text-white/60"
+                      className="text-sm text-white/65 underline transition-colors hover:text-white/80"
                     >
                       ログインしてフィードバックを投稿
                     </button>
@@ -712,7 +769,7 @@ export default function AppDetailPage() {
                 {/* Comment list */}
                 <div className="space-y-4">
                   {comments.length === 0 && (
-                    <p className="py-8 text-center text-sm text-white/20">
+                    <p className="py-8 text-center text-sm text-white/45">
                       まだフィードバックはありません。最初の一言を！
                     </p>
                   )}
@@ -727,7 +784,7 @@ export default function AppDetailPage() {
                     return (
                       <motion.div
                         key={comment.id}
-                        className="selectable rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+                        className="selectable rounded-xl border border-white/10 bg-white/[0.04] p-5"
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -739,7 +796,7 @@ export default function AppDetailPage() {
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
                               {comment.userAvatar ? getAvatarEmoji(comment.userAvatar) : comment.userName[0].toUpperCase()}
                             </div>
-                            <span className="text-sm font-medium text-white/60">{comment.userName}</span>
+                            <span className="text-sm font-medium text-white/80">{comment.userName}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             {user && user.userId === comment.userId && (
@@ -751,12 +808,12 @@ export default function AppDetailPage() {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                               </button>
                             )}
-                            <span className="text-xs text-white/15">{formatDateTime(comment.createdAt)}</span>
+                            <span className="text-xs text-white/40">{formatDateTime(comment.createdAt)}</span>
                           </div>
                         </div>
 
                         {/* Comment body */}
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/40">
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/65">
                           {comment.content}
                         </p>
 
@@ -764,7 +821,7 @@ export default function AppDetailPage() {
                         <div className="mt-3">
                           <button
                             onClick={() => handleToggleThread(comment.id)}
-                            className="inline-flex items-center gap-1.5 text-xs text-white/30 transition-colors hover:text-white/50"
+                            className="inline-flex items-center gap-1.5 text-xs text-white/55 transition-colors hover:text-white/75"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             {isThreadOpen ? '返信を閉じる' : `返信 ${replyCount}件`}
@@ -781,7 +838,7 @@ export default function AppDetailPage() {
                               transition={{ duration: 0.2 }}
                               className="overflow-hidden"
                             >
-                              <div className="mt-4 border-l-2 border-white/[0.06] pl-4">
+                              <div className="mt-4 border-l-2 border-white/10 pl-4">
                                 {/* Loading spinner */}
                                 {isLoadingReplies && (
                                   <div className="flex justify-center py-4">
@@ -791,12 +848,12 @@ export default function AppDetailPage() {
 
                                 {/* Reply list */}
                                 {!isLoadingReplies && replies.length === 0 && (
-                                  <p className="py-3 text-xs text-white/20">まだ返信はありません</p>
+                                  <p className="py-3 text-xs text-white/45">まだ返信はありません</p>
                                 )}
                                 {!isLoadingReplies && replies.map((reply) => (
                                   <motion.div
                                     key={reply.id}
-                                    className="mb-3 rounded-lg border border-white/[0.04] bg-white/[0.015] p-3"
+                                    className="mb-3 rounded-lg border border-white/[0.08] bg-white/[0.03] p-3"
                                     initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
                                   >
@@ -805,7 +862,7 @@ export default function AppDetailPage() {
                                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs">
                                           {reply.userAvatar ? getAvatarEmoji(reply.userAvatar) : reply.userName[0].toUpperCase()}
                                         </div>
-                                        <span className="text-xs font-medium text-white/50">{reply.userName}</span>
+                                        <span className="text-xs font-medium text-white/75">{reply.userName}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         {user && user.userId === reply.userId && (
@@ -817,10 +874,10 @@ export default function AppDetailPage() {
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                           </button>
                                         )}
-                                        <span className="text-[10px] text-white/15">{formatDateTime(reply.createdAt)}</span>
+                                        <span className="text-[10px] text-white/40">{formatDateTime(reply.createdAt)}</span>
                                       </div>
                                     </div>
-                                    <p className="whitespace-pre-wrap text-xs leading-relaxed text-white/40">
+                                    <p className="whitespace-pre-wrap text-xs leading-relaxed text-white/65">
                                       {reply.content}
                                     </p>
                                   </motion.div>
@@ -843,7 +900,7 @@ export default function AppDetailPage() {
                                       }}
                                       placeholder="返信を入力..."
                                       maxLength={500}
-                                      className="flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                                      className="flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 placeholder-white/35 outline-none transition-colors focus:border-white/20"
                                     />
                                     <button
                                       onClick={() => handleSubmitReply(comment.id)}
@@ -856,7 +913,7 @@ export default function AppDetailPage() {
                                 ) : (
                                   <button
                                     onClick={openAuth}
-                                    className="mt-2 text-xs text-white/30 underline transition-colors hover:text-white/50"
+                                    className="mt-2 text-xs text-white/55 underline transition-colors hover:text-white/75"
                                   >
                                     ログインして返信
                                   </button>
@@ -875,24 +932,24 @@ export default function AppDetailPage() {
             {activeTab === 'reviews' && (
               <div>
                 {/* Review summary */}
-                <div className="mb-8 flex items-center gap-6 rounded-xl border-l-2 border-blue-400/30 bg-white/[0.02] p-4 sm:p-6">
+                <div className="mb-8 flex items-center gap-6 rounded-xl border-l-2 border-blue-400/30 bg-white/[0.04] p-4 sm:p-6">
                   <div className="text-center">
                     <div className="text-4xl font-black">{avgRating.toFixed(1)}</div>
                     <StarRating rating={avgRating} />
-                    <div className="mt-1 text-xs text-white/20">{reviews.length} reviews</div>
+                    <div className="mt-1 text-xs text-white/45">{reviews.length} reviews</div>
                   </div>
                   <div className="h-16 w-px bg-white/[0.06]" />
                   {/* Review form or login prompt */}
                   <div className="flex-1">
                     {user && token ? (
                       myReview ? (
-                        <p className="text-sm text-white/30">
+                        <p className="text-sm text-white/55">
                           レビュー投稿済みです（下の自分のレビューから編集できます）
                         </p>
                       ) : (
                         <div className="space-y-3">
                           <div>
-                            <div className="mb-1 text-xs text-white/30">評価</div>
+                            <div className="mb-1 text-xs text-white/55">評価</div>
                             <InteractiveStarRating rating={newRating} onChange={setNewRating} />
                           </div>
                           <textarea
@@ -901,9 +958,9 @@ export default function AppDetailPage() {
                             placeholder="レビューを書く..."
                             rows={2}
                             maxLength={500}
-                            className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                            className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/35 outline-none transition-colors focus:border-white/20"
                           />
-                          <div className="text-right text-xs text-white/20">
+                          <div className="text-right text-xs text-white/45">
                             {newContent.length}/500
                           </div>
                           <button
@@ -918,7 +975,7 @@ export default function AppDetailPage() {
                     ) : (
                       <button
                         onClick={openAuth}
-                        className="text-sm text-white/40 underline transition-colors hover:text-white/60"
+                        className="text-sm text-white/65 underline transition-colors hover:text-white/80"
                       >
                         ログインしてレビューを投稿
                       </button>
@@ -931,7 +988,7 @@ export default function AppDetailPage() {
                   {reviews.map((review, i) => (
                     <motion.div
                       key={review.id}
-                      className="selectable rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+                      className="selectable rounded-xl border border-white/10 bg-white/[0.04] p-5"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.08 }}
@@ -941,7 +998,7 @@ export default function AppDetailPage() {
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
                             {review.userAvatar ? getAvatarEmoji(review.userAvatar) : review.userName[0].toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium text-white/60">{review.userName}</span>
+                          <span className="text-sm font-medium text-white/80">{review.userName}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           {user && user.userId === review.userId && editingId !== review.id && (
@@ -962,7 +1019,7 @@ export default function AppDetailPage() {
                               </button>
                             </>
                           )}
-                          <span className="text-xs text-white/15">{formatDateTime(review.createdAt)}</span>
+                          <span className="text-xs text-white/40">{formatDateTime(review.createdAt)}</span>
                         </div>
                       </div>
 
@@ -974,9 +1031,9 @@ export default function AppDetailPage() {
                             onChange={(e) => setEditContent(e.target.value)}
                             rows={3}
                             maxLength={500}
-                            className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/20 outline-none transition-colors focus:border-white/20"
+                            className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/70 placeholder-white/35 outline-none transition-colors focus:border-white/20"
                           />
-                          <div className="text-right text-xs text-white/20">
+                          <div className="text-right text-xs text-white/45">
                             {editContent.length}/500
                           </div>
                           <div className="flex gap-2">
@@ -989,7 +1046,7 @@ export default function AppDetailPage() {
                             </button>
                             <button
                               onClick={handleCancelEdit}
-                              className="rounded-lg px-3 py-1.5 text-xs text-white/30 transition-colors hover:text-white/50"
+                              className="rounded-lg px-3 py-1.5 text-xs text-white/55 transition-colors hover:text-white/75"
                             >
                               キャンセル
                             </button>
@@ -999,7 +1056,7 @@ export default function AppDetailPage() {
                         <>
                           <StarRating rating={review.rating} />
                           <div className="mt-3">
-                            <p className={`text-sm leading-relaxed text-white/40 whitespace-pre-wrap ${
+                            <p className={`text-sm leading-relaxed text-white/65 whitespace-pre-wrap ${
                               !expandedReviews.has(review.id) ? 'line-clamp-3' : ''
                             }`}>
                               {review.content}
@@ -1012,7 +1069,7 @@ export default function AppDetailPage() {
                                   else next.add(review.id);
                                   return next;
                                 })}
-                                className="mt-1 text-xs text-white/30 hover:text-white/50"
+                                className="mt-1 text-xs text-white/55 hover:text-white/75"
                               >
                                 {expandedReviews.has(review.id) ? '閉じる' : 'もっと見る'}
                               </button>
@@ -1029,149 +1086,69 @@ export default function AppDetailPage() {
             </AnimatePresence>
           </div>
 
-          {/* ===== Right column: sidebar (desktop only) ===== */}
-          <div className="hidden w-72 shrink-0 lg:block">
-            <div className="sticky top-20 space-y-5">
-              {/* Title (desktop only) */}
-              <div className="hidden lg:block">
-                <div className="mb-3 flex items-center gap-3">
-                  {project.icon ? (
-                    <img src={project.icon} alt="" className="h-12 w-12 rounded-full border border-white/10 object-cover" loading="lazy" />
-                  ) : (
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-2xl">
-                      {categoryEmoji[project.category]}
-                    </span>
-                  )}
-                  <div>
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/25">
-                      {categoryLabel[project.category]}
-                    </span>
-                    <span
-                      className="ml-2 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider"
-                      style={{ color: status.color }}
-                    >
-                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
-                      {status.text}
-                    </span>
-                  </div>
-                </div>
-                <h1 className="mb-1 text-2xl font-black tracking-tight">{project.title}</h1>
-                <p className="text-sm text-white/40">{project.subtitle}</p>
-              </div>
-
-              {/* Action buttons */}
-              {!isComingSoon && (
-                <div className="flex flex-col gap-2">
-                  {project.links.web && (
-                    <a href={project.links.web} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02]">
-                      <ExternalLinkIcon size={14} /> Open App
-                    </a>
-                  )}
-                  {/* ストアはインストール導線なので、GitHub より上・ダウンロードと同じ扱いにする */}
-                  {project.links.appStore && (
-                    <a href={project.links.appStore} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02]">
-                      <AppleIcon /> App Store
-                    </a>
-                  )}
-                  {project.links.playStore && (
-                    <a href={project.links.playStore} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02]">
-                      <PlayStoreIcon /> Google Play
-                    </a>
-                  )}
-                  {project.downloads && project.downloads.length > 0 && (
-                    <DownloadButton projectId={project.id} downloads={project.downloads} />
-                  )}
-                  {!project.downloads?.length && project.links.download && (
-                    <a href={project.links.download} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-black">
-                      <DownloadIcon /> Download
-                    </a>
-                  )}
-                  {project.links.github && (
-                    <a href={project.links.github} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 py-2.5 text-sm font-medium text-white/60 transition-colors hover:border-white/40 hover:text-white">
-                      <GitHubIcon /> GitHub
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Interest button (coming-soon) */}
-              {isComingSoon && (
-                <button
-                  onClick={user && token ? handleToggleInterest : openAuth}
-                  disabled={interestLoading}
-                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all ${
-                    isInterested
-                      ? 'border border-blue-400/30 bg-blue-400/10 text-blue-400'
-                      : 'border border-white/10 text-white/40 hover:border-white/30 hover:text-white/60'
-                  }`}
-                >
-                  {isInterested ? '★' : '☆'} 興味あり {interestCount > 0 && `(${interestCount})`}
-                </button>
-              )}
-
-              {/* Info card */}
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <div className="space-y-3 text-xs">
-                  {/* Rating */}
+          {/* ===== 右: 情報。狭い窓では本文の下に回る ===== */}
+          <aside className="w-full shrink-0 lg:w-72">
+            <div className="space-y-4 lg:sticky lg:top-20">
+              <div className="rounded-xl border border-white/10 bg-[#0d0f14]/80 p-5 backdrop-blur-md">
+                <dl className="space-y-3 text-sm">
                   {!isComingSoon && reviews.length > 0 && (
                     <div className="flex items-center justify-between">
-                      <span className="text-white/30">Rating</span>
-                      <div className="flex items-center gap-1.5">
+                      <dt className="text-white/55">評価</dt>
+                      <dd className="flex items-center gap-1.5">
                         <StarRating rating={avgRating} />
-                        <span className="text-white/50">{avgRating.toFixed(1)}</span>
-                      </div>
+                        <span className="text-white/85">{avgRating.toFixed(1)}</span>
+                      </dd>
                     </div>
                   )}
                   {interestCount > 0 && !isComingSoon && (
                     <div className="flex items-center justify-between">
-                      <span className="text-white/30">Interested</span>
-                      <span className="text-blue-400/60">{interestCount}人</span>
+                      <dt className="text-white/55">興味あり</dt>
+                      <dd className="text-blue-300">{interestCount}人</dd>
                     </div>
                   )}
-                  {/* Platform */}
                   <div className="flex items-center justify-between">
-                    <span className="text-white/30">Platform</span>
-                    <div className="flex gap-1.5">
+                    <dt className="text-white/55">対応</dt>
+                    <dd className="flex gap-1.5">
                       {project.platform.map((p) => (
-                        <span key={p} className="rounded bg-white/[0.06] px-2 py-0.5 text-[10px] text-white/40">{p}</span>
+                        <span key={p} className="rounded bg-white/[0.08] px-2 py-0.5 text-xs text-white/85">{p}</span>
                       ))}
-                    </div>
-                  </div>
-                  {/* Views & Downloads */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/30">Views</span>
-                    <span className="text-white/40">{viewCount.toLocaleString()}</span>
+                    </dd>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-white/30">Downloads</span>
-                    <span className="text-white/40">{downloadCount > 0 ? downloadCount.toLocaleString() : '-'}</span>
+                    <dt className="text-white/55">閲覧</dt>
+                    <dd className="tabular-nums text-white/85">{viewCount.toLocaleString()}</dd>
                   </div>
-                  {/* Updated */}
                   <div className="flex items-center justify-between">
-                    <span className="text-white/30">Updated</span>
-                    <span className="text-white/40">{project.updatedAt}</span>
+                    <dt className="text-white/55">ダウンロード</dt>
+                    <dd className="tabular-nums text-white/85">{downloadCount > 0 ? downloadCount.toLocaleString() : '-'}</dd>
                   </div>
-                </div>
+                  <div className="flex items-center justify-between">
+                    <dt className="text-white/55">更新</dt>
+                    <dd className="tabular-nums text-white/85">{project.updatedAt}</dd>
+                  </div>
+                </dl>
               </div>
 
-              {/* Tags */}
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/20">Tech Stack</div>
+              <div className="rounded-xl border border-white/10 bg-[#0d0f14]/80 p-5 backdrop-blur-md">
+                <div className="mb-3 text-xs font-semibold text-white/60">技術</div>
                 <div className="flex flex-wrap gap-1.5">
                   {project.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-white/[0.08] px-2.5 py-0.5 text-[11px] text-white/30">
+                    <span key={tag} className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-white/80">
                       {tag}
                     </span>
                   ))}
                 </div>
               </div>
+
+              <Link
+                to={`/devlog?app=${project.id}`}
+                className="flex items-center justify-between rounded-xl border border-white/10 bg-[#0d0f14]/80 px-5 py-4 text-sm text-white/85 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white"
+              >
+                開発ログを見る
+                <span className="text-white/50">→</span>
+              </Link>
             </div>
-          </div>
+          </aside>
         </motion.div>
       </div>
 
@@ -1187,7 +1164,7 @@ export default function AppDetailPage() {
           >
             {/* Close button */}
             <button
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
               onClick={() => setLightboxIndex(null)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1196,7 +1173,7 @@ export default function AppDetailPage() {
             {/* Prev button */}
             {lightboxIndex > 0 && (
               <button
-                className="absolute left-4 z-10 rounded-full bg-white/10 p-3 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+                className="absolute left-4 z-10 rounded-full bg-white/10 p-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1219,7 +1196,7 @@ export default function AppDetailPage() {
             {/* Next button */}
             {lightboxIndex < project.screenshots.length - 1 && (
               <button
-                className="absolute right-4 z-10 rounded-full bg-white/10 p-3 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+                className="absolute right-4 z-10 rounded-full bg-white/10 p-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1227,7 +1204,7 @@ export default function AppDetailPage() {
             )}
 
             {/* Counter */}
-            <div className="absolute bottom-4 text-xs text-white/30">
+            <div className="absolute bottom-4 text-xs text-white/55">
               {lightboxIndex + 1} / {project.screenshots.length}
             </div>
           </motion.div>
