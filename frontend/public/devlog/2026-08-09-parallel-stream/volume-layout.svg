@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">「音量順」: 枠の面積を音量に比例させる</text>
+
+  <!-- 画面 -->
+  <rect x="40" y="60" width="640" height="240" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+
+  <!-- 1 行目(音量の大きい順に左から) -->
+  <rect x="78" y="78" width="232" height="131" rx="8" fill="#60a5fa" fill-opacity="0.25" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="194" y="149" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700" text-anchor="middle">80%</text>
+  <rect x="318" y="94" width="174" height="98" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.5"/>
+  <text x="405" y="148" fill="#ffffff" fill-opacity="0.85" font-size="14" font-weight="700" text-anchor="middle">45%</text>
+  <rect x="500" y="103" width="142" height="80" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.4"/>
+  <text x="571" y="148" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">30%</text>
+
+  <!-- 2 行目 -->
+  <rect x="257" y="217" width="116" height="65" rx="8" fill="#60a5fa" fill-opacity="0.12" stroke="#60a5fa" stroke-opacity="0.35"/>
+  <text x="315" y="254" fill="#ffffff" fill-opacity="0.85" font-size="13" font-weight="700" text-anchor="middle">20%</text>
+  <rect x="381" y="227" width="82" height="46" rx="8" fill="#60a5fa" fill-opacity="0.08" stroke="#60a5fa" stroke-opacity="0.3"/>
+  <text x="422" y="254" fill="#ffffff" fill-opacity="0.6" font-size="12" font-weight="700" text-anchor="middle">10%</text>
+
+  <text x="40" y="324" fill="#ffffff" fill-opacity="0.4" font-size="12">どの枠も 16:9 のまま、大きい順に横へ詰める</text>
+</svg>

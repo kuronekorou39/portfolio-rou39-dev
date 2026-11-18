@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" font-family="system-ui, sans-serif">
+  <rect width="720" height="260" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">2 台のプレーヤーが交互に鳴らす</text>
+
+  <!-- レーン名 -->
+  <text x="24" y="104" fill="#ffffff" fill-opacity="0.6" font-size="13" font-weight="700">プレーヤー A</text>
+  <text x="24" y="184" fill="#ffffff" fill-opacity="0.6" font-size="13" font-weight="700">プレーヤー B</text>
+
+  <!-- A -->
+  <rect x="130" y="76" width="300" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="280" y="104" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">曲 1 を再生</text>
+  <rect x="580" y="76" width="116" height="44" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="638" y="104" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">曲 3 を先読み</text>
+
+  <!-- B -->
+  <rect x="330" y="156" width="100" height="44" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="380" y="184" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">曲 2 を先読み</text>
+  <rect x="440" y="156" width="256" height="44" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="510" y="184" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">曲 2 を再生</text>
+
+  <!-- 切り替え -->
+  <line x1="435" y1="64" x2="435" y2="214" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="435" y="236" fill="#ffffff" fill-opacity="0.6" font-size="12" text-anchor="middle">入れ替えるだけで次の曲へ</text>
+  <text x="330" y="146" fill="#ffffff" fill-opacity="0.4" font-size="11">残り 30 秒から</text>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" font-family="system-ui, sans-serif">
+  <rect width="720" height="280" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">動画を開いてから音が出るまで</text>
+
+  <!-- 前 -->
+  <text x="24" y="94" fill="#ffffff" fill-opacity="0.4" font-size="13" font-weight="700">前</text>
+  <rect x="70" y="70" width="330" height="40" rx="8" fill="#f87171" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.5"/>
+  <text x="235" y="95" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">波形のダウンロードを待つ</text>
+  <rect x="410" y="70" width="286" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="553" y="95" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">再生</text>
+
+  <!-- 後 -->
+  <text x="24" y="174" fill="#60a5fa" font-size="13" font-weight="700">後</text>
+  <rect x="70" y="150" width="626" height="40" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="383" y="175" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">すぐに再生</text>
+  <rect x="70" y="200" width="330" height="40" rx="8" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="235" y="225" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">波形は裏で取得</text>
+
+  <!-- 開いた時点 -->
+  <line x1="70" y1="58" x2="70" y2="252" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="70" y="268" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">開いた時点</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffffff" fill-opacity="0.4"/>
+    </marker>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">記録の置き場所と、機種変更での引き継ぎ</text>
+
+  <!-- 前 -->
+  <text x="24" y="104" fill="#ffffff" fill-opacity="0.4" font-size="13" font-weight="700">前</text>
+  <rect x="70" y="76" width="170" height="52" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="155" y="107" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">端末</text>
+  <line x1="242" y1="102" x2="356" y2="102" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <text x="300" y="92" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">ログインして同期</text>
+  <rect x="360" y="76" width="170" height="52" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12" stroke-dasharray="4 4"/>
+  <text x="445" y="107" fill="#ffffff" fill-opacity="0.4" font-size="13" text-anchor="middle">クラウド(撤去)</text>
+
+  <!-- 後 -->
+  <text x="24" y="214" fill="#60a5fa" font-size="13" font-weight="700">後</text>
+  <rect x="70" y="184" width="170" height="60" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="155" y="209" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">端末</text>
+  <text x="155" y="230" fill="#ffffff" fill-opacity="0.4" font-size="11" text-anchor="middle">記録と写真はここだけ</text>
+  <line x1="242" y1="214" x2="296" y2="214" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow-accent)"/>
+  <rect x="300" y="184" width="150" height="60" rx="10" fill="#60a5fa" fill-opacity="0.15" stroke="#60a5fa" stroke-opacity="0.6"/>
+  <text x="375" y="219" fill="#60a5fa" font-size="14" font-weight="700" text-anchor="middle">ZIP のバックアップ</text>
+  <line x1="452" y1="214" x2="506" y2="214" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow-accent)"/>
+  <rect x="510" y="184" width="186" height="60" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="603" y="219" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">新しい端末</text>
+</svg>

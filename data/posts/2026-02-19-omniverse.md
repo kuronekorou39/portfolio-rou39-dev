@@ -9,3 +9,5 @@ projects: [omniverse]
 - ログイン時の Cookie から認証情報を拾い、アカウントとして保存
 - 全アカウントのタイムラインを並行して定期取得
 - アカウント一覧と詳細の画面を追加
+
+![アカウント一覧の画面(のちの版)](/projects/omniverse/snapshot-accounts.png)

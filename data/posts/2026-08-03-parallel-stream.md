@@ -9,3 +9,5 @@ projects: [parallel-stream]
 - YouTube の枠が落ちる件を計測と切り分けで追い、原因の処理を外した
 - リサイズのつまみを右下の1点にまとめ、枠の最小サイズを 16:9 に揃えた
 - ログイン用 Cookie の変更を切り替え、元に戻せるようにした
+
+![映像と公式チャットを組にした枠](/projects/parallel-stream/snap-02-one.jpg)

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" font-family="system-ui, sans-serif">
+  <rect width="720" height="340" fill="#0b0c10"/>
+  <text x="24" y="36" fill="#ffffff" fill-opacity="0.85" font-size="15" font-weight="700">サイドパネルの出し方を画面の幅で分ける</text>
+
+  <!-- 横向き -->
+  <text x="40" y="78" fill="#ffffff" fill-opacity="0.6" font-size="13" font-weight="700">横向き・タブレット(上流どおり)</text>
+  <rect x="40" y="92" width="380" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="52" y="104" width="230" height="176" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="167" y="197" fill="#ffffff" fill-opacity="0.6" font-size="13" text-anchor="middle">ページ</text>
+  <rect x="290" y="104" width="118" height="176" rx="8" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.3"/>
+  <text x="349" y="197" fill="#ffffff" fill-opacity="0.85" font-size="13" text-anchor="middle">パネル</text>
+  <text x="230" y="316" fill="#ffffff" fill-opacity="0.4" font-size="12" text-anchor="middle">横に並べる</text>
+
+  <!-- 縦向き -->
+  <text x="490" y="78" fill="#60a5fa" font-size="13" font-weight="700">縦向きのスマホ(今回)</text>
+  <rect x="490" y="92" width="150" height="200" rx="10" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <rect x="500" y="102" width="130" height="180" rx="8" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.12"/>
+  <text x="520" y="124" fill="#ffffff" fill-opacity="0.4" font-size="12">ページ</text>
+  <rect x="500" y="136" width="130" height="146" rx="8" fill="#60a5fa" fill-opacity="0.2" stroke="#60a5fa" stroke-opacity="0.7"/>
+  <text x="565" y="214" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">パネル</text>
+  <text x="565" y="316" fill="#60a5fa" font-size="12" text-anchor="middle">ページの上に重ねる</text>
+</svg>
