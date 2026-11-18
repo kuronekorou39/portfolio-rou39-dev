@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
-import { categoryEmoji, kindLabel, statusLabel } from '@/data/mockProjects';
+import { categoryEmoji, isVideo, kindLabel, statusLabel } from '@/data/mockProjects';
 import { fetchProject, fetchReviews, createReview, updateReview, deleteReview, incrementPageView, fetchPageView, fetchInterest, addInterest, removeInterest, fetchComments, createComment, deleteComment, fetchReplies, createReply } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarEmoji } from '@/lib/avatars';
@@ -615,6 +615,19 @@ export default function AppDetailPage() {
                 setTouchX(null);
               }}
             >
+              {isVideo(shots[shot]) ? (
+                // 動画は音なしで自動再生。操作バーがあるので、押して拡大はしない
+                <video
+                  key={shots[shot]}
+                  src={shots[shot]}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  className="block h-[60vw] max-h-[560px] min-h-[220px] w-full object-contain"
+                />
+              ) : (
               <button
                 type="button"
                 onClick={() => setLightboxIndex(shot)}
@@ -634,6 +647,7 @@ export default function AppDetailPage() {
                   />
                 </AnimatePresence>
               </button>
+              )}
               {shots.length > 1 && (
                 <>
                   <button
@@ -652,7 +666,7 @@ export default function AppDetailPage() {
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                   </button>
-                  <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs tabular-nums text-white/85 backdrop-blur">
+                  <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs tabular-nums text-white/85 backdrop-blur">
                     {shot + 1} / {shots.length}
                   </span>
                 </>
@@ -667,11 +681,21 @@ export default function AppDetailPage() {
                     onClick={() => showShot(i)}
                     aria-label={`${i + 1} 枚目`}
                     aria-current={i === shot}
-                    className={`h-16 shrink-0 overflow-hidden rounded-lg border-2 transition sm:h-20 ${
+                    className={`relative h-16 shrink-0 overflow-hidden rounded-lg border-2 transition sm:h-20 ${
                       i === shot ? 'border-[#60a5fa]' : 'border-transparent opacity-55 hover:opacity-100'
                     }`}
                   >
-                    <img src={src} alt="" loading="lazy" className="h-full w-auto object-cover" />
+                    {isVideo(src) ? (
+                      <>
+                        {/* 頭の 1 コマを小さく出す。中身は選ばれるまで読み込まない */}
+                        <video src={`${src}#t=0.5`} muted playsInline preload="metadata" className="h-full w-auto object-cover" />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z" /></svg>
+                        </span>
+                      </>
+                    ) : (
+                      <img src={src} alt="" loading="lazy" className="h-full w-auto object-cover" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -1181,6 +1205,19 @@ export default function AppDetailPage() {
             )}
 
             {/* Image */}
+            {isVideo(project.screenshots[lightboxIndex]) ? (
+              <video
+                key={lightboxIndex}
+                src={project.screenshots[lightboxIndex]}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                className="max-h-[85vh] max-w-[90vw] rounded-xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
             <motion.img
               key={lightboxIndex}
               src={project.screenshots[lightboxIndex]}
@@ -1192,6 +1229,7 @@ export default function AppDetailPage() {
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             />
+            )}
 
             {/* Next button */}
             {lightboxIndex < project.screenshots.length - 1 && (

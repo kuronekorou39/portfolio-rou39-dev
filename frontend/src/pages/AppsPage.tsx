@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { kindLabel, categoryEmoji, statusLabel } from '@/data/mockProjects';
+import { kindLabel, categoryEmoji, statusLabel, firstImage } from '@/data/mockProjects';
 import { fetchProjects } from '@/lib/api';
 import type { Project, ProjectCategory } from '../../../shared/src/types';
 import PageBackground from '@/components/PageBackground';
@@ -370,7 +370,7 @@ export default function AppsPage() {
               const isLarge = size === 'large';
               const isSmall = size === 'small';
               // 画像は 1 枚だけ、カードの下端に敷いてフェードで溶かす。小さいカードには置かない
-              const shot = isSmall ? undefined : project.cover ?? project.screenshots?.[0];
+              const shot = isSmall ? undefined : project.cover ?? firstImage(project.screenshots);
               const isNew = daysSince(project.updatedAt) <= NEW_BADGE_DAYS;
 
               return (

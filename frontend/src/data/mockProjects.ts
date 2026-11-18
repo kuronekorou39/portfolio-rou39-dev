@@ -148,6 +148,12 @@ export const categoryLabel: Record<string, string> = {
 // スマホのアプリは「Mobile」とまとめず、出している OS をそのまま見せる
 const MOBILE_OS = ['Android', 'iOS'];
 
+/** screenshots には紹介動画(mp4)も混ぜられる。拡張子で見分ける */
+export const isVideo = (src: string): boolean => /\.mp4($|\?)/i.test(src);
+
+/** 一覧のカードなど、静止画しか置けない所に使う 1 枚目の画像 */
+export const firstImage = (shots: string[] | undefined): string | undefined => shots?.find((s) => !isVideo(s));
+
 /** カードに出す種類の名前。スマホは platform の OS(Android / iOS)、それ以外はカテゴリ名 */
 export function kindLabel(project: Pick<Project, 'category' | 'platform'>): string {
   if (project.category === 'mobile') {

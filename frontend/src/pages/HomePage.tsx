@@ -11,7 +11,7 @@ import {
 } from 'framer-motion';
 import avatarImg from '@/assets/avatar.png';
 import underConstructionImg from '@/assets/under-construction.png';
-import { kindLabel, categoryEmoji } from '@/data/mockProjects';
+import { kindLabel, categoryEmoji, firstImage } from '@/data/mockProjects';
 import { fetchContributions, fetchProjects, type ContributionCalendar } from '@/lib/api';
 import type { Project } from '../../../shared/src/types';
 
@@ -737,7 +737,7 @@ function ProjectShowcase({ project, index }: { project: Project; index: number }
   const y = useTransform(scrollYProgress, [0, 1], [60, -60]);
   const { color, accent } = accentPair(project.id);
   // スマホのスクショは縦長で、横長の枠に入れると小さく浮く。モバイルはアイコンを見せる
-  const screenshot = project.category === 'mobile' && project.icon ? undefined : project.screenshots?.[0];
+  const screenshot = project.category === 'mobile' && project.icon ? undefined : firstImage(project.screenshots);
   const updatedAt = Date.parse(project.updatedAt);
   const isNew = Number.isFinite(updatedAt) && Date.now() - updatedAt <= NEW_BADGE_DAYS * 86_400_000;
 
