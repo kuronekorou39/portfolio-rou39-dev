@@ -33,5 +33,6 @@
   "easy-blur": { "repo": "kuronekorou39/easy-blur" },
   "hayabuzz": { "repo": "kuronekorou39/hayabuzz" },
   "tapomaton": { "repo": "kuronekorou39/tapomaton" },
-  "window-resizer": { "repo": "kuronekorou39/chrome-window-resizer" }
+  "window-resizer": { "repo": "kuronekorou39/chrome-window-resizer" },
+  "clipglass": { "repo": "kuronekorou39/clipglass" }
 }
