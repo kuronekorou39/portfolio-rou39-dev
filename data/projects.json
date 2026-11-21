@@ -40,7 +40,8 @@
     "updatedAt": "2026-09-12",
     "size": "large",
     "published": true,
-    "featured": true
+    "featured": true,
+    "priority": 1
   },
   {
     "id": "koko-meshi",
@@ -80,7 +81,8 @@
         "url": "https://rou39.com/kokomeshi/kokomeshi-v0.13.2.apk",
         "os": "android"
       }
-    ]
+    ],
+    "priority": 2
   },
   {
     "id": "u2b-loop",
@@ -114,7 +116,8 @@
     "publishedAt": "2025-01-15",
     "updatedAt": "2026-09-11",
     "size": "medium",
-    "published": true
+    "published": true,
+    "priority": 4
   },
   {
     "id": "cryptid-logic-solver",
@@ -147,7 +150,8 @@
     "publishedAt": "2026-01-01",
     "updatedAt": "2026-01-04",
     "size": "medium",
-    "published": true
+    "published": true,
+    "priority": 12
   },
   {
     "id": "icon-builder",
@@ -242,7 +246,8 @@
     "publishedAt": "2026-05-28",
     "updatedAt": "2026-09-30",
     "size": "medium",
-    "published": true
+    "published": true,
+    "priority": 3
   },
   {
     "id": "ad-skipper-twitch",
@@ -276,7 +281,8 @@
     "publishedAt": "2026-02-13",
     "updatedAt": "2026-08-08",
     "size": "small",
-    "published": true
+    "published": true,
+    "priority": 14
   },
   {
     "id": "ad-skipper-prime",
@@ -313,7 +319,8 @@
     "publishedAt": "2026-02-13",
     "updatedAt": "2026-08-08",
     "size": "small",
-    "published": true
+    "published": true,
+    "priority": 15
   },
   {
     "id": "ad-skipper-youtube",
@@ -347,7 +354,8 @@
     "publishedAt": "2026-02-13",
     "updatedAt": "2026-08-08",
     "size": "small",
-    "published": true
+    "published": true,
+    "priority": 13
   },
   {
     "id": "local-port-board",
@@ -400,7 +408,8 @@
     "publishedAt": "2025-05-01",
     "updatedAt": "2026-04-03",
     "size": "medium",
-    "published": true
+    "published": true,
+    "priority": 9
   },
   {
     "id": "actlog-app",
@@ -465,7 +474,8 @@
         "url": "https://github.com/kuronekorou39/office-raw-editor/releases/download/v0.2.0/office-raw-editor-0.2.0.zip",
         "os": "windows"
       }
-    ]
+    ],
+    "priority": 11
   },
   {
     "id": "deka-mado",
@@ -613,7 +623,8 @@
     "publishedAt": "2025-06-01",
     "updatedAt": "2026-08-21",
     "size": "small",
-    "published": true
+    "published": true,
+    "priority": 10
   },
   {
     "id": "mobile-bex",
@@ -653,7 +664,8 @@
     "updatedAt": "2026-10-13",
     "size": "large",
     "published": true,
-    "cover": "/projects/mobile-bex/snap-hero.png"
+    "cover": "/projects/mobile-bex/snap-hero.png",
+    "priority": 5
   },
   {
     "id": "u2b-loop-web",
@@ -722,7 +734,8 @@
     "publishedAt": "2026-05-28",
     "updatedAt": "2026-10-26",
     "size": "large",
-    "published": true
+    "published": true,
+    "priority": 6
   },
   {
     "id": "easy-blur",
@@ -787,7 +800,8 @@
     "publishedAt": "2026-08-13",
     "updatedAt": "2026-09-04",
     "size": "medium",
-    "published": true
+    "published": true,
+    "priority": 7
   },
   {
     "id": "tapomaton",
@@ -880,6 +894,7 @@
     "publishedAt": "2026-10-06",
     "updatedAt": "2026-11-18",
     "size": "small",
-    "published": true
+    "published": true,
+    "priority": 8
   }
 ]

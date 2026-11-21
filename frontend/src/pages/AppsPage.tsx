@@ -16,13 +16,14 @@ const categories: { key: 'all' | ProjectCategory; label: string }[] = [
 ];
 
 const sorts = [
+  { key: 'recommended', label: 'おすすめ順' },
   { key: 'updated', label: '更新順' },
   { key: 'new', label: '新着順' },
   { key: 'popular', label: '人気順' },
 ] as const;
 type SortKey = (typeof sorts)[number]['key'];
 
-const DEFAULT_SORT: SortKey = 'updated';
+const DEFAULT_SORT: SortKey = 'recommended';
 // タグフィルタに出す数。実データには30種以上あるので、よく使うものだけ出す
 const TAG_FILTER_LIMIT = 10;
 // updatedAt がこれ以内なら NEW バッジを出す
@@ -41,9 +42,28 @@ function daysSince(iso: string): number {
   return Number.isFinite(t) ? (Date.now() - t) / 86_400_000 : Infinity;
 }
 
+// カードを置く列を決めるための、おおよその高さ(px)
+const CARD_TEXT_HEIGHT = 240;
+const CARD_IMAGE_HEIGHT = { small: 0, medium: 192, large: 256 };
+
+function readColumnCount(): number {
+  if (window.matchMedia('(min-width: 1024px)').matches) return 3;
+  return window.matchMedia('(min-width: 640px)').matches ? 2 : 1;
+}
+
+function useColumnCount(): number {
+  const [count, setCount] = useState(readColumnCount);
+  useEffect(() => {
+    const onResize = () => setCount(readColumnCount());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return count;
+}
+
 // 技術タグは 1 行に収める。入りきらないぶんは「+N」にまとめる。
 // 幅はカードごとに違うので、全部を見えない所に並べて測ってから、入る数を決める
-function TagLine({ tags, small }: { tags: string[]; small: boolean }) {
+function TagLine({ tags }: { tags: string[] }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(tags.length);
@@ -74,9 +94,7 @@ function TagLine({ tags, small }: { tags: string[]; small: boolean }) {
     return () => observer.disconnect();
   }, [tags]);
 
-  const chip = `shrink-0 whitespace-nowrap rounded-full border border-white/[0.12] text-white/50 ${
-    small ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-0.5 text-[11px] xl:text-xs'
-  }`;
+  const chip = 'shrink-0 whitespace-nowrap rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[11px] text-white/50 xl:text-xs';
   const more = 'shrink-0 whitespace-nowrap px-1 text-[11px] text-white/40 xl:text-xs';
   const rest = tags.length - shown;
 
@@ -173,12 +191,27 @@ export default function AppsPage() {
       const rank = (statusRank[a.status] ?? 9) - (statusRank[b.status] ?? 9);
       if (rank !== 0) return rank;
       let diff = 0;
-      if (sort === 'popular') diff = (b.viewCount ?? 0) - (a.viewCount ?? 0);
+      if (sort === 'recommended') diff = (a.priority ?? Infinity) - (b.priority ?? Infinity) || 0;
+      else if (sort === 'popular') diff = (b.viewCount ?? 0) - (a.viewCount ?? 0);
       else if (sort === 'new') diff = b.publishedAt.localeCompare(a.publishedAt);
       else diff = b.updatedAt.localeCompare(a.updatedAt);
       return diff !== 0 ? diff : a.id.localeCompare(b.id);
     });
   }, [projects, filter, tagFilter, searchInput, sort]);
+
+  // CSS の columns は縦に流し込むので、おすすめの上位が 1 列目に固まる。
+  // 先頭から順に一番短い列へ置いて、上の段に上位が横並びになるようにする
+  const columnCount = useColumnCount();
+  const columns = useMemo(() => {
+    const lists: { project: Project; i: number }[][] = Array.from({ length: columnCount }, () => []);
+    const heights = new Array<number>(columnCount).fill(0);
+    visible.forEach((project, i) => {
+      const shortest = heights.indexOf(Math.min(...heights));
+      lists[shortest].push({ project, i });
+      heights[shortest] += CARD_TEXT_HEIGHT + CARD_IMAGE_HEIGHT[project.size || 'medium'];
+    });
+    return lists;
+  }, [visible, columnCount]);
 
   const hasFilters = filter !== 'all' || !!tagFilter || !!searchInput;
   // 検索と絞り込みは畳んでおく。条件付きの URL で来たときは、何が効いているか見えるよう開く
@@ -358,12 +391,11 @@ export default function AppsPage() {
             </button>
           </div>
         ) : (
-        <motion.div
-          layout
-          className="mt-6 columns-1 gap-5 sm:columns-2 lg:columns-3 xl:gap-6"
-        >
+        <div className="mt-6 flex items-start gap-5 xl:gap-6">
+          {columns.map((column, c) => (
+          <div key={c} className="min-w-0 flex-1">
           <AnimatePresence mode="popLayout">
-            {visible.map((project, i) => {
+            {column.map(({ project, i }) => {
               const status = statusLabel[project.status];
               const isComingSoon = project.status === 'coming-soon';
               const size = project.size || 'medium';
@@ -389,23 +421,23 @@ export default function AppsPage() {
                       isComingSoon
                         ? 'border border-dashed border-blue-400/30 bg-[#0b0c10]/75 hover:border-blue-400/50'
                         : 'border border-white/[0.12] bg-[#0b0c10]/75 hover:border-white/30'
-                    } ${isSmall ? 'p-4' : 'p-6 xl:p-8'}`}
+                    } p-6 xl:p-8`}
                   >
-                    {/* 情報の並びは全サイズで共通。行ごと消すと視線の位置が揃わないので、
-                        大きさの差はフォントサイズと余白だけでつける */}
+                    {/* 余白・アイコン・文字の大きさは全サイズで揃える。
+                        サイズの差は、下に敷く画像の有無と高さ、large の題名だけでつける */}
 
                     {/* Row 1: status。左に寄せ、右は空けてゆとりにする */}
-                    <span className={`flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider ${isSmall ? 'mb-2' : 'mb-3'}`} style={{ color: status.color }}>
+                    <span className="mb-3 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider" style={{ color: status.color }}>
                       <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.color }} />
                       {status.text}
                     </span>
 
                     {/* Row 2: icon + category。アイコンは元の角丸のまま見せる(丸く切らない) */}
-                    <div className={`flex min-w-0 items-center gap-2.5 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
+                    <div className="mb-4 flex min-w-0 items-center gap-2.5">
                       {project.icon ? (
-                        <img src={project.icon} alt="" className={`shrink-0 rounded-[22%] object-cover ${isSmall ? 'h-7 w-7' : 'h-10 w-10 xl:h-12 xl:w-12'}`} loading="lazy" />
+                        <img src={project.icon} alt="" className="h-10 w-10 shrink-0 rounded-[22%] object-cover xl:h-12 xl:w-12" loading="lazy" />
                       ) : (
-                        <span className={`shrink-0 ${isSmall ? 'text-lg' : 'text-2xl'}`}>
+                        <span className="shrink-0 text-2xl">
                           {categoryEmoji[project.category]}
                         </span>
                       )}
@@ -416,7 +448,7 @@ export default function AppsPage() {
 
                     {/* Row 3: title + NEW + hover arrow */}
                     <div className="mb-1.5 flex items-center gap-2">
-                      <h2 className={`min-w-0 font-bold text-white/90 transition-colors group-hover:text-white ${isSmall ? 'text-base xl:text-lg' : isLarge ? 'text-2xl xl:text-3xl' : 'text-xl xl:text-2xl'}`}>
+                      <h2 className={`min-w-0 font-bold text-white/90 transition-colors group-hover:text-white ${isLarge ? 'text-2xl xl:text-3xl' : 'text-xl xl:text-2xl'}`}>
                         {project.title}
                       </h2>
                       {isNew && (
@@ -428,12 +460,12 @@ export default function AppsPage() {
                     </div>
 
                     {/* Row 4: subtitle — 2行で打ち切り、カード間の高さの差を抑える */}
-                    <p className={`line-clamp-2 text-sm text-white/55 xl:text-base transition-colors group-hover:text-white/70 ${isSmall ? 'mb-2.5' : 'mb-4'}`}>
+                    <p className="mb-4 line-clamp-2 text-sm text-white/55 transition-colors group-hover:text-white/70 xl:text-base">
                       {project.subtitle}
                     </p>
 
                     {/* Row 5: tags。1 行に入るぶんだけ出し、残りは +N にまとめる */}
-                    <TagLine tags={project.tags} small={isSmall} />
+                    <TagLine tags={project.tags} />
 
                     {/* 下端のスクショ。上をフェードさせて、文字の領域から地続きに見せる */}
                     {shot && (
@@ -457,7 +489,9 @@ export default function AppsPage() {
               );
             })}
           </AnimatePresence>
-        </motion.div>
+          </div>
+          ))}
+        </div>
         )}
       </div>
     </div>

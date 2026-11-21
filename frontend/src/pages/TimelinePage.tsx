@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchProjects } from '@/lib/api';
 import {
@@ -32,6 +32,11 @@ const BAR_HEIGHT = 24;
 const STREAK_MAX_GAP = 2;
 // 開いたとき、今日の列を表の幅のどのあたりに置くか(右に予定が見える位置)
 const TODAY_POSITION = 0.7;
+// 日付の見出しを止める位置(サイト上部のナビの高さ)
+const SITE_HEADER_HEIGHT = 57;
+// 見えている範囲の外にも記録がある行の、左右の端に出す淡い光
+const EDGE_WIDTH = 36;
+const EDGE_COLOR = 'rgba(147,197,253,0.26)';
 
 const PANEL_BG = '#0b0c10';
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
@@ -74,7 +79,39 @@ export default function TimelinePage() {
   const [posts, setPosts] = useState<PostMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const edgeFrame = useRef(0);
   const [pick, setPick] = useState<Pick | null>(null);
+
+  // 端の光は、横スクロールのたびに表全体を描き直さないよう DOM を直接切り替える
+  const updateEdges = useCallback(() => {
+    cancelAnimationFrame(edgeFrame.current);
+    edgeFrame.current = requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const viewLeft = el.scrollLeft;
+      const viewRight = viewLeft + el.clientWidth - LEFT_WIDTH;
+      el.querySelectorAll<HTMLElement>('[data-edge]').forEach((edge) => {
+        const beyond =
+          edge.dataset.edge === 'left' ? Number(edge.dataset.first) < viewLeft - 1 : Number(edge.dataset.last) > viewRight + 1;
+        edge.style.opacity = beyond ? '1' : '0';
+      });
+    });
+  }, []);
+
+  // 見出しと本体は別のスクロール領域なので、横の位置を揃える
+  const syncScroll = (source: HTMLDivElement, target: HTMLDivElement | null) => {
+    if (target && target.scrollLeft !== source.scrollLeft) target.scrollLeft = source.scrollLeft;
+    updateEdges();
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', updateEdges);
+    return () => {
+      window.removeEventListener('resize', updateEdges);
+      cancelAnimationFrame(edgeFrame.current);
+    };
+  }, [updateEdges]);
 
   // 吹き出しは、外を押す・Esc・スクロールで閉じる
   useEffect(() => {
@@ -148,7 +185,13 @@ export default function TimelinePage() {
         const logsByDate = new Map<string, PostMeta[]>();
         for (const log of logs) logsByDate.set(log.date, [...(logsByDate.get(log.date) ?? []), log]);
         const last = Object.keys(days).sort().at(-1) ?? '';
-        return { project, days, goals: own, lanes, laneCount: Math.max(1, ...lanes.map((l) => l + 1)), logs, logsByDate, last };
+        // 予定と実績を合わせた、この行の最初と最後の日
+        const points = [
+          ...Object.keys(days),
+          ...own.flatMap((g) => [g.start, g.due, g.done ?? (today > g.due ? today : g.due)]),
+        ].sort();
+        const extent = points.length > 0 ? { first: points[0], last: points[points.length - 1] } : null;
+        return { project, days, goals: own, lanes, laneCount: Math.max(1, ...lanes.map((l) => l + 1)), logs, logsByDate, last, extent };
       })
       // 目標のあるアプリ、次に最近動いたアプリを上に
       .sort((a, b) => b.goals.length - a.goals.length || b.last.localeCompare(a.last) || a.project.title.localeCompare(b.project.title));
@@ -157,8 +200,11 @@ export default function TimelinePage() {
   // 開いたときは今日のあたりを見せる
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollLeft = LEFT_WIDTH + todayIndex * CELL - el.clientWidth * TODAY_POSITION;
-  }, [rows.length, todayIndex]);
+    if (!el) return;
+    el.scrollLeft = LEFT_WIDTH + todayIndex * CELL - el.clientWidth * TODAY_POSITION;
+    if (headRef.current) headRef.current.scrollLeft = el.scrollLeft;
+    updateEdges();
+  }, [rows, loading, todayIndex, updateEdges]);
 
   return (
     <div className="relative isolate min-h-screen bg-[#060608] text-white">
@@ -176,13 +222,17 @@ export default function TimelinePage() {
         ) : (
           <>
             <div
-              ref={scrollRef}
-              className="overflow-x-auto rounded-2xl border border-white/[0.12] backdrop-blur-md"
+              className="rounded-2xl border border-white/[0.12] backdrop-blur-md"
               style={{ background: 'rgba(11,12,16,0.8)' }}
             >
-              <div style={{ width: LEFT_WIDTH + gridWidth }}>
-                {/* 見出し: 月 / 曜日と日 */}
-                <div className="flex border-b border-white/[0.12]">
+              {/* 見出し: 月 / 曜日と日。縦に長くなっても日付が見えるよう、ナビの下に止める */}
+              <div
+                ref={headRef}
+                onScroll={(e) => syncScroll(e.currentTarget, scrollRef.current)}
+                className="sticky z-30 overflow-x-auto rounded-t-2xl border-b border-white/[0.12] [&::-webkit-scrollbar]:hidden"
+                style={{ top: SITE_HEADER_HEIGHT, background: PANEL_BG, scrollbarWidth: 'none' }}
+              >
+                <div className="flex" style={{ width: LEFT_WIDTH + gridWidth }}>
                   <div className="sticky left-0 z-20 shrink-0 border-r border-white/[0.12]" style={{ width: LEFT_WIDTH, background: PANEL_BG }} />
                   <div>
                     <div className="flex border-b border-white/[0.08]">
@@ -220,7 +270,14 @@ export default function TimelinePage() {
                     </div>
                   </div>
                 </div>
+              </div>
 
+              <div
+                ref={scrollRef}
+                onScroll={(e) => syncScroll(e.currentTarget, headRef.current)}
+                className="overflow-x-auto rounded-b-2xl"
+              >
+              <div style={{ width: LEFT_WIDTH + gridWidth }}>
                 {/* 本体 */}
                 <div className="relative">
                   {/* 列の地: 土日・月の境・今日 */}
@@ -239,7 +296,7 @@ export default function TimelinePage() {
                     })}
                   </div>
 
-                  {rows.map(({ project, days, goals, lanes, laneCount, logsByDate }) => {
+                  {rows.map(({ project, days, goals, lanes, laneCount, logsByDate, extent }) => {
                     const planHeight = laneCount * PLAN_LANE + 6;
                     return (
                       <div key={project.id} className="flex border-b border-white/[0.08] last:border-b-0">
@@ -266,6 +323,24 @@ export default function TimelinePage() {
                         </div>
 
                         <div className="relative" style={{ width: gridWidth }}>
+                          {/* 見えている範囲の外にも記録があれば、その側の端を淡く光らせる */}
+                          {extent && (
+                            <div className="pointer-events-none absolute inset-0 z-10 flex justify-between" aria-hidden>
+                              <div
+                                data-edge="left"
+                                data-first={Math.max(0, dayDiff(from, extent.first)) * CELL}
+                                className="sticky h-full transition-opacity duration-200"
+                                style={{ left: LEFT_WIDTH, width: EDGE_WIDTH, opacity: 0, background: `linear-gradient(to right, ${EDGE_COLOR}, transparent)` }}
+                              />
+                              <div
+                                data-edge="right"
+                                data-last={(Math.min(lastIndex, dayDiff(from, extent.last)) + 1) * CELL}
+                                className="sticky h-full transition-opacity duration-200"
+                                style={{ right: 0, width: EDGE_WIDTH, opacity: 0, background: `linear-gradient(to left, ${EDGE_COLOR}, transparent)` }}
+                              />
+                            </div>
+                          )}
+
                           {/* 予定: 目標ごとに着手日から期限までのバー */}
                           <div className="relative border-b border-dashed border-white/[0.06]" style={{ height: planHeight }}>
                             {goals.map((goal, i) => {
@@ -359,6 +434,7 @@ export default function TimelinePage() {
                   })}
                 </div>
               </div>
+              </div>
             </div>
 
             {/* 凡例 */}
@@ -383,6 +459,10 @@ export default function TimelinePage() {
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 rounded-full bg-white" />
                 ログあり(日を押すと、その日にやったことが出る)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-6 rounded-[3px]" style={{ background: `linear-gradient(to right, ${EDGE_COLOR}, transparent)` }} />
+                端の光: その先にも記録あり
               </span>
               {activity.updatedAt && <span className="ml-auto text-white/35">実績は {shortDate(activity.updatedAt)} 時点</span>}
             </div>

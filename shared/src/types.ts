@@ -44,6 +44,8 @@ export interface Project {
   published?: boolean;
   /** トップページの Featured 枠に優先的に出す。未指定分は updatedAt の新しい順で補完される */
   featured?: boolean;
+  /** Apps の「おすすめ順」の順位。小さいほど上。未指定は後ろ */
+  priority?: number;
   status: ProjectStatus;
   size: ProjectSize;
   publishedAt: string;
