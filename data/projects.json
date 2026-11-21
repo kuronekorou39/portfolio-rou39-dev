@@ -136,6 +136,7 @@
     ],
     "icon": "/projects/cryptid-logic-solver/icon.png",
     "screenshots": [
+      "/projects/cryptid-logic-solver/promo.mp4",
       "/projects/cryptid-logic-solver/snap-advanced.png"
     ],
     "links": {
@@ -367,7 +368,9 @@
       "macOS"
     ],
     "icon": "/projects/local-port-board/icon.png",
-    "screenshots": [],
+    "screenshots": [
+      "/projects/local-port-board/promo.mp4"
+    ],
     "links": {
       "github": "https://github.com/kuronekorou39/local-port-board"
     },
@@ -443,6 +446,7 @@
     ],
     "icon": "/projects/office-raw-editor/icon.png",
     "screenshots": [
+      "/projects/office-raw-editor/promo.mp4",
       "/projects/office-raw-editor/tree.png",
       "/projects/office-raw-editor/editor.png",
       "/projects/office-raw-editor/welcome.png"
@@ -591,6 +595,7 @@
     ],
     "icon": "/projects/domain-traffic-inspector/icon.png",
     "screenshots": [
+      "/projects/domain-traffic-inspector/promo.mp4",
       "/projects/domain-traffic-inspector/screenshot-traffic.png",
       "/projects/domain-traffic-inspector/screenshot-rules.png"
     ],
@@ -699,6 +704,7 @@
     ],
     "icon": "/projects/vloom/icon.png",
     "screenshots": [
+      "/projects/vloom/promo.mp4",
       "/projects/vloom/vcode-anatomy.png"
     ],
     "links": {
@@ -770,6 +776,7 @@
     ],
     "icon": "/projects/hayabuzz/icon.png",
     "screenshots": [
+      "/projects/hayabuzz/promo.mp4",
       "/projects/hayabuzz/top.png"
     ],
     "links": {
@@ -856,6 +863,7 @@
     ],
     "icon": "/projects/clipglass/icon.png",
     "screenshots": [
+      "/projects/clipglass/promo.mp4",
       "/projects/clipglass/screenshot.png"
     ],
     "links": {
